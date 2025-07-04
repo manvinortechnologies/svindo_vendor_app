@@ -75,9 +75,7 @@ import { HomeNavigation } from '../constants/app-routes.constants';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { THomeNavigation } from '../type';
 import WelcomeScreen from '../component/WelcomeScreen';
-
-
-
+import AdminProfile from '../component/AdminProfile';
 
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
@@ -159,6 +157,7 @@ const AppNavigation = () => {
                 <Stack.Screen name={HomeNavigation.CREATE_QUATION} component={CreateQuation} />
                 <Stack.Screen name={HomeNavigation.CREATE_PRO_FARMA_INVOICE} component={CreateproFarmaInvoice} />
                 <Stack.Screen name={HomeNavigation.DELIVERY_CHALLAN} component={DeliveryChallan} />
+                <Stack.Screen name={HomeNavigation.ADMINPROFILE} component={AdminProfile} />
             </Stack.Navigator>
         </NavigationContainer>
     );

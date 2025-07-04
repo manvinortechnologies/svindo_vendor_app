@@ -13,6 +13,7 @@ import { SignUpDetailScreenProps } from '../type';
 import { useAddCompanyMutation } from '../services/api/state-api-slice';
 import { HomeNavigation } from '../constants/app-routes.constants';
 import { useForm, Controller } from 'react-hook-form';
+import { storage } from '../utils/storage';
 
 
 type FormData = {
@@ -71,9 +72,10 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({ navigation }) =
 
 
       const res = await addCompany(formData).unwrap();
+      
       console.log(res)
-
-      // navigation.navigate(HomeNavigation.SELECT_LOCATION_SCREEN);
+ storage.delete('signUp');
+      navigation.navigate(HomeNavigation.SELECT_LOCATION_SCREEN);
     } catch (error) {
       console.log('Comapny Error:', error);
     }
@@ -85,7 +87,10 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({ navigation }) =
         <Text style={styles.headerTitle}>Add Company</Text>
         <TouchableOpacity
           style={styles.skipButton}
-          onPress={() => navigation.navigate(HomeNavigation.SELECT_LOCATION_SCREEN)}>
+          onPress={() => {navigation.navigate(HomeNavigation.SELECT_LOCATION_SCREEN)
+storage.delete('signUp');
+
+          }}>
           <LinearGradient
             colors={['#F9C313', '#FCA511']}
             style={styles.skipButtonGradient}
@@ -110,6 +115,7 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({ navigation }) =
                 placeholder="Company Name"
                 value={value}
                 onChangeText={onChange}
+                placeholderTextColor="#999"
               />
             )}
           />
@@ -126,6 +132,8 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({ navigation }) =
                 style={styles.input}
                 value={value}
                 onChangeText={onChange}
+                placeholderTextColor="#999"
+
               />
             )}
           />

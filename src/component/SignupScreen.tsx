@@ -17,6 +17,7 @@ import auth from '@react-native-firebase/auth';
 import { SignUpScreenProps, THomeNavigation } from '../type';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { HomeNavigation } from '../constants/app-routes.constants';
+import Loading from '../CommonComponent/Loading';
 
 
 
@@ -50,10 +51,10 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
     try {
       const fullPhoneNumber = `+91${phoneNumber}`;
       const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
-      console.log(confirmation)
+      console.log("confirmaiton --->",confirmation)
       setConfirm(confirmation);
       navigation.navigate(HomeNavigation.OTP_SCREEN, { confirmAuth: confirmation, phoneNumber: fullPhoneNumber,authType:authType });
-      Alert.alert('Verification code sent to your phone.');
+      // Alert.alert('Verification code sent to your phone.');
     } catch (error: any) {
       setError(error.message);
     } finally {
@@ -110,6 +111,7 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
             placeholder="Enter Phone Number"
             keyboardType="phone-pad"
             style={styles.input}
+            placeholderTextColor={"#909090"}
             value={phoneNumber}
             onChangeText={text => setPhoneNumber(text)}
             maxLength={10}
@@ -138,6 +140,9 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
           <Text style={styles.linkText}>Privacy Policy</Text>.
         </Text>
       </View>
+      <Loading
+      visible={loading}
+      />
 
 
     </View>

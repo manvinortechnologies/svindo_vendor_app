@@ -44,7 +44,6 @@ const ManageCompanies = () => {
   return (
     <View style={styles.container}>
         <Headerwithback title="Manage Companies " />
-    <ScrollView>
       {/* Tabs */}
       <View style={styles.tabRow}>
         <Text style={styles.activeTab}>My Companies</Text>
@@ -63,7 +62,6 @@ const ManageCompanies = () => {
       <TouchableOpacity style={styles.addCompany}>
         <Text style={styles.addText}>＋ Add Company</Text>
       </TouchableOpacity>
-      </ScrollView>
       <Bottomnavigation></Bottomnavigation>
     </View>
   );

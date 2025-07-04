@@ -16,16 +16,16 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { HomeNavigation } from '../constants/app-routes.constants';
 import { OtpInput } from 'react-native-otp-entry';
 import auth from '@react-native-firebase/auth';
-import { useLoginMutation, useSignupMutation } from '../services/api/state-api-slice';
+import { useLoginMutation } from '../services/api/state-api-slice';
 import { DEFAULT_STATUS_CODE_SUCCESS } from '../constants/api-const';
 import { storage } from '../utils/storage';
+import Loading from '../CommonComponent/Loading';
 
 
 const OtpScreen: React.FC<OtpScreenProps> = () => {
   const navigation = useNavigation<NativeStackNavigationProp<THomeNavigation>>();
   const route = useRoute<RouteProp<THomeNavigation, HomeNavigation.OTP_SCREEN>>();
   const { confirmAuth, phoneNumber, authType } = route?.params
-  const [signUp, { isLoading, error: signupError }] = useSignupMutation();
   const [login] = useLoginMutation();
 
   const [otp, setOtp] = useState<string>('');
@@ -111,24 +111,32 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
       const userCredential = await confirm.confirm(otp);
       const idToken = await userCredential.user.getIdToken();
       console.log(idToken)
-      if (authType === 'login') {
-        const response = await login({ idToken: idToken, user_type: "vendor" }).unwrap();
-        if (response.status === DEFAULT_STATUS_CODE_SUCCESS) {
-          storage.set('accessToken', response.access);
-          storage.set('refreshToken', response.refresh);
+      // if (authType === 'login') {
+      //   const response = await login({ idToken: idToken, user_type: "vendor" }).unwrap();
+      //   if (response.status === DEFAULT_STATUS_CODE_SUCCESS) {
+      //     storage.set('accessToken', response.access);
+      //     storage.set('refreshToken', response.refresh);
+      //   }
+      //   navigation.replace(HomeNavigation.STATISTICS_SCREEN);
+      // } else {
+      const response = await login({ idToken: idToken, user_type: "vendor" }).unwrap();
+      console.log(response)
+      if (response.status === DEFAULT_STATUS_CODE_SUCCESS) {
+        storage.set('signUp', 'SIGNUP');
+        storage.set('accessToken', response.access);
+        storage.set('refreshToken', response.refresh);
+        if (response.user.created) {
+          navigation.replace(HomeNavigation.STATISTICS_SCREEN);
         }
-        navigation.replace(HomeNavigation.STATISTICS_SCREEN);
-      } else {
-        const response = await signUp({ idToken: idToken, user_type: "vendor" }).unwrap();
-        console.log(response)
-        if (response.status === DEFAULT_STATUS_CODE_SUCCESS) {
-          storage.set('signUp', 'SIGNUP');
-          storage.set('accessToken', response.access);
-          storage.set('refreshToken', response.refresh);
+        else {
+          navigation.replace(HomeNavigation.ADMINPROFILE);
         }
-        navigation.replace(HomeNavigation.SIGNUP_DETAIL_SCREEN);
       }
+      navigation.replace(HomeNavigation.SIGNUP_DETAIL_SCREEN);
+      // }
     } catch (error) {
+      console.log("error-->", error);
+
       setError('Invalid verification code. Please try again.');
     }
     finally {
@@ -211,7 +219,9 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
         </LinearGradient>
       </TouchableOpacity>
 
-      {loading && <ActivityIndicator size={'large'} color={'#FCA511'} style={styles.loading} />}
+      <Loading
+        visible={loading}
+      />
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
       {/* Terms and Privacy */}
       <View style={styles.footer}>
@@ -340,7 +350,7 @@ const styles = StyleSheet.create({
     color: 'red',
     marginBottom: 10,
   },
-  loading:{
-    marginTop:"15%"
+  loading: {
+    marginTop: "15%"
   }
 });

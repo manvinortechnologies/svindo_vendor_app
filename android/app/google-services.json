@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "675983903457",
+    "project_id": "svindovender-71cf8",
+    "storage_bucket": "svindovender-71cf8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:675983903457:android:0a2924c4e3048c056a85a0",
+        "android_client_info": {
+          "package_name": "com.svindovender"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmBUfDiipPqCwPR61lOMItOmm0pg5eI04"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

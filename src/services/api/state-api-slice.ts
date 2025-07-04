@@ -72,16 +72,7 @@ export const api = createApi({
   reducerPath: 'api',
   baseQuery: baseQuery,
   endpoints: (builder) => ({
-    signup: builder.mutation<SignUpRes, signUp>({
-      query: sigup => ({
-        url: 'users/signup/',
-        method: 'POST',
-        body: sigup,
-      }),
-      transformResponse: (response: SignUpRes, meta: { response: Response }) => {
-        return { ...response, status: meta.response.status };
-      },
-    }),
+
     login: builder.mutation<SignUpRes, signUp>({
       query: login => ({
         url: 'users/login/',
@@ -94,7 +85,7 @@ export const api = createApi({
     }),
     addCompany: builder.mutation<any, any>({
       query: companyDetails => ({
-        url: `masters/company/`,
+        url: `vendor/company-profile/`,
         method: 'POST',
         body: companyDetails,
       }),
@@ -141,7 +132,6 @@ export const api = createApi({
 });
 
 export const {
-  useSignupMutation,
   useLoginMutation,
   useAddCompanyMutation,
   useUpdateProfileMutation,

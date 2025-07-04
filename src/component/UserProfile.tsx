@@ -1,10 +1,14 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Platform, StatusBar } from 'react-native';
 import Headerwithback from './Headerwithback';
 import Bottomnavigation from './Bottomnavigation';
 
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import Loading from '../CommonComponent/Loading';
+import api from '../services/api/api';
+import CustomTextInput from '../CommonComponent/CustomeTextInput';
+import CustomButton from '../CommonComponent/CustomeButton';
 type RootStackParamList = {
   MyAccount: undefined;
   DeleteAccountScreen: undefined;
@@ -16,8 +20,36 @@ type RootStackParamList = {
 type SignupScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ResetDataScreen'>;
 
 
-const UserProfile = () => {
-  const navigation = useNavigation<SignupScreenNavigationProp>();
+const UserProfile = ({navigation}:any) => {
+  const [isLoading,setIsLoading]=useState<boolean>(false)
+  const [firstName,setFirstName]=useState<string>("")
+    const [lastName,setLasttName]=useState<string>("")
+      const [email,setemail]=useState<string>("")
+
+
+
+  useEffect(()=>{
+    getUserData();
+
+
+  },[])
+  const getUserData=async()=>{
+    try {
+      setIsLoading(true)
+      const res= await api.get("users/profile/me/");
+      console.log("userData-->",res);
+      if(res.data){
+        setFirstName(res.data.first_name);
+        setLasttName(res.data.last_name);
+        setemail(res.data.email)
+      }
+      
+    } catch (error) {
+      
+    }finally{
+      setIsLoading(false)
+    }
+  }
   
   return (
  <View style={styles.container}>
@@ -25,15 +57,39 @@ const UserProfile = () => {
     <ScrollView contentContainerStyle={styles.formcontainer}>
     
 
-      <View style={styles.avatar}>
+      {/* <View style={styles.avatar}>
         <Text style={styles.avatarText}>T</Text>
       </View>
 
-      <Text style={styles.title}>Update profile picture</Text>
+      <Text style={styles.title}>Update profile picture</Text> */}
+      <CustomTextInput
+             styles={{marginTop:10}}
 
-      <TextInput style={styles.input} placeholder="Your name" />
+      value={firstName}
+      placeholder='Enter yout first name'
+      onChangeText={setFirstName}
+      />
+       <CustomTextInput
+              styles={{marginTop:10}}
+
+      value={lastName}
+      placeholder='Enter your last name'
+      onChangeText={setLasttName}
+      />
+       <CustomTextInput
+       styles={{marginTop:10}}
+      value={email}
+      placeholder=''
+      onChangeText={setemail}
+      />
+
+      {/* <TextInput style={styles.input} placeholder="Your name" />
       <TextInput style={styles.input} placeholder="9876543210" />
-      <TextInput style={styles.input} placeholder="Tarunkumar@gmail.com" />
+      <TextInput style={styles.input} placeholder="Tarunkumar@gmail.com" /> */}
+      {/* <CustomButton
+      title='Update Profile'
+      onPress={()=>{}}
+      /> */}
 
       <Text style={styles.sectionLabel}>Privacy Settings</Text>
 
@@ -50,6 +106,9 @@ const UserProfile = () => {
         <Text style={styles.outlinedButtonText}>Logout of all devices</Text>
       </TouchableOpacity>
     </ScrollView>
+    <Loading
+    visible={isLoading}
+    />
     <Bottomnavigation/>
     </View>
   );

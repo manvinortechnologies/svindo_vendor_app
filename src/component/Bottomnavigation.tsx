@@ -76,17 +76,17 @@ const Bottomnavigation = () => {
           <Icon 
             name="storefront-outline" 
             size={28} 
-            color={route.name === "CartScreen" ? "#FCA511" : "#000"} 
+            color={route.name === "Storescreen" ? "#FCA511" : "#000"} 
           />
-          <Text style={[styles.bottombartext, route.name === "CartScreen" && styles.selectedText]}>
+          <Text style={[styles.bottombartext, route.name === "Storescreen" && styles.selectedText]}>
             Store
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.bottombar} activeOpacity={0.6} 
           onPress={() => navigation.navigate("Erp")}>
-          <Icon name="menu" size={28}  color={route.name === "CartScreen" ? "#FCA511" : "#000"} />
-          <Text style={styles.bottombartext}>ERP</Text>
+          <Icon name="menu" size={28}  color={route.name === "Erp" ? "#FCA511" : "#000"} />
+          <Text style={[styles.bottombartext, route.name === "Erp" && styles.selectedText]}>ERP</Text>
         </TouchableOpacity>
       </View>
     </View>

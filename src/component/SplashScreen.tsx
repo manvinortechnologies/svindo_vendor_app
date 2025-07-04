@@ -16,7 +16,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
         const signUp = storage.getString('signUp');
         console.log(idToken,signUp,"token")
         if (idToken && signUp) {
-          navigation.navigate(HomeNavigation.SIGNUP_DETAIL_SCREEN);
+          navigation.navigate(HomeNavigation.ADMINPROFILE);
         } else if (idToken && !signUp) {
           navigation.navigate(HomeNavigation.STATISTICS_SCREEN);
         } else {
