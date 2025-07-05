@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ScrollView, Text, View, StyleSheet } from 'react-native';
+import { ScrollView, Text, View, StyleSheet, Alert } from 'react-native';
 import MainContainer from '../CommonComponent/MainContainer';
 import Headerwithback from './Headerwithback';
 import SettingItem from '../CommonComponent/SettingItem';
@@ -97,9 +97,10 @@ const ProductSetting = ({ navigation }: any) => {
       console.log('Sending payload:', payload);
 
       // Uncomment this when API is ready
-      const response = await api.post('vendor/productsetting/', payload);
+      const response = await api.post('vendor/productsetting/update/', payload);
       if (response.status === 200 || response.status === 201) {
         console.log('Settings updated successfully:', response.data);
+        Alert.alert("Success","Product Settings updated successfully")
       } else {
         console.warn('Unexpected response:', response);
       }
