@@ -1,11 +1,33 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Bottomnavigation from './Bottomnavigation';
 import Headerwithback from './Headerwithback';
+import api from '../services/api/api';
+import Loading from '../CommonComponent/Loading';
 
 
-const CashInHand = () => {
+const CashInHand = ({navigation}:any) => {
+  const [cash,setCash]=useState<string>("00.00");
+  const [isLoading,setIsLoading]= useState<boolean>(false);
+  useEffect(()=>{
+    getCash();
+  },[]);
+  const getCash=async()=>{
+    try {
+      setIsLoading(true);
+      const res=await api.get("vendor/cash-balance/");
+      if(res.data){
+        setCash(res.data.balance)
+      }
+      
+    } catch (error) {
+      
+    }finally{
+      setIsLoading(false)
+    }
+
+  }
   return (
     <View style={styles.container}>
       <SafeAreaView style={{ flex: 1 }}>
@@ -19,13 +41,16 @@ const CashInHand = () => {
             />
             <View>
               <Text style={styles.label}>Current Cash Balance</Text>
-              <Text style={styles.amount}>Rs 0.00</Text>
+              <Text style={styles.amount}>Rs {cash}</Text>
             </View>
           </View>
         </View>
 
        
       </SafeAreaView>
+      <Loading
+      visible={isLoading}
+      />
 
       <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button}>
