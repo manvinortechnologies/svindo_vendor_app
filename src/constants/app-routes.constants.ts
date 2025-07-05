@@ -70,6 +70,7 @@ export enum HomeNavigation {
     CREATE_QUATION = 'CreateQuation',
     CREATE_PRO_FARMA_INVOICE = 'CreateproFarmaInvoice',
     DELIVERY_CHALLAN = 'DeliveryChallan',
-    ADMINPROFILE="AdminProfile"
+    ADMINPROFILE="AdminProfile",
+    PRODUCTSETTING="ProductSetting",
   }
   

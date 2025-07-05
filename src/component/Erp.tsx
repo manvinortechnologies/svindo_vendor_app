@@ -38,6 +38,7 @@ type RootStackParamList = {
   AttendanceScreen: undefined;
   DeliveryChallan: undefined;
   WebAppScreen: undefined;
+  ProductSetting:undefined;
 };
 
 type MenuItemType = {
@@ -76,6 +77,7 @@ const menuItems: MenuItemType[] = [
   { title: 'Close Financial Year', icon: 'calendar-plus', screen: 'CloseYearScreen' },
   { title: 'Settings', icon: 'cog-outline', screen: 'SettingsScreen' },
   { title: 'Invoice Settings', icon: 'file-document-outline', screen: 'InvoiceSettings' },
+   { title: 'Product Settings', icon: 'file-document-outline', screen: 'ProductSetting' },
   { title: 'Reminders', icon: 'bell-alert-outline', screen: 'RemindersScreen' },
   {
     title: 'Help & Support',
