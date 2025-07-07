@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -12,10 +12,44 @@ import {
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Feather from 'react-native-vector-icons/Feather';
 import Headerwithback from './Headerwithback';
+import Loading from '../CommonComponent/Loading';
+import api from '../services/api/api';
+import { Vendor } from '../type/Vendor';
+import VendorModal from '../Modals/VendorModal';
 
-const CreatePurchase = () => {
+const CreatePurchase = ({navigation}:any) => {
+  const [isLoading,setIsLoading]= useState<boolean>(false)
+ const [isVendorModalVisible, setIsVendorModalVisible] = useState(false);
+  const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
+  const [allVendorList,setAllVendorList] = useState<Vendor[]>();
   const handleSearch = () => {
     // Handle search action
+  };
+  useEffect(()=>{
+    getAllVendors();
+
+
+  }
+  ,[]);
+  const getAllVendors=async()=>{
+    try {
+      setIsLoading(true)
+      const res=await api.get("vendor/get-vendor/");
+      console.log("res--->",res)
+      if(res.data){
+        setAllVendorList(res.data)
+      }
+      
+    } catch (error) {
+      
+    }finally{
+      setIsLoading(false)
+
+    }
+  }
+   const handleSelectVendor = (vendor: Vendor) => {
+    setSelectedVendor(vendor);
+    setIsVendorModalVisible(false);
   };
   return (
     <View style={styles.container}>
@@ -23,9 +57,9 @@ const CreatePurchase = () => {
       <Headerwithback
       title="Create Purchase"
       rightIcons={[
-        <TouchableOpacity onPress={handleSearch} key="search">
-          <Icon name="search" size={20} color="#000" />
-        </TouchableOpacity>,
+        // <TouchableOpacity onPress={handleSearch} key="search">
+        //   <Icon name="search" size={20} color="#000" />
+        // </TouchableOpacity>,
          <TouchableOpacity onPress={handleSearch} key="search">
          <Icon name="youtube" size={20} color="#000" />
        </TouchableOpacity>,
@@ -48,11 +82,13 @@ const CreatePurchase = () => {
         {/* Vendor Selection */}
         <View>
           <Text style={styles.label}>Vendor <Icon name="information" size={14} /></Text>
-          <TouchableOpacity style={styles.selector}>
+          <TouchableOpacity style={styles.selector} 
+          onPress={()=>setIsVendorModalVisible(true)}
+          >
             <Text style={styles.selectorText}>+ Select Vendor</Text>
           </TouchableOpacity>
 
-          <Text style={styles.label}>Vendor <Icon name="information" size={14} /></Text>
+          <Text style={styles.label}>Product <Icon name="information" size={14} /></Text>
           <TouchableOpacity style={styles.selector}>
             <Text style={styles.selectorText}>+ Select Products</Text>
           </TouchableOpacity>
@@ -115,6 +151,16 @@ const CreatePurchase = () => {
             </TouchableOpacity>
           ))}
         </View>
+         <VendorModal
+        visible={isVendorModalVisible}
+        vendors={allVendorList}
+        selectedVendor={selectedVendor}
+        onSelect={handleSelectVendor}
+        onClose={() => setIsVendorModalVisible(false)}
+      />
+        <Loading
+        visible={isLoading}
+        />
       </ScrollView>
     </View>
   );

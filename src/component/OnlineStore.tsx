@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, StatusBar, Platform, Alert } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Icons from "react-native-vector-icons/AntDesign";
@@ -25,7 +25,7 @@ type RootStackParamList = {
   AddPaymentGateway: undefined;
   MarketingTools: undefined;
   OnlineStore: undefined
-  StoreWorkingHours:undefined;
+  StoreWorkingHours: undefined;
 };
 
 // ✅ Define the type for navigation prop
@@ -39,6 +39,34 @@ const OnlineStore = ({ navigation }: any) => {
   const [display, setDisplay] = useState<boolean>(true);
   const [isPrivate, setIsPrivate] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  useEffect(() => {
+    getData();
+  }, []);
+  const getData = async () => {
+    try {
+      setIsLoading(true)
+      const res = await api.get("vendor/onlineStoreSetting/");
+      if (res.status == 200) {
+        const data = res.data;
+        console.log(data)
+        setEnable(data.store_page_visible);
+        setLocation(data.store_location_visible);
+        setDisplay(data.display_as_catalog);
+        setIsPrivate(data.private_catalog);
+
+
+      }
+
+
+
+    } catch (error) {
+      console.log("error-->", error)
+
+    } finally {
+      setIsLoading(false)
+
+    }
+  }
 
   const handelUpdateSetting = async () => {
     try {
@@ -49,17 +77,17 @@ const OnlineStore = ({ navigation }: any) => {
         display_as_catalog: display,
         private_catalog: isPrivate
       }
-      console.log("data-->",data);
-      const res=await api.post("vendor/onlineStoreSetting/",data);
-      console.log("ressss->",res)
-      if(res.status==201){
-        Alert.alert("Success" , "Online Store Setting updated successfully")
+      console.log("data-->", data);
+      const res = await api.post("vendor/onlineStoreSetting/", data);
+      console.log("ressss->", res)
+      if (res.status == 200) {
+        Alert.alert("Success", "Online Store Setting updated successfully")
       }
-      
+
 
 
     } catch (error) {
-      console.log("error-->",error)
+      console.log("error-->", error)
 
     } finally {
       setIsLoading(false)
@@ -68,131 +96,131 @@ const OnlineStore = ({ navigation }: any) => {
   }
   return (
     <MainContainer>
-    <View style={styles.container}>
+      <View style={styles.container}>
 
-      {/* <Header
+        {/* <Header
         title="Online Store Setting"
         backgroundColor="#FFF"
         textColor="#333"
         borderBottomColor="#ccc"
       /> */}
-              <Headerwithback title="Online Store Setting" />
+        <Headerwithback title="Online Store Setting" />
 
-      <ScrollView
+        <ScrollView
 
-      >
-        <View style={styles.storepage}>
-          <View style={styles.storecontent}>
-            <Icon name="storefront-outline" size={24} color="#000" />
-            <Text style={styles.mytext}>Store Page</Text>
-          </View>
-          <View>
-            <Text style={{ marginLeft: 28 }}>This option helps you hide/ un-hide your store and product on svindo app</Text>
-            <View style={styles.switchstorecontent}>
-              <Text style={styles.switchtext}>visible on svindo</Text>
-              <CustomSwitch value={isEnabled} onValueChange={setEnable}
-                activeColor="#FCA311"
-                inactiveColor="#999"
-                borderColor="#999" />
-            </View>
-          </View>
-        </View>
-        <View style={styles.menuContainer}>
-          {menuItems.map((item) => (
-            <TouchableOpacity
-              key={item.title}
-              style={styles.menuItem}
-              onPress={() => item.screen && navigation.navigate(item.screen)} // ✅ Corrected navigation
-            >
-              <Icon name={item.icon} size={24} color="#000" />
-              <Text style={styles.menuText}>{item.title}</Text>
-              <Icon name="chevron-right" size={24} color="#000" style={{ marginLeft: 'auto' }} />
-            </TouchableOpacity>
-          ))}
-        </View>
-        <View style={styles.storepage}>
-          <View style={styles.storecontent}>
-            <Ionicons name="location-sharp" size={24} color="#000" />
-            <Text style={styles.mytext}>Store Location </Text>
-          </View>
-          <View>
-            <Text style={{ marginLeft: 28 }}>This option helps you to Hide / Un-hide your store location on svindo app.</Text>
-            <View style={styles.switchstorecontent}>
-              <Text style={styles.switchtext}>visible on svindo</Text>
-              <CustomSwitch value={location} onValueChange={setLocation}
-                activeColor="#FCA311"
-                inactiveColor="#999"
-                borderColor="#999" />
-            </View>
-          </View>
-        </View>
-        <View style={styles.storepage}>
-          <View style={[styles.storecontent, { justifyContent: "space-between" }]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Icon name="chevron-right" size={24} color="#000" style={{ marginLeft: 'auto' }} />
-              <Text style={styles.mytext}>Display products as Catalog </Text>
+        >
+          <View style={styles.storepage}>
+            <View style={styles.storecontent}>
+              <Icon name="storefront-outline" size={24} color="#000" />
+              <Text style={styles.mytext}>Store Page</Text>
             </View>
             <View>
-              <CustomSwitch value={display} onValueChange={setDisplay}
-                activeColor="#FCA311"
-                inactiveColor="#999"
-                borderColor="#999" />
+              <Text style={{ marginLeft: 28 }}>This option helps you hide/ un-hide your store and product on svindo app</Text>
+              <View style={styles.switchstorecontent}>
+                <Text style={styles.switchtext}>visible on svindo</Text>
+                <CustomSwitch value={isEnabled} onValueChange={setEnable}
+                  activeColor="#FCA311"
+                  inactiveColor="#999"
+                  borderColor="#999" />
+              </View>
             </View>
           </View>
-          <View>
-            <Text style={{ marginLeft: 28 }}>Enabling this option, makes the products
-              posted online into a catalog that is the
-              customer will not be able to place order.
-              But can enquire through chat box. .</Text>
-
+          <View style={styles.menuContainer}>
+            {menuItems.map((item) => (
+              <TouchableOpacity
+                key={item.title}
+                style={styles.menuItem}
+                onPress={() => item.screen && navigation.navigate(item.screen)} // ✅ Corrected navigation
+              >
+                <Icon name={item.icon} size={24} color="#000" />
+                <Text style={styles.menuText}>{item.title}</Text>
+                <Icon name="chevron-right" size={24} color="#000" style={{ marginLeft: 'auto' }} />
+              </TouchableOpacity>
+            ))}
           </View>
-          <View style={[styles.storecontent, { justifyContent: "space-between", marginTop: 10 }]}>
-            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Ionicons name="eye-off-sharp" size={24} color="#000" style={{ marginLeft: 'auto' }} />
-              <Text style={styles.mytext}>Private Catalog </Text>
+          <View style={styles.storepage}>
+            <View style={styles.storecontent}>
+              <Ionicons name="location-sharp" size={24} color="#000" />
+              <Text style={styles.mytext}>Store Location </Text>
             </View>
             <View>
-              <CustomSwitch value={isPrivate} onValueChange={setIsPrivate}
-                activeColor="#FCA311"
-                inactiveColor="#999"
-                borderColor="#999" />
+              <Text style={{ marginLeft: 28 }}>This option helps you to Hide / Un-hide your store location on svindo app.</Text>
+              <View style={styles.switchstorecontent}>
+                <Text style={styles.switchtext}>visible on svindo</Text>
+                <CustomSwitch value={location} onValueChange={setLocation}
+                  activeColor="#FCA311"
+                  inactiveColor="#999"
+                  borderColor="#999" />
+              </View>
             </View>
           </View>
-          <View>
-            <Text style={{ marginLeft: 28 }}>Enabling this option, makes the products
-              posted online into a catalog that is the
-              customer will not be able to place order.
-              But can enquire through chat box. .</Text>
+          <View style={styles.storepage}>
+            <View style={[styles.storecontent, { justifyContent: "space-between" }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Icon name="chevron-right" size={24} color="#000" style={{ marginLeft: 'auto' }} />
+                <Text style={styles.mytext}>Display products as Catalog </Text>
+              </View>
+              <View>
+                <CustomSwitch value={display} onValueChange={setDisplay}
+                  activeColor="#FCA311"
+                  inactiveColor="#999"
+                  borderColor="#999" />
+              </View>
+            </View>
+            <View>
+              <Text style={{ marginLeft: 28 }}>Enabling this option, makes the products
+                posted online into a catalog that is the
+                customer will not be able to place order.
+                But can enquire through chat box. .</Text>
 
+            </View>
+            <View style={[styles.storecontent, { justifyContent: "space-between", marginTop: 10 }]}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Ionicons name="eye-off-sharp" size={24} color="#000" style={{ marginLeft: 'auto' }} />
+                <Text style={styles.mytext}>Private Catalog </Text>
+              </View>
+              <View>
+                <CustomSwitch value={isPrivate} onValueChange={setIsPrivate}
+                  activeColor="#FCA311"
+                  inactiveColor="#999"
+                  borderColor="#999" />
+              </View>
+            </View>
+            <View>
+              <Text style={{ marginLeft: 28 }}>Enabling this option, makes the products
+                posted online into a catalog that is the
+                customer will not be able to place order.
+                But can enquire through chat box. .</Text>
+
+            </View>
           </View>
-        </View>
-        <CustomButton
-        containerStyle={{padding:8,}}
-          title='Update Settings'
-          onPress={handelUpdateSetting}
+          <CustomButton
+            containerStyle={{ padding: 8, }}
+            title='Update Settings'
+            onPress={handelUpdateSetting}
+          />
+        </ScrollView>
+        <Loading
+          visible={isLoading}
         />
-      </ScrollView>
-      <Loading
-        visible={isLoading}
-      />
-      {/* <Bottompopup/> */}
-      <View style={styles.bottomcontainer}>
-        <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('OnlineStore')}>
-          <Icon name="storefront-outline" size={20} color="#f7931e" />
-          <Text style={[styles.optionText, { color: '#f7931e' }]}>Online Store</Text>
-        </TouchableOpacity>
+        {/* <Bottompopup/> */}
+        <View style={styles.bottomcontainer}>
+          <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('OnlineStore')}>
+            <Icon name="storefront-outline" size={20} color="#f7931e" />
+            <Text style={[styles.optionText, { color: '#f7931e' }]}>Online Store</Text>
+          </TouchableOpacity>
 
-        <View style={styles.divider} />
+          <View style={styles.divider} />
 
-        <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('MarketingTools')}>
-          <Icons name="setting" size={20} color="#555" />
-          <Text style={styles.optionText}>Tools</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('MarketingTools')}>
+            <Icons name="setting" size={20} color="#555" />
+            <Text style={styles.optionText}>Tools</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Bottomnavigation />
+
       </View>
-
-      <Bottomnavigation />
-
-    </View>
     </MainContainer>
   );
 };
