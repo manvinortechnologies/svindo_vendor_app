@@ -15,10 +15,28 @@ import Headerwithback from './Headerwithback';
 import CustomSwitch from '../CommonComponent/CustomSwitch';
 import api from '../services/api/api'; // Your API service
 import { Coupon } from '../type/Coupan';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native';
+
+type RootStackParamList = {
+  CouponsScreen: undefined;
+  CreateCoupon: undefined;
+  
+};
+
+type CouponsScreenNavigationProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'CouponsScreen'
+>;
+
+type CouponsScreenProps = {
+  navigation: CouponsScreenNavigationProp;
+  route: RouteProp<RootStackParamList, 'CouponsScreen'>;
+};
 
 
 
-const CouponsScreen = () => {
+const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
   const [deliveryDiscountEnabled, setDeliveryDiscountEnabled] = useState(true);
   const [percentage, setPercentage] = useState('');
   const [minOrderValue, setMinOrderValue] = useState('');
@@ -151,7 +169,7 @@ const CouponsScreen = () => {
       </ScrollView>
 
       {/* Floating Button */}
-      <TouchableOpacity style={styles.addBtn}>
+      <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate('CreateCoupon')}  >
         <Text style={styles.addBtnText}>Add Coupon</Text>
       </TouchableOpacity>
     </MainContainer>

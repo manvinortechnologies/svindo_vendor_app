@@ -80,6 +80,7 @@ import ProductSetting from '../component/ProductSetting';
 import StoreWorkingHours from '../component/StoreWorkingHours';
 import CouponsScreen from '../component/CouponsScreen';
 import ExpensesScreen from '../component/ExpensesScreen';
+import CreateCouponScreen from '../component/CreateCouponScreen';
 
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
@@ -166,6 +167,7 @@ const AppNavigation = () => {
                 <Stack.Screen name={HomeNavigation.STOREWORKING_HOURS} component={StoreWorkingHours} />
                 <Stack.Screen name={HomeNavigation.COUPONS_SCREEN} component={CouponsScreen} />
                 <Stack.Screen name={HomeNavigation.EXPENESES_SCREEN} component={ExpensesScreen} />
+                <Stack.Screen name={HomeNavigation.CREATECOUPON} component={CreateCouponScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );
