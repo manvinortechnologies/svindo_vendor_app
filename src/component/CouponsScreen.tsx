@@ -9,6 +9,7 @@ import {
   FlatList,
   Image,
   ActivityIndicator,
+  Dimensions
 } from 'react-native';
 import MainContainer from '../CommonComponent/MainContainer';
 import Headerwithback from './Headerwithback';
@@ -17,6 +18,8 @@ import api from '../services/api/api'; // Your API service
 import { Coupon } from '../type/Coupan';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
+
+const { width } = Dimensions.get('window');
 
 type RootStackParamList = {
   CouponsScreen: undefined;
@@ -135,6 +138,8 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
           </Text>
 
           <View style={styles.inputRow}>
+            <View>
+              <Text style={{color: '#727272'}}>Pecentage</Text>
             <TextInput
               style={styles.input}
               placeholder="Ex: 5"
@@ -143,6 +148,9 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
               keyboardType="numeric"
               placeholderTextColor="#aaa"
             />
+            </View>
+            <View>
+              <Text style={{color: '#727272'}}>Minimum Order Value</Text>
             <TextInput
               style={styles.input}
               placeholder="Ex: 100"
@@ -151,6 +159,7 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
               keyboardType="numeric"
               placeholderTextColor="#aaa"
             />
+            </View>
           </View>
         </View>
 
@@ -206,16 +215,17 @@ const styles = StyleSheet.create({
   },
   inputRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: 10,
   },
   input: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#FCA311',
+    backgroundColor: '#FFEFD5',
     borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    marginRight: 10,
+    padding: 10,
+    marginTop: 6,
+    width: width / 2 - 30,
+    borderColor: '#FCA311',
+    borderWidth: 1
   },
   sectionTitle: {
     fontSize: 15,
@@ -248,8 +258,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   activeBadge: {
-    backgroundColor: '#b2f0b2',
-    color: 'green',
+    backgroundColor: '#D8FFDE',
+    color: '#000',
+    fontWeight: '600',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 6,
@@ -259,7 +270,8 @@ const styles = StyleSheet.create({
   },
   couponText: {
     fontSize: 13,
-    color: '#333',
+    color: '#000',
+    fontWeight: '500',
     marginBottom: 2,
   },
   addBtn: {

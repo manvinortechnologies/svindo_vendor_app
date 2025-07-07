@@ -5,6 +5,8 @@ import Icons from "react-native-vector-icons/FontAwesome";
 
 import Bottomnavigation from "./Bottomnavigation";
 import NavigationButton from "./NavigationButton";
+import CustomSwitch from "./CustomSwitch";
+import RequestFromBuyers from "../CommonComponent/RequestFromBuyers";
 NavigationButton
 
 const screenWidth = Dimensions.get("window").width - 20;
@@ -51,7 +53,9 @@ const getFilteredProducts = (type: string) => {
 };
 
 
+
 const StatisticsScreen = () => {
+  const [deliveryDiscountEnabled, setDeliveryDiscountEnabled] = useState(true);
     const [selectedFilter, setSelectedFilter] = useState("Today");
   const filters = ["Today", "This Week", "This Month", "This Year"];
 
@@ -59,20 +63,24 @@ const StatisticsScreen = () => {
     <View style={styles.container}>
          <View style={styles.header}>
       <View style={styles.headerleft}>
-        <Icon name="shopping" size={24} color="#000" />
+        <Image
+        source={require('../assets/Logo_Icon.png')}
+        style={{ width: 28, height: 36, marginTop: 5, marginHorizontal: 10 }}
+        />
         <View style={styles.titlecontent}>
         <Text style={styles.headerTitle}>Business Name</Text>
-        <Text style={styles.subTitle}>Business Name</Text>
+        <Text style={styles.subTitle}>ID: 12345678</Text>
         </View>
         </View>
         <View style={styles.headerRight}>
-          <Icon name="toggle-switch" size={24} color="green" />
-          <Icon name="bell" size={24} color="red" style={styles.notificationIcon} />
+          <CustomSwitch value={deliveryDiscountEnabled}
+              onValueChange={setDeliveryDiscountEnabled} />
+          <Icon name="bell-outline" size={28} color="#000" style={styles.notificationIcon} />
         </View>
       </View>
     <ScrollView >
      
-      
+      <RequestFromBuyers />
     <View style={styles.titleRow}>
         <Text style={styles.title}>Statistics</Text>
         <TouchableOpacity style={styles.filterButton}>
