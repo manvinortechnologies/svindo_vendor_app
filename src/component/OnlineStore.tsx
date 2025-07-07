@@ -25,6 +25,7 @@ type RootStackParamList = {
   AddPaymentGateway: undefined;
   MarketingTools: undefined;
   OnlineStore: undefined
+  StoreWorkingHours:undefined;
 };
 
 // ✅ Define the type for navigation prop
@@ -205,7 +206,7 @@ type MenuItemType = {
 
 // ✅ Ensure screen names match the navigation stack
 const menuItems: MenuItemType[] = [
-  { title: 'Store working hours', icon: 'calendar-clock', screen: 'StoreTimings' },
+  { title: 'Store working hours', icon: 'calendar-clock', screen: 'StoreWorkingHours' },
   { title: 'Verification Tag & Online Payment', icon: 'store-check-outline', screen: 'StoreVerification' },
   // { title: 'Enable svindo Payment Gateway', icon: 'credit-card-check', screen: 'EnableSvindoGateway' },
   { title: 'Add your Payment Gateway', icon: 'credit-card-plus', screen: 'AddPaymentGateway' },

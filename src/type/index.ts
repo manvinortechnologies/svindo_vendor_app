@@ -77,7 +77,9 @@ export type THomeNavigation = {
   [HomeNavigation.CREATE_PRO_FARMA_INVOICE]: undefined;
   [HomeNavigation.DELIVERY_CHALLAN]: undefined;
   [HomeNavigation.ADMINPROFILE]:undefined;
-  [HomeNavigation.PRODUCTSETTING]:undefined
+  [HomeNavigation.PRODUCTSETTING]:undefined;
+  [HomeNavigation.STOREWORKING_HOURS]:undefined;
+  [HomeNavigation.COUPONS_SCREEN]:undefined,
 };
 
 

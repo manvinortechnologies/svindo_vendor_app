@@ -72,5 +72,7 @@ export enum HomeNavigation {
     DELIVERY_CHALLAN = 'DeliveryChallan',
     ADMINPROFILE="AdminProfile",
     PRODUCTSETTING="ProductSetting",
+    STOREWORKING_HOURS="StoreWorkingHours",
+    COUPONS_SCREEN="CouponsScreen",
   }
   

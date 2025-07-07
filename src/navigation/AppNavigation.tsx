@@ -77,6 +77,8 @@ import { THomeNavigation } from '../type';
 import WelcomeScreen from '../component/WelcomeScreen';
 import AdminProfile from '../component/AdminProfile';
 import ProductSetting from '../component/ProductSetting';
+import StoreWorkingHours from '../component/StoreWorkingHours';
+import CouponsScreen from '../component/CouponsScreen';
 
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
@@ -160,6 +162,8 @@ const AppNavigation = () => {
                 <Stack.Screen name={HomeNavigation.DELIVERY_CHALLAN} component={DeliveryChallan} />
                 <Stack.Screen name={HomeNavigation.ADMINPROFILE} component={AdminProfile} />
                 <Stack.Screen name={HomeNavigation.PRODUCTSETTING} component={ProductSetting} />
+                <Stack.Screen name={HomeNavigation.STOREWORKING_HOURS} component={StoreWorkingHours} />
+                <Stack.Screen name={HomeNavigation.COUPONS_SCREEN} component={CouponsScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );

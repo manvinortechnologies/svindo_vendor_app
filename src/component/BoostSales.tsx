@@ -13,6 +13,7 @@ type RootStackParamList = {
     DiscountCoupons: undefined;
     DeliveryCashback: undefined;
     SendNotifications: undefined;
+    CouponsScreen:undefined
   };
 
 // ✅ Define the type for navigation prop
@@ -65,7 +66,7 @@ type MenuItemType = {
 const menuItems: MenuItemType[] = [
     { title: 'Banner Ads', icon: 'image-outline', screen: 'BannerAds' },
     { title: 'Promote Store / Products / Posts', icon: 'storefront-outline', screen: 'PromoteStore' },
-    { title: 'Discount Coupons', icon: 'ticket-percent-outline', screen: 'DiscountCoupons' },
+    { title: 'Discount Coupons', icon: 'ticket-percent-outline', screen: 'CouponsScreen' },
     { title: 'Delivery Cashback Amount', icon: 'cash-refund', screen: 'DeliveryCashback' },
     { title: 'Send Notifications on svindo app', icon: 'bell-outline', screen: 'SendNotifications' },
   ];
