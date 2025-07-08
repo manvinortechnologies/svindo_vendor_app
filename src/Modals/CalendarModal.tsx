@@ -8,6 +8,7 @@ type Props = {
   initialDate?: string;
   onClose: () => void;
   onSelect: (date: string) => void;   // ← YYYY-MM-DD
+  minDate?:string;
 };
 
 export default function CalendarModal({
@@ -15,6 +16,7 @@ export default function CalendarModal({
   initialDate,
   onClose,
   onSelect,
+  minDate=new Date().toISOString().split('T')[0]
 }: Props) {
   return (
     <Modal visible={visible} transparent animationType="fade">
@@ -22,7 +24,8 @@ export default function CalendarModal({
         <Pressable style={s.card}>
           <Calendar
             current={initialDate}
-            minDate={new Date().toISOString().split('T')[0]} // disables all dates before today
+            
+            minDate={minDate} // disables all dates before today
             onDayPress={day => {
               onSelect(day.dateString); // ← already “YYYY‑MM‑DD”
               onClose();
