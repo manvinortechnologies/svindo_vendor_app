@@ -74,6 +74,7 @@ export enum HomeNavigation {
     PRODUCTSETTING="ProductSetting",
     STOREWORKING_HOURS="StoreWorkingHours",
     COUPONS_SCREEN="CouponsScreen",
+    EXPENESES_SCREEN="ExpensesScreen",
     CREATECOUPON="CreateCoupon",
     BUYERSREQUEST = "BuyersRequest",
   }

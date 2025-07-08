@@ -80,6 +80,7 @@ export type THomeNavigation = {
   [HomeNavigation.PRODUCTSETTING]:undefined;
   [HomeNavigation.STOREWORKING_HOURS]:undefined;
   [HomeNavigation.COUPONS_SCREEN]:undefined,
+  [HomeNavigation.EXPENESES_SCREEN]:undefined,
   [HomeNavigation.CREATECOUPON]:undefined,
   [HomeNavigation.BUYERSREQUEST]: undefined;
 };

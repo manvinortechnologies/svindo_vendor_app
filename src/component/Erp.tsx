@@ -40,6 +40,7 @@ type RootStackParamList = {
   DeliveryChallan: undefined;
   WebAppScreen: undefined;
   ProductSetting:undefined;
+  ExpensesScreen:undefined;
 };
 
 type MenuItemType = {
@@ -57,7 +58,7 @@ const menuItems: MenuItemType[] = [
   { title: 'Sale & POS', icon: 'cart-outline', screen: 'SalePOS' },
   { title: 'Purchase', icon: 'cart-arrow-down', screen: 'CreatePurchase' },
   { title: 'Barcode Generator', icon: 'barcode-scan', screen: 'Barcode' },
-  { title: 'Expenses', icon: 'file-document-outline', screen: 'Expenses' },
+  { title: 'Expenses', icon: 'file-document-outline', screen: 'ExpensesScreen' },
   { title: 'Reports', icon: 'file-chart-outline', screen: 'Reports' },
   { title: 'Bank Accounts', icon: 'bank-outline', screen: 'BankAccounts' },
   { title: 'Cash in-Hand', icon: 'cash-multiple', screen: 'CashInHand' },

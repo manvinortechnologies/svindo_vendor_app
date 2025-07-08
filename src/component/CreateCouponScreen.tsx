@@ -8,168 +8,465 @@ import {
   Switch,
   StyleSheet,
   Dimensions,
+  KeyboardAvoidingView,
+  Image,
+  Alert,
 } from 'react-native';
 import Header from './Header';
 import Headerwithback from './Headerwithback';
+import CustomSwitch from '../CommonComponent/CustomSwitch';
+import MainContainer from '../CommonComponent/MainContainer';
+import { Platform } from 'react-native';
+import Loading from '../CommonComponent/Loading';
+import ModalUpdatePhoto from '../Modals/ModalUpdatePhoto';
+import CalendarModal from '../Modals/CalendarModal';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { setPersistence } from '@react-native-firebase/auth';
+import { formatToISOString } from '../utils/dateandTime';
+import api from '../services/api/api';
 
 const { width } = Dimensions.get('window');
 
 const CreateCouponScreen = () => {
-  const [selectedType, setSelectedType] = useState<string>('Discount Coupon');
+  const [selectedType, setSelectedType] = useState<string>('discount');
   const [customerIdEnabled, setCustomerIdEnabled] = useState(false);
   const [onlyFollowers, setOnlyFollowers] = useState(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [discountAmount, setDiscountAmount] = useState<string>("");
+  const [discountPercentage, setDiscountPercentage] = useState<string>("");
+  const [minOrderAmmount, setMinOrderAmount] = useState<string>("");
+  const [maxOrderAmmount, setMaxOrderAmount] = useState<string>("");
+  const [valiDate, setValidDate] = useState<string>("");
+  const [valiTime, setValidTime] = useState<string>("");
+  const [startDate, setstartdDate] = useState<string>("");
+  const [startTime, setstartdTime] = useState<string>("");
+  const [code, setCode] = useState<string>("");
+  const [description, setDescription] = useState<string>("");
+  const [tittle, setTittle] = useState<string>("");
+  const [isActive, setIsActive] = useState<boolean>(true)
 
-  const couponTypes = ['Discount Coupon', 'No Return & Exchange', 'Online Pay'];
+  const [imageFile, setImageFile] = useState<any>();
+  const [imageUrl, setImageUrl] = useState('');
+  const [imagePickerModel, setImagePickerModel] = useState(false);
+  const [dsicounntType, setDiscountType] = useState<string>("amount")
+  const [startDateCallModel, setStartDateCallModel] = useState<boolean>(false)
+  const [endDateCallModel, setEndDateCallModel] = useState<boolean>(false)
+  const [startTimeCallModel, setStartTimeCallModel] = useState<boolean>(false)
+  const [endTimeCallModel, setEndTimeCallModel] = useState<boolean>(false)
 
+
+
+  const couponTypes = [{name:'Discount Coupon',id:"discount"}, {name:'No Return & Exchange',id:"noReturn"}, {name:'Online Pay',id:"online"}];
+
+  const handelCreateCoupan = async () => {
+    console.log("-------------");
+    
+    try {
+      setIsLoading(true)
+      const formData = new FormData();
+
+      formData.append('code', code);
+      formData.append('title', tittle);
+      formData.append('description', description);
+      formData.append('coupon_type', selectedType);
+      formData.append('type', dsicounntType);
+      formData.append('discount_percentage', discountPercentage);
+      formData.append('min_purchase', minOrderAmmount);
+      formData.append('max_discount', maxOrderAmmount);
+      formData.append('start_date', formatToISOString(startDate,startTime));
+      formData.append('end_date', formatToISOString(valiDate,valiTime));
+      formData.append('only_followers', onlyFollowers);  // Booleans must be strings
+      formData.append('is_active', isActive);       // Same here
+
+      // If you have an image file to include:
+      if (imageFile) {
+        formData.append('image', {
+          uri: imageFile.uri,
+          name: imageFile.name || "file.jpg",
+          type: imageFile.type || "image/jpeg",
+        });
+      }
+      console.log("formdata-->",formData)
+      const res=await api.post("vendor/coupon/",formData,{
+       headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+      console.log("res--->",res)
+      if(res.status==201){
+        Alert.alert("Success","Coupon code added successfully!")
+      }
+
+
+
+    } catch (error) {
+      console.log("error-->",error)
+
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  const onStartTimeChange = (event: any, selectedTime?: Date) => {
+    if (Platform.OS === 'android') {
+      setStartTimeCallModel(false);
+    }
+
+    if (selectedTime) {
+      const formatted = selectedTime.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      setstartdTime(formatted)
+    }
+  };
+  const onEndTimeChange = (event: any, selectedTime?: Date) => {
+    if (Platform.OS === 'android') {
+      setEndTimeCallModel(false);
+    }
+
+    if (selectedTime) {
+      const formatted = selectedTime.toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+
+      setValidTime(formatted)
+    }
+  };
   const renderForm = () => (
     <View style={styles.form}>
       {/* Discount Amount and Discount Percentage */}
-      <View style={{borderColor: '#727272', borderWidth: 1, paddingHorizontal: 8, borderRadius: 12}}>
-      <View style={styles.row}>
-      <View>
-        <Text style={styles.sectionTitle}>Discount Amount</Text>
-        <TextInput
-          placeholder="Enter here"
-          placeholderTextColor="#000"
-          style={styles.inputHalf}
-        />
-      </View>
+      <View style={{ borderColor: '#727272', borderWidth: 1, paddingHorizontal: 8, borderRadius: 12 }}>
         <View>
-          <Text style={styles.sectionTitle}>Discount Percentage</Text>
-        <TextInput
-          placeholder="Enter here"
-          placeholderTextColor="#000"
-          style={styles.inputHalf}
-        />
+          <Text style={styles.sectionTitle}>Code</Text>
+          <TextInput
+            placeholder="Make coupan code(COUP20)"
+            placeholderTextColor="#727272"
+            style={styles.inputFull}
+            value={code}
+            onChangeText={setCode}
+          />
         </View>
-      </View>
-      <Text style={{color: '#FCA311', marginTop: 10, marginBottom: 5, marginHorizontal: 10}}>Note: {'\n'} <Text style={{color: '#000'}}>Only one can be chosen.</Text></Text>
+        <View>
+          <Text style={styles.sectionTitle}>Tittle</Text>
+          <TextInput
+            placeholder="Enter Tittle"
+            placeholderTextColor="#727272"
+            style={styles.inputFull}
+            value={tittle}
+            onChangeText={setTittle}
+          />
+        </View>
+        <View>
+          <Text style={styles.sectionTitle}>Description</Text>
+          <TextInput
+            placeholder="Enter Description"
+            placeholderTextColor="#727272"
+            style={styles.inputFull}
+            value={description}
+            onChangeText={setDescription}
+          />
+        </View>
+        <View style={styles.row}>
+          <View>
+            <Text style={styles.sectionTitle}>Discount Amount</Text>
+            <TextInput
+              placeholder="Enter here"
+              placeholderTextColor="#727272"
+              style={styles.inputHalf}
+              value={discountAmount}
+              onChangeText={setDiscountAmount}
+              keyboardType='decimal-pad'
+              onFocus={()=>{setDiscountType("amount")
+                 setDiscountPercentage("")
+              }}
+            />
+          </View>
+          <View>
+            <Text style={styles.sectionTitle}>Discount Percentage</Text>
+            <TextInput
+              placeholder="Enter here"
+              placeholderTextColor="#727272"
+              style={styles.inputHalf}
+              value={discountPercentage}
+               keyboardType='decimal-pad'
+              onChangeText={setDiscountPercentage}
+              onFocus={()=>{setDiscountType("percent")
+
+                setDiscountAmount("")
+              }}
+            />
+          </View>
+        </View>
+        <Text style={{ color: '#FCA311', marginTop: 10, marginBottom: 5, marginHorizontal: 10 }}>Note: {'\n'} <Text style={{ color: '#000' }}>Only one can be chosen.</Text></Text>
       </View>
 
       {/* Min Order & Max Discount */}
-      <View style={{borderColor: '#727272', borderWidth: 1, paddingHorizontal: 8, borderRadius: 12, marginTop: 10, paddingVertical: 10}}>
-      <View style={styles.row}>
-        <View>
-      <Text style={styles.sectionTitle}>Mini Order Amount</Text>
-        <TextInput
-          placeholder="Enter here"
-          placeholderTextColor="#000"
-          style={styles.inputHalf}
-        />
+      <View style={{ borderColor: '#727272', borderWidth: 1, paddingHorizontal: 8, borderRadius: 12, marginTop: 10, paddingVertical: 10 }}>
+        <View style={styles.row}>
+          <View>
+            <Text style={styles.sectionTitle}>Mini Order Amount</Text>
+            <TextInput
+              placeholder="Enter here"
+              placeholderTextColor="#727272"
+              style={styles.inputHalf}
+              keyboardType='decimal-pad'
+              value={minOrderAmmount}
+              onChangeText={setMinOrderAmount}
+            />
+          </View>
+          <View><Text style={styles.sectionTitle}>Max Discount Amount</Text>
+            <TextInput
+              placeholder="Enter here"
+              placeholderTextColor="#727272"
+              style={styles.inputHalf}
+              keyboardType='decimal-pad'
+              value={maxOrderAmmount}
+              onChangeText={setMaxOrderAmount}
+            />
+          </View>
         </View>
-        <View><Text style={styles.sectionTitle}>Max Discount Amount</Text>
-        <TextInput
-          placeholder="Enter here"
-          placeholderTextColor="#000"
-          style={styles.inputHalf}
-        />
+        <View style={styles.row}>
+          <View>
+            <Text style={styles.sectionTitle}>Start date</Text>
+            <TouchableOpacity onPress={() => setStartDateCallModel(true)}>
+              <TextInput
+                placeholder="Date (YYYY-MM-DD))"
+                placeholderTextColor="#727272"
+                style={styles.inputHalf}
+                editable={false}
+                value={startDate}
+                pointerEvents="none" // Prevents interaction inside TextInput
+              />
+            </TouchableOpacity>
+          </View>
+          <View>
+            <Text style={styles.sectionTitle}></Text>
+            <TouchableOpacity onPress={() => setStartTimeCallModel(true)}>
+              <TextInput
+                placeholder="Time (HH:MM AM)"
+                placeholderTextColor="#727272"
+                style={styles.inputHalf}
+                editable={false}
+                value={startTime}
+                pointerEvents="none"
+              />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
 
-      {/* Validity Date and Time */}
-      <View style={styles.row}>
-        <View>
-      <Text style={styles.sectionTitle}>Validity till</Text>
-        <TextInput
-          placeholder="Date (DD/MM/YYYY)"
-          placeholderTextColor="#000"
-          style={styles.inputHalf}
-        />
+        {/* Validity Date and Time */}
+        <View style={styles.row}>
+          <View>
+            <Text style={styles.sectionTitle}>Validity till</Text>
+            <TouchableOpacity onPress={() => setEndDateCallModel(true)}>
+              <TextInput
+                placeholder="Date (YYYY-MM-DD)"
+                placeholderTextColor="#727272"
+                style={styles.inputHalf}
+                editable={false}
+                value={valiDate}
+                pointerEvents="none" // Ensures the press passes through to TouchableOpacity
+              />
+            </TouchableOpacity>
+          </View>
+          <View>
+            <Text style={styles.sectionTitle}></Text>
+            <TouchableOpacity onPress={() => setEndTimeCallModel(true)}>
+              <TextInput
+                placeholder="Time (HH:MM AM)"
+                placeholderTextColor="#727272"
+                style={styles.inputHalf}
+                editable={false}
+                value={valiTime}
+                pointerEvents="none"
+              />
+            </TouchableOpacity>
+          </View>
         </View>
-        <View>
-          <Text style={styles.sectionTitle}></Text>
-        <TextInput
-          placeholder="Time (HH:MM AM)"
-          placeholderTextColor="#000"
-          style={styles.inputHalf}
-        />
-        </View>
-      </View>
       </View>
 
       {/* Customer ID with toggle */}
-      <View style={{borderColor: '#727272', borderWidth: 1, paddingHorizontal: 8, borderRadius: 12, marginTop: 10, paddingVertical: 10}}>
-      <View style={styles.toggleRow}>
-        <Text style={styles.label}>Customer Id:</Text>
-        <Switch
-          value={customerIdEnabled}
-          onValueChange={setCustomerIdEnabled}
-          trackColor={{ false: '#ccc', true: '#FBBF24' }}
-          thumbColor={customerIdEnabled ? '#F59E0B' : '#f4f3f4'}
-        />
-      </View>
-      {customerIdEnabled && (
-        <TextInput
-          placeholder="Enter here"
-          placeholderTextColor="#000"
-          style={styles.inputFull}
-        />
-      )}
-      <Text style={{color: '#FCA311', marginTop: 10, marginBottom: 5, marginHorizontal: 10}}>Note: {'\n'} <Text style={{color: '#000'}}>If Customer id is entered then the offer will be valid for only that customer.</Text>
-      </Text>
+      <View style={{ borderColor: '#727272', borderWidth: 1, paddingHorizontal: 8, borderRadius: 12, marginTop: 10, paddingVertical: 10 }}>
+        <View style={styles.toggleRow}>
+          <Text style={styles.label}>Customer Id:</Text>
+
+          <CustomSwitch
+            value={customerIdEnabled}
+            onValueChange={setCustomerIdEnabled}
+            activeColor='#FBBF24'
+            inactiveColor='#ccc'
+          />
+        </View>
+        {customerIdEnabled && (
+          <TextInput
+            placeholder="Enter here"
+            placeholderTextColor="#727272"
+            style={styles.inputFull}
+          />
+        )}
+        <Text style={{ color: '#FCA311', marginTop: 10, marginBottom: 5, marginHorizontal: 10 }}>Note: {'\n'}<Text style={{ color: '#000' }}>If Customer id is entered then the offer will be valid for only that customer.</Text>
+        </Text>
       </View>
 
       {/* Only Followers with toggle */}
-      <View style={{borderColor: '#727272', borderWidth: 1, paddingHorizontal: 8, borderRadius: 12, marginTop: 10, paddingVertical: 10}}>
-      <View style={styles.toggleRow}>
-        <Text style={styles.label}>Only Followers</Text>
-        <Switch
-          value={onlyFollowers}
-          onValueChange={setOnlyFollowers}
-          trackColor={{ false: '#ccc', true: '#FBBF24' }}
-          thumbColor={onlyFollowers ? '#F59E0B' : '#f4f3f4'}
-        />
-      </View>
-      <Text style={{color: '#FCA311', marginTop: 10, marginBottom: 5, marginHorizontal: 10}}>Note: {'\n'} <Text style={{color: '#000'}}>If enabled only followers will be eligible for offers.</Text>
-      </Text>
-      </View>
+      <View style={{ borderColor: '#727272', borderWidth: 1, paddingHorizontal: 8, borderRadius: 12, marginTop: 10, paddingVertical: 10 }}>
+        <View style={styles.toggleRow}>
+          <Text style={styles.label}>Only Followers</Text>
 
+          <CustomSwitch
+            onValueChange={setOnlyFollowers}
+            value={onlyFollowers}
+            activeColor='#FBBF24'
+            inactiveColor='#ccc'
+          />
+        </View>
+        <Text style={{ color: '#FCA311', marginTop: 10, marginBottom: 5, marginHorizontal: 10 }}>Note: {'\n'}<Text style={{ color: '#000' }}>If enabled only followers will be eligible for offers.</Text>
+        </Text>
+      </View>
+      <View style={{ borderColor: '#727272', borderWidth: 1, paddingHorizontal: 8, borderRadius: 12, marginTop: 10, paddingVertical: 10 }}>
+        <View style={styles.toggleRow}>
+          <Text style={styles.label}>Active</Text>
+
+          <CustomSwitch
+            onValueChange={setIsActive}
+            value={isActive}
+            activeColor='#FBBF24'
+            inactiveColor='#ccc'
+          />
+        </View>
+        <Text style={{ color: '#FCA311', marginTop: 10, marginBottom: 5, marginHorizontal: 10 }}>Note: {'\n'}<Text style={{ color: '#000' }}>If enabled so your coupon is active.</Text>
+        </Text>
+      </View>
+      <View style={{ borderColor: '#727272', borderWidth: 1, paddingHorizontal: 8, borderRadius: 12, marginTop: 10, paddingVertical: 10 }}>
+
+        <View style={styles.toggleRow}>
+          <Text style={styles.label}>Upload Coupon Image </Text>
+
+
+        </View>
+        <TouchableOpacity
+          onPress={() => setImagePickerModel(true)}
+          style={[styles.submitButton, { width: "50%", alignSelf: 'center', backgroundColor: '#FBBF24' }]}>
+          <Text style={styles.submitText}>Upload Image</Text>
+        </TouchableOpacity>
+        {imageUrl && (
+          <Image
+            source={{ uri: imageUrl }}
+            style={{ width: 200, height: 80, resizeMode: "contain", alignSelf: 'center' }}
+          />
+        )}
+      </View>
+      <ModalUpdatePhoto
+        isVisible={imagePickerModel}
+        onClose={() => setImagePickerModel(false)}
+        onSelectedFile={(file: any) => {
+          setImageFile(file);
+          setImageUrl(file.uri);
+        }}
+        onChange={(image) => console.log('Full crop picker image:', image)}
+      />
+      <CalendarModal
+        visible={startDateCallModel}
+        initialDate={startDate}
+        onClose={() => setStartDateCallModel(false)}
+        onSelect={setstartdDate}
+      />
+      <CalendarModal
+        visible={endDateCallModel}
+        initialDate={valiDate}
+        onClose={() => setEndDateCallModel(false)}
+        onSelect={setValidDate}
+      />
+      {startTimeCallModel && (
+        <DateTimePicker
+          value={new Date()}
+          mode="time"
+          is24Hour={false}
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={onStartTimeChange}
+        />
+      )}
+      {endTimeCallModel && (
+        <DateTimePicker
+          value={new Date()}
+          mode="time"
+          is24Hour={false}
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={onEndTimeChange}
+        />
+      )}
       {/* Submit */}
-      <TouchableOpacity style={styles.submitButton}>
+      <TouchableOpacity style={styles.submitButton}
+        onPress={() => { handelCreateCoupan() }}
+      >
         <Text style={styles.submitText}>Submit</Text>
       </TouchableOpacity>
     </View>
   );
 
+
   return (
-    <FlatList
-      data={['form']}
-      keyExtractor={(item, index) => index.toString()}
-      ListHeaderComponent={
-        <>
-          {/* Header */}
-          
-         <Headerwithback title={'Create Coupon'} />
-         
+    <MainContainer>
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : "height"}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0} // Adjust if header overlaps input
+      >
 
+        <FlatList
+          data={['form']}
+          keyExtractor={(item, index) => index.toString()}
+          keyboardShouldPersistTaps="handled"
+          ListHeaderComponent={
+            <>
+              {/* Header */}
+              <Headerwithback title={'Create Coupon'} />
 
-          {/* Coupon Types */}
-          <Text style={{color: '#727272', fontWeight: '600',marginHorizontal: 20, marginVertical: 10}}>Types</Text>
-          <View style={styles.typeContainer}>
-            {couponTypes.map((type) => (
-              <TouchableOpacity
-                key={type}
-                onPress={() => setSelectedType(type)}
-                style={[
-                  styles.typeButton,
-                  selectedType === type && styles.typeButtonSelected,
-                ]}
+              {/* Coupon Types */}
+              <Text
+                style={{
+                  color: '#727272',
+                  fontWeight: '600',
+                  marginHorizontal: 20,
+                  marginVertical: 10,
+                }}
               >
-                <Text
-                  style={[
-                    styles.typeText,
-                    selectedType === type && styles.typeTextSelected,
-                  ]}
-                >
-                  {type}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </>
-      }
-      renderItem={() => renderForm()}
-    />
+                Types
+              </Text>
+              <View style={styles.typeContainer}>
+                {couponTypes.map((type) => (
+                  <TouchableOpacity
+                    key={type.id}
+                    onPress={() => setSelectedType(type.id)}
+                    style={[
+                      styles.typeButton,
+                      selectedType === type.id && styles.typeButtonSelected,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.typeText,
+                        selectedType === type.id && styles.typeTextSelected,
+                      ]}
+                    >
+                      {type.name}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </>
+          }
+          renderItem={() => renderForm()}
+        />
+        <Loading
+          visible={isLoading}
+        />
+
+      </KeyboardAvoidingView>
+    </MainContainer>
+
   );
 };
 
@@ -182,7 +479,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 10,
     backgroundColor: '#fff'
-    
+
   },
   typeButton: {
     borderColor: '#FBBF24',
@@ -223,7 +520,8 @@ const styles = StyleSheet.create({
     marginTop: 6,
     width: width / 2 - 30,
     borderColor: '#FCA311',
-    borderWidth: 1
+    borderWidth: 1,
+    color: "#000"
   },
   inputFull: {
     backgroundColor: '#FFEFD5',

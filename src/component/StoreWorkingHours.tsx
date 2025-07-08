@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,16 @@ import {
   ScrollView,
   TouchableOpacity,
   Platform,
+  Alert,
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import MainContainer from '../CommonComponent/MainContainer';
 import Headerwithback from './Headerwithback';
 import CustomButton from '../CommonComponent/CustomeButton';
 import CustomSwitch from '../CommonComponent/CustomSwitch';
+import { convert24To12Hour, convertTo24Hour } from '../utils/dateandTime';
+import Loading from '../CommonComponent/Loading';
+import api from '../services/api/api';
 
 const daysOfWeek = [
   'Sunday',
@@ -44,9 +48,47 @@ const StoreWorkingHours = () => {
     field: null,
     show: false,
   });
+  const [isLoading, setIsLoading] = useState<boolean>(false)
 
   const showTimePicker = (day: string, field: 'openTime' | 'closeTime') => {
     setTimePicker({ day, field, show: true });
+  };
+  useEffect(() => {
+    fetchWorkingData();
+  }, [])
+
+  const fetchWorkingData = async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.get("vendor/store-working-hour/");
+      if (res.data.length > 0) {
+        const workingHours = transformWorkingHoursFromBE(res.data);
+        console.log("datttaaaa->", workingHours)
+        setHours(workingHours);
+      }
+
+    } catch (error) {
+
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  const transformWorkingHoursFromBE = (data: any[]) => {
+    const formatted: {
+      [key: string]: { isOpen: boolean; openTime: string; closeTime: string };
+    } = {};
+
+    data.forEach(item => {
+      const dayKey = item.day.charAt(0).toUpperCase() + item.day.slice(1); // "sunday" → "Sunday"
+
+      formatted[dayKey] = {
+        isOpen: item.is_open,
+        openTime: convert24To12Hour(item.open_time),
+        closeTime: convert24To12Hour(item.close_time),
+      };
+    });
+
+    return formatted;
   };
 
   const onTimeChange = (event: any, selectedTime?: Date) => {
@@ -80,8 +122,32 @@ const StoreWorkingHours = () => {
     }));
   };
 
-  const handleSubmit = () => {
-    console.log('Saved Hours:', hours);
+  const handleSubmit = async () => {
+    try {
+      setIsLoading(true)
+      const payload = Object.entries(hours).map(([day, value]) => ({
+        day: day.toLowerCase(),
+        open_time: convertTo24Hour(value.openTime),
+        close_time: convertTo24Hour(value.closeTime),
+        is_open: value.isOpen,
+      }));
+
+      console.log('Payload:', payload);
+      const res = await api.post("vendor/store-working-hour/bulk/", payload)
+      console.log("res-->", res)
+      if (res.status == 201) {
+        Alert.alert("Success", "Store timing has been successfully updated.")
+      }
+    } catch (error) {
+
+    } finally {
+      setIsLoading(false)
+    }
+
+
+    // Send payload to backend
+
+
     // Add your API call here
   };
 
@@ -134,6 +200,9 @@ const StoreWorkingHours = () => {
 
           <CustomButton title="SAVE" onPress={handleSubmit} />
         </ScrollView>
+        <Loading
+          visible={isLoading}
+        />
 
         {/* Time Picker */}
         {timePicker.show && (
@@ -194,13 +263,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#000',
     marginRight: 10,
-    fontWeight:"400"
+    fontWeight: "400"
   },
   timeRow: {
     flexDirection: 'row',
     marginTop: 10,
     alignItems: 'center',
-    width:"60%"
+    width: "60%"
   },
   timeBox: {
     flex: 1,
@@ -213,8 +282,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     justifyContent: 'space-between',
-    backgroundColor:"#FFEBCB"
-    
+    backgroundColor: "#FFEBCB"
+
   },
   timeText: {
     fontSize: 14,
