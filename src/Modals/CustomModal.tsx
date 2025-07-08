@@ -8,6 +8,7 @@ import {
   Dimensions,
   ViewStyle,
   StyleProp,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons'; // Or any icon lib
 
@@ -28,6 +29,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
 }) => {
   return (
     <Modal transparent visible={visible} animationType="slide">
+        <TouchableWithoutFeedback onPress={onClose}>
       <View style={styles.overlay}>
         <View style={[styles.modalContainer, modalStyle]}>
           <TouchableOpacity onPress={onClose} style={styles.closeIcon}>
@@ -37,6 +39,7 @@ const CustomModal: React.FC<CustomModalProps> = ({
           {children}
         </View>
       </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };

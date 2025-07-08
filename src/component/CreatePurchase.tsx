@@ -8,6 +8,7 @@ import {
   ScrollView,
   Platform,
   StatusBar,
+  Keyboard,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Feather from 'react-native-vector-icons/Feather';
@@ -16,12 +17,20 @@ import Loading from '../CommonComponent/Loading';
 import api from '../services/api/api';
 import { Vendor } from '../type/Vendor';
 import VendorModal from '../Modals/VendorModal';
+import CustomModal from '../Modals/CustomModal';
+import CustomTextInput from '../CommonComponent/CustomeTextInput';
+import CalendarModal from '../Modals/CalendarModal';
+import CustomButton from '../CommonComponent/CustomeButton';
 
 const CreatePurchase = ({navigation}:any) => {
   const [isLoading,setIsLoading]= useState<boolean>(false)
  const [isVendorModalVisible, setIsVendorModalVisible] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [allVendorList,setAllVendorList] = useState<Vendor[]>();
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+const [purchasecode, setpurchasecode] = useState('');
+const [purchaseDate, setpurchaseDate] = useState('');
+const [openCallenderModel,setOpenCallenderModel]=useState<boolean>(false)
   const handleSearch = () => {
     // Handle search action
   };
@@ -72,10 +81,12 @@ const CreatePurchase = ({navigation}:any) => {
           <View style={styles.rowBetween}>
             <View>
               <Text style={styles.label}>Purchase</Text>
-              <Text style={styles.value}>PINV-1</Text>
-              <Text style={styles.subtext}>14-02-2025</Text>
+              <Text style={styles.value}>{purchasecode}</Text>
+              <Text style={styles.subtext}>{purchaseDate}</Text>
             </View>
-            <TouchableOpacity><Text style={styles.editText}>Edit</Text></TouchableOpacity>
+            <TouchableOpacity 
+            onPress={()=>{setIsEditModalVisible(true)}}
+            ><Text style={styles.editText}>Edit</Text></TouchableOpacity>
           </View>
         </View>
 
@@ -93,14 +104,14 @@ const CreatePurchase = ({navigation}:any) => {
             <Text style={styles.selectorText}>+ Select Products</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.customFieldButton}>
+          {/* <TouchableOpacity style={styles.customFieldButton}>
             <View>
             
             <Text style={styles.customFieldText}>Add Custom Fields</Text>
             <Text style={styles.customsubText}>Persolize to perfectly suit your style</Text>
             </View>
             <Icon name="headphones" size={18} color="#fff" style={{ marginLeft: 8 }} />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {/* Supplier Invoice */}
@@ -160,6 +171,44 @@ const CreatePurchase = ({navigation}:any) => {
       />
         <Loading
         visible={isLoading}
+        />
+        <CustomModal
+        visible={isEditModalVisible}
+        onClose={()=>{setIsEditModalVisible(false)}}
+        children={
+          <>
+          <CustomTextInput
+          value={purchasecode}
+          onChangeText={setpurchasecode}
+          placeholder='Enter Purchase code'
+          autoCapitalize='characters'
+          />
+          <TouchableOpacity style={{marginTop:20}} onPress={()=>{setOpenCallenderModel(true)}}>
+             <CustomTextInput
+          value={purchaseDate}
+          placeholder='Select Purchase Date'
+          editable={false}
+          />
+          </TouchableOpacity>
+         <CalendarModal
+                  visible={openCallenderModel}
+                  initialDate={purchaseDate}
+                  onClose={() => setOpenCallenderModel(false)}
+                  onSelect={(e) => {
+                    console.log(e)
+                    setpurchaseDate(e)
+        
+                  }}
+                />
+                <CustomButton
+                containerStyle={{marginTop:20}}
+                title='Done'
+                onPress={()=>{
+                  setIsEditModalVisible(false)}}
+                />
+          
+          </>
+        }
         />
       </ScrollView>
     </View>
