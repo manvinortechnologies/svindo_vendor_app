@@ -77,5 +77,7 @@ export enum HomeNavigation {
     EXPENESES_SCREEN="ExpensesScreen",
     CREATECOUPON="CreateCoupon",
     BUYERSREQUEST = "BuyersRequest",
+    CREATEREQUEST = "CreateRequest",
+    CREATEOFFER = "CreateOffer",
   }
   

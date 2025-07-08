@@ -83,6 +83,8 @@ export type THomeNavigation = {
   [HomeNavigation.EXPENESES_SCREEN]:undefined,
   [HomeNavigation.CREATECOUPON]:undefined,
   [HomeNavigation.BUYERSREQUEST]: undefined;
+  [HomeNavigation.CREATEREQUEST]:undefined;
+  [HomeNavigation.CREATEOFFER]:undefined;
 };
 
 
