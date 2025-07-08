@@ -5,6 +5,8 @@ import Icons from "react-native-vector-icons/FontAwesome";
 
 import Bottomnavigation from "./Bottomnavigation";
 import NavigationButton from "./NavigationButton";
+import CustomSwitch from "./CustomSwitch";
+import RequestFromBuyers from "../CommonComponent/RequestFromBuyers";
 NavigationButton
 
 const screenWidth = Dimensions.get("window").width - 20;
@@ -51,7 +53,9 @@ const getFilteredProducts = (type: string) => {
 };
 
 
+
 const StatisticsScreen = () => {
+  const [deliveryDiscountEnabled, setDeliveryDiscountEnabled] = useState(true);
     const [selectedFilter, setSelectedFilter] = useState("Today");
   const filters = ["Today", "This Week", "This Month", "This Year"];
 
@@ -59,20 +63,24 @@ const StatisticsScreen = () => {
     <View style={styles.container}>
          <View style={styles.header}>
       <View style={styles.headerleft}>
-        <Icon name="shopping" size={24} color="#000" />
+        <Image
+        source={require('../assets/Logo_Icon.png')}
+        style={{ width: 28, height: 36, marginTop: 5, marginHorizontal: 10 }}
+        />
         <View style={styles.titlecontent}>
         <Text style={styles.headerTitle}>Business Name</Text>
-        <Text style={styles.subTitle}>Business Name</Text>
+        <Text style={styles.subTitle}>ID: 12345678</Text>
         </View>
         </View>
         <View style={styles.headerRight}>
-          <Icon name="toggle-switch" size={24} color="green" />
-          <Icon name="bell" size={24} color="red" style={styles.notificationIcon} />
+          <CustomSwitch value={deliveryDiscountEnabled}
+              onValueChange={setDeliveryDiscountEnabled} />
+          <Icon name="bell-outline" size={28} color="#000" style={styles.notificationIcon} />
         </View>
       </View>
     <ScrollView >
      
-      
+      <RequestFromBuyers />
     <View style={styles.titleRow}>
         <Text style={styles.title}>Statistics</Text>
         <TouchableOpacity style={styles.filterButton}>
@@ -112,6 +120,15 @@ const StatisticsScreen = () => {
           </View>
         ))}
       </View>
+
+      {/* Day Book */}
+      <TouchableOpacity style={{flexDirection: 'row',justifyContent: 'space-between', alignItems: 'center', padding: 10, borderWidth: 1, borderColor: '#BCBCBC', borderRadius: 10, marginVertical: 10}}>
+        <View style={{flexDirection: 'row', gap: 10}}>
+          <Icon name="book-open-variant" size={20} color="#000"/>
+          <Text style={{color: '#000', fontWeight: '600'}}>Day Book</Text>
+        </View>
+        <Icon name="chevron-right" size={20} color="#000" />
+      </TouchableOpacity>
       
       <View style={styles.insightsContainer}>
         <Text style={styles.insightsTitle}>Store Insights</Text>
@@ -222,15 +239,21 @@ const StatisticsScreen = () => {
                
     </ScrollView>
     <View style={styles.floatingButtons}>
+       <TouchableOpacity style={styles.addButtonRed}>
+          <Icon name="file-document-outline" size={18} color="#000" />
+          <Text style={styles.buttonText}> + Expense</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.paymentButtonBlue}>
+          <Icon name="file-document-outline" size={18} color="#000" />
+          <Text style={styles.buttonBlue}> Payments</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity style={styles.addButtonGreen}>
-          <Icon name="plus" size={18} color="#000" />
+          <Icon name="cart-outline" size={18} color="#000" />
          
           <Text style={styles.buttongreen}> <NavigationButton screen="DraftScreen" label="+ New Sale"  color="#00630F" fontSize={12} fontWeight="bold"/></Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.addButtonRed}>
-          <Icon name="minus" size={18} color="#000" />
-          <Text style={styles.buttonText}> + Expense</Text>
-        </TouchableOpacity>
+        
       </View>
       <Bottomnavigation/>
       </View>
@@ -284,8 +307,11 @@ const styles = StyleSheet.create({
      selectedFilter:{},
   filterButton: { flexDirection: "row", alignItems: "center", paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderRadius: 5, borderColor: "#ccc" },
   filterText: { fontSize: 16, marginRight: 5 },
-  floatingButtons: { position: "absolute", top: "60%", right: 20,
-     flexDirection: "column", gap: 10 },
+  floatingButtons: {
+     position: "absolute",
+      top: "60%", right: 20,
+     flexDirection: "row",
+      gap: 20 },
   viewall:{ fontSize:16,},
   categoryTitlesection:{flexDirection:"row", justifyContent:"space-between"},
   addButtonGreen: {
@@ -307,6 +333,16 @@ const styles = StyleSheet.create({
     paddingVertical:4,
     borderWidth:1,
     borderColor:"#AA0000",
+  },
+  paymentButtonBlue: {
+    backgroundColor: '#E5EEFF',
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 10,
+    borderRadius: 5,
+    paddingVertical:4,
+    borderWidth:1,
+    borderColor: '#163881'
   },
   section: { marginVertical: 10 },
   sectionTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 10 },
@@ -345,6 +381,9 @@ const styles = StyleSheet.create({
     productDescription: { fontSize: 12, textAlign: "left", color: "#555", marginHorizontal:5,},
     productPrice: { fontSize: 14, fontWeight: "bold", textAlign: "right", color: "#FCA311" },
   buttonText: { color: "#AA0000", marginLeft: 5, fontWeight: "bold" },
+  buttonBlue: {
+    color: '#163881', marginLeft: 5, fontWeight: "bold"
+  },
   buttongreen: { color: "#00630F", marginLeft: 5, fontWeight: "bold" },
   insightsContainer: { marginTop: 20 },
   insightsTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
@@ -375,7 +414,7 @@ activityTextContainer: { flex: 1, flexDirection:'row' },
 userid: { fontSize: 14, fontWeight: "bold" },
 comment: { fontSize: 14, color: "#555", paddingHorizontal:5,fontWeight: "bold",},
 activityImage: { width: 40, height: 40, borderRadius: 20, marginLeft: 10 },
-notificationtext:{fontSize:14, paddingHorizontal:10,},
+notificationtext:{fontSize:12, paddingHorizontal:10, marginRight: 10},
 datesection:{alignItems:"flex-end",justifyContent:"flex-end"},
 
 notificationcontain:{

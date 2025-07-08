@@ -10,6 +10,7 @@ type RootStackParamList = {
   CompanyProfile: undefined;
   UserProfile: undefined;
   ManageCompanies: undefined;
+  DayBookScreen: undefined;
   SalePOS: undefined;
   CreatePurchase: undefined;
   Barcode: undefined;
@@ -53,6 +54,7 @@ const menuItems: MenuItemType[] = [
   { title: 'Company Profile', icon: 'office-building-outline', screen: 'CompanyProfile' },
   { title: 'User Profile', icon: 'account-outline', screen: 'UserProfile' },
   { title: 'Manage Companies', icon: 'account-group-outline', screen: 'ManageCompanies' },
+  { title: 'Day Book', icon: 'book-open-variant', screen: 'DayBookScreen'},
   { title: 'Sale & POS', icon: 'cart-outline', screen: 'SalePOS' },
   { title: 'Purchase', icon: 'cart-arrow-down', screen: 'CreatePurchase' },
   { title: 'Barcode Generator', icon: 'barcode-scan', screen: 'Barcode' },

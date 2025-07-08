@@ -82,6 +82,7 @@ import CouponsScreen from '../component/CouponsScreen';
 import ExpensesScreen from '../component/ExpensesScreen';
 import CreateCouponScreen from '../component/CreateCouponScreen';
 import AddPostScreen from '../component/AddPostScreen';
+import BuyersRequestScreen from '../component/BuyersRequestScreen';
 
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
@@ -170,6 +171,7 @@ const AppNavigation = () => {
                 <Stack.Screen name={HomeNavigation.EXPENESES_SCREEN} component={ExpensesScreen} />
                 <Stack.Screen name={HomeNavigation.CREATECOUPON} component={CreateCouponScreen} />
                 <Stack.Screen name={HomeNavigation.ADD_POST_SCREEN} component={AddPostScreen} />
+                <Stack.Screen name={HomeNavigation.BUYERSREQUEST} component={BuyersRequestScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );
