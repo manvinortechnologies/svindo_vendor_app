@@ -23,6 +23,8 @@ import CalendarModal from '../Modals/CalendarModal';
 import CustomButton from '../CommonComponent/CustomeButton';
 
 const CreatePurchase = ({navigation}:any) => {
+  const [selectedPayment, setSelectedPayment] = useState('Credit');
+  const [selectedAdvanceType, setSelectedAdvanceType] = useState('');
   const [isLoading,setIsLoading]= useState<boolean>(false)
  const [isVendorModalVisible, setIsVendorModalVisible] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
@@ -70,7 +72,7 @@ const [openCallenderModel,setOpenCallenderModel]=useState<boolean>(false)
         //   <Icon name="search" size={20} color="#000" />
         // </TouchableOpacity>,
          <TouchableOpacity onPress={handleSearch} key="search">
-         <Icon name="youtube" size={20} color="#000" />
+         <Icon name="file-document-outline" size={20} color="#FCA311" />
        </TouchableOpacity>,
       ]}
     />
@@ -80,9 +82,9 @@ const [openCallenderModel,setOpenCallenderModel]=useState<boolean>(false)
         <View style={styles.section}>
           <View style={styles.rowBetween}>
             <View>
-              <Text style={styles.label}>Purchase</Text>
+              <Text style={{color: '#777777'}}>Purchase</Text>
               <Text style={styles.value}>{purchasecode}</Text>
-              <Text style={styles.subtext}>{purchaseDate}</Text>
+              <Text style={{color: '#777777', marginTop: 2}}>{purchaseDate}</Text>
             </View>
             <TouchableOpacity 
             onPress={()=>{setIsEditModalVisible(true)}}
@@ -135,6 +137,7 @@ const [openCallenderModel,setOpenCallenderModel]=useState<boolean>(false)
               <Text style={styles.linkText}>+ Additional Charges</Text>
             </TouchableOpacity>
           </View>
+
         <View style={styles.section}>
          
 
@@ -162,6 +165,85 @@ const [openCallenderModel,setOpenCallenderModel]=useState<boolean>(false)
             </TouchableOpacity>
           ))}
         </View>
+
+        {/* Last Box Container */}
+        <View style={{padding: 10, borderWidth: 1, borderColor: '#D9D9D9', borderRadius: 15}}>
+      {/* Discount Row */}
+      <View style={styles.row}>
+        <Text style={[styles.label, {marginRight: 15}]}>Discount</Text>
+        <View style={styles.inputGroup}>
+          <TouchableOpacity style={styles.optionButton}>
+            <Text style={styles.optionText}>%</Text>
+          </TouchableOpacity>
+          <TextInput placeholder="0" style={styles.input} keyboardType="numeric" />
+        </View>
+      </View>
+
+      {/* Payment Row */}
+      <View style={styles.row}>
+        <Text style={[styles.label, {marginRight: 20}]}>Payment</Text>
+        <View style={styles.optionsRow}>
+          {['UPI', 'Card', 'Cash', 'Credit'].map((method) => (
+            <TouchableOpacity
+              key={method}
+              style={[
+                styles.optionButton,
+                selectedPayment === method && styles.selectedButton
+              ]}
+              onPress={() => setSelectedPayment(method)}
+            >
+              <Text
+                style={[
+                  styles.optionText,
+                  selectedPayment === method && styles.selectedText
+                ]}
+              >
+                {method}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* Advance Row */}
+      <View style={styles.row}>
+        <Text style={[styles.label, {marginRight: 15}]}>Advance</Text>
+        <View style={styles.inputGroup}>
+          <TextInput placeholder="Amount" style={styles.input} keyboardType="numeric" />
+          {['Bank', 'Cash'].map((type) => (
+            <TouchableOpacity
+              key={type}
+              style={[
+                styles.optionButton,
+                selectedAdvanceType === type && styles.selectedButton
+              ]}
+              onPress={() => setSelectedAdvanceType(type)}
+            >
+              <Text
+                style={[
+                  styles.optionText,
+                  selectedAdvanceType === type && styles.selectedText
+                ]}
+              >
+                {type}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
+      {/* Due Date Row */}
+      <View style={styles.row}>
+        <Text style={[styles.label, {marginRight: 15}]}>Due Date</Text>
+        <TextInput placeholder="DD/MM/YYYY" style={styles.inputFull} />
+      </View>
+        </View>
+
+       {/* Procced Button  */}
+        <TouchableOpacity style={{width: '40%', alignSelf: 'center', padding: 10, backgroundColor: '#FCA311', marginVertical: 15, alignItems: 'center', borderRadius: 15}}>
+          <Text style={{color: '#fff', fontWeight: '600'}}>Procced</Text>
+        </TouchableOpacity>
+
          <VendorModal
         visible={isVendorModalVisible}
         vendors={allVendorList}
@@ -257,7 +339,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   selector: {
-    backgroundColor: '#FFF1D6',
+    backgroundColor: '#FFF6E9',
     borderRadius: 6,
     padding: 12,
     marginBottom: 12,
@@ -315,7 +397,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderColor: '#eee',
+    borderColor: '#DEDEDE',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
@@ -326,10 +408,70 @@ const styles = StyleSheet.create({
   },
   optionText: {
     marginLeft: 10,
-    color: '#333',
+    color: '#000',
+    fontWeight: '500'
   },
   subOptionText: {
     fontWeight: 'bold',
+    fontSize: 13,
+
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    flexWrap: 'wrap',
+  },
+  inputGroup: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    alignItems: 'center',
+    flex: 1,
+    marginLeft: 10
+  },
+  optionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    flex: 1,
+  },
+  optionButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    backgroundColor: '#fff',
+    marginRight: 6,
+    marginTop: 6,
+    fontWeight: '500'
+  },
+  
+  selectedButton: {
+    backgroundColor: '#FCA311',
+    borderColor: '#FCA311',
+  },
+  selectedText: {
+    color: '#fff',
+    fontWeight: '600',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    width: 60,
+    fontSize: 13,
+  },
+  inputFull: {
+  width: '30%',
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     fontSize: 13,
   },
 });
