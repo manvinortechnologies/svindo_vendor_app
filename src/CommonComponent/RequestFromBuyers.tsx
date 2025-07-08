@@ -8,6 +8,24 @@ import {
   Dimensions,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp, useNavigation } from '@react-navigation/native';
+import { HomeNavigation } from '../constants/app-routes.constants';
+
+type RootStackParamList = {
+  BuyersRequest: undefined;
+  
+};
+
+type BuyersRequestNavProp = NativeStackNavigationProp<
+  RootStackParamList,
+  'BuyersRequest'
+>;
+
+type BuyersRequestProps = {
+  navigation: BuyersRequestNavProp;
+  route: RouteProp<RootStackParamList, 'BuyersRequest'>;
+};
 
 const { width } = Dimensions.get('window');
 
@@ -28,7 +46,9 @@ const requests = [
   },
 ];
 
-const RequestFromBuyers = () => {
+const RequestFromBuyers: React.FC = () => {
+  const navigation = useNavigation<BuyersRequestNavProp>();
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -37,7 +57,6 @@ const RequestFromBuyers = () => {
           <Text style={styles.countText}>100+ </Text>
           Request from Buyers
         </Text>
-        
       </View>
 
       {/* Request List */}
@@ -50,24 +69,30 @@ const RequestFromBuyers = () => {
               <Text style={styles.productName}>{item.name}</Text>
               <View>
                 <Text style={styles.productName}>Category</Text>
-              <Text style={styles.category}>{item.category}</Text>
+                <Text style={styles.category}>{item.category}</Text>
               </View>
             </View>
             <Text style={styles.description}>{item.description}</Text>
             <Text style={styles.budget}>Budget - {item.budget}</Text>
           </View>
         )}
-        scrollEnabled={false} // since it's inside a scroll view or screen
+        scrollEnabled={false}
       />
-      <TouchableOpacity style={styles.viewAll}>
-          <Text style={styles.viewAllText}>View all</Text>
-          <Icon name="chevron-right" size={18} color="#000" />
-        </TouchableOpacity>
+
+      {/* View All Button */}
+      <TouchableOpacity
+        style={styles.viewAll}
+        onPress={() => navigation.navigate(HomeNavigation.BUYERSREQUEST)}
+      >
+        <Text style={styles.viewAllText}>View all</Text>
+        <Icon name="chevron-right" size={18} color="#000" />
+      </TouchableOpacity>
     </View>
   );
 };
 
 export default RequestFromBuyers;
+
 
 const styles = StyleSheet.create({
   container: {
