@@ -52,3 +52,33 @@ export const convert24To12Hour = (time: string): string => {
 
   return `${hour.toString().padStart(2, '0')}:${minuteStr} ${ampm}`;
 };
+
+export function formatToISOString(dateStr: string, timeStr: string): string {
+  // Clean up any weird Unicode spaces (e.g. \u202F)
+  const cleanedTime = timeStr
+    .replace(/[\u202F\u00A0]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+
+  const [hourMin, meridian] = cleanedTime.split(' ');
+  const [hourStr, minStr] = hourMin.split(':');
+  let hour = parseInt(hourStr, 10);
+  const minute = parseInt(minStr, 10);
+
+  if (isNaN(hour) || isNaN(minute) || (meridian !== 'am' && meridian !== 'pm')) {
+    throw new Error('Invalid time format');
+  }
+
+  // Convert to 24-hour time
+  if (meridian === 'pm' && hour !== 12) hour += 12;
+  if (meridian === 'am' && hour === 12) hour = 0;
+
+  // Construct UTC ISO string manually
+  const isoString = new Date(`${dateStr}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00Z`).toISOString();
+
+
+
+  // Return ISO format without milliseconds
+  return isoString.replace('.000', '');
+}
