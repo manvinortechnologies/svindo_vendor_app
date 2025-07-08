@@ -48,7 +48,10 @@ const RequestFromBuyers = () => {
           <View style={styles.card}>
             <View style={styles.cardRow}>
               <Text style={styles.productName}>{item.name}</Text>
+              <View>
+                <Text style={styles.productName}>Category</Text>
               <Text style={styles.category}>{item.category}</Text>
+              </View>
             </View>
             <Text style={styles.description}>{item.description}</Text>
             <Text style={styles.budget}>Budget - {item.budget}</Text>
@@ -110,7 +113,6 @@ const styles = StyleSheet.create({
   cardRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 4,
   },
   productName: {
     fontWeight: '600',
