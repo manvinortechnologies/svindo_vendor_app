@@ -82,6 +82,7 @@ export type THomeNavigation = {
   [HomeNavigation.COUPONS_SCREEN]:undefined,
   [HomeNavigation.EXPENESES_SCREEN]:undefined,
   [HomeNavigation.CREATECOUPON]:undefined,
+  [HomeNavigation.ADD_POST_SCREEN]:undefined,
 };
 
 

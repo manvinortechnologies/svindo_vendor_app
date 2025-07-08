@@ -76,5 +76,6 @@ export enum HomeNavigation {
     COUPONS_SCREEN="CouponsScreen",
     EXPENESES_SCREEN="ExpensesScreen",
     CREATECOUPON="CreateCoupon",
+    ADD_POST_SCREEN="AddPostScreen"
   }
   
