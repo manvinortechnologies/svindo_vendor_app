@@ -56,7 +56,7 @@ const CreateCouponScreen = () => {
 
 
 
-  const couponTypes = [{name:'Discount Coupon',id:"discount"}, {name:'No Return & Exchange',id:"noReturn"}, {name:'Online Pay',id:"online"}];
+  const couponTypes = [{name:'Discount Coupon',id:"discount"}, {name:'No Return & Exchange',id:"no_return"}, {name:'Online Pay',id:"online_pay"}];
 
   const handelCreateCoupan = async () => {
     console.log("-------------");
@@ -71,6 +71,7 @@ const CreateCouponScreen = () => {
       formData.append('coupon_type', selectedType);
       formData.append('type', dsicounntType);
       formData.append('discount_percentage', discountPercentage);
+      formData.append("discount_amount",discountAmount)
       formData.append('min_purchase', minOrderAmmount);
       formData.append('max_discount', maxOrderAmmount);
       formData.append('start_date', formatToISOString(startDate,startTime));
@@ -144,6 +145,7 @@ const CreateCouponScreen = () => {
             placeholder="Make coupan code(COUP20)"
             placeholderTextColor="#727272"
             style={styles.inputFull}
+            autoCapitalize='characters'
             value={code}
             onChangeText={setCode}
           />
