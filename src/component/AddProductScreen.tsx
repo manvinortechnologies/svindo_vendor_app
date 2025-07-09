@@ -18,6 +18,7 @@ import MainContainer from '../CommonComponent/MainContainer';
 import { InputBox } from '../CommonComponent/InputBox';
 import CustomDropdown from '../CommonComponent/CustomDropdown';
 import CustomSwitch from '../CommonComponent/CustomSwitch';
+import CalendarModal from '../Modals/CalendarModal';
 
 const AddProductScreen = () => {
   const [selectedType, setSelectedType] = useState('Product');
@@ -25,43 +26,60 @@ const AddProductScreen = () => {
 
   const types = ['Product', 'Service', 'Print'];
   const forOptions = ['Offline only', 'Both online & Offline'];
-const [productName, setProductName] = useState('');
-const [wholesalePrice, setWholesalePrice] = useState('');
-const [purchasePrice, setPurchasePrice] = useState('');
-const [salesPrice, setSalesPrice] = useState('');
-const [mrp, setMRP] = useState('');
-const [unit,setUnit]= useState('')
-const [hsn, setHSN] = useState('');
-const [gst,setGst]=useState("")
-const [openingStock, setOpeningStock] = useState('');
-const [lowStockQty, setLowStockQty] = useState('');
-const [brandName, setBrandName] = useState('');
-const [batchNumber, setBatchNumber] = useState('');
-const [expiryDate, setExpiryDate] = useState('');
-const [description, setDescription] = useState('');
+  const [productName, setProductName] = useState('');
+  const [wholesalePrice, setWholesalePrice] = useState('');
+  const [purchasePrice, setPurchasePrice] = useState('');
+  const [salesPrice, setSalesPrice] = useState('');
+  const [mrp, setMRP] = useState('');
+  const [unit, setUnit] = useState('')
+  const [hsn, setHSN] = useState('');
+  const [gst, setGst] = useState("")
+  const [openingStock, setOpeningStock] = useState('');
+  const [lowStockQty, setLowStockQty] = useState('');
+  const [brandName, setBrandName] = useState('');
+  const [batchNumber, setBatchNumber] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+  const [description, setDescription] = useState('');
 
-// Switches
-const [isWholesaleEnabled, setIsWholesaleEnabled] = useState(true);
-const [includesTax, setIncludesTax] = useState<boolean>(true);
-const [lowStockAlert, setLowStockAlert] = useState(false);
-const [batchSwitch, setBatchSwitch] = useState(true);
-const [expirySwitch, setExpirySwitch] = useState(true);
+  // Switches
+  const [isWholesaleEnabled, setIsWholesaleEnabled] = useState(true);
+  const [includesTax, setIncludesTax] = useState<boolean>(true);
+  const [lowStockAlert, setLowStockAlert] = useState(false);
+  const [batchSwitch, setBatchSwitch] = useState(true);
+  const [expirySwitch, setExpirySwitch] = useState(true);
 
-// Delivery options
-const [instantDelivery, setInstantDelivery] = useState(true);
-const [selfPickup, setSelfPickup] = useState(true);
-const [generalDelivery, setGeneralDelivery] = useState(true);
+  // Delivery options
+  const [deliveryOptions, setDeliveryOptions] = useState<Record<string, boolean>>({
+    'Instant Delivery': false,
+    'Self Pickup': false,
+    'General Delivery': false,
+  });
 
-// Policies
-const [returnPolicy, setReturnPolicy] = useState(true);
-const [codPolicy, setCodPolicy] = useState(true);
-const [replacementPolicy, setReplacementPolicy] = useState(true);
-const [shopExchange, setShopExchange] = useState(true);
-const [shopWarranty, setShopWarranty] = useState(true);
-const [brandWarranty, setBrandWarranty] = useState(true);
-const [onShopOrders, setOnShopOrders] = useState(true);
-
-
+  // Policies
+  const [toggleValues, setToggleValues] = useState<Record<string, boolean>>({
+    Return: false,
+    COD: false,
+    Replacement: false,
+    'Shop Exchange': false,
+    'Shop Warranty': false,
+    'Brand Warranty': false,
+    'On shop orders': false,
+  });
+  const [callenderModel,setCallenderModel]=useState<boolean>(false)
+const [deliveryTax,setDeliveryTax]=useState<boolean>(false)
+const [policyTax,setPolicyTax]=useState<boolean>(false)
+  const onToggleChange = (key: string, value: boolean) => {
+    setToggleValues(prev => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+  const handleToggle = (key: string, value: boolean) => {
+    setDeliveryOptions(prev => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
   const sections = [
     {
       title: 'Product Name',
@@ -71,12 +89,12 @@ const [onShopOrders, setOnShopOrders] = useState(true);
         //   <Icon name="chevron-down" size={18} color="#000" />
         // </TouchableOpacity>
         <InputBox
-        background='#FFF8EB'
-        placeholder='Enter Product Name'
-        onChangeText={setProductName}
-        value={productName}
-        autoCapitalize='sentences'
-        
+          background='#FFF8EB'
+          placeholder='Enter Product Name'
+          onChangeText={setProductName}
+          value={productName}
+          autoCapitalize='sentences'
+
         />
       ),
     },
@@ -89,61 +107,61 @@ const [onShopOrders, setOnShopOrders] = useState(true);
             <CustomSwitch value={isWholesaleEnabled} onValueChange={setIsWholesaleEnabled} />
           </View>
           {/* Wholesale Price */}
-          {isWholesaleEnabled &&(
+          {isWholesaleEnabled && (
             <InputBox
               placeholder="Enter here"
-               background='#FFF8EB'
-               value={wholesalePrice}
-               keyboardType='number-pad'
-               onChangeText={setWholesalePrice}
+              background='#FFF8EB'
+              value={wholesalePrice}
+              keyboardType='number-pad'
+              onChangeText={setWholesalePrice}
             />
-            )}
+          )}
           {/* Purchase & Sales Price */}
           <View style={styles.priceRow}>
             <View style={styles.inputHalf}>
               <Text style={styles.smallLabel}>Purchase Price</Text>
-             
-                <InputBox
-              placeholder="Enter here"
-               background='#FFF8EB'
-               value={purchasePrice}
-               keyboardType='number-pad'
-               onChangeText={setPurchasePrice}
-            />
-              
+
+              <InputBox
+                placeholder="Enter here"
+                background='#FFF8EB'
+                value={purchasePrice}
+                keyboardType='number-pad'
+                onChangeText={setPurchasePrice}
+              />
+
             </View>
             <View style={styles.inputHalf}>
               <Text style={styles.smallLabel}>Sales Price</Text>
-              
-                 <InputBox
-              placeholder="Enter here"
-               background='#FFF8EB'
-               value={salesPrice}
-               keyboardType='number-pad'
-               onChangeText={setSalesPrice}
-            />
+
+              <InputBox
+                placeholder="Enter here"
+                background='#FFF8EB'
+                value={salesPrice}
+                keyboardType='number-pad'
+                onChangeText={setSalesPrice}
+              />
             </View>
           </View>
           {/* MRP & Unit */}
           <View style={styles.priceRow}>
             <View style={styles.inputHalf}>
               <Text style={styles.smallLabel}>MRP</Text>
-            
+
               <InputBox
-              placeholder="Enter here"
-               background='#FFF8EB'
-               value={mrp}
-               onChangeText={setMRP}
-            />
-          </View>
+                placeholder="Enter here"
+                background='#FFF8EB'
+                value={mrp}
+                onChangeText={setMRP}
+              />
+            </View>
             <View style={styles.inputHalf}>
               <Text style={styles.smallLabel}>Unit</Text>
-           <InputBox
-              placeholder="ex: Kg"
-               background='#FFF8EB'
-               value={unit}
-               onChangeText={setUnit}
-            />
+              <InputBox
+                placeholder="ex: Kg"
+                background='#FFF8EB'
+                value={unit}
+                onChangeText={setUnit}
+              />
             </View>
           </View>
           {/* HSN & GST */}
@@ -151,20 +169,20 @@ const [onShopOrders, setOnShopOrders] = useState(true);
             <View style={styles.inputHalf}>
               <Text style={styles.smallLabel}>HSN</Text>
               <InputBox
-              placeholder="Enter here"
-               background='#FFF8EB'
-               value={hsn}
-               onChangeText={setHSN}
-            />
+                placeholder="Enter here"
+                background='#FFF8EB'
+                value={hsn}
+                onChangeText={setHSN}
+              />
             </View>
             <View style={styles.inputHalf}>
               <Text style={styles.smallLabel}>GST</Text>
-               <InputBox
-              placeholder="ex: 5%"
-               background='#FFF8EB'
-               value={gst}
-               onChangeText={setGst}
-            />
+              <InputBox
+                placeholder="ex: 5%"
+                background='#FFF8EB'
+                value={gst}
+                onChangeText={setGst}
+              />
             </View>
           </View>
           <Text style={styles.warningText}>
@@ -202,14 +220,14 @@ const [onShopOrders, setOnShopOrders] = useState(true);
             * Stock will be calculated based on this
           </Text>
           <Text style={styles.stockLabel}>Opening Stock</Text>
-          <View style={[ { width: '50%', marginTop: 5 }]}>
-           
-                 <InputBox
+          <View style={[{ width: '50%', marginTop: 5 }]}>
+
+            <InputBox
               placeholder="Enter here"
-               background='#FFF8EB'
-               value={openingStock}
-               keyboardType='number-pad'
-               onChangeText={setOpeningStock}
+              background='#FFF8EB'
+              value={openingStock}
+              keyboardType='number-pad'
+              onChangeText={setOpeningStock}
             />
           </View>
           <View style={styles.lowStockRow}>
@@ -220,14 +238,14 @@ const [onShopOrders, setOnShopOrders] = useState(true);
             <CustomSwitch value={lowStockAlert} onValueChange={setLowStockAlert} />
           </View>
           <Text style={styles.stockLabel}>Low Stock Quantity</Text>
-          <View style={[ { width: '50%', marginTop: 5 }]}>
-           
-                 <InputBox
+          <View style={[{ width: '50%', marginTop: 5 }]}>
+
+            <InputBox
               placeholder="Enter here"
-               background='#FFF8EB'
-               value={lowStockQty}
-               keyboardType='number-pad'
-               onChangeText={setLowStockQty}
+              background='#FFF8EB'
+              value={lowStockQty}
+              keyboardType='number-pad'
+              onChangeText={setLowStockQty}
             />
           </View>
         </View>
@@ -258,13 +276,13 @@ const [onShopOrders, setOnShopOrders] = useState(true);
 
           {/* Brand Name */}
           <Text style={styles.optionalLabel}>Brand Name <Text style={styles.optionalText}>(Optional)</Text></Text>
-        
-                 <InputBox
-              placeholder="Enter here"
-               background='#FFF8EB'
-               value={brandName}
-               onChangeText={setBrandName}
-            />
+
+          <InputBox
+            placeholder="Enter here"
+            background='#FFF8EB'
+            value={brandName}
+            onChangeText={setBrandName}
+          />
 
           {/* Pick Color */}
           <Text style={styles.optionalLabel}>Pick Color <Text style={styles.optionalText}>(Optional)</Text></Text>
@@ -292,39 +310,43 @@ const [onShopOrders, setOnShopOrders] = useState(true);
             <Text style={styles.optionalLabel}>Batch number <Text style={styles.optionalText}>(Optional)</Text></Text>
             <CustomSwitch value={batchSwitch} onValueChange={setBatchSwitch} />
           </View>
-          {batchSwitch&&(
-         
-                 <InputBox
+          {batchSwitch && (
+
+            <InputBox
               placeholder="Enter here"
-               background='#FFF8EB'
-               value={batchNumber}
-               onChangeText={setBatchNumber}
+              background='#FFF8EB'
+              value={batchNumber}
+              onChangeText={setBatchNumber}
             />
-            )}
+          )}
 
           {/* Expiry Date */}
           <View style={styles.toggleRow}>
             <Text style={styles.optionalLabel}>Expiry Date <Text style={styles.optionalText}>(Optional)</Text></Text>
             <CustomSwitch value={expirySwitch} onValueChange={setExpirySwitch} />
           </View>
-          {expirySwitch &&(
-          <TouchableOpacity style={styles.inputBox}>
-            <TextInput
-              placeholder="Enter here"
-              placeholderTextColor="#888"
-              style={styles.textInput}
-              value={expiryDate}
-              editable={false}
-            />
-          </TouchableOpacity>
+          {expirySwitch && (
+            <TouchableOpacity style={styles.inputBox} 
+            onPress={()=>{
+              setCallenderModel(true)
+            }}
+            >
+              <TextInput
+                placeholder="Enter here"
+                placeholderTextColor="#888"
+                style={styles.textInput}
+                value={expiryDate}
+                editable={false}
+              />
+            </TouchableOpacity>
           )}
 
           {/* Description */}
           <Text style={styles.optionalLabel}>Description <Text style={styles.optionalText}>(Optional)</Text></Text>
           <View style={styles.textAreaBox}>
             <TextInput
-            value={description}
-            onChangeText={setDescription}
+              value={description}
+              onChangeText={setDescription}
               placeholder="Enter here"
               placeholderTextColor="#888"
             />
@@ -362,7 +384,10 @@ const [onShopOrders, setOnShopOrders] = useState(true);
             {['Instant Delivery', 'Self Pickup', 'General Delivery'].map(option => (
               <View key={option} style={styles.toggleRow}>
                 <Text style={styles.smallLabel}>{option}</Text>
-                <CustomSwitch value={true} onValueChange={() => { }} />
+                <CustomSwitch
+                  value={deliveryOptions[option]}
+                  onValueChange={(val) => handleToggle(option, val)}
+                />
               </View>
             ))}
           </View>
@@ -372,7 +397,7 @@ const [onShopOrders, setOnShopOrders] = useState(true);
             <Text style={styles.sectionTitle}>Delivery Details</Text>
             <View style={styles.includesRow}>
               <Text style={styles.smallLabel}>Includes Tax</Text>
-              <CustomSwitch value={false} onValueChange={() => { }} />
+              <CustomSwitch value={deliveryTax} onValueChange={setDeliveryTax} />
             </View>
           </View>
         ),
@@ -396,7 +421,10 @@ const [onShopOrders, setOnShopOrders] = useState(true);
             ].map(option => (
               <View key={option} style={styles.toggleRow}>
                 <Text style={styles.smallLabel}>{option}</Text>
-                <CustomSwitch value={true} onValueChange={() => { }} />
+                <CustomSwitch
+                  value={toggleValues[option]}
+                  onValueChange={(val) => onToggleChange(option, val)}
+                />
               </View>
             ))}
           </View>
@@ -406,7 +434,7 @@ const [onShopOrders, setOnShopOrders] = useState(true);
             <Text style={styles.sectionTitle}>Policies</Text>
             <View style={styles.includesRow}>
               <Text style={styles.smallLabel}>Includes Tax</Text>
-              <CustomSwitch value={false} onValueChange={() => { }} />
+              <CustomSwitch value={policyTax} onValueChange={setPolicyTax} />
             </View>
           </View>
         ),
@@ -418,88 +446,97 @@ const [onShopOrders, setOnShopOrders] = useState(true);
     <MainContainer>
       <SafeAreaView style={styles.safeArea}>
         <Headerwithback title={'Enter Details'} />
-        
-                <KeyboardAvoidingView
-                  style={{ flex: 1 }}
-                  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                  keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 30}
-                >
-                  <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <FlatList
-         keyboardShouldPersistTaps="handled"
-          ListHeaderComponent={
-            <View style={{ padding: 16 }}>
-              <View style={styles.row}>
-                <Text style={styles.label}>Type :</Text>
-                <View style={styles.optionGroup}>
-                  {types.map(type => (
-                    <TouchableOpacity
-                      key={type}
-                      style={[
-                        styles.optionButton,
-                        selectedType === type && styles.selectedButton,
-                      ]}
-                      onPress={() => setSelectedType(type)}
-                    >
-                      <Text
-                        style={[
-                          styles.optionText,
-                          selectedType === type && styles.selectedText,
-                        ]}
-                      >
-                        {type}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+  <CalendarModal
+            visible={callenderModel}
+            onClose={()=>{setCallenderModel(false)}}
+            onSelect={(e)=>{
+              setExpiryDate(e)
+            }}
+            
+            />
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 30}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <FlatList
+              keyboardShouldPersistTaps="handled"
+              ListHeaderComponent={
+                <View style={{ padding: 16 }}>
+                  <View style={styles.row}>
+                    <Text style={styles.label}>Type :</Text>
+                    <View style={styles.optionGroup}>
+                      {types.map(type => (
+                        <TouchableOpacity
+                          key={type}
+                          style={[
+                            styles.optionButton,
+                            selectedType === type && styles.selectedButton,
+                          ]}
+                          onPress={() => setSelectedType(type)}
+                        >
+                          <Text
+                            style={[
+                              styles.optionText,
+                              selectedType === type && styles.selectedText,
+                            ]}
+                          >
+                            {type}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                  <View style={styles.row}>
+                    <Text style={styles.label}>For :</Text>
+                    <View style={styles.optionGroup}>
+                      {forOptions.map(option => (
+                        <TouchableOpacity
+                          key={option}
+                          style={[
+                            styles.optionButton,
+                            selectedFor === option && styles.selectedOrange,
+                          ]}
+                          onPress={() => setSelectedFor(option)}
+                        >
+                          <Text
+                            style={[
+                              styles.optionText,
+                              selectedFor === option && styles.selectedText,
+                            ]}
+                          >
+                            {option}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
                 </View>
-              </View>
-              <View style={styles.row}>
-                <Text style={styles.label}>For :</Text>
-                <View style={styles.optionGroup}>
-                  {forOptions.map(option => (
-                    <TouchableOpacity
-                      key={option}
-                      style={[
-                        styles.optionButton,
-                        selectedFor === option && styles.selectedOrange,
-                      ]}
-                      onPress={() => setSelectedFor(option)}
-                    >
-                      <Text
-                        style={[
-                          styles.optionText,
-                          selectedFor === option && styles.selectedText,
-                        ]}
-                      >
-                        {option}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+              }
+              data={[...sections, ...dynamicSections]}
+              keyExtractor={item => item.title}
+              contentContainerStyle={{ paddingHorizontal: 16 }}
+              renderItem={({ item }) => (
+                <View style={styles.section}>
+                  {item.customHeader ? item.customHeader : (
+                    <Text style={styles.sectionTitle}>{item.title}</Text>
+                  )}
+                  {item.content}
                 </View>
-              </View>
-            </View>
-          }
-          data={[...sections, ...dynamicSections]}
-          keyExtractor={item => item.title}
-          contentContainerStyle={{ paddingHorizontal: 16 }}
-          renderItem={({ item }) => (
-            <View style={styles.section}>
-              {item.customHeader ? item.customHeader : (
-                <Text style={styles.sectionTitle}>{item.title}</Text>
               )}
-              {item.content}
-            </View>
-          )}
-          ListFooterComponent={
-            <View style={styles.footer}>
-              <TouchableOpacity style={styles.addButton}>
-                <Text style={styles.addButtonText}>Save</Text>
-              </TouchableOpacity>
-            </View>
-          }
-          extraData={{ selectedType, selectedFor }}
-        />
-        </TouchableWithoutFeedback>
+              ListFooterComponent={
+                <View style={styles.footer}>
+                  <TouchableOpacity style={styles.addButton}>
+                    <Text style={styles.addButtonText}>Save</Text>
+                  </TouchableOpacity>
+                </View>
+              }
+              extraData={{ selectedType, selectedFor }}
+            />
+
+          
+          </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
       </SafeAreaView>
     </MainContainer>
