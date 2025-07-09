@@ -1,69 +1,109 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, FlatList, Platform, StatusBar } from 'react-native';
-import Bottomnavigation from './Bottomnavigation';
-import Headerwithback from './Headerwithback';
-import { ScrollView } from 'react-native-gesture-handler';
+import React, { useEffect, useState } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, FlatList } from 'react-native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import MainContainer from '../CommonComponent/MainContainer';
+import CustomHeader from '../CommonComponent/CustomHeader';
+import Loading from '../CommonComponent/Loading';
+import { Company } from '../type/Company';
+import api from '../services/api/api';
 
-const companiesData = [
-  {
-    id: '1',
-    type: 'My Company',
-    name: 'Raigun enterprise',
-    gstin: '123jkgfhfsk',
-  },
-  {
-    id: '2',
-    type: 'My Company',
-    name: 'Skyline Traders',
-    gstin: 'GSTIN987654321',
-  },
-];
+// interface Company {
+//   id: number;
+//   name: string;
+//   gstin: string;
+// }
 
-const ManageCompanies = () => {
-  const [companies, setCompanies] = useState(companiesData);
+// const companies: Company[] = [
+//   { id: 1, name: 'Raigun enterprise', gstin: '123jkghfhsk' },
+// ];
 
-  const handleDelete = (id: string) => {
-    setCompanies(prev => prev.filter(company => company.id !== id));
+const ManageCompanies = ({navigation}:any) => {
+  const [isLoading,setIsLoading]=useState<boolean>(false)
+  const [companiesList,setCompaniesLst]=useState<Company[]>();
+  
+  useEffect(()=>{
+    getAllCompanyData();
+  },[]);
+
+  const getAllCompanyData=async()=>{
+    try {
+      setIsLoading(true);
+      const res=await api.get("vendor/company-profile/");
+      setCompaniesLst(res.data)
+      
+      
+    } catch (error) {
+      
+    }finally{
+      setIsLoading(false)
+    }
+
+  }
+  const handleAdd = () => {
+    navigation.navigate("SignupDetailScreen")
+    // Handle add company
   };
 
-  const renderCompany = ({ item }: any) => (
-    <View style={styles.card}>
-      <Text style={styles.label}>{item.type}</Text>
-      <Text style={styles.companyName}>{item.name}</Text>
-      <Text style={styles.gstin}>GSTIN - {item.gstin}</Text>
-      <View style={styles.actionRow}>
-        <Text style={styles.rename}>Rename</Text>
+  const handleEdit = (id: number) => {
+    // Handle edit company
+  };
+
+  const handleDelete = (id: number) => {
+    // Handle delete company
+  };
+
+  const renderCompany = ({ item }: { item: Company }) => (
+    <View style={styles.companyCard}>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.companyName}>{item.company_name}</Text>
+        <Text style={styles.gstin}>GSTIN - {item.gstin}</Text>
+      </View>
+      <View style={styles.actions}>
+        <TouchableOpacity onPress={() => handleEdit(item.id)}>
+          <Text style={styles.editText}>Edit</Text>
+        </TouchableOpacity>
         <Text style={styles.separator}>|</Text>
         <TouchableOpacity onPress={() => handleDelete(item.id)}>
-          <Text style={styles.delete}>Delete</Text>
+          <Text style={styles.deleteText}>Delete</Text>
         </TouchableOpacity>
       </View>
     </View>
   );
 
   return (
+    <MainContainer>
     <View style={styles.container}>
-        <Headerwithback title="Manage Companies " />
-      {/* Tabs */}
-      <View style={styles.tabRow}>
-        <Text style={styles.activeTab}>My Companies</Text>
-        <Text style={styles.inactiveTab}>Shared With Me</Text>
-      </View>
-
-      {/* Company List */}
-      <FlatList
-        data={companies}
-        renderItem={renderCompany}
-        keyExtractor={item => item.id}
-        contentContainerStyle={{ paddingBottom: 20 }}
+      {/* Header */}
+          <CustomHeader
+        title="Manage Companies"
+       
+        rightIcon={
+          <TouchableOpacity onPress={handleAdd} style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Ionicons name="add" size={20} color="#FCA511" />
+            <Text style={{ color: '#FCA511', fontWeight: '700', marginLeft: 4 }}>Add</Text>
+          </TouchableOpacity>
+        }
       />
 
-      {/* Add Company */}
-      <TouchableOpacity style={styles.addCompany}>
-        <Text style={styles.addText}>＋ Add Company</Text>
-      </TouchableOpacity>
-      <Bottomnavigation></Bottomnavigation>
+      {/* List */}
+      <FlatList
+        data={companiesList}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={{ padding: 16 }}
+        renderItem={renderCompany}
+        ListEmptyComponent={
+          <>
+          <Text style={{alignSelf:'center',color:"#777"}}>
+            List is Empty
+          </Text>
+          </>
+        }
+      />
+      <Loading
+      visible={isLoading}
+      />
     </View>
+    </MainContainer>
   );
 };
 
@@ -73,70 +113,73 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    padding: 16,
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 20 : 0,
   },
-  tabRow: {
+  header: {
+    height: 60,
     flexDirection: 'row',
-    marginVertical: 20,
-    justifyContent:"space-between"
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderColor: '#eee',
   },
-  activeTab: {
-    color: '#FCA311',
+  backButton: {
+    backgroundColor: '#FCA511',
+    borderRadius: 20,
+    padding: 6,
+  },
+  headerTitle: {
+    fontSize: 16,
     fontWeight: 'bold',
-    marginRight: 30,
-    borderBottomWidth: 2,
-    borderColor: '#FCA311',
-    paddingBottom: 4,
+    color: '#000',
+    flex: 1,
+    textAlign: 'center',
+    marginRight: 32,
   },
-  inactiveTab: {
-    color: '#ADACAC',
-    fontWeight:"600"
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  card: {
-    borderColor: '#FCA311',
+  addText: {
+    color: '#FCA511',
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  companyCard: {
+    backgroundColor: '#FFF8F2',
+    borderColor: '#FCA511',
     borderWidth: 1,
-    borderRadius: 8,
+    borderRadius: 10,
     padding: 12,
-    backgroundColor: '#FFFCF8',
-    marginBottom: 15,
-  },
-  label: {
-    fontWeight: '800',
-    fontSize: 12,
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   companyName: {
     fontWeight: 'bold',
+    color: '#000',
     fontSize: 14,
   },
   gstin: {
-    fontWeight: '800',
+    color: '#727272',
     fontSize: 12,
+    marginTop: 2,
   },
-  actionRow: {
+  actions: {
     flexDirection: 'row',
-    justifyContent: 'flex-end',
-    marginTop: 6,
+    alignItems: 'center',
+    marginLeft: 12,
   },
-  rename: {
-    fontSize: 12,
-    color: '#333',
+  editText: {
+    color: '#6E6E6E',
+    fontSize: 13,
+  },
+  deleteText: {
+    color: '#FF3B30',
+    fontSize: 13,
   },
   separator: {
-    marginHorizontal: 4,
-    color: '#aaa',
-  },
-  delete: {
-    fontSize: 12,
-    color: 'red',
-  },
-  addCompany: {
-    alignItems: "flex-end",
-    marginTop: 10,
-  },
-  addText: {
-    color: '#FCA311',
-    fontWeight: '800',
-    fontSize: 16,
+    marginHorizontal: 6,
+    color: '#ccc',
   },
 });
