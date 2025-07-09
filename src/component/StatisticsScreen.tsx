@@ -54,7 +54,7 @@ const getFilteredProducts = (type: string) => {
 
 
 
-const StatisticsScreen = () => {
+const StatisticsScreen = ({navigation}:any) => {
   const [deliveryDiscountEnabled, setDeliveryDiscountEnabled] = useState(true);
     const [selectedFilter, setSelectedFilter] = useState("Today");
   const filters = ["Today", "This Week", "This Month", "This Year"];
@@ -239,7 +239,11 @@ const StatisticsScreen = () => {
                
     </ScrollView>
     <View style={styles.floatingButtons}>
-       <TouchableOpacity style={styles.addButtonRed}>
+       <TouchableOpacity style={styles.addButtonRed}
+       onPress={()=>{
+        navigation.navigate("ExpensesScreen")
+       }}
+       >
           <Icon name="file-document-outline" size={18} color="#000" />
           <Text style={styles.buttonText}> + Expense</Text>
         </TouchableOpacity>
@@ -309,9 +313,10 @@ const styles = StyleSheet.create({
   filterText: { fontSize: 16, marginRight: 5 },
   floatingButtons: {
      position: "absolute",
-      top: "60%", right: 20,
+      alignSelf:"center",
      flexDirection: "row",
-      gap: 20 },
+      gap: 20,
+    bottom:80 },
   viewall:{ fontSize:16,},
   categoryTitlesection:{flexDirection:"row", justifyContent:"space-between"},
   addButtonGreen: {

@@ -46,9 +46,25 @@ const ManageCompanies = ({navigation}:any) => {
 
   const handleEdit = (id: number) => {
     // Handle edit company
+    navigation.navigate("CompanyProfile",{id:id})
   };
 
   const handleDelete = (id: number) => {
+    console.log("delete id--->",id);
+    try {
+      setIsLoading(true);
+      const apiEnd=`vendor/company-profile/${id}/`
+      const res= api.delete(apiEnd);
+      console.log("res-->",res);
+      
+      getAllCompanyData();
+      
+    } catch (error) {
+      
+    }finally{
+      setIsLoading(false)
+    }
+    
     // Handle delete company
   };
 
