@@ -85,6 +85,8 @@ import AddPostScreen from '../component/AddPostScreen';
 import BuyersRequestScreen from '../component/BuyersRequestScreen';
 import CreateRequestScreen from '../component/CreateRequestScreen';
 import CreateOffer from '../component/CreateOffer';
+import AddSpotlightScreen from '../component/AddSpotlightScreen';
+import SelectSpotlightProduct from '../component/SelectSpotlightProduct';
 
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
@@ -176,6 +178,8 @@ const AppNavigation = () => {
                 <Stack.Screen name={HomeNavigation.BUYERSREQUEST} component={BuyersRequestScreen} />
                 <Stack.Screen name={HomeNavigation.CREATEREQUEST} component={CreateRequestScreen} />
                 <Stack.Screen name={HomeNavigation.CREATEOFFER} component={CreateOffer} />
+                <Stack.Screen name={HomeNavigation.ADDSPOTLIGHT} component={AddSpotlightScreen} />
+                <Stack.Screen name={HomeNavigation.SELECTSPOTLIGHTPRODUCT} component={SelectSpotlightProduct} />
             </Stack.Navigator>
         </NavigationContainer>
     );

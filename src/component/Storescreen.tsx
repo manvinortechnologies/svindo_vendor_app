@@ -128,8 +128,10 @@ const Storescreen = ({ navigation }: any) => {
 
 
         <View style={styles.Containertitle}>
-          <Text style={styles.sectionTitle}>+ Add Banners</Text>
-          <Text style={styles.sectionTitle}>Max - 3</Text>
+          <View style={{backgroundColor: '#FCA311', padding: 6, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 8}}>
+            <Text style={{color: '#fff', fontWeight: '700', fontSize: 16}}>Add Banners</Text>
+          </View>
+          <Text style={styles.sectionTitleRight}>Max - 3</Text>
         </View>
         {/* Scrollable Banner */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bannerScroll}>
@@ -142,9 +144,13 @@ const Storescreen = ({ navigation }: any) => {
         <View style={styles.spotlightSection}>
 
           <View style={styles.Containerspotlight}>
-            <Text style={styles.sectionTitle}>+ Add Spotlight Products</Text>
+            <TouchableOpacity style={{backgroundColor: '#FCA311', padding: 6, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 8}} onPress={() => {
+              navigation.navigate("AddSpotlightScreen")
+            }}>
+            <Text style={{color: '#fff', fontWeight: '700', fontSize: 16}}>Add Spotlight</Text>
+            </TouchableOpacity>
 
-            <Text style={styles.sectionTitle}>Max - 4  Max - 8</Text>
+            <Text style={styles.sectionTitleRight}>Max - 4  Max - 8</Text>
 
 
           </View>
@@ -169,7 +175,7 @@ const Storescreen = ({ navigation }: any) => {
                         </View>
                         <View>
                           <Text style={styles.productPrice}>Rs {product.price}</Text>
-                          <Text style={styles.addbtn}>Add</Text>
+                          <Text style={styles.addbtn}>Remove</Text>
                         </View>
                       </View>
                     </View>
@@ -180,46 +186,44 @@ const Storescreen = ({ navigation }: any) => {
             ))}
           </View>
           <View>
-
           </View>
-
-
         </View>
 
 
 
         <View style={styles.highlightsSection}>
           <View style={styles.Containertitle}>
-            <TouchableOpacity onPress={() => {
+            <TouchableOpacity style={{backgroundColor: '#FCA311', padding: 6, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 8}} onPress={() => {
               navigation.navigate("AddPostScreen")
             }}>
-              <Text style={styles.sectionTitle}>+ Add Posts</Text>
+              <Text style={{color: '#fff', fontWeight: '700', fontSize: 16}}>Add Posts</Text>
             </TouchableOpacity>
-            <Text style={styles.sectionTitle}>Max - 4</Text>
+            
+            <Text style={styles.sectionTitleRight}>Max - 4</Text>
           </View>
 
           <View style={styles.highlightCard}>
             <Image source={require("../assets/product/product2.png")} style={styles.highlightImage} />
-
-            <View style={styles.postcontainer}>
+          </View>
+          <View style={styles.postcontainer}>
               <Text style={styles.highlightDescription}>Lorem ipsum dolor sit amet consectetur Lorem ipsum dolor sit amet consectetur Lorem ipsum dolor sit amet consectetur.</Text>
 
               <View style={styles.highlightControls}>
 
                 <TouchableOpacity style={styles.openButton}><Text style={styles.openText}>Boost</Text></TouchableOpacity>
-                <Icon name="briefcase-upload-outline" size={24} color="#000" />
+                <Icon name="tray-arrow-up" size={24} color="#000" />
+                <Icon name="dots-vertical" size={24} color="#000" />
               </View>
             </View>
-          </View>
 
         </View>
         <View style={styles.Containerspotlight}>
-          <TouchableOpacity onPress={() => {
+          <TouchableOpacity style={{backgroundColor: '#FCA311', padding: 6, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 8}} onPress={() => {
             navigation.navigate("AddPostScreen")
           }}>
-            <Text style={styles.sectionTitle}>+ Add Video Posts</Text>
+            <Text style={{color: '#fff', fontWeight: '700', fontSize: 16}}>Add Reel</Text>
           </TouchableOpacity> 
-          <Text style={styles.sectionTitle}>Max - 4</Text>
+          <Text style={styles.sectionTitleRight}>Max - 4</Text>
         </View>
         <View style={styles.videoSection}>
 
@@ -241,10 +245,20 @@ const Storescreen = ({ navigation }: any) => {
           <View style={styles.Containerspotlight}>
             <Text style={styles.sectionTitle}>Live Review</Text>
 
-            <Text style={styles.sectionTitle}><Icon name="star" size={25} color="#FCA311" /> Disabled</Text>
+            <View style={{flexDirection: 'row',  alignItems: "flex-end", justifyContent: "flex-end", marginBottom: 10}}>
+                {/* <Icon name="bell-outline" size={24} color="#000" style={styles.actionIcon} /> */}
+                <CustomSwitch value={disabletab} onValueChange={setdisable}
+                  activeColor="#830002"
+                  inactiveColor="#999"
+                  borderColor="#4CAF50" />
 
-
+                <TouchableOpacity style={styles.followButton}>
+                  <Text style={styles.followText}>Disabled</Text>
+                </TouchableOpacity>
+            </View>
           </View>
+
+
           <View style={styles.reviewContainer}>
             <View style={styles.starContainer}>
               <Icon name="star" size={25} color="#FCA311" />
@@ -265,7 +279,10 @@ const Storescreen = ({ navigation }: any) => {
             <Text style={styles.title}>Keep Shopping</Text>
             <View style={styles.line} />
           </View>
-          <Text style={styles.location}>@ Lacoste, Panjaguga, Hyderabad - A.P.</Text>
+          <Text style={styles.location}>@ Lacoste, Panjaguga, Hyderabad - A.P.<TouchableOpacity>
+            <Icon name="pencil-outline" size={20} color="#000" style={styles.actionIcon} />
+          </TouchableOpacity></Text>
+          
         </View>
       </ScrollView>
 
@@ -448,7 +465,6 @@ const styles = StyleSheet.create({
     top: -60,
   },
   actionsContainer: {
-
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "flex-end",
@@ -479,13 +495,14 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 6,
-    paddingHorizontal: 15,
+    paddingVertical: 4,
+    paddingHorizontal: 12,
     borderRadius: 5,
   },
   followText: {
     fontWeight: "bold",
     color: "#AA0000",
+    fontSize: 16
   },
 
   actionIcon: {
@@ -521,6 +538,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 15,
+  },
+
+  sectionTitleRight: {
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 15,
+    color: '#505050'
   },
 
   filterButton: {
@@ -625,14 +649,11 @@ const styles = StyleSheet.create({
   highlightControls: {
     flexDirection: "row",
     justifyContent: "flex-end",
-    gap: 20,
+    gap: 15,
     marginVertical: 10,
   },
   openButton: {
-
     paddingVertical: 5,
-
-
   },
   openText: {
     color: "#fff",
@@ -642,17 +663,17 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   highlightDescription: {
-    fontSize: 16,
-    color: "#555",
+    fontSize: 11,
+    color: "#000",
     fontWeight: "normal",
-    maxWidth: "80%",
+    maxWidth: "65%",
     textAlign: "left",
     padding: 5,
 
   },
   postcontainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    gap: 5
   },
   videoSection: {
     paddingHorizontal: 10,
@@ -696,12 +717,12 @@ const styles = StyleSheet.create({
   },
   reviewContainer:
   {
-    backgroundColor: "#FFEAA5",
+    backgroundColor: "#FFF",
     paddingVertical: 15,
-    paddingHorizontal: 40,
+    paddingHorizontal: 20,
     borderRadius: 10,
-    borderColor: "#000",
-    borderWidth: 1,
+    marginHorizontal: 15,
+    elevation: 5
   },
   starContainer: {
     flexDirection: "row",
@@ -735,6 +756,8 @@ const styles = StyleSheet.create({
     color: "#006EB2",
     textAlign: "center",
     textTransform: "uppercase",
+    fontStyle: 'italic'
+    
   },
   location: {
     fontSize: 16,
@@ -770,14 +793,16 @@ const styles = StyleSheet.create({
 
   productDetails: { flexDirection: "row", justifyContent: "space-between", width: "100%", paddingVertical: 10 },
   productTextContainer: { flex: 1 },
-  productName: { fontSize: 14, fontWeight: "bold", textAlign: "left" },
-  productDescription: { fontSize: 12, textAlign: "left", color: "#555", marginHorizontal: 5, },
-  productPrice: { fontSize: 14, fontWeight: "bold", textAlign: "right", color: "#FCA311" },
+  productName: { fontSize: 10, fontWeight: "bold", textAlign: "left" },
+  productDescription: { fontSize: 8, textAlign: "left", color: "#6B6B6B", marginHorizontal: 5, fontWeight: '500' },
+  productPrice: { fontSize: 10, fontWeight: "bold", textAlign: "right", color: "#FCA311" },
   productRow: { flexDirection: "row", justifyContent: "space-between", flexWrap: "wrap" },
   addbtn: {
     borderWidth: 1,
-    paddingHorizontal: 10,
+    paddingHorizontal: 4,
     borderRadius: 5,
+    fontSize: 10,
+    marginTop: 5
   },
   drafttext: {
     fontSize: 18,

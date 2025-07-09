@@ -86,6 +86,8 @@ export type THomeNavigation = {
   [HomeNavigation.BUYERSREQUEST]: undefined;
   [HomeNavigation.CREATEREQUEST]:undefined;
   [HomeNavigation.CREATEOFFER]:undefined;
+  [HomeNavigation.ADDSPOTLIGHT]:undefined;
+  [HomeNavigation.SELECTSPOTLIGHTPRODUCT]:undefined;
 };
 
 

@@ -80,5 +80,7 @@ export enum HomeNavigation {
     BUYERSREQUEST = "BuyersRequest",
     CREATEREQUEST = "CreateRequest",
     CREATEOFFER = "CreateOffer",
+    ADDSPOTLIGHT = "AddSpotlightScreen",
+    SELECTSPOTLIGHTPRODUCT = 'SelectSpotlightProduct'
   }
   
