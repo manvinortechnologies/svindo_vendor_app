@@ -5,12 +5,12 @@ import {
   SafeAreaView,
   FlatList,
   TouchableOpacity,
-  StyleSheet
+  StyleSheet,
+  TextInput,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons'; // adjust if using other icon lib
-import CustomSwitch from './CustomSwitch'; // adjust import path
-import Headerwithback from './Headerwithback'; // adjust import path
-// import { styles } from './styles'; // adjust import path
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import CustomSwitch from './CustomSwitch';
+import Headerwithback from './Headerwithback';
 
 const AddProductScreen = () => {
   const [selectedType, setSelectedType] = useState('Product');
@@ -19,15 +19,14 @@ const AddProductScreen = () => {
   const types = ['Product', 'Service', 'Print'];
   const forOptions = ['Offline only', 'Both online & Offline'];
 
-  // Sections always present
   const sections = [
     {
       title: 'Product Name',
       content: (
-        <View style={[styles.inputBoxOptional, { borderColor: 'white', opacity: 5 }]}>
+        <TouchableOpacity style={styles.inputBoxOptional}>
           <Text style={styles.placeholderText}>Ex: Lee White T shirt XL size</Text>
           <Icon name="chevron-down" size={18} color="#000" />
-        </View>
+        </TouchableOpacity>
       ),
     },
     {
@@ -38,31 +37,47 @@ const AddProductScreen = () => {
             <Text style={styles.smallLabel}>Wholesale Price (Optional)</Text>
             <CustomSwitch value={false} onValueChange={() => {}} />
           </View>
-
-          <View style={styles.inputBoxOptional}>
-            <Text style={styles.placeholderText}>Enter here</Text>
+          {/* Wholesale Price */}
+          <View style={styles.inputBox}>
+            <TextInput
+              placeholder="Enter here"
+              placeholderTextColor="#888"
+              style={styles.textInput}
+            />
           </View>
-
+          {/* Purchase & Sales Price */}
           <View style={styles.priceRow}>
             <View style={styles.inputHalf}>
               <Text style={styles.smallLabel}>Purchase Price</Text>
-              <View style={styles.inputBoxOptional}>
-                <Text style={styles.placeholderText}>Enter here</Text>
+              <View style={styles.inputBox}>
+                <TextInput
+                  placeholder="Enter here"
+                  placeholderTextColor="#888"
+                  style={styles.textInput}
+                />
               </View>
             </View>
             <View style={styles.inputHalf}>
               <Text style={styles.smallLabel}>Sales Price</Text>
-              <View style={styles.inputBoxOptional}>
-                <Text style={styles.placeholderText}>Enter here</Text>
+              <View style={styles.inputBox}>
+                <TextInput
+                  placeholder="Enter here"
+                  placeholderTextColor="#888"
+                  style={styles.textInput}
+                />
               </View>
             </View>
           </View>
-
+          {/* MRP & Unit */}
           <View style={styles.priceRow}>
             <View style={styles.inputHalf}>
               <Text style={styles.smallLabel}>MRP</Text>
-              <View style={styles.inputBoxOptional}>
-                <Text style={styles.placeholderText}>Enter here</Text>
+              <View style={styles.inputBox}>
+                <TextInput
+                  placeholder="Enter here"
+                  placeholderTextColor="#888"
+                  style={styles.textInput}
+                />
               </View>
             </View>
             <View style={styles.inputHalf}>
@@ -73,12 +88,16 @@ const AddProductScreen = () => {
               </TouchableOpacity>
             </View>
           </View>
-
+          {/* HSN & GST */}
           <View style={styles.priceRow}>
             <View style={styles.inputHalf}>
               <Text style={styles.smallLabel}>HSN</Text>
-              <View style={styles.inputBoxOptional}>
-                <Text style={styles.placeholderText}>Enter here</Text>
+              <View style={styles.inputBox}>
+                <TextInput
+                  placeholder="Enter here"
+                  placeholderTextColor="#888"
+                  style={styles.textInput}
+                />
               </View>
             </View>
             <View style={styles.inputHalf}>
@@ -89,7 +108,6 @@ const AddProductScreen = () => {
               </TouchableOpacity>
             </View>
           </View>
-
           <Text style={styles.warningText}>
             * To enable GST details please select as registered business in company settings
           </Text>
@@ -112,26 +130,26 @@ const AddProductScreen = () => {
           <Text style={styles.stockNote}>
             * Disable stock to create a simple product for billing only
           </Text>
-
           <View style={styles.imeiRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-              <Text style={styles.stockLabel}>IMEI / Serial No </Text>
+              <Text style={styles.stockLabel}>IMEI / Serial No</Text>
               <Text style={styles.optionalText}>(Optional)</Text>
             </View>
             <TouchableOpacity style={styles.addButtonSmall}>
               <Text style={styles.addButtonTextSmall}>Add +</Text>
             </TouchableOpacity>
           </View>
-
           <Text style={styles.stockWarning}>
             * Stock will be calculated based on this
           </Text>
-
           <Text style={styles.stockLabel}>Opening Stock</Text>
-          <View style={[styles.inputBoxStock, { width: '50%', marginTop: 5 }]}>
-            <Text style={styles.placeholderText}>Enter here</Text>
+          <View style={[styles.inputBox, { width: '50%' , marginTop: 5}]}>
+            <TextInput
+              placeholder="Enter here"
+              placeholderTextColor="#888"
+              style={styles.textInput}
+            />
           </View>
-
           <View style={styles.lowStockRow}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <Text style={styles.lowStockIcon}>🔔</Text>
@@ -139,30 +157,114 @@ const AddProductScreen = () => {
             </View>
             <CustomSwitch value={false} onValueChange={() => {}} />
           </View>
-
           <Text style={styles.stockLabel}>Low Stock Quantity</Text>
-          <View style={[styles.inputBoxStock, { width: '50%', marginTop: 5 }]}>
-            <Text style={styles.placeholderText}>Enter here</Text>
+          <View style={[styles.inputBox, { width: '50%', marginTop: 5 }]}>
+            <TextInput
+              placeholder="Enter here"
+              placeholderTextColor="#888"
+              style={styles.textInput}
+            />
           </View>
         </View>
       ),
     },
-    {
-      title: 'Optional Details',
-      content: (
-        <View style={styles.optionalContainer}>
-          {/* Example: You can fill in your optional details content */}
-          <Text style={styles.optionalLabel}>Description <Text style={styles.optionalText}>(Optional)</Text></Text>
-          <View style={styles.textAreaBox}>
-            <Text style={styles.placeholderText}>Enter here</Text>
-          </View>
-          <Text style={styles.optionalLabel}>Image <Text style={styles.optionalText}>(Optional)</Text></Text>
-          <TouchableOpacity style={styles.imageBox}>
-            <Text style={styles.plusIcon}>+</Text>
+
+     {
+  title: 'Optional Details',
+  content: (
+    <View style={styles.optionalContainer}>
+      {/* Category */}
+      <Text style={styles.optionalLabel}>Category <Text style={styles.optionalText}>(Optional)</Text></Text>
+      <View style={styles.inputBoxOptional}>
+        <Text style={styles.placeholderText}>Select category</Text>
+        <TouchableOpacity style={styles.includesRow}>
+            <Icon name="chevron-down" size={18} color="#000" />
+          </TouchableOpacity>
+      </View>
+
+      {/* Sub Category */}
+      <Text style={styles.optionalLabel}>Sub category <Text style={styles.optionalText}>(Optional)</Text></Text>
+      <View style={styles.inputBoxOptional}>
+        <Text style={styles.placeholderText}>Select Sub category</Text>
+        <TouchableOpacity style={styles.includesRow}>
+            <Icon name="chevron-down" size={18} color="#000" />
+          </TouchableOpacity>
+      </View>
+
+      {/* Brand Name */}
+      <Text style={styles.optionalLabel}>Brand Name <Text style={styles.optionalText}>(Optional)</Text></Text>
+      <View style={styles.inputBox}>
+        <TextInput
+              placeholder="Enter here"
+              placeholderTextColor="#888"
+              style={styles.textInput}
+            />
+      </View>
+
+      {/* Pick Color */}
+      <Text style={styles.optionalLabel}>Pick Color <Text style={styles.optionalText}>(Optional)</Text></Text>
+      <View style={styles.rowBetween}>
+        <View style={[styles.inputBoxOptional, { flex: 1 }]}>
+          <Text style={styles.placeholderText}>Select one</Text>
+          <TouchableOpacity style={styles.includesRow}>
+            <Icon name="chevron-down" size={18} color="#000" />
           </TouchableOpacity>
         </View>
-      ),
-      customHeader: (
+        <View style={styles.colorBox} />
+      </View>
+
+      {/* Select Size */}
+      <Text style={styles.optionalLabel}>Select Size <Text style={styles.optionalText}>(Optional)</Text></Text>
+      <View style={styles.inputBoxOptional}>
+        <Text style={styles.placeholderText}>Select here</Text>
+        <TouchableOpacity style={styles.includesRow}>
+            <Icon name="chevron-down" size={18} color="#000" />
+          </TouchableOpacity>
+      </View>
+
+      {/* Batch Number */}
+      <View style={styles.toggleRow}>
+        <Text style={styles.optionalLabel}>Batch number <Text style={styles.optionalText}>(Optional)</Text></Text>
+        <CustomSwitch value={false} onValueChange={() => {}} />
+      </View>
+      <View style={styles.inputBox}>
+        <TextInput
+              placeholder="Enter here"
+              placeholderTextColor="#888"
+              style={styles.textInput}
+            />
+      </View>
+
+      {/* Expiry Date */}
+      <View style={styles.toggleRow}>
+        <Text style={styles.optionalLabel}>Expiry Date <Text style={styles.optionalText}>(Optional)</Text></Text>
+        <CustomSwitch value={false} onValueChange={() => {}} />
+      </View>
+      <View style={styles.inputBox}>
+        <TextInput
+              placeholder="Enter here"
+              placeholderTextColor="#888"
+              style={styles.textInput}
+            />
+      </View>
+
+      {/* Description */}
+      <Text style={styles.optionalLabel}>Description <Text style={styles.optionalText}>(Optional)</Text></Text>
+      <View style={styles.textAreaBox}>
+        <TextInput
+          placeholder="Enter here"
+          placeholderTextColor="#888"
+          />
+      </View>
+
+      {/* Image */}
+      <Text style={styles.optionalLabel}>Image <Text style={styles.optionalText}>(Optional)</Text></Text>
+      <TouchableOpacity style={styles.imageBox}>
+        <Text style={styles.plusIcon}>+</Text>
+      </TouchableOpacity>
+    </View>
+  ),
+  customHeader: (
         <View style={styles.headerRow}>
           <Text style={styles.sectionTitle}>Optional Details</Text>
           <TouchableOpacity style={styles.includesRow}>
@@ -173,7 +275,6 @@ const AddProductScreen = () => {
     },
   ];
 
-  // Dynamic sections based on selection
   const dynamicSections: any[] = [];
   if (selectedType === 'Product' && selectedFor === 'Both online & Offline') {
     dynamicSections.push(
@@ -181,10 +282,10 @@ const AddProductScreen = () => {
         title: 'Delivery Details',
         content: (
           <View>
-            <View style={styles.toggleRow}>
+            {/* <View style={styles.toggleRow}>
               <Text style={styles.sectionTitle}>Use default</Text>
               <CustomSwitch value={true} onValueChange={() => {}} />
-            </View>
+            </View> */}
             {['Instant Delivery', 'Self Pickup', 'General Delivery'].map(option => (
               <View key={option} style={styles.toggleRow}>
                 <Text style={styles.smallLabel}>{option}</Text>
@@ -193,15 +294,24 @@ const AddProductScreen = () => {
             ))}
           </View>
         ),
+        customHeader: (
+        <View style={styles.headerRow}>
+          <Text style={styles.sectionTitle}>Delivery Details</Text>
+          <View style={styles.includesRow}>
+            <Text style={styles.smallLabel}>Includes Tax</Text>
+            <CustomSwitch value={false} onValueChange={() => {}} />
+          </View>
+        </View>
+      ),
       },
       {
         title: 'Policies',
         content: (
           <View>
-            <View style={styles.toggleRow}>
+            {/* <View style={styles.toggleRow}>
               <Text style={styles.sectionTitle}>Use default</Text>
               <CustomSwitch value={true} onValueChange={() => {}} />
-            </View>
+            </View> */}
             {[
               'Return',
               'COD',
@@ -218,6 +328,15 @@ const AddProductScreen = () => {
             ))}
           </View>
         ),
+        customHeader: (
+        <View style={styles.headerRow}>
+          <Text style={styles.sectionTitle}>Policies</Text>
+          <View style={styles.includesRow}>
+            <Text style={styles.smallLabel}>Includes Tax</Text>
+            <CustomSwitch value={false} onValueChange={() => {}} />
+          </View>
+        </View>
+      ),
       }
     );
   }
@@ -296,7 +415,7 @@ const AddProductScreen = () => {
             </TouchableOpacity>
           </View>
         }
-        extraData={{selectedType, selectedFor}}
+        extraData={{ selectedType, selectedFor }}
       />
     </SafeAreaView>
   );
@@ -374,11 +493,16 @@ const styles = StyleSheet.create({
   },
   inputBox: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: '#FCA311',
     borderRadius: 6,
-    padding: 12,
-    backgroundColor: '#fff',
+    padding: 1,
+    backgroundColor: '#FFF8EB',
     marginBottom: 12,
+  },
+   textInput: {
+    flex: 1,
+    fontSize: 14,
+    color: '#000',
   },
   placeholderText: {
     color: '#000',
@@ -505,7 +629,7 @@ inputBoxOptional: {
   borderWidth: 1,
   borderColor: '#FCA311',
   borderRadius: 6,
-  padding: 12,
+  padding: 10,
   backgroundColor: '#FFF8EB',
   marginBottom: 12,
 },

@@ -59,6 +59,10 @@ const Storescreen = ({ navigation }: any) => {
         borderBottomColor="#ccc"
       />
 
+      <TouchableOpacity style={{position: 'absolute', top:25, right: 15, padding:5, backgroundColor: '#006EB2', borderRadius: 8}}>
+        <Text style={{color: '#fff'}}>View Store</Text>
+      </TouchableOpacity>
+
       <ScrollView>
         {/* Top Header */}
 
@@ -74,7 +78,9 @@ const Storescreen = ({ navigation }: any) => {
               <Text style={styles.openLabel}>Edit Logo</Text>
               <View style={styles.storeContainer}>
                 <Text style={styles.storetext}>Business Name</Text>
-                <MaterialIcon name="location-on" size={28} color="#000" style={styles.actionIcon} />
+                <TouchableOpacity>
+                  <Icon name="pencil-outline" size={28} color="#000" style={styles.actionIcon} />
+                </TouchableOpacity>
 
               </View>
             </View>
@@ -83,7 +89,7 @@ const Storescreen = ({ navigation }: any) => {
             <View style={styles.infoContainer}>
               <View style={styles.editbannner}>
                 <Text>
-                  Edit <Icon name="star" size={20} color="#FCA311" />
+                  Edit <Icon name="pencil-outline" size={20} color="#000" />
                   {"\n"}
                   banner
                 </Text>
@@ -91,7 +97,7 @@ const Storescreen = ({ navigation }: any) => {
 
               </View>
               <View style={styles.ratingContainer}>
-                <Icon name="star" size={25} color="#FCA311" />
+                <MaterialIcon name="location-on" size={25} color="#006EB2" />
                 <Text>Location</Text>
               </View>
               {/* Follow Button and Icons */}
@@ -113,6 +119,9 @@ const Storescreen = ({ navigation }: any) => {
           <View style={styles.textContainer}>
             <Text style={styles.textheader}>About</Text>
             <Text style={styles.additionalText}>Lorem ipsum dolor sit amet consectetur. Nulla eget consequat et volutpat dolor sodales sem. Egestas pulvinar nibh amet a nunc velit amet in. Tristique ipsum enim turpis porttitor amet at volutpat. Rhoncus orci consequat sed aenean.</Text>
+            <TouchableOpacity style={{alignSelf: 'flex-end'}}>
+              <Icon name="pencil-outline" size={28} color="#000"  />
+            </TouchableOpacity>
           </View>
         </View>
         {/* Additional Text at the Bottom */}
@@ -262,14 +271,14 @@ const Storescreen = ({ navigation }: any) => {
 
       <View style={styles.bottomcontainer}>
         <TouchableOpacity style={styles.option}>
-          <Icon name="storefront" size={20} color="#555" />
+          <Icon name="storefront" size={20} color="#FCA511" />
           <Text style={styles.optionText}> <NavigationButton screen="MarketingTools" label="Online Store" color="#FCA511" fontSize={16} fontWeight="bold" /></Text>
         </TouchableOpacity>
 
         <View style={styles.divider} />
 
         <TouchableOpacity style={styles.option}>
-          <Icon name="build" size={20} color="#f7931e" />
+          <Icon name="cog-outline" size={20} color="#000" />
           <Text style={[styles.optionText, { color: '#f7931e' }]}><NavigationButton screen="MarketingTools" label="Tools" color="#000" fontSize={16} /></Text>
         </TouchableOpacity>
       </View>
