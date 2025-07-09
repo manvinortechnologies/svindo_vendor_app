@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 40 : 0,
     },
-    floatingButtons: { position: "absolute", top: "85%", right: 20,
+    floatingButtons: { position: "absolute", bottom: "25%", right: 20,
         flexDirection: "column", gap: 10 },
         addButtonGreen: {
             flexDirection: "row",
