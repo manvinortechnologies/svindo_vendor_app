@@ -78,5 +78,7 @@ export enum HomeNavigation {
     CREATECOUPON="CreateCoupon",
     ADD_POST_SCREEN="AddPostScreen",
     BUYERSREQUEST = "BuyersRequest",
+    CREATEREQUEST = "CreateRequest",
+    CREATEOFFER = "CreateOffer",
   }
   

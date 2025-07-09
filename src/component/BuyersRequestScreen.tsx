@@ -1,6 +1,8 @@
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, Image, Dimensions, SafeAreaView } from 'react-native'
 import React, { useState } from 'react';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; 
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Headerwithback from './Headerwithback';
 
 const  { width } = Dimensions.get('window');
@@ -32,8 +34,21 @@ const buyersRequests = [
   },
 ];
 
-const BuyersRequestScreen = () => {
+type RootStackParamList = {
+    BuyersRequest: undefined;
+    CreateRequest: undefined;
+    CreateOffer: undefined;
+};
+
+type BuyersRequestScreenNavigationProp = NativeStackNavigationProp<
+ RootStackParamList,
+ 'CreateRequest'
+>; 
+
+const BuyersRequestScreen: React.FC = () => {
     const [selectedTab, setSelectedTab] = useState('Wholesale');
+
+     const navigation = useNavigation<BuyersRequestScreenNavigationProp>();
   return (
     <SafeAreaView style={styles.container}>
         
@@ -75,7 +90,7 @@ const BuyersRequestScreen = () => {
             </Text>
           </TouchableOpacity>
         ))}
-      </View>
+        </View>
       {/* Buyer Requests */}
       <FlatList data={buyersRequests} keyExtractor={(item) => item.id}
       contentContainerStyle={{ paddingBottom: 100}}
@@ -86,9 +101,9 @@ const BuyersRequestScreen = () => {
 
             {/* Customer wants to buy */}
             <View style={styles.rowBetween}>
-                <Text style={styles.customerText}>Customer wants to buy</Text>
+                <Text style={styles.customerText}>{selectedTab === "Requested" ? "You want to buy" : "Customer wants to buy"}</Text>
                 <TouchableOpacity style={styles.sellButton}>
-                    <Text style={styles.sellButtonText}>Sell now</Text>
+                    <Text style={styles.sellButtonText}>{selectedTab === "Requested" ? "Show offers" : "Sell now"}</Text>
                 </TouchableOpacity>
             </View>
 
@@ -97,30 +112,58 @@ const BuyersRequestScreen = () => {
 
             {/* Details */}
             <View style={styles.detailsRow}>
-                <View style={styles.detailsLeft}>
-                    <Text style={styles.label}>Category
-                    <Text style={styles.subLabel}> {item.subCategory}</Text>
+                <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+                    <View>
+                    <Text style={styles.label}>Category {'\n'}
+                    <Text style={styles.label}> {item.subCategory}</Text>
                     </Text>
-                    <Text style={styles.label}>
-                  User id <Text style={styles.subLabel}>{item.userId}</Text>
-                </Text>
-                <Text style={styles.label}>{item.city}</Text>
-                <Text style={styles.label}>{item.description}</Text>
-                </View>
-                <View style={styles.detailsRight}>
+                    </View>
                     <Text style={styles.budgetText}>Budget</Text>
+                </View>
+                <View style={{flexDirection: 'row', justifyContent: 'space-between' , marginTop: 5}}>
+                <Text style={styles.label}>
+                  User id 
+                </Text>
+                <Text style={styles.subLabel}>{item.userId}</Text>
+                {/* Hide Offer Coupon button in Requested */}
+                {selectedTab !== "Requested" && (
                     <TouchableOpacity style={styles.couponButton}>
                         <Text style={styles.couponButtonText}>Offer Coupon</Text>
-                    </TouchableOpacity>
+                </TouchableOpacity>
+                )}
+                </View>
+                <Text style={styles.subLabel}>{item.city}</Text>
+                <View>
+                    <Text style={[styles.label, {marginTop: 5}]}>
+                  Description
+                </Text>
+                <Text style={styles.subLabel}>{item.description}</Text>
                 </View>
             </View>
         </View>
       )}
       />
+      {/* Show Your Request & Offers for you button  */}
+      {selectedTab === 'Requested' && (
+        <View style={styles.requestBox}>
+          <TouchableOpacity
+            style={styles.requestTabButton}
+            onPress={() => navigation.navigate('CreateRequest')}
+          >
+            <Text style={styles.requestTabText}>Your Request</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.requestTabButton}
+            onPress={() => navigation.navigate('CreateOffer')}
+          >
+            <Text style={styles.requestTabText}>Offers for you</Text>
+          </TouchableOpacity>
+        </View>
+      )}
       {/* Request Stock */}
       <View style={styles.requestStockContainer}>
-        <Text style={styles.swipeText}>⬆ Swipe up to see more</Text>
-        <TouchableOpacity style={styles.requestStockButton}>
+        <Text style={styles.swipeText}><Icon name="arrow-up" size={24} color="#FFE8C1"  /> Swipe up to see more</Text>
+        <TouchableOpacity style={styles.requestStockButton} onPress={() => navigation.navigate('CreateRequest')}>
           <Text style={styles.requestStockText}>Request Stock</Text>
         </TouchableOpacity>
       </View>
@@ -178,28 +221,29 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     alignItems: 'center',
+    backgroundColor: '#FFF5E5'
   },
   tabSelected: {
-    borderBottomWidth: 2,
-    borderColor: '#F59E0B',
+    backgroundColor: '#F59E0B',
   },
   tabText: {
     fontSize: 13,
-    color: '#000',
-  },
-  tabTextSelected: {
     color: '#F59E0B',
     fontWeight: '600',
   },
+  tabTextSelected: {
+    color: '#FFF',
+    fontWeight: '600',
+  },
   card: {
-    backgroundColor: '#FFFBEB',
+    backgroundColor: '#FFFAF2',
     margin: 12,
     borderRadius: 8,
     padding: 10,
   },
   productImage: {
     width: '100%',
-    height: width * 0.5,
+    height: width * 0.6,
     borderRadius: 20,
     marginBottom: 8,
     resizeMode: 'cover'
@@ -208,14 +252,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginTop: 10
   },
   customerText: {
     color: '#F59E0B',
-    fontSize: 13,
-    fontWeight: '500',
+    fontSize: 20,
+    fontWeight: '600',
   },
   sellButton: {
-    backgroundColor: '#FBBF24',
+    backgroundColor: '#F59E0B',
     borderRadius: 4,
     paddingVertical: 4,
     paddingHorizontal: 10,
@@ -225,40 +270,42 @@ const styles = StyleSheet.create({
   sellButtonText: {
     fontSize: 12,
     color: '#fff',
-    fontWeight: '500',
+    fontWeight: '600',
   },
   productName: {
-    fontSize: 15,
+    fontSize: 18,
     fontWeight: '600',
     color: '#000',
-    marginVertical: 4,
+    marginVertical: 8,
   },
   detailsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
     marginTop: 6,
   },
   detailsLeft: {
     flex: 1,
+    gap: 5
   },
   label: {
     fontSize: 12,
     color: '#000',
+    fontWeight: '600',
   },
   subLabel: {
     fontWeight: '500',
+    color: '#727272'
   },
   detailsRight: {
     alignItems: 'flex-end',
     justifyContent: 'space-between',
   },
   budgetText: {
+    fontSize: 18,
     fontWeight: '600',
     color: '#000',
     marginBottom: 6,
   },
   couponButton: {
-    backgroundColor: '#FBBF24',
+    backgroundColor: '#F59E0B',
     borderRadius: 4,
     paddingVertical: 6,
     paddingHorizontal: 12,
@@ -288,6 +335,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#727272',
     marginBottom: 4,
+  },
+    requestBox: {
+    position: 'absolute',
+    bottom: 60,
+    left: 20,
+    right: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    backgroundColor: '#FFF3E1',
+    paddingVertical: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#F59E0B',
+    zIndex: 5,
+  },
+  requestTabButton: {
+    backgroundColor: '#F59E0B',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  requestTabText: {
+    color: '#fff',
+    fontWeight: '600',
   },
   requestStockButton: {
     backgroundColor: '#F59E0B',
