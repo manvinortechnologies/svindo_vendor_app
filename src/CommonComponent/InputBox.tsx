@@ -1,3 +1,4 @@
+import { StyleProp, TextStyle } from "react-native";
 import { KeyboardTypeOptions, StyleSheet, Text, TextInput, View } from "react-native";
 
 export const InputBox = ({
@@ -10,16 +11,18 @@ export const InputBox = ({
     autoCapitalize = 'none',
     keyboardType = 'default',
     maxLength,
+    styless
 }: {
     label?: string;
-    placeholder: string;
+    placeholder?: string;
     editable?: boolean;
     background?: string;
-    value: string;
+    value?: string;
     maxLength?: number
-    onChangeText: (text: string) => void;
+    onChangeText?: (text: string) => void;
     autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
     keyboardType?: KeyboardTypeOptions,
+    styless?:StyleProp<TextStyle>;
 
 }) => (
     <View style={{ marginBottom: 12 }}>
