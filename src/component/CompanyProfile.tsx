@@ -194,7 +194,6 @@ const CompanyProfile = ({ navigation, route }: any) => {
           type: imageFile.type || "image/jpeg",
         });
       }
-console.log("formdata-->",formData);
 
       const apiEnd = `vendor/company-profile/`;
       const response = await api.post(apiEnd, formData, {
