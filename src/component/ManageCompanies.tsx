@@ -40,7 +40,7 @@ const ManageCompanies = ({navigation}:any) => {
 
   }
   const handleAdd = () => {
-    navigation.navigate("SignupDetailScreen")
+    navigation.navigate("CompanyProfile")
     // Handle add company
   };
 
