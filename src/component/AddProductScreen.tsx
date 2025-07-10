@@ -12,6 +12,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Image,
+  ScrollView,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Headerwithback from './Headerwithback';
@@ -23,6 +24,7 @@ import CalendarModal from '../Modals/CalendarModal';
 import Loading from '../CommonComponent/Loading';
 import ModalUpdatePhoto from '../Modals/ModalUpdatePhoto';
 import ImeiModal from '../Modals/ImeiModal';
+import api from '../services/api/api';
 const colorOptions: { name: string; id: string | number }[] = [
   { name: 'Red', id: '#FF0000' },
   { name: 'Green', id: '#00FF00' },
@@ -68,7 +70,7 @@ const AddProductScreen = () => {
   const [batchSwitch, setBatchSwitch] = useState(true);
   const [expirySwitch, setExpirySwitch] = useState(true);
 
-  const [pickColor,setPicColor]=useState<{name:string,id:string|number}>()
+  const [pickColor, setPicColor] = useState<{ name: string, id: string | number }>()
 
   // Delivery options
   const [deliveryOptions, setDeliveryOptions] = useState<Record<string, boolean>>({
@@ -117,13 +119,51 @@ const AddProductScreen = () => {
     }));
   };
 
-  const handelSaveProduct=async()=>{
+  const handelSaveProduct = async () => {
     try {
       setIsLoading(true)
-      
+         const payload = {
+      name: productName,
+      type: selectedType.toLowerCase(), // 'Product' => 'product'
+      sale_type: selectedFor === 'Both online & Offline' ? 'both' : 'offline',
+      wholesale_price: isWholesaleEnabled ? wholesalePrice : undefined,
+      purchase_price: purchasePrice,
+      sales_price: salesPrice,
+      mrp: mrp,
+      unit: unit,
+      hsn: hsn,
+      gst: gst,
+      imei_serials: imeiList,
+      opening_stock: Number(openingStock),
+      low_stock_alert: lowStockAlert,
+      low_stock_quantity: lowStockAlert ? Number(lowStockQty) : undefined,
+      category: 1, // <-- Replace this with actual category ID from your dropdown if needed
+      sub_category: "Electronics", // Replace with actual selection when dynamic
+      brand_name: brandName,
+      color: pickColor?.name,
+      size: "Medium", // Replace with actual size when dynamic
+      batch_number: batchSwitch ? batchNumber : undefined,
+      expiry_date: expirySwitch ? expiryDate : undefined,
+      description: description,
+      instant_delivery: deliveryOptions['Instant Delivery'],
+      self_pickup: deliveryOptions['Self Pickup'],
+      general_delivery: deliveryOptions['General Delivery'],
+      return_policy: toggleValues['Return'],
+      cod: toggleValues['COD'],
+      replacement: toggleValues['Replacement'],
+      shop_exchange: toggleValues['Shop Exchange'],
+      shop_warranty: toggleValues['Shop Warranty'],
+      brand_warranty: toggleValues['Brand Warranty'],
+    };
+    console.log("payload-->",payload);
+    const res=await api.post("master/product/",payload)
+    console.log("--res----",res);
+    
+    
+
     } catch (error) {
-      
-    }finally{
+
+    } finally {
       setIsLoading(false)
     }
   }
@@ -264,24 +304,24 @@ const AddProductScreen = () => {
               <Text style={styles.stockLabel}>IMEI / Serial No</Text>
               <Text style={styles.optionalText}>(Optional)</Text>
             </View>
-            <TouchableOpacity style={styles.addButtonSmall} 
-            onPress={()=>{setImeiModalVisible(true)}}
+            <TouchableOpacity style={styles.addButtonSmall}
+              onPress={() => { setImeiModalVisible(true) }}
             >
               <Text style={styles.addButtonTextSmall}>Add +</Text>
             </TouchableOpacity>
           </View>
-            <FlatList
-                      data={imeiList}
-                      keyExtractor={(_, index) => index.toString()}
-                      renderItem={({ item, index }) => (
-                         <View style={styles.listItem}>
-      <Text style={styles.itemText}>
-        {index + 1}. {item}
-      </Text>
-      
-    </View>
-                      )}
-                    />
+          <FlatList
+            data={imeiList}
+            keyExtractor={(_, index) => index.toString()}
+            renderItem={({ item, index }) => (
+              <View style={styles.listItem}>
+                <Text style={styles.itemText}>
+                  {index + 1}. {item}
+                </Text>
+
+              </View>
+            )}
+          />
           <Text style={styles.stockWarning}>
             * Stock will be calculated based on this
           </Text>
@@ -359,21 +399,30 @@ const AddProductScreen = () => {
               {/* Pick Color */}
               <Text style={styles.optionalLabel}>Pick Color <Text style={styles.optionalText}>(Optional)</Text></Text>
               <View style={styles.rowBetween}>
-                <View style={[styles.inputBoxOptional, { flex: 1 }]}>
-                  {/* <Text style={styles.placeholderText}>Select one</Text>
-                  <TouchableOpacity style={styles.includesRow}>
+                <View style={[{ flex: 1, flexDirection: 'row',alignItems:"center" }]}>
+                  {/* <Text style={styles.placeholderText}>Select one</Text> */}
+                  {/* <TouchableOpacity style={styles.includesRow}>
                     <Icon name="chevron-down" size={18} color="#000" />
                   </TouchableOpacity> */}
                   <CustomDropdown
-                  options={colorOptions}
-                  onSelect={setPicColor}
-                  placeholder='Select Color'
-                  selectedValue={pickColor?.name||""}
- dropDownBoxStyle={[styles.inputBoxOptional,{backgroundColor:"#FFF8EB",borderColor: '#FCA311',width:"100%"}]}
-                  
+                    options={colorOptions}
+                    onSelect={setPicColor}
+                    placeholder='Select Color'
+                    selectedValue={pickColor?.name || ""}
+                    dropDownBoxStyle={{
+                      width: "100%",
+                      borderWidth: 1,
+                      borderColor: '#FCA311',
+                      borderRadius: 6,
+                      padding: 10,
+                      backgroundColor: '#FFF8EB',
+                      marginBottom: 12,
+                    }}
+
+
                   />
                 </View>
-                <View style={styles.colorBox} />
+                <View style={[styles.colorBox,{backgroundColor:pickColor?.id.toString()||"#8B3A3A"}]} />
               </View>
 
               {/* Select Size */}
@@ -451,7 +500,7 @@ const AddProductScreen = () => {
           </TouchableOpacity>
           {selectedFor === 'Both online & Offline' && selectedType !== "Print" && (
             <>
-              <Text style={[styles.optionalText,{marginBottom:5}]}>(Optional)</Text>
+              <Text style={[styles.optionalText, { marginBottom: 5 }]}>(Optional)</Text>
               <View style={{ flexDirection: 'row', justifyContent: "space-between" }}>
                 <TouchableOpacity
                   onPress={() => { setImage2Model(true) }}
@@ -514,10 +563,6 @@ const AddProductScreen = () => {
         title: 'Delivery Details',
         content: (
           <View>
-            {/* <View style={styles.toggleRow}>
-              <Text style={styles.sectionTitle}>Use default</Text>
-              <CustomSwitch value={true} onValueChange={() => {}} />
-            </View> */}
             {['Instant Delivery', 'Self Pickup', 'General Delivery'].map(option => (
               <View key={option} style={styles.toggleRow}>
                 <Text style={styles.smallLabel}>{option}</Text>
@@ -583,6 +628,7 @@ const AddProductScreen = () => {
     <MainContainer>
       <SafeAreaView style={styles.safeArea}>
         <Headerwithback title={'Enter Details'} />
+
         <CalendarModal
           visible={callenderModel}
           onClose={() => { setCallenderModel(false) }}
@@ -592,12 +638,12 @@ const AddProductScreen = () => {
 
         />
 
-           <ImeiModal
-        visible={imeiModalVisible}
-        onClose={() => setImeiModalVisible(false)}
-        imeiList={imeiList}
-        setImeiList={setImeiList}
-      />
+        <ImeiModal
+          visible={imeiModalVisible}
+          onClose={() => setImeiModalVisible(false)}
+          imeiList={imeiList}
+          setImeiList={setImeiList}
+        />
         <Loading
           visible={isLoading}
         />
@@ -635,62 +681,76 @@ const AddProductScreen = () => {
           keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 30}
         >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-            <FlatList
-               keyboardShouldPersistTaps="handled"
-             nestedScrollEnabled={true} // Important for Android
+            <ScrollView
+              style={{ paddingHorizontal: 10 }}
 
-              ListHeaderComponent={
-                <View style={{ padding: 16 }}>
-                  <View style={styles.row}>
-                    <Text style={styles.label}>Type :</Text>
-                    <View style={styles.optionGroup}>
-                      {types.map(type => (
-                        <TouchableOpacity
-                          key={type}
+            >
+              <View style={{ padding: 16 }}>
+                <View style={styles.row}>
+                  <Text style={styles.label}>Type :</Text>
+                  <View style={styles.optionGroup}>
+                    {types.map(type => (
+                      <TouchableOpacity
+                        key={type}
+                        style={[
+                          styles.optionButton,
+                          selectedType === type && styles.selectedButton,
+                        ]}
+                        onPress={() => setSelectedType(type)}
+                      >
+                        <Text
                           style={[
-                            styles.optionButton,
-                            selectedType === type && styles.selectedButton,
+                            styles.optionText,
+                            selectedType === type && styles.selectedText,
                           ]}
-                          onPress={() => setSelectedType(type)}
                         >
-                          <Text
-                            style={[
-                              styles.optionText,
-                              selectedType === type && styles.selectedText,
-                            ]}
-                          >
-                            {type}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </View>
-                  <View style={styles.row}>
-                    <Text style={styles.label}>For :</Text>
-                    <View style={styles.optionGroup}>
-                      {forOptions.map(option => (
-                        <TouchableOpacity
-                          key={option}
-                          style={[
-                            styles.optionButton,
-                            selectedFor === option && styles.selectedOrange,
-                          ]}
-                          onPress={() => setSelectedFor(option)}
-                        >
-                          <Text
-                            style={[
-                              styles.optionText,
-                              selectedFor === option && styles.selectedText,
-                            ]}
-                          >
-                            {option}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
+                          {type}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
                   </View>
                 </View>
-              }
+                <View style={styles.row}>
+                  <Text style={styles.label}>For :</Text>
+                  <View style={styles.optionGroup}>
+                    {forOptions.map(option => (
+                      <TouchableOpacity
+                        key={option}
+                        style={[
+                          styles.optionButton,
+                          selectedFor === option && styles.selectedOrange,
+                        ]}
+                        onPress={() => setSelectedFor(option)}
+                      >
+                        <Text
+                          style={[
+                            styles.optionText,
+                            selectedFor === option && styles.selectedText,
+                          ]}
+                        >
+                          {option}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              </View>
+              {[...sections, ...dynamicSections].map((item) => {
+                if (item.title == "Stock" && selectedType !== "Product") return null;
+
+                return (
+                  <View style={styles.section}>
+                    {item.customHeader ? item.customHeader : (
+                      <Text style={styles.sectionTitle}>{item.title}</Text>
+                    )}
+                    {item.content}
+                  </View>
+                );
+              })}
+
+              {/* <FlatList
+               keyboardShouldPersistTaps="handled"
+             nestedScrollEnabled={true} // Important for Android
               data={[...sections, ...dynamicSections]}
               keyExtractor={item => item.title}
               contentContainerStyle={{ paddingHorizontal: 16 }}
@@ -706,17 +766,19 @@ const AddProductScreen = () => {
                   </View>
                 );
               }}
-              ListFooterComponent={
-                <View style={styles.footer}>
-                  <TouchableOpacity style={styles.addButton}>
-                    <Text style={styles.addButtonText}>Save</Text>
-                  </TouchableOpacity>
-                </View>
-              }
-              extraData={{ selectedType, selectedFor }}
-            />
+          
+            /> */}
+              <View style={styles.footer}>
+                <TouchableOpacity
+                onPress={()=>{
+                  handelSaveProduct()
+                }}
+                style={styles.addButton}>
+                  <Text style={styles.addButtonText}>Save</Text>
+                </TouchableOpacity>
+              </View>
 
-
+            </ScrollView>
           </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -929,12 +991,12 @@ const styles = StyleSheet.create({
   inputBoxOptional: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    // borderWidth: 1,
-    // borderColor: '#FCA311',
-    // borderRadius: 6,
-    // padding: 10,
-    // backgroundColor: '#FFF8EB',
-    // marginBottom: 12,
+    borderWidth: 1,
+    borderColor: '#FCA311',
+    borderRadius: 6,
+    padding: 10,
+    backgroundColor: '#FFF8EB',
+    marginBottom: 12,
   },
   rowBetween: {
     flexDirection: 'row',
@@ -949,7 +1011,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     borderColor: '#ccc',
-    marginBottom: 8
+    marginBottom: 18
   },
   textAreaBox: {
     borderWidth: 1,
@@ -995,7 +1057,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     fontSize: 16,
   },
-   listItem: {
+  listItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     paddingVertical: 8,
