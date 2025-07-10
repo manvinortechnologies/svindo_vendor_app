@@ -86,6 +86,8 @@ export type THomeNavigation = {
   [HomeNavigation.BUYERSREQUEST]: undefined;
   [HomeNavigation.CREATEREQUEST]:undefined;
   [HomeNavigation.CREATEOFFER]:undefined;
+  [HomeNavigation.BANNER_ADS]:undefined;
+  [HomeNavigation.ADD_BANNER_SCREEN]:undefined
 };
 
 

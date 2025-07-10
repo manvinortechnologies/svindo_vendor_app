@@ -80,5 +80,7 @@ export enum HomeNavigation {
     BUYERSREQUEST = "BuyersRequest",
     CREATEREQUEST = "CreateRequest",
     CREATEOFFER = "CreateOffer",
+    BANNER_ADS="BannerAds",
+    ADD_BANNER_SCREEN="AddBannerScreen",
   }
   
