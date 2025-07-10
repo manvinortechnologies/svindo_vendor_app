@@ -16,7 +16,7 @@ const { width, height } = Dimensions.get('window');
 
 interface CustomDropdownProps {
   placeholder: string;
-  options?: any[];
+  options?: {name:string,id:string|number}[];
   onSelect: (value: any) => void;
   selectedValue: string;
   styles?: StyleProp<ViewStyle>;

@@ -11,6 +11,7 @@ import {
   Platform,
   TouchableWithoutFeedback,
   Keyboard,
+  Image,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Headerwithback from './Headerwithback';
@@ -19,7 +20,26 @@ import { InputBox } from '../CommonComponent/InputBox';
 import CustomDropdown from '../CommonComponent/CustomDropdown';
 import CustomSwitch from '../CommonComponent/CustomSwitch';
 import CalendarModal from '../Modals/CalendarModal';
-
+import Loading from '../CommonComponent/Loading';
+import ModalUpdatePhoto from '../Modals/ModalUpdatePhoto';
+import ImeiModal from '../Modals/ImeiModal';
+const colorOptions: { name: string; id: string | number }[] = [
+  { name: 'Red', id: '#FF0000' },
+  { name: 'Green', id: '#00FF00' },
+  { name: 'Blue', id: '#0000FF' },
+  { name: 'Yellow', id: '#FFFF00' },
+  { name: 'Orange', id: '#FFA500' },
+  { name: 'Purple', id: '#800080' },
+  { name: 'Pink', id: '#FFC0CB' },
+  { name: 'Black', id: '#000000' },
+  { name: 'White', id: '#FFFFFF' },
+  { name: 'Gray', id: '#808080' },
+  { name: 'Brown', id: '#A52A2A' },
+  { name: 'Sky Blue', id: '#87CEEB' },
+  { name: 'Teal', id: '#008080' },
+  { name: 'Gold', id: '#FFD700' },
+  { name: 'Silver', id: '#C0C0C0' },
+];
 const AddProductScreen = () => {
   const [selectedType, setSelectedType] = useState('Product');
   const [selectedFor, setSelectedFor] = useState('Offline only');
@@ -48,6 +68,8 @@ const AddProductScreen = () => {
   const [batchSwitch, setBatchSwitch] = useState(true);
   const [expirySwitch, setExpirySwitch] = useState(true);
 
+  const [pickColor,setPicColor]=useState<{name:string,id:string|number}>()
+
   // Delivery options
   const [deliveryOptions, setDeliveryOptions] = useState<Record<string, boolean>>({
     'Instant Delivery': false,
@@ -65,9 +87,23 @@ const AddProductScreen = () => {
     'Brand Warranty': false,
     'On shop orders': false,
   });
-  const [callenderModel,setCallenderModel]=useState<boolean>(false)
-const [deliveryTax,setDeliveryTax]=useState<boolean>(false)
-const [policyTax,setPolicyTax]=useState<boolean>(false)
+  const [callenderModel, setCallenderModel] = useState<boolean>(false)
+  const [deliveryTax, setDeliveryTax] = useState<boolean>(false)
+  const [policyTax, setPolicyTax] = useState<boolean>(false)
+  const [image1, setImage] = useState<any>();
+  const [image1Model, setImage1Model] = useState<boolean>(false)
+
+  const [image2, setImage2] = useState<any>();
+  const [image2Model, setImage2Model] = useState<boolean>(false)
+
+  const [image3, setImage3] = useState<any>();
+  const [image3Model, setImage3Model] = useState<boolean>(false)
+
+  const [image4, setImage4] = useState<any>();
+  const [image4Model, setImage4Model] = useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [imeiModalVisible, setImeiModalVisible] = useState(false);
+  const [imeiList, setImeiList] = useState<string[]>([]);
   const onToggleChange = (key: string, value: boolean) => {
     setToggleValues(prev => ({
       ...prev,
@@ -80,6 +116,21 @@ const [policyTax,setPolicyTax]=useState<boolean>(false)
       [key]: value,
     }));
   };
+
+  const handelSaveProduct=async()=>{
+    try {
+      setIsLoading(true)
+      
+    } catch (error) {
+      
+    }finally{
+      setIsLoading(false)
+    }
+  }
+
+
+
+
   const sections = [
     {
       title: 'Product Name',
@@ -203,6 +254,7 @@ const [policyTax,setPolicyTax]=useState<boolean>(false)
     {
       title: 'Stock',
       content: (
+
         <View style={styles.stockContainer}>
           <Text style={styles.stockNote}>
             * Disable stock to create a simple product for billing only
@@ -212,10 +264,24 @@ const [policyTax,setPolicyTax]=useState<boolean>(false)
               <Text style={styles.stockLabel}>IMEI / Serial No</Text>
               <Text style={styles.optionalText}>(Optional)</Text>
             </View>
-            <TouchableOpacity style={styles.addButtonSmall}>
+            <TouchableOpacity style={styles.addButtonSmall} 
+            onPress={()=>{setImeiModalVisible(true)}}
+            >
               <Text style={styles.addButtonTextSmall}>Add +</Text>
             </TouchableOpacity>
           </View>
+            <FlatList
+                      data={imeiList}
+                      keyExtractor={(_, index) => index.toString()}
+                      renderItem={({ item, index }) => (
+                         <View style={styles.listItem}>
+      <Text style={styles.itemText}>
+        {index + 1}. {item}
+      </Text>
+      
+    </View>
+                      )}
+                    />
           <Text style={styles.stockWarning}>
             * Stock will be calculated based on this
           </Text>
@@ -237,17 +303,21 @@ const [policyTax,setPolicyTax]=useState<boolean>(false)
             </View>
             <CustomSwitch value={lowStockAlert} onValueChange={setLowStockAlert} />
           </View>
-          <Text style={styles.stockLabel}>Low Stock Quantity</Text>
-          <View style={[{ width: '50%', marginTop: 5 }]}>
+          {lowStockAlert && (
+            <>
+              <Text style={styles.stockLabel}>Low Stock Quantity</Text>
+              <View style={[{ width: '50%', marginTop: 5 }]}>
 
-            <InputBox
-              placeholder="Enter here"
-              background='#FFF8EB'
-              value={lowStockQty}
-              keyboardType='number-pad'
-              onChangeText={setLowStockQty}
-            />
-          </View>
+                <InputBox
+                  placeholder="Enter here"
+                  background='#FFF8EB'
+                  value={lowStockQty}
+                  keyboardType='number-pad'
+                  onChangeText={setLowStockQty}
+                />
+              </View>
+            </>
+          )}
         </View>
       ),
     },
@@ -275,88 +345,155 @@ const [policyTax,setPolicyTax]=useState<boolean>(false)
           </View>
 
           {/* Brand Name */}
-          <Text style={styles.optionalLabel}>Brand Name <Text style={styles.optionalText}>(Optional)</Text></Text>
+          {selectedType !== "Print" && (
+            <>
+              <Text style={styles.optionalLabel}>Brand Name <Text style={styles.optionalText}>(Optional)</Text></Text>
 
-          <InputBox
-            placeholder="Enter here"
-            background='#FFF8EB'
-            value={brandName}
-            onChangeText={setBrandName}
-          />
-
-          {/* Pick Color */}
-          <Text style={styles.optionalLabel}>Pick Color <Text style={styles.optionalText}>(Optional)</Text></Text>
-          <View style={styles.rowBetween}>
-            <View style={[styles.inputBoxOptional, { flex: 1 }]}>
-              <Text style={styles.placeholderText}>Select one</Text>
-              <TouchableOpacity style={styles.includesRow}>
-                <Icon name="chevron-down" size={18} color="#000" />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.colorBox} />
-          </View>
-
-          {/* Select Size */}
-          <Text style={styles.optionalLabel}>Select Size <Text style={styles.optionalText}>(Optional)</Text></Text>
-          <View style={styles.inputBoxOptional}>
-            <Text style={styles.placeholderText}>Select here</Text>
-            <TouchableOpacity style={styles.includesRow}>
-              <Icon name="chevron-down" size={18} color="#000" />
-            </TouchableOpacity>
-          </View>
-
-          {/* Batch Number */}
-          <View style={styles.toggleRow}>
-            <Text style={styles.optionalLabel}>Batch number <Text style={styles.optionalText}>(Optional)</Text></Text>
-            <CustomSwitch value={batchSwitch} onValueChange={setBatchSwitch} />
-          </View>
-          {batchSwitch && (
-
-            <InputBox
-              placeholder="Enter here"
-              background='#FFF8EB'
-              value={batchNumber}
-              onChangeText={setBatchNumber}
-            />
-          )}
-
-          {/* Expiry Date */}
-          <View style={styles.toggleRow}>
-            <Text style={styles.optionalLabel}>Expiry Date <Text style={styles.optionalText}>(Optional)</Text></Text>
-            <CustomSwitch value={expirySwitch} onValueChange={setExpirySwitch} />
-          </View>
-          {expirySwitch && (
-            <TouchableOpacity style={styles.inputBox} 
-            onPress={()=>{
-              setCallenderModel(true)
-            }}
-            >
-              <TextInput
+              <InputBox
                 placeholder="Enter here"
-                placeholderTextColor="#888"
-                style={styles.textInput}
-                value={expiryDate}
-                editable={false}
+                background='#FFF8EB'
+                value={brandName}
+                onChangeText={setBrandName}
               />
-            </TouchableOpacity>
+
+              {/* Pick Color */}
+              <Text style={styles.optionalLabel}>Pick Color <Text style={styles.optionalText}>(Optional)</Text></Text>
+              <View style={styles.rowBetween}>
+                <View style={[styles.inputBoxOptional, { flex: 1 }]}>
+                  {/* <Text style={styles.placeholderText}>Select one</Text>
+                  <TouchableOpacity style={styles.includesRow}>
+                    <Icon name="chevron-down" size={18} color="#000" />
+                  </TouchableOpacity> */}
+                  <CustomDropdown
+                  options={colorOptions}
+                  onSelect={setPicColor}
+                  placeholder='Select Color'
+                  selectedValue={pickColor?.name||""}
+ dropDownBoxStyle={[styles.inputBoxOptional,{backgroundColor:"#FFF8EB",borderColor: '#FCA311',width:"100%"}]}
+                  
+                  />
+                </View>
+                <View style={styles.colorBox} />
+              </View>
+
+              {/* Select Size */}
+              <Text style={styles.optionalLabel}>Select Size <Text style={styles.optionalText}>(Optional)</Text></Text>
+              <View style={styles.inputBoxOptional}>
+                <Text style={styles.placeholderText}>Select here</Text>
+                <TouchableOpacity style={styles.includesRow}>
+                  <Icon name="chevron-down" size={18} color="#000" />
+                </TouchableOpacity>
+              </View>
+
+              {/* Batch Number */}
+              <View style={styles.toggleRow}>
+                <Text style={styles.optionalLabel}>Batch number <Text style={styles.optionalText}>(Optional)</Text></Text>
+                <CustomSwitch value={batchSwitch} onValueChange={setBatchSwitch} />
+              </View>
+              {batchSwitch && (
+
+                <InputBox
+                  placeholder="Enter here"
+                  background='#FFF8EB'
+                  value={batchNumber}
+                  onChangeText={setBatchNumber}
+                />
+              )}
+
+              {/* Expiry Date */}
+              <View style={styles.toggleRow}>
+                <Text style={styles.optionalLabel}>Expiry Date <Text style={styles.optionalText}>(Optional)</Text></Text>
+                <CustomSwitch value={expirySwitch} onValueChange={setExpirySwitch} />
+              </View>
+              {expirySwitch && (
+                <TouchableOpacity style={styles.inputBox}
+                  onPress={() => {
+                    setCallenderModel(true)
+                  }}
+                >
+                  <TextInput
+                    placeholder="Enter here"
+                    placeholderTextColor="#888"
+                    style={styles.textInput}
+                    value={expiryDate}
+                    editable={false}
+                  />
+                </TouchableOpacity>
+              )}
+
+              {/* Description */}
+              <Text style={styles.optionalLabel}>Description <Text style={styles.optionalText}>(Optional)</Text></Text>
+              <View style={styles.textAreaBox}>
+                <TextInput
+                  value={description}
+                  onChangeText={setDescription}
+                  placeholder="Enter here"
+                  placeholderTextColor="#888"
+                />
+              </View>
+            </>
           )}
 
-          {/* Description */}
-          <Text style={styles.optionalLabel}>Description <Text style={styles.optionalText}>(Optional)</Text></Text>
-          <View style={styles.textAreaBox}>
-            <TextInput
-              value={description}
-              onChangeText={setDescription}
-              placeholder="Enter here"
-              placeholderTextColor="#888"
-            />
-          </View>
 
           {/* Image */}
           <Text style={styles.optionalLabel}>Image <Text style={styles.optionalText}>(Optional)</Text></Text>
-          <TouchableOpacity style={styles.imageBox}>
-            <Text style={styles.plusIcon}>+</Text>
+          <TouchableOpacity
+            onPress={() => { setImage1Model(true) }}
+            style={styles.imageBox}>
+            {image1?.uri ?
+              <Image
+                source={{ uri: image1?.uri }}
+                style={{ width: "100%", height: "100%", resizeMode: "contain" }}
+              />
+              :
+              <Text style={styles.plusIcon}>+</Text>
+            }
           </TouchableOpacity>
+          {selectedFor === 'Both online & Offline' && selectedType !== "Print" && (
+            <>
+              <Text style={[styles.optionalText,{marginBottom:5}]}>(Optional)</Text>
+              <View style={{ flexDirection: 'row', justifyContent: "space-between" }}>
+                <TouchableOpacity
+                  onPress={() => { setImage2Model(true) }}
+                  style={styles.imageBox}>
+                  {image2?.uri ?
+                    <Image
+                      source={{ uri: image2?.uri }}
+                      style={{ width: "100%", height: "100%", resizeMode: "contain" }}
+                    />
+                    :
+                    <Text style={styles.plusIcon}>+</Text>
+                  }
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => { setImage3Model(true) }}
+                  style={styles.imageBox}>
+                  {image3?.uri ?
+                    <Image
+                      source={{ uri: image3?.uri }}
+                      style={{ width: "100%", height: "100%", resizeMode: "contain" }}
+                    />
+                    :
+                    <Text style={styles.plusIcon}>+</Text>
+                  }
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => { setImage4Model(true) }}
+                  style={styles.imageBox}>
+                  {image4?.uri ?
+                    <Image
+                      source={{ uri: image4?.uri }}
+                      style={{ width: "100%", height: "100%", resizeMode: "contain" }}
+                    />
+                    :
+                    <Text style={styles.plusIcon}>+</Text>
+                  }
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+
+
         </View>
       ),
       customHeader: (
@@ -371,7 +508,7 @@ const [policyTax,setPolicyTax]=useState<boolean>(false)
   ];
 
   const dynamicSections: any[] = [];
-  if (selectedType === 'Product' && selectedFor === 'Both online & Offline') {
+  if (selectedFor === 'Both online & Offline') {
     dynamicSections.push(
       {
         title: 'Delivery Details',
@@ -446,14 +583,52 @@ const [policyTax,setPolicyTax]=useState<boolean>(false)
     <MainContainer>
       <SafeAreaView style={styles.safeArea}>
         <Headerwithback title={'Enter Details'} />
-  <CalendarModal
-            visible={callenderModel}
-            onClose={()=>{setCallenderModel(false)}}
-            onSelect={(e)=>{
-              setExpiryDate(e)
-            }}
-            
-            />
+        <CalendarModal
+          visible={callenderModel}
+          onClose={() => { setCallenderModel(false) }}
+          onSelect={(e) => {
+            setExpiryDate(e)
+          }}
+
+        />
+
+           <ImeiModal
+        visible={imeiModalVisible}
+        onClose={() => setImeiModalVisible(false)}
+        imeiList={imeiList}
+        setImeiList={setImeiList}
+      />
+        <Loading
+          visible={isLoading}
+        />
+        <ModalUpdatePhoto
+          isVisible={image1Model}
+          onClose={() => { setImage1Model(false) }}
+          onSelectedFile={(e) => {
+            setImage(e)
+          }}
+        />
+        <ModalUpdatePhoto
+          isVisible={image2Model}
+          onClose={() => { setImage2Model(false) }}
+          onSelectedFile={(e) => {
+            setImage2(e)
+          }}
+        />
+        <ModalUpdatePhoto
+          isVisible={image3Model}
+          onClose={() => { setImage3Model(false) }}
+          onSelectedFile={(e) => {
+            setImage3(e)
+          }}
+        />
+        <ModalUpdatePhoto
+          isVisible={image4Model}
+          onClose={() => { setImage4Model(false) }}
+          onSelectedFile={(e) => {
+            setImage4(e)
+          }}
+        />
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -461,7 +636,9 @@ const [policyTax,setPolicyTax]=useState<boolean>(false)
         >
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <FlatList
-              keyboardShouldPersistTaps="handled"
+               keyboardShouldPersistTaps="handled"
+             nestedScrollEnabled={true} // Important for Android
+
               ListHeaderComponent={
                 <View style={{ padding: 16 }}>
                   <View style={styles.row}>
@@ -517,14 +694,18 @@ const [policyTax,setPolicyTax]=useState<boolean>(false)
               data={[...sections, ...dynamicSections]}
               keyExtractor={item => item.title}
               contentContainerStyle={{ paddingHorizontal: 16 }}
-              renderItem={({ item }) => (
-                <View style={styles.section}>
-                  {item.customHeader ? item.customHeader : (
-                    <Text style={styles.sectionTitle}>{item.title}</Text>
-                  )}
-                  {item.content}
-                </View>
-              )}
+              renderItem={({ item }) => {
+                if (item.title == "Stock" && selectedType !== "Product") return null;
+
+                return (
+                  <View style={styles.section}>
+                    {item.customHeader ? item.customHeader : (
+                      <Text style={styles.sectionTitle}>{item.title}</Text>
+                    )}
+                    {item.content}
+                  </View>
+                );
+              }}
               ListFooterComponent={
                 <View style={styles.footer}>
                   <TouchableOpacity style={styles.addButton}>
@@ -535,7 +716,7 @@ const [policyTax,setPolicyTax]=useState<boolean>(false)
               extraData={{ selectedType, selectedFor }}
             />
 
-          
+
           </TouchableWithoutFeedback>
         </KeyboardAvoidingView>
       </SafeAreaView>
@@ -748,12 +929,12 @@ const styles = StyleSheet.create({
   inputBoxOptional: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: '#FCA311',
-    borderRadius: 6,
-    padding: 10,
-    backgroundColor: '#FFF8EB',
-    marginBottom: 12,
+    // borderWidth: 1,
+    // borderColor: '#FCA311',
+    // borderRadius: 6,
+    // padding: 10,
+    // backgroundColor: '#FFF8EB',
+    // marginBottom: 12,
   },
   rowBetween: {
     flexDirection: 'row',
@@ -813,6 +994,17 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: '600',
     fontSize: 16,
+  },
+   listItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEE',
+  },
+  itemText: {
+    fontSize: 16,
+    color: '#333',
   },
 });
 
