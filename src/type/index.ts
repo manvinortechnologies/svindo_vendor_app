@@ -91,6 +91,7 @@ export type THomeNavigation = {
   [HomeNavigation.VERIFICATIONPAYMENT]:undefined;
   [HomeNavigation.ADDCUSTOMER]:undefined;
   [HomeNavigation.ADDVENDOR]:undefined;
+  [HomeNavigation.PAYMENTSCREEN]:undefined;
 };
 
 

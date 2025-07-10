@@ -90,6 +90,7 @@ import SelectSpotlightProduct from '../component/SelectSpotlightProduct';
 import VerificationPaymentsScreen from '../component/VerificationPaymentsScreen';
 import AddCustomer from '../component/AddCustomer';
 import AddVendor from '../component/AddVendor';
+import PaymentsScreen from '../component/PaymentsScreen';
 
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
@@ -186,6 +187,7 @@ const AppNavigation = () => {
                 <Stack.Screen name={HomeNavigation.VERIFICATIONPAYMENT} component={VerificationPaymentsScreen} />
                 <Stack.Screen name={HomeNavigation.ADDCUSTOMER} component={AddCustomer} />
                 <Stack.Screen name={HomeNavigation.ADDVENDOR} component={AddVendor} />
+                <Stack.Screen name={HomeNavigation.PAYMENTSCREEN} component={PaymentsScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );

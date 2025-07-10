@@ -42,7 +42,7 @@ const CompanyProfile = () => {
         <Text style={styles.buttonText}>Save & Update</Text>
       </TouchableOpacity>
     </ScrollView>
-    <Bottomnavigation/>
+    <Bottomnavigation />
     </View>
   );
 };
@@ -51,8 +51,10 @@ export default CompanyProfile;
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
     backgroundColor: '#fff',
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 40 : 0,
+    paddingVertical: 25
   },
   formcontainer:{
     padding: 20,
@@ -131,7 +133,8 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 6,
     alignItems: 'center',
-    marginTop: 20,
+   marginVertical: 10,
+   marginBottom: 30
   },
   buttonText: {
     color: '#fff',
