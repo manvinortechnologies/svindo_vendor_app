@@ -90,6 +90,9 @@ export type THomeNavigation = {
   [HomeNavigation.ADD_BANNER_SCREEN]:undefined
   [HomeNavigation.ADDSPOTLIGHT]:undefined;
   [HomeNavigation.SELECTSPOTLIGHTPRODUCT]:undefined;
+  [HomeNavigation.VERIFICATIONPAYMENT]:undefined;
+  [HomeNavigation.ADDCUSTOMER]:undefined;
+  [HomeNavigation.ADDVENDOR]:undefined;
 };
 
 

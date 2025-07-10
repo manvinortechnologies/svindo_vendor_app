@@ -314,6 +314,7 @@ const styles = StyleSheet.create({
   floatingButtons: {
      position: "absolute",
       alignSelf:"center",
+      right: 20,
      flexDirection: "row",
       gap: 20,
     bottom:80 },

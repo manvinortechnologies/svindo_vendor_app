@@ -4,7 +4,16 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Headerwithback from './Headerwithback';
 import Bottomnavigation from './Bottomnavigation';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { useNavigation } from '@react-navigation/native';
 
+
+type RootStackParamList = {
+  ManageVendor:undefined;
+  AddVendor: undefined;
+};
+
+export type SecurityScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ManageVendor'>;
 
 const customers = [
   {
@@ -18,6 +27,7 @@ const customers = [
 ];
 
 const ManageVendors = () => {
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   return (
     <View style={styles.container}>
       <SafeAreaView style={{ flex: 1 }}>
@@ -33,7 +43,7 @@ const ManageVendors = () => {
               placeholderTextColor="#888"
             />
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('AddVendor')}>
             <Text style={styles.addText}>+ Add New Vendors</Text>
           </TouchableOpacity>
         </View>

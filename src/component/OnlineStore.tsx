@@ -20,7 +20,7 @@ import MainContainer from '../CommonComponent/MainContainer';
 type RootStackParamList = {
   OnlineStoreSettings: undefined;
   StoreTimings: undefined;
-  StoreVerification: undefined;
+  VerificationPayment: undefined;
   EnableSvindoGateway: undefined;
   AddPaymentGateway: undefined;
   MarketingTools: undefined;
@@ -28,7 +28,7 @@ type RootStackParamList = {
   StoreWorkingHours: undefined;
 };
 
-// ✅ Define the type for navigation prop
+//  Define the type for navigation prop
 export type SecurityScreenNavigationProp = StackNavigationProp<RootStackParamList, 'OnlineStoreSettings'>;
 
 
@@ -235,7 +235,7 @@ type MenuItemType = {
 // ✅ Ensure screen names match the navigation stack
 const menuItems: MenuItemType[] = [
   { title: 'Store working hours', icon: 'calendar-clock', screen: 'StoreWorkingHours' },
-  { title: 'Verification Tag & Online Payment', icon: 'store-check-outline', screen: 'StoreVerification' },
+  { title: 'Verification Tag & Online Payment', icon: 'store-check-outline', screen: 'VerificationPayment' },
   // { title: 'Enable svindo Payment Gateway', icon: 'credit-card-check', screen: 'EnableSvindoGateway' },
   { title: 'Add your Payment Gateway', icon: 'credit-card-plus', screen: 'AddPaymentGateway' },
 ];

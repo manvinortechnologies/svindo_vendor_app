@@ -42,7 +42,8 @@ const InvoiceTemplates = () => {
       <Headerwithback title="Invoice Tamplates" />
 
 
-      {/* Invoice Type Switch */}
+      <ScrollView>
+        {/* Invoice Type Switch */}
       <View style={styles.typeSwitchContainer}>
         {invoiceTypes.map(type => (
           <TouchableOpacity
@@ -92,7 +93,8 @@ const InvoiceTemplates = () => {
       {/* Save Button */}
        <TouchableOpacity style={styles.updateBtn}>
                       <Text style={styles.updateText}>Save and Update</Text>
-                    </TouchableOpacity>
+      </TouchableOpacity>
+      </ScrollView>
 
       {/* Bottom Navigation Placeholder */}
        <Bottomnavigation/>
@@ -205,7 +207,7 @@ const styles = StyleSheet.create({
   updateText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#fff',
   },
 
 });

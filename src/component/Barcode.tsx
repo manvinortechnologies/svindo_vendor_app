@@ -21,6 +21,7 @@ const Barcode = () => {
   const [productFontSize, setProductFontSize] = useState('16');
   const [mrpFontSize, setMrpFontSize] = useState('16');
   const [barcodeSize, setBarcodeSize] = useState('16');
+  const [size, setSize] = useState('25x50');
 
   return (
     <View style={styles.container}>
@@ -49,9 +50,24 @@ const Barcode = () => {
             value={mrpLabel}
             onChangeText={setMrpLabel}
             placeholder="MRP"
+            placeholderTextColor="#FCA311"
           />
         </View>
         <Text style={styles.subText}>leave blank to hide label on mrp</Text>
+        </View>
+
+        {/* Show Discount */}
+        <View style={styles.Boxcontainer}>
+        <View style={styles.rowBox}>
+          <Text style={styles.label}>Show Discount:</Text>
+          <CustomSwitch
+  value={showPackageDate}
+  onValueChange={() => setShowPackageDate(!showPackageDate)}
+/>
+          </View>
+          <Text style={styles.subText}>
+          Discount will be shown on barcode if enabled
+        </Text>
         </View>
 
         {/* Show Price with Text */}
@@ -93,23 +109,34 @@ const Barcode = () => {
           />
         </View>
         </View>
+
         <View style={styles.Boxcontainer}>
-        <View style={styles.rowBox}>
-          <Text style={styles.label}>Barcode Size:</Text>
-          <TextInput
-            style={styles.smallInput}
-            keyboardType="numeric"
-            value={barcodeSize}
-            onChangeText={setBarcodeSize}
-          />
-        </View>
-        <Text style={styles.subText}>barcode will generate in this size (6-10)</Text>
-        </View>
+  <Text style={[styles.label, { margin: 10}]}>Barcode Size:</Text>
+
+  <View style={styles.sizeRow}>
+    <Text style={styles.label}>25MM * 50MM</Text>
+    <CustomSwitch
+      value={size === '25x50'}
+      onValueChange={() => setSize('25x50')}
+    />
+  </View>
+
+  <View style={styles.sizeRow}>
+    <Text style={styles.label}>50MM * 100MM</Text>
+    <CustomSwitch
+      value={size === '50x100'}
+      onValueChange={() => setSize('50x100')}
+    />
+  </View>
+
+  <Text style={styles.subText}>barcode will generate in this size</Text>
+</View>
+
      
       </ScrollView>
          {/* Generate Button */}
          <TouchableOpacity style={styles.button}>
-          <Text style={styles.buttonText}>Generate Code</Text>
+          <Text style={styles.buttonText}>Save</Text>
         </TouchableOpacity>
     </View>
   );
@@ -129,6 +156,10 @@ const styles = StyleSheet.create({
   Boxcontainer:{
     backgroundColor: '#FFF1D6',
     marginBottom: 8,
+    borderColor: '#FCA311',
+    borderWidth: 1,
+    padding: 4,
+    borderRadius: 5
   },
   rowBox: {
     flexDirection: 'row',
@@ -142,8 +173,16 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#000',
-    flex: 1,
+    color: '#323232',
+    
+  },
+  sizeRow: {
+   flexDirection: 'row',
+   justifyContent: 'flex-end',
+   alignItems: 'center',
+   gap: 20,
+   marginRight: 15,
+   marginVertical: 6,
   },
   subText: {
     fontSize: 12,
@@ -154,7 +193,6 @@ const styles = StyleSheet.create({
   },
   smallInput: {
     width: 80,
-  
     backgroundColor: '#FFF1D6',
     borderColor: '#FCA311',
     borderWidth: 1,
@@ -163,10 +201,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+
   button: {
     backgroundColor: '#FCA311',
-    paddingVertical: 14,
-    borderRadius: 10,
+    paddingVertical: 10,
+    borderRadius: 5,
     marginTop: 20,
     alignItems: 'center',
     shadowColor: '#000',
@@ -174,10 +213,10 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 2,
     marginBottom:20,
-    marginHorizontal:20,
+    marginHorizontal:30,
   },
   buttonText: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#fff',
   },
