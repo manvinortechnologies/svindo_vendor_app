@@ -309,7 +309,7 @@ const styles = StyleSheet.create({
   filterText: { fontSize: 16, marginRight: 5 },
   floatingButtons: {
      position: "absolute",
-      top: "60%", right: 20,
+      bottom: "15%", right: 20,
      flexDirection: "row",
       gap: 20 },
   viewall:{ fontSize:16,},

@@ -88,6 +88,9 @@ export type THomeNavigation = {
   [HomeNavigation.CREATEOFFER]:undefined;
   [HomeNavigation.ADDSPOTLIGHT]:undefined;
   [HomeNavigation.SELECTSPOTLIGHTPRODUCT]:undefined;
+  [HomeNavigation.VERIFICATIONPAYMENT]:undefined;
+  [HomeNavigation.ADDCUSTOMER]:undefined;
+  [HomeNavigation.ADDVENDOR]:undefined;
 };
 
 

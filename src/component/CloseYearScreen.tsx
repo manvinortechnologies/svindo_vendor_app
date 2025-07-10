@@ -31,7 +31,7 @@ const CloseYearScreen = () => {
         <Headerwithback title="Close Financial Books"/>
  
     <ScrollView >
-      <Text style={styles.title}>Close Financial Books</Text>
+      {/* <Text style={styles.title}>Close Financial Books</Text> */}
       <Text style={styles.subtitle}>How do you want to close the books</Text>
 
       {/* Restart Transaction Card */}
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   subtitle: {
     marginTop: 8,
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '700',
     color: '#333',
   },
   card: {

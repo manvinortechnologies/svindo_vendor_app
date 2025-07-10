@@ -7,6 +7,7 @@ import Bottomnavigation from './Bottomnavigation';
 
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 type RootStackParamList = {
   MyAccount: undefined;
   InvoiceTemplates: undefined;
@@ -64,6 +65,7 @@ const InvoiceSettings = () => {
             <Text style={styles.settingTitle}>Invoice Templates</Text>
             <Text style={styles.settingDesc}>Customise invoice templates</Text>
           </View>
+          <Icon name="chevron-right" color="black" size={24}/>
         </TouchableOpacity>
 
         <View style={styles.settingItem}>
@@ -89,6 +91,7 @@ const InvoiceSettings = () => {
             <Text style={styles.settingTitle}>Document prefix and suffix</Text>
             <Text style={styles.settingDesc}>Add multiple suffix and prefix for all your documents</Text>
           </View>
+          <Icon name="chevron-right" color="black" size={24}/>
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.settingItem}>
@@ -185,6 +188,13 @@ const InvoiceSettings = () => {
             </View>
           ))}
         </View>
+        <TouchableOpacity style={[styles.settingItem, {marginTop: 10}]}>
+          <View>
+            <Text style={styles.settingTitle}>Get Custom Invoice</Text>
+            <Text style={styles.settingDesc}>Get Customize Invoice Templates</Text>
+          </View>
+          <Icon name="chevron-right" color="black" size={24}/>
+        </TouchableOpacity>
       </ScrollView>
       <TouchableOpacity style={styles.updateBtn}>
                 <Text style={styles.updateText}>Save and Update</Text>
@@ -208,6 +218,7 @@ const styles = StyleSheet.create({
   settingItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: '#fff',
     padding: 16,
     borderRadius: 12,
@@ -312,6 +323,6 @@ const styles = StyleSheet.create({
   updateText: {
     fontSize: 16,
     fontWeight: 'bold',
-    color: '#000',
+    color: '#fff',
   },
 });

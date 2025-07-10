@@ -71,14 +71,14 @@ const Reports = () => {
   return (
     <View style={styles.container}>
      <Headerwithback
-        title="My Screen"
+        title="Reports"
         rightIcons={[
           <TouchableOpacity>
             <Feather name="search" size={20} color="#000" />
           </TouchableOpacity>,
-          <TouchableOpacity >
-            <Feather name="settings" size={20} color="#000" />
-          </TouchableOpacity>,
+          // <TouchableOpacity >
+          //   <Feather name="settings" size={20} color="#000" />
+          // </TouchableOpacity>,
         ]}
       />
       <ScrollView contentContainerStyle={styles.containercard}>
