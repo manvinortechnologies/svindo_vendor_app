@@ -88,6 +88,8 @@ export type THomeNavigation = {
   [HomeNavigation.CREATEOFFER]:undefined;
   [HomeNavigation.BANNER_ADS]:undefined;
   [HomeNavigation.ADD_BANNER_SCREEN]:undefined
+  [HomeNavigation.ADDSPOTLIGHT]:undefined;
+  [HomeNavigation.SELECTSPOTLIGHTPRODUCT]:undefined;
 };
 
 

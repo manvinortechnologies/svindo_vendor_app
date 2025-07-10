@@ -82,5 +82,7 @@ export enum HomeNavigation {
     CREATEOFFER = "CreateOffer",
     BANNER_ADS="BannerAds",
     ADD_BANNER_SCREEN="AddBannerScreen",
+    ADDSPOTLIGHT = "AddSpotlightScreen",
+    SELECTSPOTLIGHTPRODUCT = 'SelectSpotlightProduct'
   }
   

@@ -87,6 +87,8 @@ import CreateRequestScreen from '../component/CreateRequestScreen';
 import CreateOffer from '../component/CreateOffer';
 import BannerAds from '../component/BannerAds';
 import AddBannerScreen from '../component/AddBannerScreen';
+import AddSpotlightScreen from '../component/AddSpotlightScreen';
+import SelectSpotlightProduct from '../component/SelectSpotlightProduct';
 
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
@@ -181,6 +183,8 @@ const AppNavigation = () => {
                 <Stack.Screen name={HomeNavigation.BANNER_ADS} component={BannerAds} />
                  <Stack.Screen name={HomeNavigation.ADD_BANNER_SCREEN} component={AddBannerScreen} />
 
+                <Stack.Screen name={HomeNavigation.ADDSPOTLIGHT} component={AddSpotlightScreen} />
+                <Stack.Screen name={HomeNavigation.SELECTSPOTLIGHTPRODUCT} component={SelectSpotlightProduct} />
             </Stack.Navigator>
         </NavigationContainer>
     );
