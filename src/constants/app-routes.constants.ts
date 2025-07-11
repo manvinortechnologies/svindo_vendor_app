@@ -85,6 +85,8 @@ export enum HomeNavigation {
     VERIFICATIONPAYMENT = 'VerificationPayment',
     ADDCUSTOMER = 'AddCustomer',
     ADDVENDOR = 'AddVendor',
-    PAYMENTSCREEN = 'PaymentScreen'
+    PAYMENTSCREEN = 'PaymentScreen',
+    SENDNOTIFICATION = 'SendNotifications',
+    PROMOTESTORE = 'PromoteStore'
   }
   
