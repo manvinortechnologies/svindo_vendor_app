@@ -98,6 +98,7 @@ export type THomeNavigation = {
   [HomeNavigation.SENDNOTIFICATION]:undefined;
   [HomeNavigation.PROMOTESTORE]:undefined;
   [HomeNavigation.AUTOASSIGNDELIVERY]:undefined;
+  [HomeNavigation.ASSIGNOWNDELIVERYBOY]:undefined;
 };
 
 
