@@ -3,13 +3,18 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image,
 import Headerwithback from './Headerwithback';
 import Bottomnavigation from './Bottomnavigation';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import CustomHeader from '../CommonComponent/CustomHeader';
 
 const SalePOS = () => {
   const [products, setProducts] = useState([{ name: '', quantity: '' }]);
 
   return (
     <View style={styles.container}>
-      <Headerwithback title="Sales & POS" rightIcon={<Icon name="search" size={20} color="black" />} />
+      {/* <Headerwithback title="Sales & POS"  rightIcon={[<Icon name="search" size={20} color="black" />]} /> */}
+      <CustomHeader
+      title="Sales & POS"
+      rightIcon={<Icon name="search" size={20} color="black" />}
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
         <View style={styles.companyHeader}>

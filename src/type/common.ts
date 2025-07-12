@@ -11,3 +11,24 @@ export interface Expense {
   user: number; // user ID
   category: number; // category ID
 }
+
+export interface BankDetails {
+  name: string;
+  account_holder: string;
+  account_number: string;
+  ifsc_code: string;
+  branch: string;
+}
+
+export interface BannerCampaign {
+  id: number;
+  banner_image: string;
+  campaign_name: string;
+  redirect_to: string;
+  redirect_target: string;
+  boost_post: boolean;
+  budget: string;
+  is_approved: boolean;
+  created_at: string;
+  user: number;
+}

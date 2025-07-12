@@ -25,7 +25,7 @@ export const InputBox = ({
     styless?:StyleProp<TextStyle>;
 
 }) => (
-    <View style={{ marginBottom: 12 }}>
+    <View style={[{ marginBottom: 12 },styless]}>
         {label && <Text style={styles.label}>{label}</Text>}
         <TextInput
             placeholder={placeholder}

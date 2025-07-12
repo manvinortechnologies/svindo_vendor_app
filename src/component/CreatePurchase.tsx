@@ -74,7 +74,7 @@ const CreatePurchase = ({ navigation }: any) => {
   const getAllVendors = async () => {
     try {
       setIsLoading(true);
-      const res = await api.get("vendor/get-vendor/");
+      const res = await api.get("vendor/vendor/");
       if (res.data) {
         setAllVendorList(res.data);
       }
