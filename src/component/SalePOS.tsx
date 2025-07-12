@@ -1,102 +1,144 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Image, Platform, StatusBar } from 'react-native';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  Platform,
+  StatusBar,
+} from 'react-native';
 import Headerwithback from './Headerwithback';
 import Bottomnavigation from './Bottomnavigation';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import CustomButton from '../CommonComponent/CustomeButton';
 
 const SalePOS = () => {
-  const [products, setProducts] = useState([{ name: '', quantity: '' }]);
+  const [products, setProducts] = useState([
+    { name: 'White Shirt XL Size, Blue Color, Denim Brand.......', quantity: '2' },
+    { name: 'White Shirt XL Size, Blue Color, Denim Brand.......', quantity: '2' },
+  ]);
 
   return (
     <View style={styles.container}>
-      <Headerwithback title="Sales & POS" rightIcon={<Icon name="search" size={20} color="black" />} />
+      <Headerwithback
+        title="Sales & POS"
+        rightIcons={[<Icon name="magnify" size={20} color="black" key="search" />]}
+      />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.companyHeader}>
-          <View style={styles.avatar}><Text style={styles.avatarText}>RE</Text></View>
-          <Text style={styles.companyName}>Raigun Enterprise</Text>
-          <TouchableOpacity style={styles.addCompanyBtn}>
-            <Text style={styles.addCompanyText}>+ Add Another{"\n"}Company</Text>
+        {/* Company Section */}
+        <View style={styles.companyRow}>
+          <Text style={styles.companyText}>Company - Svindo Enterprise</Text>
+          <TouchableOpacity>
+            <Text style={styles.changeText}>Change</Text>
           </TouchableOpacity>
         </View>
 
-        <View style={styles.buttonRow}>
-          <TouchableOpacity style={styles.discardButton}>
-            <Text style={styles.buttonText}>Discard</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.checkoutButton}>
-            <Text style={styles.buttonText}>Checkout</Text>
+        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+          <Text style={styles.label}>Customer Details</Text>
+        <TouchableOpacity>
+          <Text style={styles.addCustomer}>+ Add Customer</Text>
+        </TouchableOpacity>
+        </View>
+        <TextInput
+          placeholder="Search Mobile"
+          style={{width: '50%', borderWidth: 1, borderColor: '#FCA311', backgroundColor: '#FFEBCB', borderRadius: 10, padding: 2}}
+        />
+        
+
+        <View style={styles.invoiceRow}>
+          <View style={{flexDirection: 'row', gap: 10}}>
+            <Text style={styles.label}>Wholesale Invoice</Text>
+          {/* <CustomButton title={''} onPress={function (): void {
+            throw new Error('Function not implemented.');
+          } } /> */}
+          </View>
+          <TouchableOpacity style={styles.addItemButton}>
+            <Text style={styles.addItemText}>Add Item</Text>
           </TouchableOpacity>
         </View>
 
-        {products.map((product, index) => (
-          <View key={index} style={styles.inputRow}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Product Name</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Search or scan product barcode"
-                value={product.name}
-                onChangeText={(text) => {
-                  const newProducts = [...products];
-                  newProducts[index].name = text;
-                  setProducts(newProducts);
-                }}
-              />
-              {index === products.length - 1 && (
-                <TouchableOpacity onPress={() => setProducts([...products, { name: '', quantity: '' }])}>
-                  <Text style={[styles.subLabel, { color: '#FCA311', textDecorationLine: 'underline' }]}>
-                    Add New Product
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Quantity</Text>
-              <TextInput
-                style={styles.input}
-                value={product.quantity}
-                onChangeText={(text) => {
-                  const newProducts = [...products];
-                  newProducts[index].quantity = text;
-                  setProducts(newProducts);
-                }}
-                keyboardType="numeric"
-              />
-            </View>
+        {/* Table Header */}
+        <View style={styles.tableHeader}>
+          <Text style={[styles.tableText, {color: '#fff', fontWeight: '500'}]}>S.No.</Text>
+          <Text style={[styles.tableText, { flex: 3,color: '#fff', fontWeight: '500' }]}>Item</Text>
+          <Text style={[styles.tableText, {color: '#fff', fontWeight: '500'}]}>Quantity</Text>
+          <Text style={[styles.tableText, {color: '#fff', fontWeight: '500'}]}>Price</Text>
+          <Text style={[styles.tableText, {color: '#fff', fontWeight: '500'}]}>Amount</Text>
+          {/* <Text style={[styles.tableText, {color: '#fff', fontWeight: '500'}]}>Action</Text> */}
+        </View>
+
+        {/* Product List */}
+        {products.map((item, index) => (
+          <View key={index} style={styles.tableRow}>
+            <Text style={styles.tableText}>{index + 1}</Text>
+            <Text style={[styles.tableText, { flex: 3 }]} numberOfLines={2}>{item.name}</Text>
+            <Text style={styles.tableText}>{item.quantity}</Text>
+            <Text style={styles.tableText}>500.00</Text>
+            <Text style={styles.tableText}>1000.00</Text>
+            <TouchableOpacity
+              onPress={() => {
+                const updated = products.filter((_, i) => i !== index);
+                setProducts(updated);
+              }}>
+              <Icon name="delete" size={16} color="red" />
+            </TouchableOpacity>
           </View>
         ))}
 
-        <TouchableOpacity style={styles.addButton}>
-          <Text style={styles.addButtonText}>Add Items</Text>
-        </TouchableOpacity>
-
-        <View style={styles.tableHeader}>
-          <Text style={styles.tableText}>Item</Text>
-          <Text style={styles.tableText}>Quantity</Text>
-          <Text style={styles.tableText}>Price</Text>
-          <Text style={styles.tableText}>Amount</Text>
-          <Text style={styles.tableText}>Action</Text>
-        </View>
-
-        <View style={styles.summarySection}>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Total Items</Text>
-            <Text style={styles.summaryValue}>Rs 1000/</Text>
+        {/* Discount */}
+        <View style={styles.bottomBox}>
+          <View style={styles.discountRow}>
+            <Text style={styles.label}>Discount</Text>
+            <TextInput placeholder="%" style={styles.discountInput} />
+            <TextInput placeholder="0" style={styles.discountInput} />
           </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Total tax</Text>
-            <Text style={styles.summaryValue}>Rs 1000/</Text>
+
+          {/* Payment */}
+          <View style={{flexDirection: 'row', gap: 20}}>
+          <Text style={styles.label}>Payment</Text>
+          <View style={styles.paymentOptions}>
+            {['UPI', 'Card', 'Cash', 'Credit'].map((method) => (
+              <TouchableOpacity key={method} style={styles.paymentButton}>
+                <Text style={{fontWeight: '500'}}>{method}</Text>
+              </TouchableOpacity>
+            ))}
           </View>
-          <View style={styles.summaryRow}>
-            <Text style={[styles.summaryLabel, { color: '#FCA311' }]}>Total Amount</Text>
-            <Text style={[styles.summaryValue, { color: '#FCA311' }]}>Rs 1000/</Text>
+          </View>
+
+          {/* Advance */}
+          <View style={{flexDirection: 'row', gap: 20}}>
+          <Text style={styles.label}>Advance</Text>
+          <TextInput placeholder="Amount" style={[styles.input, {paddingVertical: 2}]} />
+          <View style={styles.paymentOptions}>
+            {['Bank', 'Cash'].map((method) => (
+              <TouchableOpacity key={method} style={styles.paymentButton}>
+                <Text style={{fontWeight: '500'}}>{method}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          </View>
+
+          {/* Due Date */}
+          <View style={{flexDirection: 'row', gap: 20, marginTop: 10}}>
+          <Text style={styles.label}>Due Date</Text>
+          <TextInput placeholder="DD/MM/YYYY" style={styles.input} />
           </View>
         </View>
       </ScrollView>
-      <View style={styles.imagerow}>
-       <Image  style={styles.images} source={require("../assets/paymentss.png")}/>
-       </View>
+
+      {/* Footer Buttons */}
+      <View style={styles.bottomButtonRow}>
+        <TouchableOpacity style={styles.discardButton}>
+          <Text style={{ color: '#000', fontWeight: 'bold' }}>Discard</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.proceedButton}>
+          <Text style={{ color: '#000', fontWeight: 'bold' }}>Proceed</Text>
+        </TouchableOpacity>
+      </View>
+
       <Bottomnavigation />
     </View>
   );
@@ -108,137 +150,132 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#fff',
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 40 : 0,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 40 : 0,
   },
   scrollContent: {
-    padding: 20,
+    padding: 15,
   },
-  companyHeader: {
+  companyRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
+    gap: 20,
+    marginBottom: 10,
   },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#FFF1D6',
-    borderWidth: 1,
-    borderColor: '#FCA311',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  avatarText: {
+  companyText: {
     fontWeight: 'bold',
-    color: '#000',
+    fontSize: 18
   },
-  companyName: {
-    marginLeft: 10,
+  changeText: {
+    color: '#FCA311',
     fontWeight: 'bold',
-    fontSize: 16,
-    flex: 1,
-  },
-  addCompanyBtn: {
-    alignItems: 'flex-end',
-  },
-  addCompanyText: {
-    textAlign: 'right',
-    fontWeight: 'bold',
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: "flex-start",
-    marginBottom: 20,
-  },
-  discardButton: {
-    backgroundColor: '#FFABAB',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 6,
-  },
-  checkoutButton: {
-    backgroundColor: '#92F1A0',
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 6,
-    marginLeft: 10,
-  },
-  buttonText: {
-    fontWeight: 'bold',
-    color: '#000',
-  },
-  inputRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-    gap: 10,
-  },
-  inputContainer: {
-    flex: 1,
   },
   label: {
+    fontSize: 16,
+    color: '#5A5A5A',
     fontWeight: 'bold',
-    marginBottom: 5,
+    marginVertical: 6,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#FCA311',
+    borderColor: '#ccc',
     borderRadius: 6,
-    padding: 10,
+    padding: 8,
+    paddingHorizontal: 12,
     backgroundColor: '#fff',
   },
-  subLabel: {
-    fontSize: 12,
-    color: '#888',
+  addCustomer: {
+    color: '#FCA311',
+    fontWeight: 'bold',
     marginTop: 5,
   },
-  addButton: {
-    alignSelf: 'center',
-    backgroundColor: '#FCA311',
-    paddingVertical: 12,
-    paddingHorizontal: 25,
-    borderRadius: 6,
-    marginBottom: 20,
+  invoiceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 10,
   },
-  addButtonText: {
+  addItemButton: {
+    backgroundColor: '#FCA311',
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 6,
+  },
+  addItemText: {
     color: '#fff',
     fontWeight: 'bold',
   },
   tableHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    backgroundColor: '#DEDEDE',
-    padding: 10,
-    borderRadius: 4,
-    marginBottom: 10,
-  },
-  tableText: {
-    fontWeight: 'bold',
-    fontSize: 12,
-    flex: 1,
-    textAlign: 'center',
-  },
-  summarySection: {
-    marginTop: 20,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  summaryLabel: {
-    color: '#82A0AA',
-  },
-  summaryValue: {
-    fontWeight: 'bold',
-  },
-  imagerow:{
-    alignContent:"center",
-    alignItems:"center",justifyContent:"center",
-
+    backgroundColor: '#008BE1',
+    padding: 8,
+    marginTop: 10,
     
   },
-  images:{
-width:"100%",
-  }
+  tableRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    backgroundColor: '#F5F5F5',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+    marginTop: 5
+  },
+  tableText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  bottomBox: {
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    padding: 10,
+  },
+  discountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 10,
+  },
+  discountInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    padding: 8,
+    borderRadius: 6,
+    backgroundColor: '#fff',
+  },
+  paymentOptions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginVertical: 8,
+  },
+  paymentButton: {
+    paddingVertical: 2,
+    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 6,
+  },
+  bottomButtonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    marginHorizontal: 30
+  },
+  discardButton: {
+    backgroundColor: '#FF5B5B',
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+  },
+  proceedButton: {
+    backgroundColor: '#92F1A0',
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 8,
+  },
 });
