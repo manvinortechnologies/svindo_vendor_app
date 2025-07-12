@@ -5,6 +5,8 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
 import Bottomnavigation from './Bottomnavigation';
 import Header from './Header';
+import CustomHeader from '../CommonComponent/CustomHeader';
+import MainContainer from '../CommonComponent/MainContainer';
 
 // ✅ Define the type for the navigation stack
 type RootStackParamList = {
@@ -13,25 +15,29 @@ type RootStackParamList = {
     ShipRocketDelivery: undefined;
     OrderPackingTime: undefined;
     GeneralDeliveryTime: undefined;
-    DeliveryCharges: undefined;
+    DeliverySettingsScreen: undefined;
   };
 
 // ✅ Define the type for navigation prop
-export type SecurityScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DeliveryCharges'>;
+export type SecurityScreenNavigationProp = StackNavigationProp<RootStackParamList, 'DeliverySettingsScreen'>;
 
 const ManageDelivery = () => {
  const navigation = useNavigation<SecurityScreenNavigationProp>(); // ✅ Corrected navigation type
     
   return (
+    <MainContainer>
     <View style={styles.container}>
              
-             <Header
+             {/* <Header
         title="Dilevery Management"
         backgroundColor="#FCA311"
         textColor="#fff"
         borderBottomColor="#ccc"
         paddingTop={50}
-      /> 
+      />  */}
+      <CustomHeader
+      title='Delivery Management'
+      />
             <ScrollView>
                             <View style={styles.menuContainer}>
                                     {menuItems.map((item) => (
@@ -52,6 +58,7 @@ const ManageDelivery = () => {
             <Bottomnavigation/>
             
         </View>
+        </MainContainer>
     );
 };
 
@@ -63,12 +70,12 @@ type MenuItemType = {
 
 // ✅ Ensure screen names match the navigation stack
 const menuItems: MenuItemType[] = [
-    { title: 'Assign Instant delivery to Porter', screen: 'AssignPorter' },
-    { title: 'Assign Own Delivery Boy', screen: 'AssignOwnDeliveryBoy' },
+    { title: 'Auto Assign Instant delivery  partners', screen: 'AssignPorter' },
+    { title: 'Manage Own Delivery Boy', screen: 'AssignOwnDeliveryBoy' },
     { title: 'ShipRocket for General Delivery', screen: 'ShipRocketDelivery' },
     { title: 'Average Order Packing Time', screen: 'OrderPackingTime' },
-    { title: 'Average General Delivery time', screen: 'GeneralDeliveryTime' },
-    { title: 'Delivery Charges', screen: 'DeliveryCharges' },
+    // { title: 'Average General Delivery time', screen: 'GeneralDeliveryTime' },
+    { title: 'Delivery settings', screen: 'DeliverySettingsScreen' },
   ];
   
   const styles = StyleSheet.create({
