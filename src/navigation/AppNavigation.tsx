@@ -93,6 +93,9 @@ import VerificationPaymentsScreen from '../component/VerificationPaymentsScreen'
 import AddCustomer from '../component/AddCustomer';
 import AddVendor from '../component/AddVendor';
 import DeliverySettingsScreen from '../component/DeliverySettingsScreen';
+import PaymentsScreen from '../component/PaymentsScreen';
+import SendNotifications from '../component/SendNotifications';
+import PromoteStore from '../component/PromoteStore';
 
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
@@ -193,6 +196,9 @@ const AppNavigation = () => {
                 <Stack.Screen name={HomeNavigation.ADDCUSTOMER} component={AddCustomer} />
                 <Stack.Screen name={HomeNavigation.ADDVENDOR} component={AddVendor} />
                 <Stack.Screen name={HomeNavigation.DELIVERY_SETTING_SCREEN} component={DeliverySettingsScreen} />
+                <Stack.Screen name={HomeNavigation.PAYMENTSCREEN} component={PaymentsScreen} />
+                <Stack.Screen name={HomeNavigation.SENDNOTIFICATION} component={SendNotifications} />
+                <Stack.Screen name={HomeNavigation.PROMOTESTORE} component={PromoteStore} />
             </Stack.Navigator>
         </NavigationContainer>
     );

@@ -10,7 +10,7 @@ type RootStackParamList = {
   SalePOS: undefined;
   CreatePurchase: undefined;
   ExpensesScreen: undefined;
-  PaymentsScreen: undefined;
+  PaymentScreen: undefined;
   CompanyProfile: undefined;
   UserProfile: undefined;
   ManageCompanies: undefined;
@@ -47,7 +47,7 @@ const Erp = () => {
     { label: "Sale & POS", icon: "cart-outline", screen: "SalePOS" },
     { label: "Purchases", icon: "cart-arrow-down", screen: "CreatePurchase" },
     { label: "Expenses", icon: "file-document-outline", screen: "ExpensesScreen" },
-    { label: "Payments", icon: "cash-multiple", screen: "PaymentsScreen" },
+    { label: "Payments", icon: "cash-multiple", screen: "PaymentScreen" },
   ];
 
   const menuItems = [

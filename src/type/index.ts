@@ -94,6 +94,9 @@ export type THomeNavigation = {
   [HomeNavigation.ADDCUSTOMER]:undefined;
   [HomeNavigation.ADDVENDOR]:undefined;
   [HomeNavigation.DELIVERY_SETTING_SCREEN]:undefined
+  [HomeNavigation.PAYMENTSCREEN]:undefined;
+  [HomeNavigation.SENDNOTIFICATION]:undefined;
+  [HomeNavigation.PROMOTESTORE]:undefined;
 };
 
 
