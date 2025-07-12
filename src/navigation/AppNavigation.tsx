@@ -96,6 +96,7 @@ import DeliverySettingsScreen from '../component/DeliverySettingsScreen';
 import PaymentsScreen from '../component/PaymentsScreen';
 import SendNotifications from '../component/SendNotifications';
 import PromoteStore from '../component/PromoteStore';
+import AutoAssignDelivery from '../component/AutoAssignDelivery';
 
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
@@ -199,6 +200,7 @@ const AppNavigation = () => {
                 <Stack.Screen name={HomeNavigation.PAYMENTSCREEN} component={PaymentsScreen} />
                 <Stack.Screen name={HomeNavigation.SENDNOTIFICATION} component={SendNotifications} />
                 <Stack.Screen name={HomeNavigation.PROMOTESTORE} component={PromoteStore} />
+                <Stack.Screen name={HomeNavigation.AUTOASSIGNDELIVERY} component={AutoAssignDelivery} />
             </Stack.Navigator>
         </NavigationContainer>
     );

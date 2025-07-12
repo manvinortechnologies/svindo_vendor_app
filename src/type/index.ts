@@ -97,6 +97,7 @@ export type THomeNavigation = {
   [HomeNavigation.PAYMENTSCREEN]:undefined;
   [HomeNavigation.SENDNOTIFICATION]:undefined;
   [HomeNavigation.PROMOTESTORE]:undefined;
+  [HomeNavigation.AUTOASSIGNDELIVERY]:undefined;
 };
 
 

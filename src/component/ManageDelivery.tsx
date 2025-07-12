@@ -10,7 +10,7 @@ import MainContainer from '../CommonComponent/MainContainer';
 
 // ✅ Define the type for the navigation stack
 type RootStackParamList = {
-    AssignPorter: undefined;
+    AutoAssignDelivery: undefined;
     AssignOwnDeliveryBoy: undefined;
     ShipRocketDelivery: undefined;
     OrderPackingTime: undefined;
@@ -70,7 +70,7 @@ type MenuItemType = {
 
 // ✅ Ensure screen names match the navigation stack
 const menuItems: MenuItemType[] = [
-    { title: 'Auto Assign Instant delivery  partners', screen: 'AssignPorter' },
+    { title: 'Auto Assign Instant delivery  partners', screen: 'AutoAssignDelivery' },
     { title: 'Manage Own Delivery Boy', screen: 'AssignOwnDeliveryBoy' },
     { title: 'ShipRocket for General Delivery', screen: 'ShipRocketDelivery' },
     { title: 'Average Order Packing Time', screen: 'OrderPackingTime' },
