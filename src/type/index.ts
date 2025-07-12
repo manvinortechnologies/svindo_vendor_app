@@ -100,6 +100,7 @@ export type THomeNavigation = {
   [HomeNavigation.AUTOASSIGNDELIVERY]:undefined;
   [HomeNavigation.ASSIGNOWNDELIVERYBOY]:undefined;
   [HomeNavigation.ADDDELIVERYBOY]:undefined;
+  [HomeNavigation.TRANSACTIONMESSAGES]: undefined;
 };
 
 

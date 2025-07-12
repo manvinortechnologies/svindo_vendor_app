@@ -94,5 +94,6 @@ export enum HomeNavigation {
     AUTOASSIGNDELIVERY = 'AutoAssignDelivery',
     ASSIGNOWNDELIVERYBOY = 'AssignOwnDeliveryBoy',
     ADDDELIVERYBOY ='AddDeliveryBoy',
+    TRANSACTIONMESSAGES = 'TransactionMessages'
   }
   

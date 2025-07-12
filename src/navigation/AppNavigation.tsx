@@ -99,6 +99,7 @@ import PromoteStore from '../component/PromoteStore';
 import AutoAssignDelivery from '../component/AutoAssignDelivery';
 import AssignOwnDeliveryBoy from '../component/AssignOwnDeliveryBoy';
 import AddDeliveryBoy from '../component/AddDeliveryBoy';
+import TransactionMessages from '../component/TransactionMessages';
 
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
@@ -205,6 +206,7 @@ const AppNavigation = () => {
                 <Stack.Screen name={HomeNavigation.AUTOASSIGNDELIVERY} component={AutoAssignDelivery} />
                 <Stack.Screen name={HomeNavigation.ASSIGNOWNDELIVERYBOY} component={AssignOwnDeliveryBoy} />
                 <Stack.Screen name={HomeNavigation.ADDDELIVERYBOY} component={AddDeliveryBoy} />
+                <Stack.Screen name={HomeNavigation.TRANSACTIONMESSAGES} component={TransactionMessages} />
             </Stack.Navigator>
         </NavigationContainer>
     );
