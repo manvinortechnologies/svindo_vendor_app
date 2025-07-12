@@ -13,10 +13,14 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 
 const { width, height } = Dimensions.get('window');
+export interface DropDownOption{
+  name:string,
+  id:string|number
+}
 
 interface CustomDropdownProps {
   placeholder: string;
-  options?: {name:string,id:string|number}[];
+  options?: DropDownOption[];
   onSelect: (value: any) => void;
   selectedValue: string;
   styles?: StyleProp<ViewStyle>;

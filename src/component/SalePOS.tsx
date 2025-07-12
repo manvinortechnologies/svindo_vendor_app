@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,12 +13,68 @@ import Headerwithback from './Headerwithback';
 import Bottomnavigation from './Bottomnavigation';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import CustomButton from '../CommonComponent/CustomeButton';
+import CustomDropdown, { DropDownOption } from '../CommonComponent/CustomDropdown';
+import Loading from '../CommonComponent/Loading';
+import api from '../services/api/api';
+import ProductSelectionModal from '../Modals/ProductSelectionModal';
+import CustomSwitch from './CustomSwitch';
 
 const SalePOS = () => {
   const [products, setProducts] = useState([
     { name: 'White Shirt XL Size, Blue Color, Denim Brand.......', quantity: '2' },
     { name: 'White Shirt XL Size, Blue Color, Denim Brand.......', quantity: '2' },
+    { name: 'White Shirt XL Size, Blue dsfdsf fdsfdsColor, Denim Brand ', quantity: '2' },
   ]);
+  const [isLoading, setIsLoading] = useState<boolean>(false)
+  const [companyList, setCompanyList] = useState<DropDownOption[]>();
+  const [companySelected, setCompanySelected] = useState<DropDownOption>();
+  const [selectedPartyType, setSelectedPartyType] = useState<'None' | 'Customer' | 'Vendor'>('None');
+  const [customerList, setCustomerList] = useState<DropDownOption[]>([]);
+  const [vendorList, setVendorList] = useState<DropDownOption[]>([]);
+  const [selectedCustomer, setSelectedCustomer] = useState<DropDownOption>();
+  const [selectedVendor, setSelectedVendor] = useState<DropDownOption>();
+const [showProductModal, setShowProductModal] = useState(false);
+const [wholesale,setWholesale]=useState<boolean>(false);
+
+ useEffect(() => {
+  fetchAllData();
+}, []);
+
+const fetchAllData = async () => {
+  try {
+    setIsLoading(true);
+
+    // Parallel fetching
+    const [companyRes, customerRes, vendorRes] = await Promise.all([
+      api.get("/vendor/company-profile/"),
+      api.get("/vendor/customer/"),
+      api.get("/vendor/vendor/"),
+    ]);
+
+    const transformedCompany: DropDownOption[] = companyRes.data?.map((item: any) => ({
+      id: item.id,
+      name: item.company_name,
+    }));
+    setCompanyList(transformedCompany);
+
+    const transformedCustomer: DropDownOption[] = customerRes.data?.map((item: any) => ({
+      id: item.id,
+      name: item.name || item.customer_name,
+    }));
+    setCustomerList(transformedCustomer);
+
+    const transformedVendor: DropDownOption[] = vendorRes.data?.map((item: any) => ({
+      id: item.id,
+      name: item.name || item.vendor_name,
+    }));
+    setVendorList(transformedVendor);
+
+  } catch (error) {
+    console.error("Error fetching data:", error);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <View style={styles.container}>
@@ -27,46 +83,113 @@ const SalePOS = () => {
         rightIcons={[<Icon name="magnify" size={20} color="black" key="search" />]}
       />
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView
+        keyboardShouldPersistTaps="always"
+        contentContainerStyle={styles.scrollContent}>
         {/* Company Section */}
         <View style={styles.companyRow}>
-          <Text style={styles.companyText}>Company - Svindo Enterprise</Text>
+          {/* <Text style={styles.companyText}>Company - Svindo Enterprise</Text>
           <TouchableOpacity>
             <Text style={styles.changeText}>Change</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
+        <Text style={styles.label}>Select Company</Text>
+        <CustomDropdown
+          onSelect={setCompanySelected}
+          placeholder='Select Company'
+          selectedValue={companySelected?.name || ""}
+          options={companyList}
+          dropDownBoxStyle={{
+            borderWidth: 1,
+            borderColor: '#FCA311',
+            borderRadius: 6,
+            padding: 10,
+            backgroundColor: '#FFF8EB',
+            marginBottom: 12,
+          }}
 
-        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
-          <Text style={styles.label}>Customer Details</Text>
-        <TouchableOpacity>
-          <Text style={styles.addCustomer}>+ Add Customer</Text>
-        </TouchableOpacity>
+
+        />
+        <Text style={styles.label}>Select Party Type</Text>
+        <View style={styles.radioGroup}>
+          {['None', 'Customer', 'Vendor'].map((type) => (
+            <TouchableOpacity
+              key={type}
+              style={styles.radioOption}
+              onPress={() => setSelectedPartyType(type as any)}
+            >
+              <View style={styles.radioOuter}>
+                {selectedPartyType === type && <View style={styles.radioInner} />}
+              </View>
+              <Text style={styles.radioLabel}>{type}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
+       {selectedPartyType === 'Customer' && (
+          <>
+            <Text style={styles.label}>Select Customer</Text>
+            <CustomDropdown
+              onSelect={setSelectedCustomer}
+              selectedValue={selectedCustomer?.name || ''}
+              options={customerList}
+              placeholder="Select Customer"
+              dropDownBoxStyle={styles.dropdownStyle}
+            />
+          </>
+         )} 
+
+        {selectedPartyType === 'Vendor' && (
+          <>
+            <Text style={styles.label}>Select Vendor</Text>
+            <CustomDropdown
+              onSelect={setSelectedVendor}
+              selectedValue={selectedVendor?.name || ''}
+              options={vendorList}
+              placeholder="Select Vendor"
+              dropDownBoxStyle={styles.dropdownStyle}
+            />
+          </>
+        )}
+
+        {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <Text style={styles.label}>Customer Details</Text>
+          <TouchableOpacity>
+            <Text style={styles.addCustomer}>+ Add Customer</Text>
+          </TouchableOpacity>
+        </View> */}
         <TextInput
           placeholder="Search Mobile"
-          style={{width: '50%', borderWidth: 1, borderColor: '#FCA311', backgroundColor: '#FFEBCB', borderRadius: 10, padding: 2}}
+          style={{ width: '50%', borderWidth: 1, borderColor: '#FCA311', backgroundColor: '#FFEBCB', borderRadius: 10, padding: 2 }}
         />
-        
+
 
         <View style={styles.invoiceRow}>
-          <View style={{flexDirection: 'row', gap: 10}}>
+          <View style={{ flexDirection: 'row', gap: 10 ,alignItems:'center'}}>
             <Text style={styles.label}>Wholesale Invoice</Text>
-          {/* <CustomButton title={''} onPress={function (): void {
+            {/* <CustomButton title={''} onPress={function (): void {
             throw new Error('Function not implemented.');
           } } /> */}
+          <CustomSwitch
+          onValueChange={setWholesale}
+          value={wholesale}
+          />
           </View>
-          <TouchableOpacity style={styles.addItemButton}>
+          <TouchableOpacity  
+          onPress={()=>{
+          setShowProductModal(true)
+          }}
+          style={styles.addItemButton}>
             <Text style={styles.addItemText}>Add Item</Text>
           </TouchableOpacity>
         </View>
 
         {/* Table Header */}
         <View style={styles.tableHeader}>
-          <Text style={[styles.tableText, {color: '#fff', fontWeight: '500'}]}>S.No.</Text>
-          <Text style={[styles.tableText, { flex: 3,color: '#fff', fontWeight: '500' }]}>Item</Text>
-          <Text style={[styles.tableText, {color: '#fff', fontWeight: '500'}]}>Quantity</Text>
-          <Text style={[styles.tableText, {color: '#fff', fontWeight: '500'}]}>Price</Text>
-          <Text style={[styles.tableText, {color: '#fff', fontWeight: '500'}]}>Amount</Text>
+          <Text style={[styles.tableText, { color: '#fff', fontWeight: '500' }]}>S.No.</Text>
+          <Text style={[styles.tableText, { flex: 3, color: '#fff', fontWeight: '500' }]}>Item</Text>
+          <Text style={[styles.tableText, { color: '#fff', fontWeight: '500' }]}>Quantity</Text>
+          <Text style={[styles.tableText, { color: '#fff', fontWeight: '500' }]}>Price</Text>
+          <Text style={[styles.tableText, { color: '#fff', fontWeight: '500' }]}>Amount</Text>
           {/* <Text style={[styles.tableText, {color: '#fff', fontWeight: '500'}]}>Action</Text> */}
         </View>
 
@@ -97,34 +220,34 @@ const SalePOS = () => {
           </View>
 
           {/* Payment */}
-          <View style={{flexDirection: 'row', gap: 20}}>
-          <Text style={styles.label}>Payment</Text>
-          <View style={styles.paymentOptions}>
-            {['UPI', 'Card', 'Cash', 'Credit'].map((method) => (
-              <TouchableOpacity key={method} style={styles.paymentButton}>
-                <Text style={{fontWeight: '500'}}>{method}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <View style={{ flexDirection: 'row', gap: 20 }}>
+            <Text style={styles.label}>Payment</Text>
+            <View style={styles.paymentOptions}>
+              {['UPI', 'Card', 'Cash', 'Credit'].map((method) => (
+                <TouchableOpacity key={method} style={styles.paymentButton}>
+                  <Text style={{ fontWeight: '500' }}>{method}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
 
           {/* Advance */}
-          <View style={{flexDirection: 'row', gap: 20}}>
-          <Text style={styles.label}>Advance</Text>
-          <TextInput placeholder="Amount" style={[styles.input, {paddingVertical: 2}]} />
-          <View style={styles.paymentOptions}>
-            {['Bank', 'Cash'].map((method) => (
-              <TouchableOpacity key={method} style={styles.paymentButton}>
-                <Text style={{fontWeight: '500'}}>{method}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <View style={{ flexDirection: 'row', gap: 20 }}>
+            <Text style={styles.label}>Advance</Text>
+            <TextInput placeholder="Amount" style={[styles.input, { paddingVertical: 2 }]} />
+            <View style={styles.paymentOptions}>
+              {['Bank', 'Cash'].map((method) => (
+                <TouchableOpacity key={method} style={styles.paymentButton}>
+                  <Text style={{ fontWeight: '500' }}>{method}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
 
           {/* Due Date */}
-          <View style={{flexDirection: 'row', gap: 20, marginTop: 10}}>
-          <Text style={styles.label}>Due Date</Text>
-          <TextInput placeholder="DD/MM/YYYY" style={styles.input} />
+          <View style={{ flexDirection: 'row', gap: 20, marginTop: 10 }}>
+            <Text style={styles.label}>Due Date</Text>
+            <TextInput placeholder="DD/MM/YYYY" style={styles.input} />
           </View>
         </View>
       </ScrollView>
@@ -138,8 +261,13 @@ const SalePOS = () => {
           <Text style={{ color: '#000', fontWeight: 'bold' }}>Proceed</Text>
         </TouchableOpacity>
       </View>
+      <Loading
+        visible={isLoading}
+      />
+      <ProductSelectionModal visible={showProductModal} onClose={() => setShowProductModal(false)} />
 
-      <Bottomnavigation />
+
+      {/* <Bottomnavigation /> */}
     </View>
   );
 };
@@ -209,7 +337,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#008BE1',
     padding: 8,
     marginTop: 10,
-    
+
   },
   tableRow: {
     flexDirection: 'row',
@@ -278,4 +406,41 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     borderRadius: 8,
   },
+  radioGroup: {
+    flexDirection: 'row',
+    gap: 20,
+    marginBottom: 20,
+  },
+  radioOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  radioOuter: {
+    height: 20,
+    width: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#FCA311',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  radioInner: {
+    height: 10,
+    width: 10,
+    borderRadius: 5,
+    backgroundColor: '#FCA311',
+  },
+  radioLabel: {
+    fontSize: 16,
+    color: '#333',
+  },
+  dropdownStyle : {
+  borderWidth: 1,
+  borderColor: '#FCA311',
+  borderRadius: 6,
+  padding: 10,
+  backgroundColor: '#FFF8EB',
+  marginBottom: 12,
+}
 });
