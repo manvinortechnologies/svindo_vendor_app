@@ -93,5 +93,6 @@ export enum HomeNavigation {
     PROMOTESTORE = 'PromoteStore',
     AUTOASSIGNDELIVERY = 'AutoAssignDelivery',
     ASSIGNOWNDELIVERYBOY = 'AssignOwnDeliveryBoy',
+    ADDDELIVERYBOY ='AddDeliveryBoy',
   }
   

@@ -99,6 +99,7 @@ export type THomeNavigation = {
   [HomeNavigation.PROMOTESTORE]:undefined;
   [HomeNavigation.AUTOASSIGNDELIVERY]:undefined;
   [HomeNavigation.ASSIGNOWNDELIVERYBOY]:undefined;
+  [HomeNavigation.ADDDELIVERYBOY]:undefined;
 };
 
 
