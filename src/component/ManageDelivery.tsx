@@ -12,7 +12,7 @@ import MainContainer from '../CommonComponent/MainContainer';
 type RootStackParamList = {
     AutoAssignDelivery: undefined;
     AssignOwnDeliveryBoy: undefined;
-    ShipRocketDelivery: undefined;
+    AddDeliveryBoy: undefined;
     OrderPackingTime: undefined;
     GeneralDeliveryTime: undefined;
     DeliverySettingsScreen: undefined;
@@ -72,8 +72,8 @@ type MenuItemType = {
 const menuItems: MenuItemType[] = [
     { title: 'Auto Assign Instant delivery  partners', screen: 'AutoAssignDelivery' },
     { title: 'Manage Own Delivery Boy', screen: 'AssignOwnDeliveryBoy' },
-    { title: 'ShipRocket for General Delivery', screen: 'ShipRocketDelivery' },
-    { title: 'Average Order Packing Time', screen: 'OrderPackingTime' },
+    { title: 'Add Own Delivery Boy', screen: 'AddDeliveryBoy' },
+    // { title: 'Average Order Packing Time', screen: 'OrderPackingTime' },
     // { title: 'Average General Delivery time', screen: 'GeneralDeliveryTime' },
     { title: 'Delivery settings', screen: 'DeliverySettingsScreen' },
   ];
