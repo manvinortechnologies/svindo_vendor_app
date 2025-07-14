@@ -32,3 +32,12 @@ export interface BannerCampaign {
   created_at: string;
   user: number;
 }
+export interface DeliveryPerson {
+  id: number;
+  name: string;
+  mobile: string;
+  photo: string | null;
+  is_active: boolean;
+  total_deliveries: number;
+  rating: string; // or number if it's always numeric like "4.8"
+}
