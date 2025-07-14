@@ -12,12 +12,12 @@ type RootStackParamList = {
     PromoteStore: undefined;
     DiscountCoupons: undefined;
     DeliveryCashback: undefined;
-    SendNotifications: undefined;
+    ShowNotification: undefined;
     CouponsScreen:undefined
   };
 
 // ✅ Define the type for navigation prop
-export type SecurityScreenNavigationProp = StackNavigationProp<RootStackParamList, 'SendNotifications'>;
+export type SecurityScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ShowNotification'>;
 
 const BoostSales = () => {
  const navigation = useNavigation<SecurityScreenNavigationProp>(); // ✅ Corrected navigation type
@@ -68,7 +68,7 @@ const menuItems: MenuItemType[] = [
     { title: 'Promote Store / Products / Posts', icon: 'storefront-outline', screen: 'PromoteStore' },
     { title: 'Discount Coupons', icon: 'ticket-percent-outline', screen: 'CouponsScreen' },
     { title: 'Delivery Cashback Amount', icon: 'cash-refund', screen: 'DeliveryCashback' },
-    { title: 'Send Notifications on svindo app', icon: 'bell-outline', screen: 'SendNotifications' },
+    { title: 'Send Notifications on svindo app', icon: 'bell-outline', screen: 'ShowNotification' },
   ];
   const styles = StyleSheet.create({
      

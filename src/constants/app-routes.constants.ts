@@ -89,6 +89,7 @@ export enum HomeNavigation {
     ADDVENDOR = 'AddVendor',
     DELIVERY_SETTING_SCREEN="DeliverySettingsScreen",
     PAYMENTSCREEN = 'PaymentScreen',
+    SHOWNOTIFICATION = 'ShowNotification',
     SENDNOTIFICATION = 'SendNotifications',
     PROMOTESTORE = 'PromoteStore',
     AUTOASSIGNDELIVERY = 'AutoAssignDelivery',
