@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,12 +13,13 @@ import {
   Keyboard,
   Image,
   ScrollView,
+  Alert,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Headerwithback from './Headerwithback';
 import MainContainer from '../CommonComponent/MainContainer';
 import { InputBox } from '../CommonComponent/InputBox';
-import CustomDropdown from '../CommonComponent/CustomDropdown';
+import CustomDropdown, { DropDownOption } from '../CommonComponent/CustomDropdown';
 import CustomSwitch from '../CommonComponent/CustomSwitch';
 import CalendarModal from '../Modals/CalendarModal';
 import Loading from '../CommonComponent/Loading';
@@ -60,6 +61,7 @@ const AddProductScreen = () => {
   const [lowStockQty, setLowStockQty] = useState('');
   const [brandName, setBrandName] = useState('');
   const [batchNumber, setBatchNumber] = useState('');
+  const [size, setSize] = useState<string>("")
   const [expiryDate, setExpiryDate] = useState('');
   const [description, setDescription] = useState('');
 
@@ -69,6 +71,8 @@ const AddProductScreen = () => {
   const [lowStockAlert, setLowStockAlert] = useState(false);
   const [batchSwitch, setBatchSwitch] = useState(true);
   const [expirySwitch, setExpirySwitch] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState<DropDownOption>();
+  const [selectedSubCategory, setSelectedSubCategory] = useState<DropDownOption>();
 
   const [pickColor, setPicColor] = useState<{ name: string, id: string | number }>()
 
@@ -106,6 +110,37 @@ const AddProductScreen = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [imeiModalVisible, setImeiModalVisible] = useState(false);
   const [imeiList, setImeiList] = useState<string[]>([]);
+  const [categoryList, setCategoryList] = useState<DropDownOption[]>();
+  const [subCategoryList, setSubCategoryList] = useState<DropDownOption[]>();
+  useEffect(() => {
+    getCategoryData();
+    getSubategoryData();
+
+  }, []);
+  const getCategoryData = async () => {
+    try {
+      setIsLoading(true)
+      const res = await api.get("masters/get-product-category/")
+      setCategoryList(res.data);
+    } catch (error) {
+
+    } finally {
+      setIsLoading(false)
+    }
+
+  }
+  const getSubategoryData = async () => {
+    try {
+      setIsLoading(true)
+      const res = await api.get("masters/get-product-subcategory/")
+      setSubCategoryList(res.data);
+    } catch (error) {
+
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   const onToggleChange = (key: string, value: boolean) => {
     setToggleValues(prev => ({
       ...prev,
@@ -122,44 +157,102 @@ const AddProductScreen = () => {
   const handelSaveProduct = async () => {
     try {
       setIsLoading(true)
-         const payload = {
-      name: productName,
-      type: selectedType.toLowerCase(), // 'Product' => 'product'
-      sale_type: selectedFor === 'Both online & Offline' ? 'both' : 'offline',
-      wholesale_price: isWholesaleEnabled ? wholesalePrice : undefined,
-      purchase_price: purchasePrice,
-      sales_price: salesPrice,
-      mrp: mrp,
-      unit: unit,
-      hsn: hsn,
-      gst: gst,
-      imei_serials: imeiList,
-      opening_stock: Number(openingStock),
-      low_stock_alert: lowStockAlert,
-      low_stock_quantity: lowStockAlert ? Number(lowStockQty) : undefined,
-      category: 1, // <-- Replace this with actual category ID from your dropdown if needed
-      sub_category: "Electronics", // Replace with actual selection when dynamic
-      brand_name: brandName,
-      color: pickColor?.name,
-      size: "Medium", // Replace with actual size when dynamic
-      batch_number: batchSwitch ? batchNumber : undefined,
-      expiry_date: expirySwitch ? expiryDate : undefined,
-      description: description,
-      instant_delivery: deliveryOptions['Instant Delivery'],
-      self_pickup: deliveryOptions['Self Pickup'],
-      general_delivery: deliveryOptions['General Delivery'],
-      return_policy: toggleValues['Return'],
-      cod: toggleValues['COD'],
-      replacement: toggleValues['Replacement'],
-      shop_exchange: toggleValues['Shop Exchange'],
-      shop_warranty: toggleValues['Shop Warranty'],
-      brand_warranty: toggleValues['Brand Warranty'],
-    };
-    console.log("payload-->",payload);
-    const res=await api.post("master/product/",payload)
-    console.log("--res----",res);
-    
-    
+      // const galleryImages=[image2,image3,image4]
+     const formData = new FormData();
+
+
+formData.append('name', productName);
+formData.append('product_type', selectedType.toLowerCase());
+formData.append('sale_type', selectedFor === 'Both online & Offline' ? 'both' : 'offline');
+
+if (isWholesaleEnabled) formData.append('wholesale_price', String(wholesalePrice));
+formData.append('purchase_price', String(purchasePrice));
+formData.append('sales_price', String(salesPrice));
+formData.append('mrp', String(mrp));
+if (unit) formData.append('unit', unit);
+if (hsn) formData.append('hsn', hsn);
+if (gst) formData.append('gst', String(gst));
+
+  // if (imeiList && imeiList.length) {
+  //   imeiList.forEach((imei, index) => {
+  //     formData.append(`imei_serials[${index}]`, imei);
+  //   });
+  // }
+
+formData.append('opening_stock', String(openingStock));
+formData.append('stock', String(openingStock));
+formData.append('low_stock_alert', String(lowStockAlert));
+if (lowStockAlert && lowStockQty) {
+  formData.append('low_stock_quantity', String(lowStockQty));
+}
+
+if (selectedCategory?.id) {
+  formData.append('category', String(selectedCategory.id));
+}
+if (selectedSubCategory?.id) {
+  formData.append('sub_category', String(selectedSubCategory.id));
+}
+
+if (brandName) formData.append('brand_name', brandName);
+if (pickColor?.name) formData.append('color', pickColor.name);
+formData.append('size', size || 'Medium');
+if (batchSwitch && batchNumber) formData.append('batch_number', batchNumber);
+formData.append('expiry_date', expirySwitch && expiryDate ? expiryDate : ''); // send empty string if null
+
+if (description) formData.append('description', description);
+
+// Delivery options
+formData.append('instant_delivery', String(deliveryOptions['Instant Delivery']));
+formData.append('self_pickup', String(deliveryOptions['Self Pickup']));
+formData.append('general_delivery', String(deliveryOptions['General Delivery']));
+
+// Policy options
+formData.append('return_policy', String(toggleValues['Return']));
+formData.append('cod', String(toggleValues['COD']));
+formData.append('replacement', String(toggleValues['Replacement']));
+formData.append('shop_exchange', String(toggleValues['Shop Exchange']));
+formData.append('shop_warranty', String(toggleValues['Shop Warranty']));
+formData.append('brand_warranty', String(toggleValues['Brand Warranty']));
+
+// Flags
+formData.append('tax_inclusive', 'true');
+formData.append('is_popular', 'true');
+formData.append('is_on_shop', 'true');
+formData.append('is_featured', 'true');
+formData.append('is_active', 'true');
+
+// Optional: If you're uploading a product image
+if (image1) {
+  formData.append('image', {
+    uri: image1.uri,
+    name: image1.fileName || 'product.jpg',
+    type: image1.type || 'image/jpeg',
+  });
+}
+
+// Optional: Gallery Images
+// if (galleryImages && Array.isArray(galleryImages)) {
+//   galleryImages.forEach((img, index) => {
+//     formData.append(`gallery_images[${index}]`, {
+//       uri: img.uri,
+//       name: img.fileName || `gallery_${index}.jpg`,
+//       type: img.type || 'image/jpeg',
+//     });
+//   });
+// }
+console.log("formdata-->",formData)
+
+      const res = await api.post("vendor/product/", formData,{
+        headers:{
+           'Content-Type': 'multipart/form-data',
+        }
+      })
+      if(res.status==201){
+        Alert.alert("Success","Product added")
+      }
+      console.log("--res----", res);
+
+
 
     } catch (error) {
 
@@ -167,6 +260,7 @@ const AddProductScreen = () => {
       setIsLoading(false)
     }
   }
+
 
 
 
@@ -368,21 +462,50 @@ const AddProductScreen = () => {
         <View style={styles.optionalContainer}>
           {/* Category */}
           <Text style={styles.optionalLabel}>Category <Text style={styles.optionalText}>(Optional)</Text></Text>
-          <View style={styles.inputBoxOptional}>
-            <Text style={styles.placeholderText}>Select category</Text>
-            <TouchableOpacity style={styles.includesRow}>
+          {/* <View style={styles.inputBoxOptional}> */}
+          {/* <TouchableOpacity style={styles.includesRow}>
               <Icon name="chevron-down" size={18} color="#000" />
-            </TouchableOpacity>
-          </View>
+            </TouchableOpacity> */}
+          <CustomDropdown
+            onSelect={setSelectedCategory}
+            placeholder='Select Category'
+            selectedValue={selectedCategory?.name || ""}
+            options={categoryList}
+            dropDownBoxStyle={{
+              borderWidth: 1,
+              borderColor: '#FCA311',
+              borderRadius: 6,
+              padding: 10,
+              backgroundColor: '#FFF8EB',
+              marginBottom: 12,
+            }}
+
+
+          />
 
           {/* Sub Category */}
           <Text style={styles.optionalLabel}>Sub category <Text style={styles.optionalText}>(Optional)</Text></Text>
-          <View style={styles.inputBoxOptional}>
+          {/* <View style={styles.inputBoxOptional}>
             <Text style={styles.placeholderText}>Select Sub category</Text>
             <TouchableOpacity style={styles.includesRow}>
               <Icon name="chevron-down" size={18} color="#000" />
-            </TouchableOpacity>
-          </View>
+            </TouchableOpacity> */}
+          <CustomDropdown
+            onSelect={setSelectedSubCategory}
+            placeholder='Select Category'
+            selectedValue={selectedSubCategory?.name || ""}
+            options={subCategoryList}
+            dropDownBoxStyle={{
+              borderWidth: 1,
+              borderColor: '#FCA311',
+              borderRadius: 6,
+              padding: 10,
+              backgroundColor: '#FFF8EB',
+              marginBottom: 12,
+            }}
+
+
+          />
 
           {/* Brand Name */}
           {selectedType !== "Print" && (
@@ -399,7 +522,7 @@ const AddProductScreen = () => {
               {/* Pick Color */}
               <Text style={styles.optionalLabel}>Pick Color <Text style={styles.optionalText}>(Optional)</Text></Text>
               <View style={styles.rowBetween}>
-                <View style={[{ flex: 1, flexDirection: 'row',alignItems:"center" }]}>
+                <View style={[{ flex: 1, flexDirection: 'row', alignItems: "center" }]}>
                   {/* <Text style={styles.placeholderText}>Select one</Text> */}
                   {/* <TouchableOpacity style={styles.includesRow}>
                     <Icon name="chevron-down" size={18} color="#000" />
@@ -422,17 +545,17 @@ const AddProductScreen = () => {
 
                   />
                 </View>
-                <View style={[styles.colorBox,{backgroundColor:pickColor?.id.toString()||"#8B3A3A"}]} />
+                <View style={[styles.colorBox, { backgroundColor: pickColor?.id.toString() || "#8B3A3A" }]} />
               </View>
 
               {/* Select Size */}
               <Text style={styles.optionalLabel}>Select Size <Text style={styles.optionalText}>(Optional)</Text></Text>
-              <View style={styles.inputBoxOptional}>
-                <Text style={styles.placeholderText}>Select here</Text>
-                <TouchableOpacity style={styles.includesRow}>
-                  <Icon name="chevron-down" size={18} color="#000" />
-                </TouchableOpacity>
-              </View>
+              <InputBox
+                placeholder="Enter here"
+                background='#FFF8EB'
+                value={size}
+                onChangeText={setSize}
+              />
 
               {/* Batch Number */}
               <View style={styles.toggleRow}>
@@ -770,10 +893,10 @@ const AddProductScreen = () => {
             /> */}
               <View style={styles.footer}>
                 <TouchableOpacity
-                onPress={()=>{
-                  handelSaveProduct()
-                }}
-                style={styles.addButton}>
+                  onPress={() => {
+                    handelSaveProduct()
+                  }}
+                  style={styles.addButton}>
                   <Text style={styles.addButtonText}>Save</Text>
                 </TouchableOpacity>
               </View>
