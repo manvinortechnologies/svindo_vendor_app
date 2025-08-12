@@ -1,14 +1,15 @@
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { HomeNavigation } from "../constants/app-routes.constants";
 
-
-
-
 export type THomeNavigation = {
   [HomeNavigation.SPLASH_SCREEN]: undefined;
   [HomeNavigation.WELCOME_SCREEN]: undefined;
   [HomeNavigation.SIGNUP_SCREEN]: { authType: string };
-  [HomeNavigation.OTP_SCREEN]: { confirmAuth?: any; phoneNumber?: string; authType: string };
+  [HomeNavigation.OTP_SCREEN]: {
+    confirmAuth?: any;
+    phoneNumber?: string;
+    authType: string;
+  };
   [HomeNavigation.SIGNUP_DETAIL_SCREEN]: undefined;
   [HomeNavigation.SELECT_LOCATION_SCREEN]: undefined;
   [HomeNavigation.STATISTICS]: undefined;
@@ -33,6 +34,7 @@ export type THomeNavigation = {
   [HomeNavigation.EMAILS]: undefined;
   [HomeNavigation.MANAGE_DELIVERY]: undefined;
   [HomeNavigation.ERP]: undefined;
+  [HomeNavigation.WHOLESALE]: undefined;
   [HomeNavigation.COMPANY_PROFILE]: undefined;
   [HomeNavigation.USER_PROFILE]: undefined;
   [HomeNavigation.MANAGE_COMPANIES]: undefined;
@@ -76,33 +78,31 @@ export type THomeNavigation = {
   [HomeNavigation.CREATE_QUATION]: undefined;
   [HomeNavigation.CREATE_PRO_FARMA_INVOICE]: undefined;
   [HomeNavigation.DELIVERY_CHALLAN]: undefined;
-  [HomeNavigation.ADMINPROFILE]:undefined;
-  [HomeNavigation.PRODUCTSETTING]:undefined;
-  [HomeNavigation.STOREWORKING_HOURS]:undefined;
-  [HomeNavigation.COUPONS_SCREEN]:undefined,
-  [HomeNavigation.EXPENESES_SCREEN]:undefined,
-  [HomeNavigation.CREATECOUPON]:undefined,
-  [HomeNavigation.ADD_POST_SCREEN]:undefined,
+  [HomeNavigation.ADMINPROFILE]: undefined;
+  [HomeNavigation.PRODUCTSETTING]: undefined;
+  [HomeNavigation.STOREWORKING_HOURS]: undefined;
+  [HomeNavigation.COUPONS_SCREEN]: undefined;
+  [HomeNavigation.EXPENESES_SCREEN]: undefined;
+  [HomeNavigation.CREATECOUPON]: undefined;
+  [HomeNavigation.ADD_POST_SCREEN]: undefined;
   [HomeNavigation.BUYERSREQUEST]: undefined;
-  [HomeNavigation.CREATEREQUEST]:undefined;
-  [HomeNavigation.CREATEOFFER]:undefined;
-  [HomeNavigation.BANNER_ADS]:undefined;
-  [HomeNavigation.ADD_BANNER_SCREEN]:undefined
-  [HomeNavigation.ADDSPOTLIGHT]:undefined;
-  [HomeNavigation.SELECTSPOTLIGHTPRODUCT]:undefined;
-  [HomeNavigation.VERIFICATIONPAYMENT]:undefined;
-  [HomeNavigation.ADDCUSTOMER]:undefined;
-  [HomeNavigation.ADDVENDOR]:undefined;
-  [HomeNavigation.DELIVERY_SETTING_SCREEN]:undefined
-  [HomeNavigation.PAYMENTSCREEN]:undefined;
-  [HomeNavigation.SENDNOTIFICATION]:undefined;
-  [HomeNavigation.PROMOTESTORE]:undefined;
-  [HomeNavigation.AUTOASSIGNDELIVERY]:undefined;
-  [HomeNavigation.ASSIGNOWNDELIVERYBOY]:undefined;
-  [HomeNavigation.ADDDELIVERYBOY]:undefined;
+  [HomeNavigation.CREATEREQUEST]: undefined;
+  [HomeNavigation.CREATEOFFER]: undefined;
+  [HomeNavigation.BANNER_ADS]: undefined;
+  [HomeNavigation.ADD_BANNER_SCREEN]: undefined;
+  [HomeNavigation.ADDSPOTLIGHT]: undefined;
+  [HomeNavigation.SELECTSPOTLIGHTPRODUCT]: undefined;
+  [HomeNavigation.VERIFICATIONPAYMENT]: undefined;
+  [HomeNavigation.ADDCUSTOMER]: undefined;
+  [HomeNavigation.ADDVENDOR]: undefined;
+  [HomeNavigation.DELIVERY_SETTING_SCREEN]: undefined;
+  [HomeNavigation.PAYMENTSCREEN]: undefined;
+  [HomeNavigation.SENDNOTIFICATION]: undefined;
+  [HomeNavigation.PROMOTESTORE]: undefined;
+  [HomeNavigation.AUTOASSIGNDELIVERY]: undefined;
+  [HomeNavigation.ASSIGNOWNDELIVERYBOY]: undefined;
+  [HomeNavigation.ADDDELIVERYBOY]: undefined;
 };
-
-
 
 // export type TTabNavigation = {
 //   [HomeNavigation.HOME]: undefined;
@@ -216,4 +216,3 @@ export type CreateProductScreenProps = NativeStackScreenProps<
   HomeNavigation.CREATE_PRODUCT
 >;
 // etc...
-

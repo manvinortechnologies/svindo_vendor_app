@@ -1,20 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, StatusBar, Platform, Alert } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+  StyleSheet,
+  StatusBar,
+  Platform,
+  Alert,
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Icons from "react-native-vector-icons/AntDesign";
 import Ionicons from "react-native-vector-icons/Ionicons";
 
-import { StackNavigationProp } from '@react-navigation/stack';
-import { useNavigation } from '@react-navigation/native';
-import Bottomnavigation from './Bottomnavigation';
-import Header from './Header';
-import CustomSwitch from './CustomSwitch';
-import CustomButton from '../CommonComponent/CustomeButton';
-import Loading from '../CommonComponent/Loading';
-import api from '../services/api/api';
-import Headerwithback from './Headerwithback';
-import MainContainer from '../CommonComponent/MainContainer';
-
+import { StackNavigationProp } from "@react-navigation/stack";
+import { useNavigation } from "@react-navigation/native";
+import Bottomnavigation from "./Bottomnavigation";
+import Header from "./Header";
+import CustomSwitch from "./CustomSwitch";
+import CustomButton from "../CommonComponent/CustomeButton";
+import Loading from "../CommonComponent/Loading";
+import api from "../services/api/api";
+import Headerwithback from "./Headerwithback";
+import MainContainer from "../CommonComponent/MainContainer";
+import { API_ROUTES } from "../constants/api-routes.constants";
 
 // ✅ Define the type for the navigation stack
 type RootStackParamList = {
@@ -24,14 +33,15 @@ type RootStackParamList = {
   EnableSvindoGateway: undefined;
   AddPaymentGateway: undefined;
   MarketingTools: undefined;
-  OnlineStore: undefined
+  OnlineStore: undefined;
   StoreWorkingHours: undefined;
 };
 
 //  Define the type for navigation prop
-export type SecurityScreenNavigationProp = StackNavigationProp<RootStackParamList, 'OnlineStoreSettings'>;
-
-
+export type SecurityScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "OnlineStoreSettings"
+>;
 
 const OnlineStore = ({ navigation }: any) => {
   const [isEnabled, setEnable] = useState(true);
@@ -44,60 +54,47 @@ const OnlineStore = ({ navigation }: any) => {
   }, []);
   const getData = async () => {
     try {
-      setIsLoading(true)
-      const res = await api.get("vendor/onlineStoreSetting/");
+      setIsLoading(true);
+      const res = await api.get(API_ROUTES.storeOnlineSetting);
       if (res.status == 200) {
         const data = res.data;
-        console.log(data)
+        console.log(data);
         setEnable(data.store_page_visible);
         setLocation(data.store_location_visible);
         setDisplay(data.display_as_catalog);
         setIsPrivate(data.private_catalog);
-
-
       }
-
-
-
     } catch (error) {
-      console.log("error-->", error)
-
+      console.log("error-->", error);
     } finally {
-      setIsLoading(false)
-
+      setIsLoading(false);
     }
-  }
+  };
 
   const handelUpdateSetting = async () => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
       const data = {
         store_page_visible: isEnabled,
         store_location_visible: location,
         display_as_catalog: display,
-        private_catalog: isPrivate
-      }
+        private_catalog: isPrivate,
+      };
       console.log("data-->", data);
-      const res = await api.post("vendor/onlineStoreSetting/", data);
-      console.log("ressss->", res)
+      const res = await api.post(API_ROUTES.storeOnlineSetting, data);
+      console.log("ressss->", res);
       if (res.status == 200) {
-        Alert.alert("Success", "Online Store Setting updated successfully")
+        Alert.alert("Success", "Online Store Setting updated successfully");
       }
-
-
-
     } catch (error) {
-      console.log("error-->", error)
-
+      console.log("error-->", error);
     } finally {
-      setIsLoading(false)
-
+      setIsLoading(false);
     }
-  }
+  };
   return (
     <MainContainer>
       <View style={styles.container}>
-
         {/* <Header
         title="Online Store Setting"
         backgroundColor="#FFF"
@@ -106,22 +103,26 @@ const OnlineStore = ({ navigation }: any) => {
       /> */}
         <Headerwithback title="Online Store Setting" />
 
-        <ScrollView
-
-        >
+        <ScrollView>
           <View style={styles.storepage}>
             <View style={styles.storecontent}>
               <Icon name="storefront-outline" size={24} color="#000" />
               <Text style={styles.mytext}>Store Page</Text>
             </View>
             <View>
-              <Text style={{ marginLeft: 28 }}>This option helps you hide/ un-hide your store and product on svindo app</Text>
+              <Text style={{ marginLeft: 28 }}>
+                This option helps you hide/ un-hide your store and product on
+                svindo app
+              </Text>
               <View style={styles.switchstorecontent}>
                 <Text style={styles.switchtext}>visible on svindo</Text>
-                <CustomSwitch value={isEnabled} onValueChange={setEnable}
+                <CustomSwitch
+                  value={isEnabled}
+                  onValueChange={setEnable}
                   activeColor="#FCA311"
                   inactiveColor="#999"
-                  borderColor="#999" />
+                  borderColor="#999"
+                />
               </View>
             </View>
           </View>
@@ -134,7 +135,12 @@ const OnlineStore = ({ navigation }: any) => {
               >
                 <Icon name={item.icon} size={24} color="#000" />
                 <Text style={styles.menuText}>{item.title}</Text>
-                <Icon name="chevron-right" size={24} color="#000" style={{ marginLeft: 'auto' }} />
+                <Icon
+                  name="chevron-right"
+                  size={24}
+                  color="#000"
+                  style={{ marginLeft: "auto" }}
+                />
               </TouchableOpacity>
             ))}
           </View>
@@ -144,82 +150,116 @@ const OnlineStore = ({ navigation }: any) => {
               <Text style={styles.mytext}>Store Location </Text>
             </View>
             <View>
-              <Text style={{ marginLeft: 28 }}>This option helps you to Hide / Un-hide your store location on svindo app.</Text>
+              <Text style={{ marginLeft: 28 }}>
+                This option helps you to Hide / Un-hide your store location on
+                svindo app.
+              </Text>
               <View style={styles.switchstorecontent}>
                 <Text style={styles.switchtext}>visible on svindo</Text>
-                <CustomSwitch value={location} onValueChange={setLocation}
+                <CustomSwitch
+                  value={location}
+                  onValueChange={setLocation}
                   activeColor="#FCA311"
                   inactiveColor="#999"
-                  borderColor="#999" />
+                  borderColor="#999"
+                />
               </View>
             </View>
           </View>
           <View style={styles.storepage}>
-            <View style={[styles.storecontent, { justifyContent: "space-between" }]}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Icon name="chevron-right" size={24} color="#000" style={{ marginLeft: 'auto' }} />
+            <View
+              style={[styles.storecontent, { justifyContent: "space-between" }]}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Icon
+                  name="chevron-right"
+                  size={24}
+                  color="#000"
+                  style={{ marginLeft: "auto" }}
+                />
                 <Text style={styles.mytext}>Display products as Catalog </Text>
               </View>
               <View>
-                <CustomSwitch value={display} onValueChange={setDisplay}
+                <CustomSwitch
+                  value={display}
+                  onValueChange={setDisplay}
                   activeColor="#FCA311"
                   inactiveColor="#999"
-                  borderColor="#999" />
+                  borderColor="#999"
+                />
               </View>
             </View>
             <View>
-              <Text style={{ marginLeft: 28 }}>Enabling this option, makes the products
-                posted online into a catalog that is the
-                customer will not be able to place order.
-                But can enquire through chat box. .</Text>
-
+              <Text style={{ marginLeft: 28 }}>
+                Enabling this option, makes the products posted online into a
+                catalog that is the customer will not be able to place order.
+                But can enquire through chat box. .
+              </Text>
             </View>
-            <View style={[styles.storecontent, { justifyContent: "space-between", marginTop: 10 }]}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Ionicons name="eye-off-sharp" size={24} color="#000" style={{ marginLeft: 'auto' }} />
+            <View
+              style={[
+                styles.storecontent,
+                { justifyContent: "space-between", marginTop: 10 },
+              ]}
+            >
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Ionicons
+                  name="eye-off-sharp"
+                  size={24}
+                  color="#000"
+                  style={{ marginLeft: "auto" }}
+                />
                 <Text style={styles.mytext}>Private Catalog </Text>
               </View>
               <View>
-                <CustomSwitch value={isPrivate} onValueChange={setIsPrivate}
+                <CustomSwitch
+                  value={isPrivate}
+                  onValueChange={setIsPrivate}
                   activeColor="#FCA311"
                   inactiveColor="#999"
-                  borderColor="#999" />
+                  borderColor="#999"
+                />
               </View>
             </View>
             <View>
-              <Text style={{ marginLeft: 28 }}>Enabling this option, makes the products
-                posted online into a catalog that is the
-                customer will not be able to place order.
-                But can enquire through chat box. .</Text>
-
+              <Text style={{ marginLeft: 28 }}>
+                Enabling this option, makes the products posted online into a
+                catalog that is the customer will not be able to place order.
+                But can enquire through chat box. .
+              </Text>
             </View>
           </View>
           <CustomButton
-            containerStyle={{ padding: 8, }}
-            title='Update Settings'
+            containerStyle={{ padding: 8 }}
+            title="Update Settings"
             onPress={handelUpdateSetting}
           />
         </ScrollView>
-        <Loading
-          visible={isLoading}
-        />
+        <Loading visible={isLoading} />
         {/* <Bottompopup/> */}
         <View style={styles.bottomcontainer}>
-          <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('OnlineStore')}>
+          <TouchableOpacity
+            style={styles.option}
+            onPress={() => navigation.navigate("OnlineStore")}
+          >
             <Icon name="storefront-outline" size={20} color="#f7931e" />
-            <Text style={[styles.optionText, { color: '#f7931e' }]}>Online Store</Text>
+            <Text style={[styles.optionText, { color: "#f7931e" }]}>
+              Online Store
+            </Text>
           </TouchableOpacity>
 
           <View style={styles.divider} />
 
-          <TouchableOpacity style={styles.option} onPress={() => navigation.navigate('MarketingTools')}>
+          <TouchableOpacity
+            style={styles.option}
+            onPress={() => navigation.navigate("MarketingTools")}
+          >
             <Icons name="setting" size={20} color="#555" />
             <Text style={styles.optionText}>Tools</Text>
           </TouchableOpacity>
         </View>
 
         <Bottomnavigation />
-
       </View>
     </MainContainer>
   );
@@ -234,50 +274,64 @@ type MenuItemType = {
 
 // ✅ Ensure screen names match the navigation stack
 const menuItems: MenuItemType[] = [
-  { title: 'Store working hours', icon: 'calendar-clock', screen: 'StoreWorkingHours' },
-  { title: 'Verification Tag & Online Payment', icon: 'store-check-outline', screen: 'VerificationPayment' },
+  {
+    title: "Store working hours",
+    icon: "calendar-clock",
+    screen: "StoreWorkingHours",
+  },
+  {
+    title: "Verification Tag & Online Payment",
+    icon: "store-check-outline",
+    screen: "VerificationPayment",
+  },
   // { title: 'Enable svindo Payment Gateway', icon: 'credit-card-check', screen: 'EnableSvindoGateway' },
-  { title: 'Add your Payment Gateway', icon: 'credit-card-plus', screen: 'AddPaymentGateway' },
+  {
+    title: "Add your Payment Gateway",
+    icon: "credit-card-plus",
+    screen: "AddPaymentGateway",
+  },
 ];
 const styles = StyleSheet.create({
-
-  container: { flex: 1, backgroundColor: '#fff', },
+  container: { flex: 1, backgroundColor: "#fff" },
 
   menuContainer: {
     marginHorizontal: 10,
-    backgroundColor: '#fff',
-
+    backgroundColor: "#fff",
   },
   menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 6,
     paddingHorizontal: 20,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: '#BCBCBC',
+    borderColor: "#BCBCBC",
     marginVertical: 10,
     borderRadius: 10,
-
   },
 
-
   menuText: { fontSize: 14, marginLeft: 8, fontWeight: "600" },
-  bottomNav: { flexDirection: 'row', justifyContent: 'space-around', padding: 12, borderTopWidth: 0.5, borderTopColor: '#ccc' },
-  navItem: { alignItems: 'center' },
+  bottomNav: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    padding: 12,
+    borderTopWidth: 0.5,
+    borderTopColor: "#ccc",
+  },
+  navItem: { alignItems: "center" },
   navText: { fontSize: 12, marginTop: 4 },
-  activeText: { color: '#007bff' },
+  activeText: { color: "#007bff" },
   bottomcontainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 20,
-    backgroundColor: '#fff',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    shadowColor: '#000',
+    backgroundColor: "#fff",
+    justifyContent: "space-around",
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
@@ -286,42 +340,40 @@ const styles = StyleSheet.create({
     marginHorizontal: 10,
   },
   option: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     textAlign: "center",
-    justifyContent: "center"
+    justifyContent: "center",
   },
   optionText: {
     marginLeft: 6,
     fontSize: 14,
-    color: '#333',
-    fontWeight: '500',
+    color: "#333",
+    fontWeight: "500",
   },
   divider: {
     width: 1,
     height: 20,
-    backgroundColor: '#ccc',
+    backgroundColor: "#ccc",
     marginHorizontal: 12,
   },
-  storepage:
-  {
+  storepage: {
     paddingVertical: 6,
     paddingHorizontal: 20,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: '#BCBCBC',
+    borderColor: "#BCBCBC",
     marginVertical: 10,
     borderRadius: 10,
     marginHorizontal: 10,
   },
   storecontent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-
+    flexDirection: "row",
+    alignItems: "center",
   },
   switchstorecontent: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     alignSelf: "flex-end",
     paddingHorizontal: 5,
   },
@@ -334,8 +386,7 @@ const styles = StyleSheet.create({
   mytext: {
     paddingHorizontal: 5,
     fontWeight: "600",
-  }
+  },
 });
 
-
-export default OnlineStore
+export default OnlineStore;

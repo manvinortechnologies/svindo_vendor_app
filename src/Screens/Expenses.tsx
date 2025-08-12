@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,22 +7,20 @@ import {
   StyleSheet,
   Platform,
   StatusBar,
-  ScrollView
-} from 'react-native';
+  ScrollView,
+} from "react-native";
 import Ionicons from "react-native-vector-icons/MaterialCommunityIcons";
-import Headerwithback from './Headerwithback';
-import CustomTextInput from '../CommonComponent/CustomeTextInput';
-import CalendarModal from '../Modals/CalendarModal';
-import api from '../services/api/api';
-import { CategoryType } from '../modelType/CommonType';
-import CustomDropdown from '../CommonComponent/CustomDropdown';
-import ModalUpdatePhoto from '../Modals/ModalUpdatePhoto';
-
-
+import Headerwithback from "./Headerwithback";
+import CustomTextInput from "../CommonComponent/CustomeTextInput";
+import CalendarModal from "../Modals/CalendarModal";
+import api from "../services/api/api";
+import { CategoryType } from "../modelType/CommonType";
+import CustomDropdown from "../CommonComponent/CustomDropdown";
+import ModalUpdatePhoto from "../Modals/ModalUpdatePhoto";
 
 const Expenses = ({ navigation }: any) => {
   const [isPaid, setIsPaid] = useState(true);
-  const [selectedType, setSelectedType] = useState('Cash');
+  const [selectedType, setSelectedType] = useState("Cash");
   const [expense, setExpense] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [openCallenderModel, setOpenCallenderModel] = useState<boolean>(false);
@@ -32,33 +30,30 @@ const Expenses = ({ navigation }: any) => {
   const [allCategoryData, setAllCategoryData] = useState<CategoryType[]>([]);
   const [category, setCategory] = useState<CategoryType | null>();
   const [selectedBank, setSelectedBank] = useState("");
-  const [description, setDescription] = useState<string>("")
+  const [description, setDescription] = useState<string>("");
   const [imageFile, setImageFile] = useState<any>();
-  const [imageUrl, setImageUrl] = useState('');
+  const [imageUrl, setImageUrl] = useState("");
   const [imagePickerModel, setImagePickerModel] = useState(false);
-  const types = ['UPI', 'Cash', 'Card', 'Cheque', 'EMI', 'Netbanking'];
+  const types = ["UPI", "Cash", "Card", "Cheque", "EMI", "Netbanking"];
   useEffect(() => {
     getAllCategory();
-  }, [])
+  }, []);
   const getAllCategory = async () => {
     try {
       setIsLoading(true);
       const res = await api.get("masters/get-expense-category/");
-      console.log("res-cegotry-->", res)
+      console.log("res-cegotry-->", res);
       if (res.status == 200) {
-        setAllCategoryData(res.data)
+        setAllCategoryData(res.data);
       }
-
     } catch (error) {
-
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
   const addExpensesData = async () => {
     try {
-      setIsLoading(true)
-
+      setIsLoading(true);
 
       const formData = new FormData();
 
@@ -88,25 +83,22 @@ const Expenses = ({ navigation }: any) => {
           type: imageFile.type || "image/jpeg",
         });
       }
-      console.log("formdata--->", formData)
+      console.log("formdata--->", formData);
       const res = await api.post("vendor/expense/", formData, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          "Content-Type": "multipart/form-data",
         },
-      })
-      console.log("res--->", res)
-
+      });
+      console.log("res--->", res);
+      navigation.goBack();
     } catch (error) {
-
-      console.log("error-->", error)
+      console.log("error-->", error);
     } finally {
-      setIsLoading(false)
-
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
-
     <View style={styles.container}>
       <Headerwithback title="Create Expenses" />
       <ScrollView>
@@ -123,15 +115,31 @@ const Expenses = ({ navigation }: any) => {
 
         {/* Expense Date */}
         <Text style={styles.label}>Expense Date</Text>
-        <TouchableOpacity style={styles.inputRow} onPress={() => { setOpenCallenderModel(true) }}>
-          <TextInput placeholderTextColor="#999" placeholder='Select Expense Date' style={styles.input} editable={false} value={expenseDate} />
+        <TouchableOpacity
+          style={styles.inputRow}
+          onPress={() => {
+            setOpenCallenderModel(true);
+          }}
+        >
+          <TextInput
+            placeholderTextColor="#999"
+            placeholder="Select Expense Date"
+            style={styles.input}
+            editable={false}
+            value={expenseDate}
+          />
 
-          <Ionicons name="calendar" size={20} color="orange" style={styles.iconRight} />
+          <Ionicons
+            name="calendar"
+            size={20}
+            color="orange"
+            style={styles.iconRight}
+          />
         </TouchableOpacity>
 
         {/* Category Dropdown */}
         <CustomDropdown
-          placeholder='Select Category'
+          placeholder="Select Category"
           onSelect={(option) => setCategory(option)}
           selectedValue={category?.name || ""}
           dropDownBoxStyle={styles.input}
@@ -140,7 +148,6 @@ const Expenses = ({ navigation }: any) => {
         <View style={styles.inputRow}>
           {/* <TextInput style={styles.input} placeholder="Select Category" editable={false} />
           <Ionicons name="chevron-down" size={20} color="orange" style={styles.iconRight} /> */}
-
         </View>
         <View style={styles.markpain}>
           {/* Mark as Paid */}
@@ -149,15 +156,17 @@ const Expenses = ({ navigation }: any) => {
             onPress={() => setIsPaid(!isPaid)}
             style={[
               styles.toggleButton,
-              { backgroundColor: isPaid ? '#FCA311' : '#ccc' },
+              { backgroundColor: isPaid ? "#FCA311" : "#ccc" },
             ]}
           >
-            <Text style={{ color: '#fff' }}>{isPaid ? 'Yes' : 'No'}</Text>
+            <Text style={{ color: "#fff" }}>{isPaid ? "Yes" : "No"}</Text>
           </TouchableOpacity>
         </View>
 
         {/* Select Type */}
-        <Text style={styles.label}>Select Type <Text style={{ color: 'red' }}>*</Text></Text>
+        <Text style={styles.label}>
+          Select Type <Text style={{ color: "red" }}>*</Text>
+        </Text>
         <View style={styles.typeRow}>
           {types.map((type) => {
             const isSelected = selectedType === type;
@@ -170,11 +179,15 @@ const Expenses = ({ navigation }: any) => {
                   isSelected && styles.typeButtonSelected,
                 ]}
               >
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <View
+                  style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
+                >
                   {isSelected && (
                     <Ionicons name="check-circle" size={16} color="#fff" />
                   )}
-                  <Text style={{ color: '#fff', fontWeight: 'bold' }}>{type}</Text>
+                  <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                    {type}
+                  </Text>
                 </View>
               </TouchableOpacity>
             );
@@ -183,9 +196,25 @@ const Expenses = ({ navigation }: any) => {
 
         {/* Payment Date */}
         <Text style={styles.label}>Payment Date</Text>
-        <TouchableOpacity style={styles.inputRow} onPress={() => { setPaymentCalModel(true) }}>
-          <TextInput placeholderTextColor="#999" placeholder='Select Payment Date' style={styles.input} editable={false} value={paymentData} />
-          <Ionicons name="calendar" size={20} color="orange" style={styles.iconRight} />
+        <TouchableOpacity
+          style={styles.inputRow}
+          onPress={() => {
+            setPaymentCalModel(true);
+          }}
+        >
+          <TextInput
+            placeholderTextColor="#999"
+            placeholder="Select Payment Date"
+            style={styles.input}
+            editable={false}
+            value={paymentData}
+          />
+          <Ionicons
+            name="calendar"
+            size={20}
+            color="orange"
+            style={styles.iconRight}
+          />
         </TouchableOpacity>
 
         {/* Add Bank */}
@@ -197,7 +226,7 @@ const Expenses = ({ navigation }: any) => {
         {/* Description */}
         <Text style={styles.label}>Description</Text>
         <TextInput
-          style={[styles.input, { height: 80, textAlignVertical: 'top' }]}
+          style={[styles.input, { height: 80, textAlignVertical: "top" }]}
           placeholder="Expense Description"
           multiline
           value={description}
@@ -208,8 +237,11 @@ const Expenses = ({ navigation }: any) => {
         {/* Attachments */}
         <Text style={styles.label}>Attachments</Text>
         <View style={styles.attachmentRow}>
-          <TouchableOpacity style={styles.attachmentBtn}
-            onPress={() => { setImagePickerModel(true) }}
+          <TouchableOpacity
+            style={styles.attachmentBtn}
+            onPress={() => {
+              setImagePickerModel(true);
+            }}
           >
             <Ionicons name="camera" size={18} color="#000" />
             <Text style={styles.attachmentText}>Camera</Text>
@@ -224,9 +256,8 @@ const Expenses = ({ navigation }: any) => {
           initialDate={expenseDate}
           onClose={() => setOpenCallenderModel(false)}
           onSelect={(e) => {
-            console.log(e)
-            setExpenseDate(e)
-
+            console.log(e);
+            setExpenseDate(e);
           }}
         />
         <CalendarModal
@@ -242,13 +273,11 @@ const Expenses = ({ navigation }: any) => {
             setImageFile(file);
             setImageUrl(file.uri);
           }}
-          onChange={(image) => console.log('Full crop picker image:', image)}
+          onChange={(image) => console.log("Full crop picker image:", image)}
         />
 
         {/* Create Button */}
-        <TouchableOpacity style={styles.createBtn}
-          onPress={addExpensesData}
-        >
+        <TouchableOpacity style={styles.createBtn} onPress={addExpensesData}>
           <Text style={styles.createText}>Create</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -256,48 +285,46 @@ const Expenses = ({ navigation }: any) => {
   );
 };
 
-
-
 const styles = StyleSheet.create({
   container: {
     padding: 10,
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 40 : 0,
   },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 16,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   headerTitle: {
     fontSize: 18,
-    fontWeight: '700',
+    fontWeight: "700",
   },
   label: {
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 12,
     marginBottom: 4,
     fontSize: 16,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#FCA311',
+    borderColor: "#FCA311",
     borderRadius: 6,
     padding: 12,
-    backgroundColor: '#FFF5E9',
+    backgroundColor: "#FFF5E9",
     width: "100%",
   },
   inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    position: 'relative',
+    flexDirection: "row",
+    alignItems: "center",
+    position: "relative",
     width: "100%",
     marginBottom: 10,
   },
   iconRight: {
-    position: 'absolute',
+    position: "absolute",
     right: 12,
   },
   markpain: {
@@ -307,75 +334,74 @@ const styles = StyleSheet.create({
   toggleButton: {
     width: 60,
     paddingVertical: 6,
-    alignItems: 'center',
+    alignItems: "center",
     borderRadius: 10,
     marginTop: 4,
   },
   typeRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
     marginVertical: 8,
     rowGap: 12,
   },
 
   typeButton: {
-    width: '30%', // ~3 buttons per row with spacing
-    alignItems: 'center',
+    width: "30%", // ~3 buttons per row with spacing
+    alignItems: "center",
     paddingVertical: 10,
     borderRadius: 8,
-    backgroundColor: '#ccc',
+    backgroundColor: "#ccc",
     color: "#fff",
   },
   typeButtonSelected: {
-    backgroundColor: '#FCA311',
+    backgroundColor: "#FCA311",
   },
   addBankBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginVertical: 8,
   },
   addBankText: {
-    color: '#FCA311',
-    fontWeight: '600',
+    color: "#FCA311",
+    fontWeight: "600",
     marginLeft: 4,
   },
   attachmentRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
     marginTop: 8,
   },
   attachmentBtn: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#FCA311',
+    borderColor: "#FCA311",
     padding: 12,
     borderRadius: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
-    justifyContent: 'center',
-    backgroundColor: '#FFF5E9',
+    justifyContent: "center",
+    backgroundColor: "#FFF5E9",
   },
   attachmentText: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
   createBtn: {
-    backgroundColor: '#FCA311',
+    backgroundColor: "#FCA311",
     padding: 14,
     borderRadius: 10,
     marginTop: 24,
-    alignItems: 'center',
-    width: '45%',
-    alignSelf: 'flex-end',   // <--- aligns button to the right
-    marginRight: 10,         // <--- optional spacing from right
+    alignItems: "center",
+    width: "45%",
+    alignSelf: "flex-end", // <--- aligns button to the right
+    marginRight: 10, // <--- optional spacing from right
   },
   createText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: 16,
   },
 });
 
-
-export default Expenses
+export default Expenses;

@@ -1,212 +1,458 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import React from "react";
+import { NavigationContainer } from "@react-navigation/native";
 
-import SignupScreen from '../component/SignupScreen';
-import OtpScreen from '../component/OtpScreen';
-import SignupDetailScreen from '../component/SignupDetailScreen';
-import SelectLocationScreen from '../component/SelectLocationScreen';
-import Statistics from '../Statistics';
-import StatisticsScreen from '../component/StatisticsScreen';
-import Bottomnavigation from '../component/Bottomnavigation';
-import DraftScreen from '../component/DraftScreen';
-import Orders from '../component/Orders';
-import StockScreen from '../component/StockScreen';
-import CreateProduct from '../component/CreateProduct';
-import AddProductScreen from '../component/AddProductScreen';
-import Storescreen from '../component/Storescreen';
-import MarketingTools from '../component/MarketingTools';
-import OnlineStore from '../component/OnlineStore';
-import BoostSales from '../component/BoostSales';
-import AdWallet from '../component/AdWallet';
-import OnlineSaleWallet from '../component/OnlineSaleWallet';
-import SearchHeader from '../component/SearchHeader';
-import CustomerFeedback from '../component/CustomerFeedback';
-import Chats from '../component/Chats';
-import DownloadQRCode from '../component/DownloadQRCode';
-import WhatsAppMessage from '../component/WhatsAppMessage';
-import Emails from '../component/Emails';
-import ManageDelivery from '../component/ManageDelivery';
-import Erp from '../component/Erp';
-import CompanyProfile from '../component/CompanyProfile';
-import UserProfile from '../component/UserProfile';
-import ManageCompanies from '../component/ManageCompanies';
-import SalePOS from '../component/SalePOS';
-import CreatePurchase from '../component/CreatePurchase';
-import Barcode from '../component/Barcode';
-import Expenses from '../component/Expenses';
-import Reports from '../component/Reports';
-import SaleReportScreen from '../component/SaleReportScreen';
-import PurchaseReportScreen from '../component/PurchaseReportScreen';
-import DayBookScreen from '../component/DayBookScreen';
-import ProfitLossScreen from '../component/ProfitLossScreen';
-import AllTransactionsScreen from '../component/AllTransactionsScreen';
-import PartyStatementScreen from '../component/PartyStatementScreen';
-import StockSummaryScreen from '../component/StockSummaryScreen';
-import StockDetailScreen from '../component/StockDetailScreen';
-import GSTR1Screen from '../component/GSTR1Screen';
-import ExpenseTransactionScreen from '../component/ExpenseTransactionScreen';
-import CashInHand from '../component/CashInHand';
-import BankAccounts from '../component/BankAccounts';
-import ManageCustomers from '../component/ManageCustomers';
-import ManageVendors from '../component/ManageVendors';
-import ManageRoles from '../component/ManageRoles';
-import RecycleBinScreen from '../component/RecycleBinScreen';
-import CloseYearScreen from '../component/CloseYearScreen';
-import SettingsScreen from '../component/SettingsScreen';
-import PreferencesScreen from '../component/PreferencesScreen';
-import Sales from '../component/Sales';
-import Purchase from '../component/Purchase';
-import DiscountSettings from '../component/DiscountSettings';
-import TaxesAndGST from '../component/TaxesAndGST ';
-import InvoiceSettings from '../component/InvoiceSettings';
-import InvoiceTemplates from '../component/InvoiceTemplates';
-import RemindersScreen from '../component/RemindersScreen';
-import RateUsScreen from '../component/RateUsScreen';
-import PrivacyPolicyScreen from '../component/PrivacyPolicyScreen';
-import DeleteAccountScreen from '../component/DeleteAccountScreen';
-import ResetDataScreen from '../component/ResetDataScreen';
-import CreateInvoice from '../component/CreateInvoice';
-import CreateCreditNote from '../component/CreateCreditNote';
-import CreateQuation from '../component/CreateQuation';
-import CreateproFarmaInvoice from '../component/CreateproFarmaInvoice';
-import DeliveryChallan from '../component/DeliveryChallan';
-import SplashScreen from '../component/SplashScreen';
-import { HomeNavigation } from '../constants/app-routes.constants';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { THomeNavigation } from '../type';
-import WelcomeScreen from '../component/WelcomeScreen';
-import AdminProfile from '../component/AdminProfile';
-import ProductSetting from '../component/ProductSetting';
-import StoreWorkingHours from '../component/StoreWorkingHours';
-import CouponsScreen from '../component/CouponsScreen';
-import ExpensesScreen from '../component/ExpensesScreen';
-import CreateCouponScreen from '../component/CreateCouponScreen';
-import AddPostScreen from '../component/AddPostScreen';
-import BuyersRequestScreen from '../component/BuyersRequestScreen';
-import CreateRequestScreen from '../component/CreateRequestScreen';
-import CreateOffer from '../component/CreateOffer';
-import BannerAds from '../component/BannerAds';
-import AddBannerScreen from '../component/AddBannerScreen';
-import AddSpotlightScreen from '../component/AddSpotlightScreen';
-import SelectSpotlightProduct from '../component/SelectSpotlightProduct';
-import VerificationPaymentsScreen from '../component/VerificationPaymentsScreen';
-import AddCustomer from '../component/AddCustomer';
-import AddVendor from '../component/AddVendor';
-import DeliverySettingsScreen from '../component/DeliverySettingsScreen';
-import PaymentsScreen from '../component/PaymentsScreen';
-import SendNotifications from '../component/SendNotifications';
-import PromoteStore from '../component/PromoteStore';
-import AutoAssignDelivery from '../component/AutoAssignDelivery';
-import AssignOwnDeliveryBoy from '../component/AssignOwnDeliveryBoy';
-import AddDeliveryBoy from '../component/AddDeliveryBoy';
-
+import SignupScreen from "../Screens/SignupScreen";
+import OtpScreen from "../Screens/OtpScreen";
+import SignupDetailScreen from "../Screens/SignupDetailScreen";
+import SelectLocationScreen from "../Screens/SelectLocationScreen";
+import Statistics from "../Statistics";
+import StatisticsScreen from "../Screens/StatisticsScreen";
+import Bottomnavigation from "../Screens/Bottomnavigation";
+import DraftScreen from "../Screens/DraftScreen";
+import Orders from "../Screens/Orders";
+import StockScreen from "../Screens/StockScreen";
+import CreateProduct from "../Screens/CreateProduct";
+import AddProductScreen from "../Screens/AddProductScreen";
+import Storescreen from "../Screens/Storescreen";
+import MarketingTools from "../Screens/MarketingTools";
+import OnlineStore from "../Screens/OnlineStore";
+import BoostSales from "../Screens/BoostSales";
+import AdWallet from "../Screens/AdWallet";
+import OnlineSaleWallet from "../Screens/OnlineSaleWallet";
+import SearchHeader from "../Screens/SearchHeader";
+import CustomerFeedback from "../Screens/CustomerFeedback";
+import Chats from "../Screens/Chats";
+import DownloadQRCode from "../Screens/DownloadQRCode";
+import WhatsAppMessage from "../Screens/WhatsAppMessage";
+import Emails from "../Screens/Emails";
+import ManageDelivery from "../Screens/ManageDelivery";
+import Erp from "../Screens/Erp";
+import CompanyProfile from "../Screens/CompanyProfile";
+import UserProfile from "../Screens/UserProfile";
+import ManageCompanies from "../Screens/ManageCompanies";
+import SalePOS from "../Screens/SalePOS";
+import CreatePurchase from "../Screens/CreatePurchase";
+import Barcode from "../Screens/Barcode";
+import Expenses from "../Screens/Expenses";
+import Reports from "../Screens/Reports";
+import SaleReportScreen from "../Screens/SaleReportScreen";
+import PurchaseReportScreen from "../Screens/PurchaseReportScreen";
+import DayBookScreen from "../Screens/DayBookScreen";
+import ProfitLossScreen from "../Screens/ProfitLossScreen";
+import AllTransactionsScreen from "../Screens/AllTransactionsScreen";
+import PartyStatementScreen from "../Screens/PartyStatementScreen";
+import StockSummaryScreen from "../Screens/StockSummaryScreen";
+import StockDetailScreen from "../Screens/StockDetailScreen";
+import GSTR1Screen from "../Screens/GSTR1Screen";
+import ExpenseTransactionScreen from "../Screens/ExpenseTransactionScreen";
+import CashInHand from "../Screens/CashInHand";
+import BankAccounts from "../Screens/BankAccounts";
+import ManageCustomers from "../Screens/ManageCustomers";
+import ManageVendors from "../Screens/ManageVendors";
+import ManageRoles from "../Screens/ManageRoles";
+import RecycleBinScreen from "../Screens/RecycleBinScreen";
+import CloseYearScreen from "../Screens/CloseYearScreen";
+import SettingsScreen from "../Screens/SettingsScreen";
+import PreferencesScreen from "../Screens/PreferencesScreen";
+import Sales from "../Screens/Sales";
+import Purchase from "../Screens/Purchase";
+import DiscountSettings from "../Screens/DiscountSettings";
+import TaxesAndGST from "../Screens/TaxesAndGST ";
+import InvoiceSettings from "../Screens/InvoiceSettings";
+import InvoiceTemplates from "../Screens/InvoiceTemplates";
+import RemindersScreen from "../Screens/RemindersScreen";
+import RateUsScreen from "../Screens/RateUsScreen";
+import PrivacyPolicyScreen from "../Screens/PrivacyPolicyScreen";
+import DeleteAccountScreen from "../Screens/DeleteAccountScreen";
+import ResetDataScreen from "../Screens/ResetDataScreen";
+import CreateInvoice from "../Screens/CreateInvoice";
+import CreateCreditNote from "../Screens/CreateCreditNote";
+import CreateQuation from "../Screens/CreateQuation";
+import CreateproFarmaInvoice from "../Screens/CreateproFarmaInvoice";
+import DeliveryChallan from "../Screens/DeliveryChallan";
+import SplashScreen from "../Screens/SplashScreen";
+import { HomeNavigation } from "../constants/app-routes.constants";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { THomeNavigation } from "../type";
+import WelcomeScreen from "../Screens/WelcomeScreen";
+import AdminProfile from "../Screens/AdminProfile";
+import ProductSetting from "../Screens/ProductSetting";
+import StoreWorkingHours from "../Screens/StoreWorkingHours";
+import CouponsScreen from "../Screens/CouponsScreen";
+import ExpensesScreen from "../Screens/ExpensesScreen";
+import CreateCouponScreen from "../Screens/CreateCouponScreen";
+import AddPostScreen from "../Screens/AddPostScreen";
+import BuyersRequestScreen from "../Screens/BuyersRequestScreen";
+import CreateRequestScreen from "../Screens/CreateRequestScreen";
+import CreateOffer from "../Screens/CreateOffer";
+import BannerAds from "../Screens/BannerAds";
+import AddBannerScreen from "../Screens/AddBannerScreen";
+import AddSpotlightScreen from "../Screens/AddSpotlightScreen";
+import SelectSpotlightProduct from "../Screens/SelectSpotlightProduct";
+import VerificationPaymentsScreen from "../Screens/VerificationPaymentsScreen";
+import AddCustomer from "../Screens/AddCustomer";
+import AddVendor from "../Screens/AddVendor";
+import DeliverySettingsScreen from "../Screens/DeliverySettingsScreen";
+import PaymentsScreen from "../Screens/PaymentsScreen";
+import SendNotifications from "../Screens/SendNotifications";
+import PromoteStore from "../Screens/PromoteStore";
+import AutoAssignDelivery from "../Screens/AutoAssignDelivery";
+import AssignOwnDeliveryBoy from "../Screens/AssignOwnDeliveryBoy";
+import AddDeliveryBoy from "../Screens/AddDeliveryBoy";
+import WholesaleScreen from "../Screens/WholesaleScreen";
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
 
-
 const AppNavigation = () => {
-    return (
-        <NavigationContainer>
-            <Stack.Navigator initialRouteName={HomeNavigation.SPLASH_SCREEN} screenOptions={{ headerShown: false }}>
-                <Stack.Screen name={HomeNavigation.SPLASH_SCREEN} component={SplashScreen} />
-                <Stack.Screen name={HomeNavigation.WELCOME_SCREEN} component={WelcomeScreen} />
-                <Stack.Screen name={HomeNavigation.SIGNUP_SCREEN} component={SignupScreen} />
-                <Stack.Screen name={HomeNavigation.OTP_SCREEN} component={OtpScreen} />
-                <Stack.Screen name={HomeNavigation.SIGNUP_DETAIL_SCREEN} component={SignupDetailScreen} />
-                <Stack.Screen name={HomeNavigation.SELECT_LOCATION_SCREEN} component={SelectLocationScreen} />
-                <Stack.Screen name={HomeNavigation.STATISTICS} component={Statistics} />
-                <Stack.Screen name={HomeNavigation.STATISTICS_SCREEN} component={StatisticsScreen} />
-                <Stack.Screen name={HomeNavigation.BOTTOM_NAVIGATION} component={Bottomnavigation} />
-                <Stack.Screen name={HomeNavigation.DRAFT_SCREEN} component={DraftScreen} />
-                <Stack.Screen name={HomeNavigation.ORDERS} component={Orders} />
-                <Stack.Screen name={HomeNavigation.STOCK_SCREEN} component={StockScreen} />
-                <Stack.Screen name={HomeNavigation.CREATE_PRODUCT} component={CreateProduct} />
-                <Stack.Screen name={HomeNavigation.ADD_PRODUCT_SCREEN} component={AddProductScreen} />
-                <Stack.Screen name={HomeNavigation.STORE_SCREEN} component={Storescreen} />
-                <Stack.Screen name={HomeNavigation.MARKETING_TOOLS} component={MarketingTools} />
-                <Stack.Screen name={HomeNavigation.ONLINE_STORE} component={OnlineStore} />
-                <Stack.Screen name={HomeNavigation.AD_WALLET} component={AdWallet} />
-                <Stack.Screen name={HomeNavigation.BOOST_SALES} component={BoostSales} />
-                <Stack.Screen name={HomeNavigation.ONLINE_SALE_WALLET} component={OnlineSaleWallet} />
-                <Stack.Screen name={HomeNavigation.SEARCH_HEADER} component={SearchHeader} />
-                <Stack.Screen name={HomeNavigation.CUSTOMER_FEEDBACK} component={CustomerFeedback} />
-                <Stack.Screen name={HomeNavigation.CHATS} component={Chats} />
-                <Stack.Screen name={HomeNavigation.DOWNLOAD_QR_CODE} component={DownloadQRCode} />
-                <Stack.Screen name={HomeNavigation.WHATSAPP_MESSAGE} component={WhatsAppMessage} />
-                <Stack.Screen name={HomeNavigation.EMAILS} component={Emails} />
-                <Stack.Screen name={HomeNavigation.MANAGE_DELIVERY} component={ManageDelivery} />
-                <Stack.Screen name={HomeNavigation.ERP} component={Erp} />
-                <Stack.Screen name={HomeNavigation.COMPANY_PROFILE} component={CompanyProfile} />
-                <Stack.Screen name={HomeNavigation.USER_PROFILE} component={UserProfile} />
-                <Stack.Screen name={HomeNavigation.MANAGE_COMPANIES} component={ManageCompanies} />
-                <Stack.Screen name={HomeNavigation.SALE_POS} component={SalePOS} />
-                <Stack.Screen name={HomeNavigation.CREATE_PURCHASE} component={CreatePurchase} />
-                <Stack.Screen name={HomeNavigation.BARCODE} component={Barcode} />
-                <Stack.Screen name={HomeNavigation.EXPENSES} component={Expenses} />
-                <Stack.Screen name={HomeNavigation.REPORTS} component={Reports} />
-                <Stack.Screen name={HomeNavigation.SALE_REPORT_SCREEN} component={SaleReportScreen} />
-                <Stack.Screen name={HomeNavigation.PURCHASE_REPORT_SCREEN} component={PurchaseReportScreen} />
-                <Stack.Screen name={HomeNavigation.DAY_BOOK_SCREEN} component={DayBookScreen} />
-                <Stack.Screen name={HomeNavigation.PROFIT_LOSS_SCREEN} component={ProfitLossScreen} />
+  return (
+    <NavigationContainer>
+      <Stack.Navigator
+        initialRouteName={HomeNavigation.SPLASH_SCREEN}
+        screenOptions={{ headerShown: false }}
+      >
+        <Stack.Screen
+          name={HomeNavigation.SPLASH_SCREEN}
+          component={SplashScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.WELCOME_SCREEN}
+          component={WelcomeScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.SIGNUP_SCREEN}
+          component={SignupScreen}
+        />
+        <Stack.Screen name={HomeNavigation.OTP_SCREEN} component={OtpScreen} />
+        <Stack.Screen
+          name={HomeNavigation.SIGNUP_DETAIL_SCREEN}
+          component={SignupDetailScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.SELECT_LOCATION_SCREEN}
+          component={SelectLocationScreen}
+        />
+        <Stack.Screen name={HomeNavigation.STATISTICS} component={Statistics} />
+        <Stack.Screen
+          name={HomeNavigation.STATISTICS_SCREEN}
+          component={StatisticsScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.BOTTOM_NAVIGATION}
+          component={Bottomnavigation}
+        />
+        <Stack.Screen
+          name={HomeNavigation.DRAFT_SCREEN}
+          component={DraftScreen}
+        />
+        <Stack.Screen name={HomeNavigation.ORDERS} component={Orders} />
+        <Stack.Screen
+          name={HomeNavigation.STOCK_SCREEN}
+          component={StockScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.CREATE_PRODUCT}
+          component={CreateProduct}
+        />
+        <Stack.Screen
+          name={HomeNavigation.ADD_PRODUCT_SCREEN}
+          component={AddProductScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.STORE_SCREEN}
+          component={Storescreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.MARKETING_TOOLS}
+          component={MarketingTools}
+        />
+        <Stack.Screen
+          name={HomeNavigation.ONLINE_STORE}
+          component={OnlineStore}
+        />
+        <Stack.Screen name={HomeNavigation.AD_WALLET} component={AdWallet} />
+        <Stack.Screen
+          name={HomeNavigation.BOOST_SALES}
+          component={BoostSales}
+        />
+        <Stack.Screen
+          name={HomeNavigation.ONLINE_SALE_WALLET}
+          component={OnlineSaleWallet}
+        />
+        <Stack.Screen
+          name={HomeNavigation.SEARCH_HEADER}
+          component={SearchHeader}
+        />
+        <Stack.Screen
+          name={HomeNavigation.CUSTOMER_FEEDBACK}
+          component={CustomerFeedback}
+        />
+        <Stack.Screen name={HomeNavigation.CHATS} component={Chats} />
+        <Stack.Screen
+          name={HomeNavigation.DOWNLOAD_QR_CODE}
+          component={DownloadQRCode}
+        />
+        <Stack.Screen
+          name={HomeNavigation.WHATSAPP_MESSAGE}
+          component={WhatsAppMessage}
+        />
+        <Stack.Screen name={HomeNavigation.EMAILS} component={Emails} />
+        <Stack.Screen
+          name={HomeNavigation.MANAGE_DELIVERY}
+          component={ManageDelivery}
+        />
+        <Stack.Screen name={HomeNavigation.ERP} component={Erp} />
+        <Stack.Screen
+          name={HomeNavigation.WHOLESALE}
+          component={WholesaleScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.COMPANY_PROFILE}
+          component={CompanyProfile}
+        />
+        <Stack.Screen
+          name={HomeNavigation.USER_PROFILE}
+          component={UserProfile}
+        />
+        <Stack.Screen
+          name={HomeNavigation.MANAGE_COMPANIES}
+          component={ManageCompanies}
+        />
+        <Stack.Screen name={HomeNavigation.SALE_POS} component={SalePOS} />
+        <Stack.Screen
+          name={HomeNavigation.CREATE_PURCHASE}
+          component={CreatePurchase}
+        />
+        <Stack.Screen name={HomeNavigation.BARCODE} component={Barcode} />
+        <Stack.Screen name={HomeNavigation.EXPENSES} component={Expenses} />
+        <Stack.Screen name={HomeNavigation.REPORTS} component={Reports} />
+        <Stack.Screen
+          name={HomeNavigation.SALE_REPORT_SCREEN}
+          component={SaleReportScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.PURCHASE_REPORT_SCREEN}
+          component={PurchaseReportScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.DAY_BOOK_SCREEN}
+          component={DayBookScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.PROFIT_LOSS_SCREEN}
+          component={ProfitLossScreen}
+        />
 
-                <Stack.Screen name={HomeNavigation.ALL_TRANSACTIONS_SCREEN} component={AllTransactionsScreen} />
-                <Stack.Screen name={HomeNavigation.PARTY_STATEMENT_SCREEN} component={PartyStatementScreen} />
-                <Stack.Screen name={HomeNavigation.STOCK_SUMMARY_SCREEN} component={StockSummaryScreen} />
-                <Stack.Screen name={HomeNavigation.STOCK_DETAIL_SCREEN} component={StockDetailScreen} />
-                <Stack.Screen name={HomeNavigation.GSTR1_SCREEN} component={GSTR1Screen} />
-                <Stack.Screen name={HomeNavigation.EXPENSE_TRANSACTION_SCREEN} component={ExpenseTransactionScreen} />
-                <Stack.Screen name={HomeNavigation.CASH_IN_HAND} component={CashInHand} />
-                <Stack.Screen name={HomeNavigation.BANK_ACCOUNTS} component={BankAccounts} />
-                <Stack.Screen name={HomeNavigation.MANAGE_CUSTOMERS} component={ManageCustomers} />
-                <Stack.Screen name={HomeNavigation.MANAGE_VENDORS} component={ManageVendors} />
-                <Stack.Screen name={HomeNavigation.MANAGE_ROLES} component={ManageRoles} />
-                <Stack.Screen name={HomeNavigation.RECYCLE_BIN_SCREEN} component={RecycleBinScreen} />
-                <Stack.Screen name={HomeNavigation.CLOSE_YEAR_SCREEN} component={CloseYearScreen} />
-                <Stack.Screen name={HomeNavigation.SETTINGS_SCREEN} component={SettingsScreen} />
-                <Stack.Screen name={HomeNavigation.PREFERENCES_SCREEN} component={PreferencesScreen} />
-                <Stack.Screen name={HomeNavigation.SALES} component={Sales} />
-                <Stack.Screen name={HomeNavigation.PURCHASE} component={Purchase} />
-                <Stack.Screen name={HomeNavigation.DISCOUNT_SETTINGS} component={DiscountSettings} />
-                <Stack.Screen name={HomeNavigation.TAXES_AND_GST} component={TaxesAndGST} />
-                <Stack.Screen name={HomeNavigation.INVOICE_SETTINGS} component={InvoiceSettings} />
-                <Stack.Screen name={HomeNavigation.INVOICE_TEMPLATES} component={InvoiceTemplates} />
-                <Stack.Screen name={HomeNavigation.REMINDERS_SCREEN} component={RemindersScreen} />
-                <Stack.Screen name={HomeNavigation.RATE_US_SCREEN} component={RateUsScreen} />
-                <Stack.Screen name={HomeNavigation.PRIVACY_POLICY_SCREEN} component={PrivacyPolicyScreen} />
-                <Stack.Screen name={HomeNavigation.DELETE_ACCOUNT_SCREEN} component={DeleteAccountScreen} />
-                <Stack.Screen name={HomeNavigation.RESET_DATA_SCREEN} component={ResetDataScreen} />
-                <Stack.Screen name={HomeNavigation.CREATE_INVOICE} component={CreateInvoice} />
-                <Stack.Screen name={HomeNavigation.CREATE_CREDIT_NOTE} component={CreateCreditNote} />
-                <Stack.Screen name={HomeNavigation.CREATE_QUATION} component={CreateQuation} />
-                <Stack.Screen name={HomeNavigation.CREATE_PRO_FARMA_INVOICE} component={CreateproFarmaInvoice} />
-                <Stack.Screen name={HomeNavigation.DELIVERY_CHALLAN} component={DeliveryChallan} />
-                <Stack.Screen name={HomeNavigation.ADMINPROFILE} component={AdminProfile} />
-                <Stack.Screen name={HomeNavigation.PRODUCTSETTING} component={ProductSetting} />
-                <Stack.Screen name={HomeNavigation.STOREWORKING_HOURS} component={StoreWorkingHours} />
-                <Stack.Screen name={HomeNavigation.COUPONS_SCREEN} component={CouponsScreen} />
-                <Stack.Screen name={HomeNavigation.EXPENESES_SCREEN} component={ExpensesScreen} />
-                <Stack.Screen name={HomeNavigation.CREATECOUPON} component={CreateCouponScreen} />
-                <Stack.Screen name={HomeNavigation.ADD_POST_SCREEN} component={AddPostScreen} />
-                <Stack.Screen name={HomeNavigation.BUYERSREQUEST} component={BuyersRequestScreen} />
-                <Stack.Screen name={HomeNavigation.CREATEREQUEST} component={CreateRequestScreen} />
-                <Stack.Screen name={HomeNavigation.CREATEOFFER} component={CreateOffer} />
-                <Stack.Screen name={HomeNavigation.BANNER_ADS} component={BannerAds} />
-                 <Stack.Screen name={HomeNavigation.ADD_BANNER_SCREEN} component={AddBannerScreen} />
+        <Stack.Screen
+          name={HomeNavigation.ALL_TRANSACTIONS_SCREEN}
+          component={AllTransactionsScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.PARTY_STATEMENT_SCREEN}
+          component={PartyStatementScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.STOCK_SUMMARY_SCREEN}
+          component={StockSummaryScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.STOCK_DETAIL_SCREEN}
+          component={StockDetailScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.GSTR1_SCREEN}
+          component={GSTR1Screen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.EXPENSE_TRANSACTION_SCREEN}
+          component={ExpenseTransactionScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.CASH_IN_HAND}
+          component={CashInHand}
+        />
+        <Stack.Screen
+          name={HomeNavigation.BANK_ACCOUNTS}
+          component={BankAccounts}
+        />
+        <Stack.Screen
+          name={HomeNavigation.MANAGE_CUSTOMERS}
+          component={ManageCustomers}
+        />
+        <Stack.Screen
+          name={HomeNavigation.MANAGE_VENDORS}
+          component={ManageVendors}
+        />
+        <Stack.Screen
+          name={HomeNavigation.MANAGE_ROLES}
+          component={ManageRoles}
+        />
+        <Stack.Screen
+          name={HomeNavigation.RECYCLE_BIN_SCREEN}
+          component={RecycleBinScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.CLOSE_YEAR_SCREEN}
+          component={CloseYearScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.SETTINGS_SCREEN}
+          component={SettingsScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.PREFERENCES_SCREEN}
+          component={PreferencesScreen}
+        />
+        <Stack.Screen name={HomeNavigation.SALES} component={Sales} />
+        <Stack.Screen name={HomeNavigation.PURCHASE} component={Purchase} />
+        <Stack.Screen
+          name={HomeNavigation.DISCOUNT_SETTINGS}
+          component={DiscountSettings}
+        />
+        <Stack.Screen
+          name={HomeNavigation.TAXES_AND_GST}
+          component={TaxesAndGST}
+        />
+        <Stack.Screen
+          name={HomeNavigation.INVOICE_SETTINGS}
+          component={InvoiceSettings}
+        />
+        <Stack.Screen
+          name={HomeNavigation.INVOICE_TEMPLATES}
+          component={InvoiceTemplates}
+        />
+        <Stack.Screen
+          name={HomeNavigation.REMINDERS_SCREEN}
+          component={RemindersScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.RATE_US_SCREEN}
+          component={RateUsScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.PRIVACY_POLICY_SCREEN}
+          component={PrivacyPolicyScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.DELETE_ACCOUNT_SCREEN}
+          component={DeleteAccountScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.RESET_DATA_SCREEN}
+          component={ResetDataScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.CREATE_INVOICE}
+          component={CreateInvoice}
+        />
+        <Stack.Screen
+          name={HomeNavigation.CREATE_CREDIT_NOTE}
+          component={CreateCreditNote}
+        />
+        <Stack.Screen
+          name={HomeNavigation.CREATE_QUATION}
+          component={CreateQuation}
+        />
+        <Stack.Screen
+          name={HomeNavigation.CREATE_PRO_FARMA_INVOICE}
+          component={CreateproFarmaInvoice}
+        />
+        <Stack.Screen
+          name={HomeNavigation.DELIVERY_CHALLAN}
+          component={DeliveryChallan}
+        />
+        <Stack.Screen
+          name={HomeNavigation.ADMINPROFILE}
+          component={AdminProfile}
+        />
+        <Stack.Screen
+          name={HomeNavigation.PRODUCTSETTING}
+          component={ProductSetting}
+        />
+        <Stack.Screen
+          name={HomeNavigation.STOREWORKING_HOURS}
+          component={StoreWorkingHours}
+        />
+        <Stack.Screen
+          name={HomeNavigation.COUPONS_SCREEN}
+          component={CouponsScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.EXPENESES_SCREEN}
+          component={ExpensesScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.CREATECOUPON}
+          component={CreateCouponScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.ADD_POST_SCREEN}
+          component={AddPostScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.BUYERSREQUEST}
+          component={BuyersRequestScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.CREATEREQUEST}
+          component={CreateRequestScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.CREATEOFFER}
+          component={CreateOffer}
+        />
+        <Stack.Screen name={HomeNavigation.BANNER_ADS} component={BannerAds} />
+        <Stack.Screen
+          name={HomeNavigation.ADD_BANNER_SCREEN}
+          component={AddBannerScreen}
+        />
 
-                <Stack.Screen name={HomeNavigation.ADDSPOTLIGHT} component={AddSpotlightScreen} />
-                <Stack.Screen name={HomeNavigation.SELECTSPOTLIGHTPRODUCT} component={SelectSpotlightProduct} />
-                <Stack.Screen name={HomeNavigation.VERIFICATIONPAYMENT} component={VerificationPaymentsScreen} />
-                <Stack.Screen name={HomeNavigation.ADDCUSTOMER} component={AddCustomer} />
-                <Stack.Screen name={HomeNavigation.ADDVENDOR} component={AddVendor} />
-                <Stack.Screen name={HomeNavigation.DELIVERY_SETTING_SCREEN} component={DeliverySettingsScreen} />
-                <Stack.Screen name={HomeNavigation.PAYMENTSCREEN} component={PaymentsScreen} />
-                <Stack.Screen name={HomeNavigation.SENDNOTIFICATION} component={SendNotifications} />
-                <Stack.Screen name={HomeNavigation.PROMOTESTORE} component={PromoteStore} />
-                <Stack.Screen name={HomeNavigation.AUTOASSIGNDELIVERY} component={AutoAssignDelivery} />
-                <Stack.Screen name={HomeNavigation.ASSIGNOWNDELIVERYBOY} component={AssignOwnDeliveryBoy} />
-                <Stack.Screen name={HomeNavigation.ADDDELIVERYBOY} component={AddDeliveryBoy} />
-            </Stack.Navigator>
-        </NavigationContainer>
-    );
+        <Stack.Screen
+          name={HomeNavigation.ADDSPOTLIGHT}
+          component={AddSpotlightScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.SELECTSPOTLIGHTPRODUCT}
+          component={SelectSpotlightProduct}
+        />
+        <Stack.Screen
+          name={HomeNavigation.VERIFICATIONPAYMENT}
+          component={VerificationPaymentsScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.ADDCUSTOMER}
+          component={AddCustomer}
+        />
+        <Stack.Screen name={HomeNavigation.ADDVENDOR} component={AddVendor} />
+        <Stack.Screen
+          name={HomeNavigation.DELIVERY_SETTING_SCREEN}
+          component={DeliverySettingsScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.PAYMENTSCREEN}
+          component={PaymentsScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.SENDNOTIFICATION}
+          component={SendNotifications}
+        />
+        <Stack.Screen
+          name={HomeNavigation.PROMOTESTORE}
+          component={PromoteStore}
+        />
+        <Stack.Screen
+          name={HomeNavigation.AUTOASSIGNDELIVERY}
+          component={AutoAssignDelivery}
+        />
+        <Stack.Screen
+          name={HomeNavigation.ASSIGNOWNDELIVERYBOY}
+          component={AssignOwnDeliveryBoy}
+        />
+        <Stack.Screen
+          name={HomeNavigation.ADDDELIVERYBOY}
+          component={AddDeliveryBoy}
+        />
+      </Stack.Navigator>
+    </NavigationContainer>
+  );
 };
 export default AppNavigation;
