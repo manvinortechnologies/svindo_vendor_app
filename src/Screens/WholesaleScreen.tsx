@@ -5,17 +5,38 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  Platform,
-  StatusBar,
   TextInput,
+  KeyboardTypeOptions,
+  StatusBar,
+  Platform
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import Headerwithback from "./Headerwithback"; // Use your actual Headerwithback import path
+import Headerwithback from "./Headerwithback"; // Use your actual path
 import OptionInput from "../CommonComponent/OptionalInputs";
+import { useNavigation } from "@react-navigation/native";
+import { HomeNavigation } from "../constants/app-routes.constants";
+
+type FormDataKeys =
+  | "dispatchAddress"
+  | "signature"
+  | "references"
+  | "notes"
+  | "terms"
+  | "shippingCharges"
+  | "packagingCharges"
+  | "ewayBill"
+  | "lrNumber"
+  | "vehicleNumber"
+  | "transportName"
+  | "parcels";
+
+type FormData = Record<FormDataKeys, string>;
 
 export default function WholesaleScreen() {
+  const navigation = useNavigation();
   const [selectedType, setSelectedType] = useState("Invoice");
-  const [formData, setFormData] = useState({
+
+  const [formData, setFormData] = useState<FormData>({
     dispatchAddress: "",
     signature: "",
     references: "",
@@ -30,13 +51,17 @@ export default function WholesaleScreen() {
     parcels: "",
   });
 
-  // Update handler
-  const handleChange = (field, value) => {
+  const handleChange = (field: FormDataKeys, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Define the array of optional input fields at the top of your component
-  const optionalFields = [
+  const optionalFields: {
+    icon?: string;
+    label: string;
+    state: FormDataKeys;
+    boldLabelPrefix?: string;
+    keyboardType?: KeyboardTypeOptions;
+  }[] = [
     { icon: "truck", label: "Dispatch Address", state: "dispatchAddress" },
     { icon: "pencil", label: "Select Signature", state: "signature" },
     { icon: "briefcase", label: "Add References", state: "references" },
@@ -56,7 +81,7 @@ export default function WholesaleScreen() {
     },
     { icon: "file-multiple", label: "E-way Bill Number", state: "ewayBill" },
     {
-      icon: null,
+      icon: undefined,
       label: "LR Number",
       state: "lrNumber",
       boldLabelPrefix: "LR",
@@ -74,7 +99,7 @@ export default function WholesaleScreen() {
   return (
     <View style={styles.container}>
       <Headerwithback
-        title="Wholesale "
+        title="Wholesale"
         rightIcons={[
           <Icon
             name="format-list-text"
@@ -93,12 +118,12 @@ export default function WholesaleScreen() {
             "Quotation",
             "Credit Note",
             "Delivery Challan",
-          ].map((type, idx) => (
+          ].map((type) => (
             <TouchableOpacity
               key={type}
               style={[
                 styles.typeButton,
-                type === selectedType && styles.typeButtonActive, // Highlight 'Invoice'
+                type === selectedType && styles.typeButtonActive,
               ]}
               onPress={() => setSelectedType(type)}
             >
@@ -126,7 +151,7 @@ export default function WholesaleScreen() {
 
         <Text style={styles.optionalTitle}>Optional</Text>
 
-        {/* Optional Fields List */}
+        {/* Optional Fields */}
         <View style={styles.optionalList}>
           {optionalFields.map((field) => (
             <OptionInput
@@ -142,7 +167,10 @@ export default function WholesaleScreen() {
         </View>
 
         {/* Proceed Button */}
-        <TouchableOpacity style={styles.proceedButton}>
+        <TouchableOpacity
+          style={styles.proceedButton}
+          onPress={() => navigation.navigate(HomeNavigation.BILLDETAILS as never)}
+        >
           <Text style={styles.proceedButtonText}>Proceed</Text>
         </TouchableOpacity>
       </ScrollView>
@@ -150,8 +178,12 @@ export default function WholesaleScreen() {
   );
 }
 
-// Reusable Option List Item component
-const OptionItem = ({ icon, label }) => (
+type OptionItemProps = {
+  icon: string;
+  label: string;
+};
+
+const OptionItem = ({ icon, label }: OptionItemProps) => (
   <TouchableOpacity style={styles.optionItem}>
     <Icon name={icon} size={18} color="#666" style={styles.optionIcon} />
     <Text style={styles.optionText}>{label}</Text>

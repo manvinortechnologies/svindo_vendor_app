@@ -28,6 +28,7 @@ export enum HomeNavigation {
   MANAGE_DELIVERY = "ManageDelivery",
   ERP = "Erp",
   WHOLESALE = "Wholesale",
+  BILLDETAILS = "BillDetails",
   COMPANY_PROFILE = "CompanyProfile",
   USER_PROFILE = "UserProfile",
   MANAGE_COMPANIES = "ManageCompanies",
@@ -95,4 +96,5 @@ export enum HomeNavigation {
   AUTOASSIGNDELIVERY = "AutoAssignDelivery",
   ASSIGNOWNDELIVERYBOY = "AssignOwnDeliveryBoy",
   ADDDELIVERYBOY = "AddDeliveryBoy",
+  
 }

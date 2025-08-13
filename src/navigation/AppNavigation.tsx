@@ -100,6 +100,7 @@ import AutoAssignDelivery from "../Screens/AutoAssignDelivery";
 import AssignOwnDeliveryBoy from "../Screens/AssignOwnDeliveryBoy";
 import AddDeliveryBoy from "../Screens/AddDeliveryBoy";
 import WholesaleScreen from "../Screens/WholesaleScreen";
+import BillDetails from "../Screens/BillDetails";
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
 
@@ -205,6 +206,7 @@ const AppNavigation = () => {
           name={HomeNavigation.WHOLESALE}
           component={WholesaleScreen}
         />
+        <Stack.Screen name={HomeNavigation.BILLDETAILS} component={BillDetails} />
         <Stack.Screen
           name={HomeNavigation.COMPANY_PROFILE}
           component={CompanyProfile}

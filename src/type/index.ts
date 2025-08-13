@@ -35,6 +35,7 @@ export type THomeNavigation = {
   [HomeNavigation.MANAGE_DELIVERY]: undefined;
   [HomeNavigation.ERP]: undefined;
   [HomeNavigation.WHOLESALE]: undefined;
+  [HomeNavigation.BILLDETAILS]: undefined;
   [HomeNavigation.COMPANY_PROFILE]: undefined;
   [HomeNavigation.USER_PROFILE]: undefined;
   [HomeNavigation.MANAGE_COMPANIES]: undefined;
