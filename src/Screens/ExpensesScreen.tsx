@@ -60,7 +60,12 @@ const ExpensesScreen = ({ navigation }: any) => {
         <Text style={styles.dateText}>Date {item.expense_date}</Text>
 
         {/* Expense Card */}
-        <View style={styles.expenseCard}>
+        <TouchableOpacity
+          style={styles.expenseCard}
+          onPress={() => {
+            navigation.navigate("ExpensesDetailScreen");
+          }}
+        >
           <View style={styles.expenseHeader}>
             <Text style={styles.cellText}>Category</Text>
             <Text style={styles.cellText}>Cash</Text>
@@ -79,7 +84,7 @@ const ExpensesScreen = ({ navigation }: any) => {
               {item.is_paid ? "No" : "Yes"}
             </Text>
           </View>
-        </View>
+        </TouchableOpacity>
       </View>
     );
   };

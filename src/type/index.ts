@@ -18,6 +18,7 @@ export type THomeNavigation = {
   [HomeNavigation.DRAFT_SCREEN]: undefined;
   [HomeNavigation.ORDERS]: undefined;
   [HomeNavigation.ORDERPRODUCTDETAILS]: undefined;
+  [HomeNavigation.PRODUCTDETAILS]: undefined;
   [HomeNavigation.STOCK_SCREEN]: undefined;
   [HomeNavigation.CREATE_PRODUCT]: undefined;
   [HomeNavigation.ADD_PRODUCT_SCREEN]: undefined;
@@ -57,6 +58,7 @@ export type THomeNavigation = {
   [HomeNavigation.EXPENSE_TRANSACTION_SCREEN]: undefined;
   [HomeNavigation.CASH_IN_HAND]: undefined;
   [HomeNavigation.BANK_ACCOUNTS]: undefined;
+  [HomeNavigation.BANK_NAME]: undefined;
   [HomeNavigation.MANAGE_CUSTOMERS]: undefined;
   [HomeNavigation.SALES_LEDGER]: undefined;
   [HomeNavigation.MANAGE_VENDORS]: undefined;
@@ -87,6 +89,7 @@ export type THomeNavigation = {
   [HomeNavigation.STOREWORKING_HOURS]: undefined;
   [HomeNavigation.COUPONS_SCREEN]: undefined;
   [HomeNavigation.EXPENESES_SCREEN]: undefined;
+  [HomeNavigation.EXPENESES_DETAIL_SCREEN]: undefined;
   [HomeNavigation.CREATECOUPON]: undefined;
   [HomeNavigation.ADD_POST_SCREEN]: undefined;
   [HomeNavigation.BUYERSREQUEST]: undefined;

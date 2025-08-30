@@ -105,6 +105,9 @@ import OrderProductDetails from "../Screens/OrderProductDetails";
 import ReminderScreen from "../Screens/ReminderSettingScreen";
 import SalesLedger from "../Screens/SalesLedger";
 import AddAddOns from "../Screens/AddAddOns";
+import ProductDetails from "../Screens/ProductDetails";
+import BankNameScreen from "../Screens/BankNameScreen";
+import ExpensesDetailScreen from "../Screens/ExpensesDetailScreen";
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
 
@@ -153,6 +156,10 @@ const AppNavigation = () => {
         <Stack.Screen
           name={HomeNavigation.ORDERPRODUCTDETAILS}
           component={OrderProductDetails}
+        />
+        <Stack.Screen
+          name={HomeNavigation.PRODUCTDETAILS}
+          component={ProductDetails}
         />
         <Stack.Screen
           name={HomeNavigation.SALES_LEDGER}
@@ -292,6 +299,10 @@ const AppNavigation = () => {
           component={BankAccounts}
         />
         <Stack.Screen
+          name={HomeNavigation.BANK_NAME}
+          component={BankNameScreen}
+        />
+        <Stack.Screen
           name={HomeNavigation.MANAGE_CUSTOMERS}
           component={ManageCustomers}
         />
@@ -400,6 +411,10 @@ const AppNavigation = () => {
         <Stack.Screen
           name={HomeNavigation.EXPENESES_SCREEN}
           component={ExpensesScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.EXPENESES_DETAIL_SCREEN}
+          component={ExpensesDetailScreen}
         />
         <Stack.Screen
           name={HomeNavigation.CREATECOUPON}

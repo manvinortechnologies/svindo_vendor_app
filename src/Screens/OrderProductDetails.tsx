@@ -10,7 +10,7 @@ import {
 import { useRoute } from "@react-navigation/native";
 import CustomHeader from "../CommonComponent/CustomHeader";
 
-const OrderProductDetails = () => {
+const OrderProductDetails = ({ navigation }: any) => {
   // const route = useRoute();
   // const { order } = route.params;
   return (
@@ -122,7 +122,10 @@ const OrderProductDetails = () => {
       </ScrollView>
 
       {/* Accept Order Button */}
-      <TouchableOpacity style={styles.acceptBtn}>
+      <TouchableOpacity
+        style={styles.acceptBtn}
+        onPress={() => navigation.navigate("ProductDetails")}
+      >
         <Text style={styles.acceptArrow}>→</Text>
         <View>
           <Text style={styles.acceptText}>Accept Order</Text>

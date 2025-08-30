@@ -23,6 +23,7 @@ type RootStackParamList = {
   ManageCompanies: undefined;
   DayBookScreen: undefined;
   BankAccounts: undefined;
+  BankNameScreen: undefined;
   CashInHand: undefined;
   Cheques: undefined;
   LoanAccounts: undefined;
@@ -89,6 +90,7 @@ const Erp = () => {
     },
     { title: "Day Book", icon: "book-open-variant", screen: "DayBookScreen" },
     { title: "Bank Accounts", icon: "bank-outline", screen: "BankAccounts" },
+    { title: "Bank Name", icon: "bank-outline", screen: "BankNameScreen" },
     { title: "Cash in Hand", icon: "cash-multiple", screen: "CashInHand" },
     { title: "Cheques", icon: "credit-card-outline", screen: "Cheques" },
     {
