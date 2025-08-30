@@ -59,11 +59,13 @@ export enum HomeNavigation {
   PREFERENCES_SCREEN = "PreferencesScreen",
   SALES = "Sales",
   PURCHASE = "Purchase",
+  SALES_LEDGER = "SalesLedger",
   DISCOUNT_SETTINGS = "DiscountSettings",
   TAXES_AND_GST = "TaxesAndGST",
   INVOICE_SETTINGS = "InvoiceSettings",
   INVOICE_TEMPLATES = "InvoiceTemplates",
   REMINDERS_SCREEN = "RemindersScreen",
+  REMINDERSETTINGS = "ReminderSettings",
   RATE_US_SCREEN = "RateUsScreen",
   PRIVACY_POLICY_SCREEN = "PrivacyPolicyScreen",
   DELETE_ACCOUNT_SCREEN = "DeleteAccountScreen",
@@ -97,5 +99,5 @@ export enum HomeNavigation {
   AUTOASSIGNDELIVERY = "AutoAssignDelivery",
   ASSIGNOWNDELIVERYBOY = "AssignOwnDeliveryBoy",
   ADDDELIVERYBOY = "AddDeliveryBoy",
-  
+  ADD_ADDONS = "AddAddOns",
 }

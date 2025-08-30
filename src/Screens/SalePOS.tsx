@@ -28,7 +28,7 @@ import { HomeNavigation } from "../constants/app-routes.constants";
 import CalendarModal from "../Modals/CalendarModal";
 
 const SalePOS = () => {
-  const naviagation = useNavigation();
+  const navigation: any = useNavigation();
 
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -38,6 +38,8 @@ const SalePOS = () => {
     "None" | "Customer" | "Vendor"
   >("None");
   const [customerList, setCustomerList] = useState<DropDownOption[]>([]);
+  const [bankList, setBankList] = useState<DropDownOption[]>([]);
+  const [selectedBank, setSelectedBank] = useState<DropDownOption>();
   const [vendorList, setVendorList] = useState<DropDownOption[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<DropDownOption>();
   const [selectedVendor, setSelectedVendor] = useState<DropDownOption>();
@@ -45,26 +47,33 @@ const SalePOS = () => {
   const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [wholesale, setWholesale] = useState<boolean>(false);
-  const [discount, setDiscount] = useState({ pr: "", amount: "0" });
+  const [discount, setDiscount] = useState({ pr: "", amount: "" });
   const [paymentMode, setPaymentMode] = useState("Cash");
-  const [advancePaymentMode, setAdvancePaymentMode] = useState("Cash");
+  const [advancePaymentMode, setAdvancePaymentMode] = useState(1);
   const [advanceAmount, setAdvanceAmount] = useState("");
   const [callenderModel, setCallenderModel] = useState<boolean>(false);
   const [dueDate, setDueDate] = useState("");
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
     fetchAllData();
   }, []);
+
+  useEffect(() => {
+    handleAmountChange(discount?.amount);
+    handlePercentChange(discount?.pr);
+  }, [wholesale]);
 
   const fetchAllData = async () => {
     try {
       setIsLoading(true);
 
       // Parallel fetching
-      const [companyRes, customerRes, vendorRes] = await Promise.all([
+      const [companyRes, customerRes, vendorRes, banks] = await Promise.all([
         api.get(API_ROUTES.companyProfle),
         api.get(API_ROUTES.vendorCustomer),
         api.get(API_ROUTES.vendorList),
+        api.get(API_ROUTES.vendorBank),
       ]);
 
       const transformedCompany: DropDownOption[] = companyRes.data?.map(
@@ -84,6 +93,7 @@ const SalePOS = () => {
       );
       setCustomerList(transformedCustomer);
       setSelectedCustomer(transformedCustomer[0]);
+
       const transformedVendor: DropDownOption[] = vendorRes.data?.map(
         (item: any) => ({
           id: item.id,
@@ -91,6 +101,14 @@ const SalePOS = () => {
         })
       );
       setVendorList(transformedVendor);
+
+      const transformedBank: DropDownOption[] = banks.data?.map(
+        (item: any) => ({
+          id: item.id,
+          name: item.name || item.vendor_name,
+        })
+      );
+      setBankList(transformedBank);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -98,20 +116,132 @@ const SalePOS = () => {
     }
   };
 
-  const handleSubmit = () => {
-    if (wholesale) {
-      naviagation.navigate(HomeNavigation.WHOLESALE, {
-        data: {
-          company: companySelected,
-          customer: selectedCustomer,
-          products,
-          discount,
-          paymentMode,
-          advanceAmount,
-          advancePaymentMode,
-          dueDate,
-        },
-      });
+  const handlePercentChange = (value: string) => {
+    const totalAmount = products.reduce(
+      (sum, item) =>
+        sum + (wholesale ? item.wholesale_price : item.price) * item.quantity,
+      0
+    );
+    setDiscount((p) => ({ ...p, pr: value }));
+    const percent = parseFloat(value);
+    if (!isNaN(percent)) {
+      const amount = (totalAmount * percent) / 100;
+      setDiscount((p) => ({ ...p, amount: amount.toFixed(2) }));
+    } else {
+      setDiscount((p) => ({ ...p, pr: "" }));
+    }
+  };
+
+  const handleAmountChange = (value: string) => {
+    const totalAmount = products.reduce(
+      (sum, item) =>
+        sum + (wholesale ? item.wholesale_price : item.price) * item.quantity,
+      0
+    );
+    setDiscount((p) => ({ ...p, amount: value }));
+    const amount = parseFloat(value);
+    if (!isNaN(amount)) {
+      const percent = (amount / totalAmount) * 100;
+      setDiscount((p) => ({ ...p, pr: percent.toFixed(2) }));
+    } else {
+      setDiscount((p) => ({ ...p, amount: "" }));
+    }
+  };
+
+  const validateForm = () => {
+    let tempErrors = {};
+    // ✅ check products
+    if (!products || products.length === 0) {
+      tempErrors.products = "Please add at least one product before proceeding";
+    }
+
+    // ✅ check discount Amount
+    if (
+      !discount.amount ||
+      Number(discount.amount) <= 0 ||
+      !discount.pr ||
+      Number(discount.pr) < 0
+    ) {
+      tempErrors.discount = `Discount amount ${
+        !discount.pr || Number(discount.pr) < 0
+          ? "and Discount percentage "
+          : ""
+      }must be a valid positive number`;
+    }
+    // if (!discount.pr || Number(discount.pr) < 0) {
+    //   tempErrors.pr = "Discount percentage must be a valid positive number";
+    // }
+    if (paymentMode !== "Cash") {
+      if (!dueDate) {
+        tempErrors.dueDate = "Due date is required";
+      }
+      if (!advanceAmount) {
+        tempErrors.advanceAmount =
+          "Advance amount must be a valid positive number";
+      }
+      if (advancePaymentMode === 1 && !selectedBank) {
+        tempErrors.advanceBank = "Please select bank";
+      }
+    }
+
+    setErrors(tempErrors);
+
+    return Object.keys(tempErrors).length > 0; // Everything OK
+  };
+
+  const handleSubmit = async () => {
+    if (validateForm()) return;
+    try {
+      const totalAmount = products.reduce(
+        (sum, item) =>
+          sum + (wholesale ? item.wholesale_price : item.price) * item.quantity,
+        0
+      );
+      const totalDiscountedAmount = totalAmount - Number(discount.amount);
+
+      const data = {
+        payment_method: paymentMode.toLocaleLowerCase(),
+        company_profile: companySelected?.id,
+        // //   "party": 2,
+        customer: selectedCustomer?.id,
+        discount_percentage: Number(discount?.pr),
+        credit_date:
+          paymentMode !== "Cash" ? new Date(dueDate).toISOString() : "",
+        is_wholesale_rate: wholesale,
+        items: products.map((p) => ({
+          product: p.id,
+          quantity: p.quantity,
+          price: wholesale ? p.wholesale_price : p.price,
+          amount: (wholesale ? p.wholesale_price : p.price) * p.quantity,
+        })),
+        total_items: products.length,
+        total_amount_before_discount: totalAmount,
+        discount_amount: discount.amount,
+        total_amount: totalDiscountedAmount,
+        balance_amount:
+          paymentMode !== "Cash"
+            ? totalDiscountedAmount - Number(advanceAmount)
+            : 0,
+        wholesale_invoice_details: null,
+        advance_bank: selectedBank?.id || "",
+        advance_amount: advanceAmount || 0,
+      };
+      console.log(data, "data");
+      if (wholesale) {
+        navigation.navigate(HomeNavigation.WHOLESALE, data);
+      } else {
+        setIsLoading(true);
+
+        const res = await api.post(API_ROUTES.posSales, data);
+        console.log(res);
+        navigation.navigate(HomeNavigation.BILLDETAILS, {
+          id: res.data?.id,
+        });
+      }
+    } catch (error) {
+      console.log(error, "sales error");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -218,6 +348,9 @@ const SalePOS = () => {
             <Text style={styles.addItemText}>Add Item</Text>
           </TouchableOpacity>
         </View>
+        {errors?.products && (
+          <Text style={{ color: "red" }}>{errors?.products}</Text>
+        )}
 
         {/* Table Header */}
         <View style={styles.tableHeader}>
@@ -260,8 +393,17 @@ const SalePOS = () => {
               {item.name}
             </Text>
             <Text style={styles.tableText}>{item.quantity}</Text>
-            <Text style={styles.tableText}>500.00</Text>
-            <Text style={styles.tableText}>1000.00</Text>
+            <Text style={styles.tableText}>
+              {Number(wholesale ? item?.wholesale_price : item?.price).toFixed(
+                2
+              )}
+            </Text>
+            <Text style={styles.tableText}>
+              {Number(
+                (wholesale ? item?.wholesale_price : item?.price) *
+                  item?.quantity
+              ).toFixed(2)}
+            </Text>
             <TouchableOpacity
               onPress={() => {
                 const updated = products.filter((_, i) => i !== index);
@@ -279,20 +421,25 @@ const SalePOS = () => {
             <Text style={styles.label}>Discount</Text>
             <TextInput
               placeholder="%"
-              placeholderTextColor="black"
+              placeholderTextColor="#ccc"
               value={discount.pr}
-              onChangeText={(v) => setDiscount((p) => ({ ...p, pr: v }))}
+              onChangeText={handlePercentChange}
               style={styles.discountInput}
               keyboardType="decimal-pad"
             />
             <TextInput
               placeholder="0"
+              placeholderTextColor="#ccc"
               value={discount.amount}
-              onChangeText={(v) => setDiscount((p) => ({ ...p, amount: v }))}
+              onChangeText={handleAmountChange}
               style={styles.discountInput}
               keyboardType="decimal-pad"
             />
           </View>
+          {errors?.pr && <Text style={{ color: "red" }}>{errors?.pr}</Text>}
+          {errors?.discount && (
+            <Text style={{ color: "red" }}>{errors?.discount}</Text>
+          )}
 
           {/* Payment */}
           <View style={{ flexDirection: "row", gap: 20 }}>
@@ -321,49 +468,75 @@ const SalePOS = () => {
           </View>
 
           {/* Advance */}
-          <View style={{ flexDirection: "row", gap: 20 }}>
-            <Text style={styles.label}>Advance</Text>
-            <TextInput
-              placeholder="Amount"
-              style={[styles.discountInput, { paddingVertical: 2 }]}
-              value={advanceAmount}
-              onChangeText={setAdvanceAmount}
-              keyboardType="decimal-pad"
-            />
-            <View style={styles.paymentOptions}>
-              {["Bank", "Cash"].map((method) => (
-                <TouchableOpacity
-                  key={method}
-                  style={[
-                    styles.paymentButton,
-                    advancePaymentMode === method && {
-                      backgroundColor: "#FCA311",
-                    },
-                  ]}
-                >
-                  <Text
-                    style={{
-                      fontWeight: "500",
-                      color: advancePaymentMode === method ? "#FFF" : "#000",
-                    }}
-                  >
-                    {method}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
+          {paymentMode !== "Cash" && (
+            <>
+              <View style={{ flexDirection: "row", gap: 20 }}>
+                <Text style={styles.label}>Advance</Text>
+                <TextInput
+                  placeholder="Amount"
+                  placeholderTextColor="#ccc"
+                  style={[styles.discountInput, { paddingVertical: 2 }]}
+                  value={advanceAmount}
+                  onChangeText={setAdvanceAmount}
+                  keyboardType="decimal-pad"
+                />
+                <View style={styles.paymentOptions}>
+                  {["Bank", "Cash"].map((method, i) => (
+                    <TouchableOpacity
+                      key={method}
+                      style={[
+                        styles.paymentButton,
+                        advancePaymentMode === i + 1 && {
+                          backgroundColor: "#FCA311",
+                        },
+                      ]}
+                      onPress={() => setAdvancePaymentMode(i + 1)}
+                    >
+                      <Text
+                        style={{
+                          fontWeight: "500",
+                          color: advancePaymentMode === i + 1 ? "#FFF" : "#000",
+                        }}
+                      >
+                        {method}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+              {errors?.advanceAmount && (
+                <Text style={{ color: "red" }}>{errors?.advanceAmount}</Text>
+              )}
 
-          {/* Due Date */}
-          <View style={{ flexDirection: "row", gap: 20, marginTop: 10 }}>
-            <Text style={styles.label}>Due Date</Text>
-            <TouchableOpacity
-              style={[styles.discountInput]}
-              onPress={() => setCallenderModel(true)}
-            >
-              <Text>{dueDate ? dueDate : "YYYY/MM/DD"}</Text>
-            </TouchableOpacity>
-          </View>
+              {advancePaymentMode === 1 && (
+                <>
+                  <CustomDropdown
+                    onSelect={setSelectedBank}
+                    placeholder="Select Bank"
+                    selectedValue={selectedBank?.name || ""}
+                    options={bankList}
+                    dropDownBoxStyle={{ marginTop: 10 }}
+                  />
+                  {errors?.advanceBank && (
+                    <Text style={{ color: "red" }}>{errors?.advanceBank}</Text>
+                  )}
+                </>
+              )}
+              {/* Due Date */}
+              <View style={{ flexDirection: "row", gap: 20, marginTop: 10 }}>
+                <Text style={styles.label}>Due Date</Text>
+                <TouchableOpacity
+                  style={[styles.discountInput]}
+                  onPress={() => setCallenderModel(true)}
+                >
+                  <Text>{dueDate ? dueDate : "YYYY/MM/DD"}</Text>
+                </TouchableOpacity>
+              </View>
+              {errors?.dueDate && (
+                <Text style={{ color: "red" }}>{errors?.dueDate}</Text>
+              )}
+            </>
+          )}
         </View>
       </ScrollView>
 
@@ -380,6 +553,8 @@ const SalePOS = () => {
       <ProductSelectionModal
         visible={showProductModal}
         onClose={() => setShowProductModal(false)}
+        setSelectedProducts={setProducts}
+        selectedProducts={products}
       />
       <CompanySelectModal
         visible={showCompanyModal}
@@ -438,6 +613,23 @@ const styles = StyleSheet.create({
     color: "#5A5A5A",
     fontWeight: "bold",
     marginVertical: 6,
+  },
+  optionButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 6,
+    backgroundColor: "#fff",
+    marginRight: 6,
+    marginTop: 6,
+    fontWeight: "500",
+    justifyContent: "center",
+  },
+  optionText: {
+    color: "#000",
+    fontWeight: "500",
   },
   input: {
     borderWidth: 1,

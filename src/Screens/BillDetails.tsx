@@ -1,8 +1,20 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, FlatList } from 'react-native';
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  FlatList,
+} from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import CheckBox from '@react-native-community/checkbox';
-import Headerwithback from './Headerwithback';
+import CheckBox from "@react-native-community/checkbox";
+import Headerwithback from "./Headerwithback";
+import api from "../services/api/api";
+import { useRoute } from "@react-navigation/native";
+import { API_ROUTES } from "../constants/api-routes.constants";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Loading from "../CommonComponent/Loading";
 
 interface BillItem {
   id: string;
@@ -21,11 +33,41 @@ interface InfoItem {
 }
 
 const BillDetails: React.FC = () => {
-  const saleType = 'Retail'; // or "Wholesale" — you can make this dynamic
+  const { params } = useRoute();
+
+  const [billData, setBillData] = useState(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    (async () => {
+      setIsLoading(true);
+      try {
+        const res = await api.get(`${API_ROUTES.posSales}/${params?.id}/`);
+
+        setBillData({ ...res.data });
+      } catch (error) {
+        console.log(error, "get bill data");
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, []);
+
+  const saleType = billData?.is_wholesale_rate; // or "Wholesale" — you can make this dynamic
 
   const billItems: BillItem[] = [
-    { id: '1', name: 'White Shirt XL Size, Blue Color, Denim Brand', quantity: 2, price: 500 },
-    { id: '2', name: 'White Shirt XL Size, Blue Color, Denim Brand', quantity: 2, price: 500 },
+    {
+      id: "1",
+      name: "White Shirt XL Size, Blue Color, Denim Brand",
+      quantity: 2,
+      price: 500,
+    },
+    {
+      id: "2",
+      name: "White Shirt XL Size, Blue Color, Denim Brand",
+      quantity: 2,
+      price: 500,
+    },
   ];
 
   const totals = {
@@ -39,10 +81,10 @@ const BillDetails: React.FC = () => {
   };
 
   const [printOptions, setPrintOptions] = useState([
-    { label: 'Customer', checked: true },
-    { label: 'Supplier', checked: true },
-    { label: 'Transport', checked: true },
-    { label: 'Delivery', checked: false },
+    { label: "Customer", checked: true },
+    { label: "Supplier", checked: true },
+    { label: "Transport", checked: true },
+    { label: "Delivery", checked: false },
   ]);
 
   const toggleOption = (index: number) => {
@@ -51,42 +93,119 @@ const BillDetails: React.FC = () => {
     setPrintOptions(updated);
   };
 
-  const renderBillItem = ({ item, index }: { item: BillItem; index: number }) => (
+  const renderBillItem = ({
+    item,
+    index,
+  }: {
+    item: BillItem;
+    index: number;
+  }) => (
     <View style={styles.tableRow}>
       <Text style={styles.tableCell}>{index + 1}</Text>
       <Text style={[styles.tableCell, { flex: 2 }]} numberOfLines={1}>
-        {item.name}
+        {item?.product_details?.name}
       </Text>
       <Text style={styles.tableCell}>{item.quantity}</Text>
-      <Text style={styles.tableCell}>₹{item.price.toFixed(2)}</Text>
-      <Text style={styles.tableCell}>₹{(item.quantity * item.price).toFixed(2)}</Text>
+      <Text style={styles.tableCell}>₹{Number(item?.price)?.toFixed(2)}</Text>
+      <Text style={styles.tableCell}>
+        ₹{(Number(item.quantity) * Number(item?.price))?.toFixed(2)}
+      </Text>
     </View>
   );
 
   const infoData: InfoItem[] = [
-    { id: '1', icon: 'truck', label: 'Dispatch Address' },
-    { id: '2', icon: 'credit-card', label: 'Payment', value: '11/10/2024', mode: 'Credit', modeColor: 'orange' },
-    { id: '3', icon: 'pen', label: 'Signature' },
-    { id: '4', icon: 'lock', label: 'References' },
-    { id: '5', icon: 'file-document', label: 'Notes' },
-    { id: '6', icon: 'file-document-edit', label: 'Terms' },
-    { id: '7', icon: 'currency-inr', label: 'Delivery/ Shipping Charges', value: '0.00' },
-    { id: '8', icon: 'package-variant', label: 'Packaging Charges', value: '0.00' },
-    { id: '9', icon: 'file-outline', label: 'E-way Bill Number' },
-    { id: '10', icon: 'truck-delivery', label: 'LR Number' },
-    { id: '11', icon: 'car', label: 'Vehicle Number' },
-    { id: '12', icon: 'truck-fast', label: 'Transport Name' },
-    { id: '13', icon: 'cube', label: 'No. of Parcels' },
+    {
+      id: "1",
+      icon: "truck",
+      label: "Dispatch Address",
+      value: billData?.wholesale_invoice_details?.dispatch_address,
+    },
+    {
+      id: "2",
+      icon: "credit-card",
+      label: "Payment",
+      value: billData?.wholesale_invoice_details?.payment_date, // you can add this in billData
+      mode: "Credit",
+      modeColor: "orange",
+    },
+    {
+      id: "3",
+      icon: "pen",
+      label: "Signature",
+      value: billData?.wholesale_invoice_details?.signature,
+    },
+    {
+      id: "4",
+      icon: "lock",
+      label: "References",
+      value: billData?.wholesale_invoice_details?.references,
+    },
+    {
+      id: "5",
+      icon: "file-document",
+      label: "Notes",
+      value: billData?.wholesale_invoice_details?.notes,
+    },
+    {
+      id: "6",
+      icon: "file-document-edit",
+      label: "Terms",
+      value: billData?.wholesale_invoice_details?.terms,
+    },
+    {
+      id: "7",
+      icon: "currency-inr",
+      label: "Delivery/ Shipping Charges",
+      value: billData?.wholesale_invoice_details?.delivery_charges,
+    },
+    {
+      id: "8",
+      icon: "package-variant",
+      label: "Packaging Charges",
+      value: billData?.wholesale_invoice_details?.packaging_charges,
+    },
+    {
+      id: "9",
+      icon: "file-outline",
+      label: "E-way Bill Number",
+      value: billData?.wholesale_invoice_details?.eway_bill_number,
+    },
+    {
+      id: "10",
+      icon: "truck-delivery",
+      label: "LR Number",
+      value: billData?.wholesale_invoice_details?.lr_number,
+    },
+    {
+      id: "11",
+      icon: "car",
+      label: "Vehicle Number",
+      value: billData?.wholesale_invoice_details?.vehicle_number,
+    },
+    {
+      id: "12",
+      icon: "truck-fast",
+      label: "Transport Name",
+      value: billData?.wholesale_invoice_details?.transport_name,
+    },
+    {
+      id: "13",
+      icon: "cube",
+      label: "No. of Parcels",
+      value: billData?.wholesale_invoice_details?.number_of_parcels,
+    },
   ];
 
   const renderItem = ({ item }: { item: InfoItem }) => (
     <View style={styles.infoRow}>
-      <View style={{ flexDirection: 'row', gap: 5 }}>
+      <View style={{ flexDirection: "row", gap: 5 }}>
         <Icon name={item.icon} size={18} color="#555" style={{ width: 24 }} />
         <View>
           <Text style={styles.infoLabel}>{item.label}</Text>
           {item.mode && (
-            <Text style={[styles.infoValue, { color: item.modeColor || '#000' }]}>
+            <Text
+              style={[styles.infoValue, { color: item.modeColor || "#000" }]}
+            >
               {item.mode}
             </Text>
           )}
@@ -94,7 +213,9 @@ const BillDetails: React.FC = () => {
       </View>
       <View>
         {item.value && (
-          <Text style={[styles.infoValue, { color: item.valueColor || '#000' }]}>
+          <Text
+            style={[styles.infoValue, { color: item.valueColor || "#000" }]}
+          >
             {item.value}
           </Text>
         )}
@@ -103,8 +224,9 @@ const BillDetails: React.FC = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
+      <Loading visible={isLoading} />
       <Headerwithback
         title="Bill Details"
         rightIcons={[
@@ -120,28 +242,38 @@ const BillDetails: React.FC = () => {
       <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
         {/* Company Info */}
         <View style={styles.companyRow}>
-          <Text style={styles.company}>Company - svindo Enterprise</Text>
-          <View style={[
-            styles.tag,
-            saleType === 'Retail' && { backgroundColor: 'transparent' }
-          ]}>
-            <Text style={[
-              styles.tagText,
-              saleType === 'Retail' && { color: 'orange' }
-            ]}>
+          <Text style={styles.company}>
+            Company - {billData?.company_profile_detials?.company_name}
+          </Text>
+          <View
+            style={[
+              styles.tag,
+              saleType === "Retail" && { backgroundColor: "transparent" },
+            ]}
+          >
+            <Text
+              style={[
+                styles.tagText,
+                saleType === "Retail" && { color: "orange" },
+              ]}
+            >
               {saleType}
             </Text>
           </View>
         </View>
 
         {/* Customer Details */}
-        <Text style={styles.sectionTitle}>Customer Details</Text>
-        <Text style={styles.sectionSubtitle}>Details here.....</Text>
+        <Text style={styles.sectionTitle}>
+          Customer - {billData?.customer_detials?.name}
+        </Text>
+        {/* <Text style={styles.sectionSubtitle}>Details here.....</Text> */}
 
         {/* Table Header */}
         <View style={[styles.tableRow, styles.tableHeader]}>
           <Text style={[styles.tableCell, styles.headerText]}>S.No.</Text>
-          <Text style={[styles.tableCell, { flex: 2 }, styles.headerText]}>Item</Text>
+          <Text style={[styles.tableCell, { flex: 2 }, styles.headerText]}>
+            Item
+          </Text>
           <Text style={[styles.tableCell, styles.headerText]}>Quantity</Text>
           <Text style={[styles.tableCell, styles.headerText]}>Price</Text>
           <Text style={[styles.tableCell, styles.headerText]}>Amount</Text>
@@ -149,7 +281,7 @@ const BillDetails: React.FC = () => {
 
         {/* Table Body */}
         <FlatList
-          data={billItems}
+          data={billData?.items}
           renderItem={renderBillItem}
           keyExtractor={(item) => item.id}
           ListFooterComponent={<View style={{ height: 10 }} />}
@@ -165,7 +297,7 @@ const BillDetails: React.FC = () => {
         </View>
 
         {/* Info List - only for Wholesale */}
-        {saleType !== 'Retail' && (
+        {saleType !== "Retail" && (
           <FlatList
             data={infoData}
             renderItem={renderItem}
@@ -178,38 +310,57 @@ const BillDetails: React.FC = () => {
         <View style={styles.totalSection}>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalValue}>Rs {totals.total.toFixed(2)}</Text>
+            <Text style={styles.totalValue}>
+              Rs {Number(billData?.total_amount_before_discount).toFixed(2)}
+            </Text>
           </View>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Charges</Text>
-            <Text style={styles.totalValue}>Rs {totals.charges.toFixed(2)}</Text>
+            <Text style={styles.totalValue}>
+              Rs {totals.charges.toFixed(2)}
+            </Text>
           </View>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Discount</Text>
-            <Text style={styles.totalValue}>Rs {totals.discount.toFixed(2)}</Text>
+            <Text style={styles.totalValue}>
+              Rs {Number(billData?.discount_amount).toFixed(2)}
+            </Text>
           </View>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Tax</Text>
             <Text style={styles.totalValue}>Rs {totals.tax.toFixed(2)}</Text>
           </View>
           <View style={styles.totalRow}>
-            <Text style={[styles.totalLabel, { fontWeight: 'bold' }]}>Net Total</Text>
-            <Text style={styles.totalValue}>Rs {totals.netTotal.toFixed(2)}</Text>
+            <Text style={[styles.totalLabel, { fontWeight: "bold" }]}>
+              Net Total
+            </Text>
+            <Text style={styles.totalValue}>
+              Rs {Number(billData?.total_amount).toFixed(2)}
+            </Text>
           </View>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Advance Paid</Text>
-            <Text style={styles.totalValue}>Rs {totals.advancePaid.toFixed(2)}</Text>
+            <Text style={styles.totalValue}>
+              Rs {Number(billData?.advance_amount).toFixed(2)}
+            </Text>
           </View>
           <View style={styles.totalRow}>
-            <Text style={[styles.totalLabel, { fontWeight: 'bold' }]}>Balance</Text>
-            <Text style={[styles.totalValue, { color: 'orange', fontWeight: 'bold' }]}>
-              Rs {totals.balance.toFixed(2)}
+            <Text style={[styles.totalLabel, { fontWeight: "bold" }]}>
+              Balance
+            </Text>
+            <Text
+              style={[
+                styles.totalValue,
+                { color: "orange", fontWeight: "bold" },
+              ]}
+            >
+              Rs {Number(billData?.balance_amount).toFixed(2)}
             </Text>
           </View>
         </View>
 
         {/* Checkbox Section - only for Wholesale */}
-        {saleType !== 'Retail' && (
+        {saleType !== "Retail" && (
           <>
             <Text style={styles.checkTitle}>Bill copies to print</Text>
             <View style={styles.checkboxRow}>
@@ -218,7 +369,7 @@ const BillDetails: React.FC = () => {
                   <CheckBox
                     value={opt.checked}
                     onValueChange={() => toggleOption(idx)}
-                    tintColors={{ true: '#ff9800', false: '#ccc' }}
+                    tintColors={{ true: "#ff9800", false: "#ccc" }}
                   />
                   <Text>{opt.label}</Text>
                 </View>
@@ -229,10 +380,14 @@ const BillDetails: React.FC = () => {
 
         {/* Buttons Section */}
         <View style={styles.buttonRow}>
-          <TouchableOpacity style={[styles.button, { backgroundColor: '#89ACF7' }]}>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: "#89ACF7" }]}
+          >
             <Text style={styles.buttonText}>View PDF</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={[styles.button, { backgroundColor: '#92F1A0' }]}>
+          <TouchableOpacity
+            style={[styles.button, { backgroundColor: "#92F1A0" }]}
+          >
             <Text style={styles.buttonText}>Print</Text>
           </TouchableOpacity>
           <TouchableOpacity style={{ margin: 5 }}>
@@ -240,31 +395,31 @@ const BillDetails: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
 export default BillDetails;
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' , },
+  container: { flex: 1, backgroundColor: "#fff" },
   header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     padding: 15,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     elevation: 3,
   },
-  headerTitle: { fontSize: 18, fontWeight: 'bold' },
+  headerTitle: { fontSize: 18, fontWeight: "bold" },
   companyRow: {
     flexDirection: "row",
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
     alignItems: "center",
     marginTop: 10,
     marginHorizontal: 10,
   },
-  company: { fontSize: 16, fontWeight: "bold" , paddingHorizontal: 10},
+  company: { fontSize: 16, fontWeight: "bold", paddingHorizontal: 10 },
   tag: {
     backgroundColor: "#ffeb3b",
     alignSelf: "center",
@@ -274,15 +429,26 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   tagText: { fontSize: 12, fontWeight: "bold" },
-  sectionTitle: { marginLeft: 10, marginTop: 5, fontWeight: "bold", marginHorizontal: 10, paddingHorizontal: 10 },
-  sectionSubtitle: { marginLeft: 10, color: "#777" , marginBottom: 10, paddingHorizontal: 10 },
+  sectionTitle: {
+    marginLeft: 10,
+    marginTop: 5,
+    fontWeight: "bold",
+    marginHorizontal: 10,
+    paddingHorizontal: 10,
+  },
+  sectionSubtitle: {
+    marginLeft: 10,
+    color: "#777",
+    marginBottom: 10,
+    paddingHorizontal: 10,
+  },
   tableRow: {
     flexDirection: "row",
     borderBottomWidth: 1,
     borderColor: "#ddd",
     paddingVertical: 6,
     paddingHorizontal: 5,
-    marginHorizontal: 20
+    marginHorizontal: 20,
   },
   tableHeader: {
     backgroundColor: "#2196f3",
@@ -290,128 +456,127 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 4,
   },
   tableCell: {
-    flex: 1, 
+    flex: 1,
     fontSize: 12,
-    fontWeight: '600' ,
-    paddingVertical: 6
+    fontWeight: "600",
+    paddingVertical: 6,
   },
-  serialCell: { 
-    textAlign: "center" ,
+  serialCell: {
+    textAlign: "center",
   },
   headerText: { color: "#fff", fontWeight: "bold" },
   invoiceBox: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#fff",
     padding: 8,
     paddingHorizontal: 15,
     borderRadius: 8,
     elevation: 2,
     marginBottom: 8,
     marginTop: 12,
-    marginHorizontal: 20
+    marginHorizontal: 20,
   },
   invoiceTitle: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 18,
   },
   invoiceNumber: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 16,
-    textAlign: 'right',
-    
+    textAlign: "right",
   },
   invoiceDate: {
     fontSize: 12,
-    color: '#777',
-    textAlign: 'right',
+    color: "#777",
+    textAlign: "right",
   },
   infoList: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 8,
     marginHorizontal: 20,
     elevation: 2,
     borderBottomWidth: 1,
-    borderColor: '#DDDDDD',
-    marginTop: 10
+    borderColor: "#DDDDDD",
+    marginTop: 10,
   },
   infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingVertical: 10,
     paddingHorizontal: 12,
     borderBottomWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: "#DDDDDD",
   },
   infoLabel: {
     flex: 1,
     fontSize: 12,
-    color: '#333',
+    color: "#333",
   },
   infoValue: {
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   totalSection: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 8,
     padding: 12,
     elevation: 2,
     marginVertical: 12,
     marginHorizontal: 20,
     borderWidth: 1,
-    borderColor: '#ddd'
+    borderColor: "#ddd",
   },
   totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 4,
   },
   totalLabel: {
     fontSize: 14,
-    color: '#617C9D',
-    fontWeight: '500'
+    color: "#617C9D",
+    fontWeight: "500",
   },
   totalValue: {
     fontSize: 14,
-    color: '#000',
-    fontWeight: '600'
+    color: "#000",
+    fontWeight: "600",
   },
   checkTitle: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 6,
-    marginHorizontal: 20
+    marginHorizontal: 20,
   },
   checkboxRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+    flexDirection: "row",
+    flexWrap: "wrap",
     marginBottom: 12,
-    marginHorizontal: 15
+    marginHorizontal: 15,
   },
   checkboxItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginRight: 6,
   },
   buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     marginTop: 6,
-    width: '70%',
-    alignSelf: 'center'
+    width: "70%",
+    alignSelf: "center",
   },
   button: {
     flex: 1,
     marginHorizontal: 2,
     paddingVertical: 8,
     borderRadius: 10,
-    alignItems: 'center',
+    alignItems: "center",
   },
   buttonText: {
-    color: '#000',
-    fontWeight: 'bold',
-    fontSize: 16
+    color: "#000",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Dimensions,
   FlatList,
@@ -9,13 +9,13 @@ import {
   TouchableOpacity,
   View,
   ViewStyle,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+} from "react-native";
+import Icon from "react-native-vector-icons/Ionicons";
 
-const { width, height } = Dimensions.get('window');
-export interface DropDownOption{
-  name:string,
-  id:string|number
+const { width, height } = Dimensions.get("window");
+export interface DropDownOption {
+  name: string;
+  id: string | number;
 }
 
 interface CustomDropdownProps {
@@ -24,7 +24,7 @@ interface CustomDropdownProps {
   onSelect: (value: any) => void;
   selectedValue: string;
   styles?: StyleProp<ViewStyle>;
-  dropDownBoxStyle?:StyleProp<ViewStyle>
+  dropDownBoxStyle?: StyleProp<ViewStyle>;
 }
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -36,21 +36,34 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   dropDownBoxStyle,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
 
   const filteredOptions = options.filter(
     (item) =>
-      typeof item.name === 'string' &&
+      typeof item.name === "string" &&
       item.name.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
     <View style={[styles.dropdownContainer, customStyles]}>
-      <TouchableOpacity style={[styles.dropdown,dropDownBoxStyle]} onPress={() => setIsOpen(!isOpen)}>
-        <Text style={[styles.dropdownText, placeholder && !selectedValue && { color: '#888' }]}>
+      <TouchableOpacity
+        style={[styles.dropdown, dropDownBoxStyle]}
+        onPress={() => setIsOpen(!isOpen)}
+      >
+        <Text
+          style={[
+            styles.dropdownText,
+            placeholder && !selectedValue && { color: "#888" },
+          ]}
+        >
           {selectedValue || placeholder}
         </Text>
-        <Icon name="chevron-down-outline" size={20} color="#888" style={styles.dropdownArrow} />
+        <Icon
+          name="chevron-down-outline"
+          size={20}
+          color="#888"
+          style={styles.dropdownArrow}
+        />
       </TouchableOpacity>
 
       {isOpen && (
@@ -65,15 +78,15 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
           <FlatList
             data={filteredOptions}
             keyExtractor={(item) => item.id.toString()}
-             keyboardShouldPersistTaps="handled"
-             nestedScrollEnabled={true} // Important for Android
+            keyboardShouldPersistTaps="handled"
+            nestedScrollEnabled={true} // Important for Android
             renderItem={({ item }) => (
               <TouchableOpacity
                 style={styles.dropdownItem}
                 onPress={() => {
                   onSelect(item);
                   setIsOpen(false);
-                  setSearch('');
+                  setSearch("");
                 }}
               >
                 <Text style={styles.dropdownItemText}>{item.name}</Text>
@@ -96,30 +109,30 @@ const styles = StyleSheet.create({
     marginBottom: height * 0.01,
   },
   dropdown: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 5,
     padding: width * 0.03,
-    backgroundColor: '#FAFAFC',
+    backgroundColor: "#FAFAFC",
   },
   dropdownText: {
     fontSize: width * 0.038,
-    color: '#666',
+    color: "#666",
   },
   dropdownArrow: {
     fontSize: width * 0.05,
-    color: '#666',
+    color: "#666",
   },
   dropdownMenu: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 5,
-    backgroundColor: '#fff',
-    position: 'absolute',
-    width: '100%',
+    backgroundColor: "#fff",
+    position: "absolute",
+    width: "100%",
     zIndex: 999,
     marginTop: 50,
     maxHeight: height * 0.3,
@@ -127,22 +140,22 @@ const styles = StyleSheet.create({
   searchInput: {
     padding: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
     fontSize: width * 0.038,
-    color: '#000',
+    color: "#000",
   },
   dropdownItem: {
     padding: width * 0.03,
     borderBottomWidth: 1,
-    borderBottomColor: '#eee',
+    borderBottomColor: "#eee",
   },
   dropdownItemText: {
     fontSize: width * 0.04,
   },
   noResultText: {
-    textAlign: 'center',
+    textAlign: "center",
     padding: 10,
-    color: '#888',
+    color: "#888",
     fontSize: width * 0.038,
   },
 });

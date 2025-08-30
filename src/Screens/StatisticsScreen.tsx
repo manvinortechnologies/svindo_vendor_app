@@ -19,6 +19,7 @@ import CustomSwitch from "./CustomSwitch";
 import RequestFromBuyers from "../CommonComponent/RequestFromBuyers";
 import GroupedBars from "./BarChart";
 import LineCharts from "./LineChart";
+import { HomeNavigation } from "../constants/app-routes.constants";
 NavigationButton;
 
 const screenWidth = Dimensions.get("window").width - 20;
@@ -239,7 +240,14 @@ const StatisticsScreen = ({ navigation }: any) => {
         <RequestFromBuyers />
         <View style={styles.titleRow}>
           <Text style={styles.title}>Statistics</Text>
-          <TouchableOpacity style={styles.filterButton}>
+          <TouchableOpacity
+            style={styles.filterButton}
+            onPress={() =>
+              navigation.navigate(HomeNavigation.BILLDETAILS, {
+                id: 4,
+              })
+            }
+          >
             <Text style={styles.filterText}>{selectedFilter}</Text>
             <Icon name="chevron-down" size={18} color="#000" />
           </TouchableOpacity>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -8,13 +8,19 @@ import {
   TextInput,
   KeyboardTypeOptions,
   StatusBar,
-  Platform
+  Platform,
+  SafeAreaView,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Headerwithback from "./Headerwithback"; // Use your actual path
 import OptionInput from "../CommonComponent/OptionalInputs";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { HomeNavigation } from "../constants/app-routes.constants";
+import api from "../services/api/api";
+import { API_ROUTES } from "../constants/api-routes.constants";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Loading from "../CommonComponent/Loading";
+import moment from "moment";
 
 type FormDataKeys =
   | "dispatchAddress"
@@ -28,14 +34,23 @@ type FormDataKeys =
   | "lrNumber"
   | "vehicleNumber"
   | "transportName"
+  | "reverseCharge"
+  | "deliveryCity"
   | "parcels";
 
 type FormData = Record<FormDataKeys, string>;
 
 export default function WholesaleScreen() {
-  const navigation = useNavigation();
-  const [selectedType, setSelectedType] = useState("Invoice");
+  const navigation: any = useNavigation();
+  const { params } = useRoute();
+  const insets = useSafeAreaInsets();
 
+  const [selectedType, setSelectedType] = useState({
+    name: "Invoice",
+    key: "invoice",
+  });
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormData>({
     dispatchAddress: "",
     signature: "",
@@ -48,6 +63,8 @@ export default function WholesaleScreen() {
     lrNumber: "",
     vehicleNumber: "",
     transportName: "",
+    deliveryCity: "",
+    reverseCharge: "",
     parcels: "",
   });
 
@@ -80,6 +97,13 @@ export default function WholesaleScreen() {
       keyboardType: "numeric",
     },
     { icon: "file-multiple", label: "E-way Bill Number", state: "ewayBill" },
+    { icon: "google-maps", label: "Delivery City", state: "deliveryCity" },
+    {
+      icon: "arrow-left-right",
+      label: "Reverse Charge",
+      state: "reverseCharge",
+      keyboardType: "numeric",
+    },
     {
       icon: undefined,
       label: "LR Number",
@@ -96,8 +120,62 @@ export default function WholesaleScreen() {
     },
   ];
 
+  const handleSubmit = async () => {
+    try {
+      const data = {
+        ...params,
+        wholesale_invoice: {
+          invoice_type: selectedType?.key,
+          invoice_number: invoiceNumber,
+          date: moment().format("YYYY-MM-DD"),
+          dispatch_address: formData?.dispatchAddress,
+          references: formData?.references,
+          notes: formData?.notes,
+          terms: formData?.terms,
+          delivery_charges: formData?.shippingCharges,
+          packaging_charges: formData?.packagingCharges,
+          eway_bill_number: formData?.ewayBill,
+          lr_number: formData?.lrNumber,
+          vehicle_number: formData?.vehicleNumber,
+          transport_name: formData?.transportName,
+          number_of_parcels: Number(formData?.parcels),
+          delivery_city: formData?.deliveryCity,
+          reverse_charges: formData?.reverseCharge,
+        },
+      };
+      {
+        setIsLoading(true);
+
+        const res = await api.post(API_ROUTES.posSales, data);
+        console.log(res);
+        navigation.navigate(HomeNavigation.BILLDETAILS, {
+          id: res.data?.id,
+        });
+      }
+    } catch (error) {
+      console.log(error, "sales error");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    (async () => {
+      const res = await api.get(
+        API_ROUTES.invoiceNumber + `?invoice_type=${selectedType?.key}`
+      );
+      setInvoiceNumber(res.data?.invoice_number);
+    })();
+  }, [selectedType?.name]);
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView
+      style={[
+        styles.container,
+        { paddingBottom: insets.bottom, paddingTop: insets.top },
+      ]}
+    >
+      <Loading visible={isLoading} />
       <Headerwithback
         title="Wholesale"
         rightIcons={[
@@ -109,32 +187,35 @@ export default function WholesaleScreen() {
           />,
         ]}
       />
-      <ScrollView style={styles.content}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom }}
+      >
         {/* Document Type Selector */}
         <View style={styles.typeSelector}>
           {[
-            "Invoice",
-            "Pro Forma Invoice",
-            "Quotation",
-            "Credit Note",
-            "Delivery Challan",
+            { name: "Invoice", key: "invoice" },
+            { name: "Pro Forma Invoice", key: "proforma" },
+            { name: "Quotation", key: "quotation" },
+            { name: "Credit Note", key: "credit_note" },
+            { name: "Delivery Challan", key: "delivery_challan" },
           ].map((type) => (
             <TouchableOpacity
-              key={type}
+              key={type?.key}
               style={[
                 styles.typeButton,
-                type === selectedType && styles.typeButtonActive,
+                type?.key === selectedType?.key && styles.typeButtonActive,
               ]}
               onPress={() => setSelectedType(type)}
             >
               <Text
                 style={
-                  type === selectedType
+                  type?.key === selectedType?.key
                     ? styles.typeButtonTextActive
                     : styles.typeButtonText
                 }
               >
-                {type}
+                {type?.name}
               </Text>
             </TouchableOpacity>
           ))}
@@ -142,11 +223,11 @@ export default function WholesaleScreen() {
 
         {/* Invoice Header */}
         <View style={styles.invoiceHeader}>
-          <Text style={styles.invoiceId}>PINV-1</Text>
+          <Text style={styles.invoiceId}>{invoiceNumber}</Text>
           <Text style={styles.invoiceDate}>14-02-2025</Text>
-          <TouchableOpacity>
+          {/* <TouchableOpacity>
             <Text style={styles.editText}>Edit</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         <Text style={styles.optionalTitle}>Optional</Text>
@@ -167,14 +248,11 @@ export default function WholesaleScreen() {
         </View>
 
         {/* Proceed Button */}
-        <TouchableOpacity
-          style={styles.proceedButton}
-          onPress={() => navigation.navigate(HomeNavigation.BILLDETAILS as never)}
-        >
+        <TouchableOpacity style={styles.proceedButton} onPress={handleSubmit}>
           <Text style={styles.proceedButtonText}>Proceed</Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }
 
@@ -194,11 +272,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 40 : 0,
   },
   content: {
     paddingHorizontal: 16,
-    paddingTop: 16,
+    paddingVertical: 16,
   },
   typeSelector: {
     flexDirection: "row",

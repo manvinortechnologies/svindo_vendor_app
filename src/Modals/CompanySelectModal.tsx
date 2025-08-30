@@ -47,7 +47,7 @@ export default function CompanySelectModal({
     <CustomModal
       modalStyle={{ minHeight: height * 0.48 }}
       visible={visible}
-      onClose={() => {}}
+      onClose={onClose}
       title={title || "Select Option"}
     >
       <TextInput

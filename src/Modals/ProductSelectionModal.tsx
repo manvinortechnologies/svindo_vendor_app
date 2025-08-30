@@ -1,11 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
-  View, Text, Modal, FlatList, TextInput,
-  TouchableOpacity, Image, StyleSheet, SafeAreaView
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import api from '../services/api/api';
-import Loading from '../CommonComponent/Loading';
+  View,
+  Text,
+  Modal,
+  FlatList,
+  TextInput,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  SafeAreaView,
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import api from "../services/api/api";
+import Loading from "../CommonComponent/Loading";
 
 interface Product {
   id: number;
@@ -15,11 +22,21 @@ interface Product {
   image: string;
 }
 
-const ProductSelectionModal = ({ visible, onClose }: { visible: boolean, onClose: () => void }) => {
+const ProductSelectionModal = ({
+  visible,
+  onClose,
+  setSelectedProducts,
+  selectedProducts,
+}: {
+  visible: boolean;
+  onClose: () => void;
+  setSelectedProducts: (x: []) => void;
+  selectedProducts: Product[];
+}) => {
   const [cart, setCart] = useState<{ [key: number]: number }>({});
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState("");
   const [productList, setProductList] = useState<Product[]>([]);
-  const [isLoading,setIsLoading]=useState<boolean>(false)
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (visible) {
@@ -29,25 +46,26 @@ const ProductSelectionModal = ({ visible, onClose }: { visible: boolean, onClose
 
   const fetchProducts = async () => {
     try {
-        setIsLoading(true)
-      const res = await api.get('master/product/'); // Replace with your API URL
+      setIsLoading(true);
+      const res = await api.get("vendor/product/"); // Replace with your API URL
       const data = res.data?.map((item: any) => ({
         id: item.id,
         name: item.name || item.product_name,
-        desc: item.description || '',
-        price: item.price || 0,
-        image: item.image || 'https://via.placeholder.com/150',
+        desc: item.description || "",
+        price: item.sales_price || 0,
+        image: item.image || "https://via.placeholder.com/150",
+        ...item,
       }));
       setProductList(data);
     } catch (error) {
-      console.error('Failed to load products', error);
-    }finally{
-        setIsLoading(false)
+      console.error("Failed to load products", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const increment = (id: number) => {
-    setCart(prev => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
+    setCart((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
   };
 
   const decrement = (id: number) => {
@@ -63,7 +81,7 @@ const ProductSelectionModal = ({ visible, onClose }: { visible: boolean, onClose
     });
   };
 
-  const filteredProducts = productList.filter(product =>
+  const filteredProducts = productList.filter((product) =>
     product.name.toLowerCase().includes(searchText.toLowerCase())
   );
 
@@ -76,7 +94,10 @@ const ProductSelectionModal = ({ visible, onClose }: { visible: boolean, onClose
         <Text style={styles.desc}>{item.desc}</Text>
         <View style={styles.bottomRow}>
           {quantity === 0 ? (
-            <TouchableOpacity style={styles.addButton} onPress={() => increment(item.id)}>
+            <TouchableOpacity
+              style={styles.addButton}
+              onPress={() => increment(item.id)}
+            >
               <Text style={styles.addButtonText}>Add</Text>
             </TouchableOpacity>
           ) : (
@@ -94,6 +115,34 @@ const ProductSelectionModal = ({ visible, onClose }: { visible: boolean, onClose
         </View>
       </View>
     );
+  };
+
+  const handleProceed = () => {
+    setSelectedProducts((prev) => {
+      // Filter out items not in cart
+      const updated = prev.filter((p) => cart[p.id] !== undefined);
+
+      // Map cart items to product objects
+      const cartItems = productList
+        .filter((item) => cart[item.id] !== undefined)
+        .map((item) => ({
+          ...item,
+          quantity: cart[item.id],
+        }));
+
+      // Merge: replace or add
+      cartItems.forEach((prod) => {
+        const index = updated.findIndex((p) => p.id === prod.id);
+        if (index >= 0) {
+          updated[index] = prod; // update
+        } else {
+          updated.push(prod); // add
+        }
+      });
+
+      return updated;
+    });
+    onClose();
   };
 
   return (
@@ -114,7 +163,7 @@ const ProductSelectionModal = ({ visible, onClose }: { visible: boolean, onClose
         <FlatList
           data={filteredProducts}
           numColumns={2}
-          columnWrapperStyle={{ justifyContent: 'space-between' }}
+          columnWrapperStyle={{ justifyContent: "space-between" }}
           contentContainerStyle={styles.list}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderItem}
@@ -131,13 +180,11 @@ const ProductSelectionModal = ({ visible, onClose }: { visible: boolean, onClose
             </TouchableOpacity>
           </View>
 
-          <TouchableOpacity style={styles.proceedBtn}>
+          <TouchableOpacity style={styles.proceedBtn} onPress={handleProceed}>
             <Text style={styles.proceedText}>Proceed</Text>
           </TouchableOpacity>
         </View>
-        <Loading
-        visible={isLoading}
-        />
+        <Loading visible={isLoading} />
       </SafeAreaView>
     </Modal>
   );
@@ -147,18 +194,17 @@ export default ProductSelectionModal;
 
 // Keep your same styles from the previous code
 
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff', padding: 10 },
+  container: { flex: 1, backgroundColor: "#fff", padding: 10 },
   header: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 8,
   },
   searchInput: {
     flex: 1,
     marginLeft: 10,
-    backgroundColor: '#F3F3F3',
+    backgroundColor: "#F3F3F3",
     borderRadius: 25,
     paddingHorizontal: 15,
     height: 40,
@@ -167,8 +213,8 @@ const styles = StyleSheet.create({
     paddingBottom: 130,
   },
   card: {
-    width: '48%',
-    backgroundColor: '#fff',
+    width: "48%",
+    backgroundColor: "#fff",
     borderRadius: 10,
     marginBottom: 16,
     elevation: 2,
@@ -177,98 +223,98 @@ const styles = StyleSheet.create({
   image: {
     height: 100,
     borderRadius: 8,
-    resizeMode: 'cover',
+    resizeMode: "cover",
   },
   title: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 14,
     marginVertical: 4,
   },
   desc: {
     fontSize: 12,
-    color: '#777',
+    color: "#777",
   },
   bottomRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 8,
   },
   addButton: {
-    backgroundColor: '#FFA500',
+    backgroundColor: "#FFA500",
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 6,
   },
   addButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
   },
   qtyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFA500',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFA500",
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
   },
   qtyBtn: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: 16,
     paddingHorizontal: 6,
   },
   qtyText: {
-    color: '#fff',
+    color: "#fff",
     marginHorizontal: 4,
   },
   price: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 14,
-    color: '#FF9900',
+    color: "#FF9900",
   },
   footer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 10,
     left: 10,
     right: 10,
   },
   scanRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 10,
   },
   scanBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFA500',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFA500",
     padding: 10,
     borderRadius: 6,
   },
   scanText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
     marginLeft: 5,
   },
   addProductBtn: {
-    backgroundColor: '#FFA500',
+    backgroundColor: "#FFA500",
     padding: 10,
     borderRadius: 6,
   },
   addProductText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
   },
   proceedBtn: {
-    backgroundColor: '#A5F5B0',
+    backgroundColor: "#A5F5B0",
     paddingVertical: 12,
     borderRadius: 30,
-    alignItems: 'center',
-    width:"50%",
-    alignSelf:'center'
+    alignItems: "center",
+    width: "50%",
+    alignSelf: "center",
   },
   proceedText: {
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: "bold",
+    color: "#000",
   },
 });

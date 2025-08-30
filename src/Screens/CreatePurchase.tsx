@@ -27,6 +27,19 @@ import MainContainer from "../CommonComponent/MainContainer";
 import { Alert } from "react-native";
 import ProductSelectionModal from "../Modals/ProductSelectionModal";
 import OptionInput from "../CommonComponent/OptionalInputs";
+import { API_ROUTES } from "../constants/api-routes.constants";
+import moment from "moment";
+import CustomDropdown, {
+  DropDownOption,
+} from "../CommonComponent/CustomDropdown";
+
+interface Product {
+  id: number;
+  name: string;
+  desc: string;
+  price: number;
+  image: string;
+}
 
 const CreatePurchase = ({ navigation }: any) => {
   const [selectedPayment, setSelectedPayment] = useState("credit");
@@ -35,14 +48,20 @@ const CreatePurchase = ({ navigation }: any) => {
   const [isVendorModalVisible, setIsVendorModalVisible] = useState(false);
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [allVendorList, setAllVendorList] = useState<Vendor[]>();
+  const [allProductList, setAllProductList] = useState<Product[]>();
+  const [bankList, setBankList] = useState<DropDownOption[]>([]);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [purchasecode, setPurchasecode] = useState("");
-  const [purchaseDate, setPurchaseDate] = useState("");
+  const [purchaseDate, setPurchaseDate] = useState(
+    moment().format("YYYY-MM-DD")
+  );
   const [openCalendarModel, setOpenCalendarModel] = useState<boolean>(false);
-  const [discount, setDiscount] = useState<string>("");
+  const [discount, setDiscount] = useState({ amount: "", pr: "" });
   const [dueDate, setDueDate] = useState<string>("");
   const [dueDateCallModel, setDueDateCallModel] = useState<boolean>(false);
   const [serialNo, setSerialNo] = useState<string>("");
+  const [advanceAmount, setAdvanceAmount] = useState<string>("");
+  const [selectedBank, setSelectedBank] = useState<DropDownOption>();
   const [supplierDate, setSupplierDate] = useState<string>("");
   const [supplierDateCallModel, setSupplierDateCallModel] =
     useState<boolean>(false);
@@ -70,9 +89,6 @@ const CreatePurchase = ({ navigation }: any) => {
     useState<boolean>(false);
   const [showProductModal, setShowProductModal] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState([]);
-  const handleSearch = () => {
-    // Handle search action
-  };
 
   const [formData, setFormData] = useState({
     dispatchAddress: "",
@@ -89,18 +105,128 @@ const CreatePurchase = ({ navigation }: any) => {
     parcels: "",
   });
 
+  const [errors, setErrors] = useState({});
+
+  const validateForm = () => {
+    let tempErrors: any = {};
+
+    if (!selectedVendor) tempErrors.vendor = "Please select a vendor";
+    if (!selectedProducts.length) tempErrors.products = "Please add a product";
+    if (!supplierDate)
+      tempErrors.supplierDate = "Supplier invoice date required";
+    if (!serialNo.trim()) tempErrors.serialNo = "Serial number is required";
+
+    // ✅ check discount Amount
+    if (
+      !discount.amount ||
+      Number(discount.amount) <= 0 ||
+      !discount.pr ||
+      Number(discount.pr) < 0
+    ) {
+      tempErrors.discount = `Discount amount ${
+        !discount.pr || Number(discount.pr) < 0
+          ? "and Discount percentage "
+          : ""
+      }must be a valid positive number`;
+    }
+
+    if (selectedPayment !== "Cash") {
+      if (!dueDate) {
+        tempErrors.dueDate = "Due date is required";
+      }
+      if (!advanceAmount) {
+        tempErrors.advanceAmount =
+          "Advance amount must be a valid positive number";
+      }
+      if (selectedAdvanceType === "Bank" && !selectedBank) {
+        tempErrors.advanceBank = "Please select bank";
+      }
+    }
+
+    setErrors(tempErrors);
+    console.log(tempErrors, "errors");
+
+    return Object.keys(tempErrors).length === 0;
+  };
+
+  const handleSearch = () => {
+    // Handle search action
+  };
+
+  const handlePercentChange = (value: string) => {
+    const totalAmount = selectedProducts.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+    setDiscount((p) => ({ ...p, pr: value }));
+    const percent = parseFloat(value);
+    if (!isNaN(percent)) {
+      const amount = (totalAmount * percent) / 100;
+      setDiscount((p) => ({ ...p, amount: amount.toFixed(2) }));
+    } else {
+      setDiscount((p) => ({ ...p, pr: "" }));
+    }
+  };
+
+  const handleAmountChange = (value: string) => {
+    const totalAmount = selectedProducts.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+    setDiscount((p) => ({ ...p, amount: value }));
+    const amount = parseFloat(value);
+    if (!isNaN(amount)) {
+      const percent = (amount / totalAmount) * 100;
+      setDiscount((p) => ({ ...p, pr: percent.toFixed(2) }));
+    } else {
+      setDiscount((p) => ({ ...p, amount: "" }));
+    }
+  };
+
   useEffect(() => {
-    getAllVendors();
+    getInitialData();
   }, []);
 
-  const getAllVendors = async () => {
+  const getInitialData = async () => {
     try {
       setIsLoading(true);
-      const res = await api.get("vendor/vendor/");
-      if (res.data) {
-        setAllVendorList(res.data);
+
+      const [vendorRes, purchaseRes, banks] = await Promise.all([
+        api.get(API_ROUTES.vendorList),
+        api.get(API_ROUTES.purchaseNo),
+        api.get(API_ROUTES.vendorBank),
+      ]);
+
+      if (vendorRes.data) {
+        setAllVendorList(vendorRes.data);
+      }
+
+      // if (productRes.data) {
+      //   const data = productRes.data.map((item: any) => ({
+      //     id: item.id,
+      //     name: item.name || item.product_name,
+      //     desc: item.description || "",
+      //     price: item.sales_price || 0,
+      //     image: item.image || "https://via.placeholder.com/150",
+      //     ...item,
+      //   }));
+      //   setAllProductList(data);
+      // }
+
+      if (purchaseRes.data) {
+        setPurchasecode(purchaseRes.data.purchase_number); // or the correct key from API
+      }
+      if (banks.data) {
+        const transformedBank: DropDownOption[] = banks.data?.map(
+          (item: any) => ({
+            id: item.id,
+            name: item.name || item.vendor_name,
+          })
+        );
+        setBankList(transformedBank);
       }
     } catch (error) {
+      console.log("Error loading data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -112,36 +238,45 @@ const CreatePurchase = ({ navigation }: any) => {
   };
 
   const submitAllData = async () => {
+    if (!validateForm()) return;
+
     try {
       setIsLoading(true);
+
       const data = {
-        payment_method: "cash",
-        discount_percent: 5.0,
-        discount_amount: 150.0,
-        advance_amount: 200.0,
-        advance_mode: "bank",
-        due_date: "2025-08-20",
-        purchase_code: purchasecode,
         purchase_date: purchaseDate,
         vendor: selectedVendor?.id,
-        supplier_invoice_date: supplierDate,
-        serial_number: serialNo,
-        payment_type: selectedPayment,
+        payment_method: selectedPayment, // cash / credit / card / upi
+        discount_percent: Number(discount) || 0,
+        discount_amount: Number(extraDiscount) || 0,
+        advance_amount: Number(advanceAmount) || 0,
+        advance_mode: selectedAdvanceType.toLowerCase(), // bank / cash
+        due_date: dueDate,
         dispatch_address: formData.dispatchAddress,
-        bank,
         references: formData.references,
         notes: formData.notes,
         terms: formData.terms,
-        delivery_shipping_charges: formData.shippingCharges,
-        packaging_charges: formData.packagingCharges,
-        extra_discount: extraDiscount,
-        items: selectedProducts,
+        delivery_shipping_charges: Number(formData.shippingCharges) || 0,
+        packaging_charges: Number(formData.packagingCharges) || 0,
+        eway_bill_no: formData.ewayBill,
+        lr_no: formData.lrNumber,
+        vehicle_no: formData.vehicleNumber,
+        transport_name: formData.transportName,
+        no_of_parcels: Number(formData.parcels) || null,
+        items: selectedProducts.map((p) => ({
+          product: p.id,
+          quantity: p.quantity,
+          price: p.price,
+          total: Number(p.quantity) * Number(p.price),
+        })),
       };
-      console.log("data-->", data);
+
+      console.log("Sending purchase data:", data);
+
       const res = await api.post("vendor/purchase/", data);
-      console.log("---res--", res);
-      if (res.status == 201) {
-        Alert.alert("Success", "Purchase created");
+
+      if (res.status === 201) {
+        navigation.goBack();
       }
     } catch (error) {
       console.log("error-->", error);
@@ -189,10 +324,14 @@ const CreatePurchase = ({ navigation }: any) => {
                     <Text style={styles.editText}>Edit</Text>
                   </TouchableOpacity>
                 </View>
+                {errors?.purchasecode && (
+                  <Text style={{ color: "red" }}>{errors?.purchasecode}</Text>
+                )}
               </View>
 
               {/* Vendor Selection */}
-              <View>
+
+              <View style={{ marginBottom: 12 }}>
                 <Text style={styles.label}>
                   Vendor <Icon name="information" size={14} />
                 </Text>
@@ -204,7 +343,11 @@ const CreatePurchase = ({ navigation }: any) => {
                     {selectedVendor ? selectedVendor.name : "+ Select Vendor"}
                   </Text>
                 </TouchableOpacity>
-
+                {errors?.vendor && (
+                  <Text style={{ color: "red", marginBottom: 12 }}>
+                    {errors?.vendor}
+                  </Text>
+                )}
                 <Text style={styles.label}>
                   Product <Icon name="information" size={14} />
                 </Text>
@@ -213,11 +356,94 @@ const CreatePurchase = ({ navigation }: any) => {
                   onPress={() => setShowProductModal(true)}
                 >
                   <Text style={styles.selectorText}>
-                    {" "}
-                    {selectedVendor ? selectedVendor.name : "+ Select Products"}
+                    {selectedProducts.length ? "Add +" : "+ Select Products"}
                   </Text>
                 </TouchableOpacity>
+                {errors?.products && (
+                  <Text style={{ color: "red" }}>{errors?.products}</Text>
+                )}
               </View>
+
+              {!!selectedProducts.length && (
+                <>
+                  {/* Table Header */}
+                  <View style={styles.tableHeader}>
+                    <Text
+                      style={[
+                        styles.tableText,
+                        { color: "#fff", fontWeight: "500" },
+                      ]}
+                    >
+                      S.No.
+                    </Text>
+                    <Text
+                      style={[
+                        styles.tableText,
+                        { flex: 2, color: "#fff", fontWeight: "500" },
+                      ]}
+                    >
+                      Item
+                    </Text>
+                    <Text
+                      style={[
+                        styles.tableText,
+                        { color: "#fff", fontWeight: "500" },
+                      ]}
+                    >
+                      Quantity
+                    </Text>
+                    <Text
+                      style={[
+                        styles.tableText,
+                        { color: "#fff", fontWeight: "500" },
+                      ]}
+                    >
+                      Purchase Price
+                    </Text>
+                    <Text
+                      style={[
+                        styles.tableText,
+                        { color: "#fff", fontWeight: "500" },
+                      ]}
+                    >
+                      Amount
+                    </Text>
+                    {/* <Text style={[styles.tableText, {color: '#fff', fontWeight: '500'}]}>Action</Text> */}
+                  </View>
+
+                  {/* Product List */}
+                  {selectedProducts.map((item, index) => (
+                    <View key={index} style={styles.tableRow}>
+                      <Text style={styles.tableText}>{index + 1}</Text>
+                      <Text
+                        style={[styles.tableText, { flex: 2 }]}
+                        numberOfLines={2}
+                      >
+                        {item.name}
+                      </Text>
+                      <Text style={styles.tableText}>{item.quantity}</Text>
+                      <Text style={styles.tableText}>
+                        {Number(item?.purchase_price).toFixed(2)}
+                      </Text>
+                      <Text style={styles.tableText}>
+                        {Number(item?.purchase_price * item?.quantity).toFixed(
+                          2
+                        )}
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => {
+                          const updated = selectedProducts.filter(
+                            (_, i) => i !== index
+                          );
+                          setSelectedProducts(updated);
+                        }}
+                      >
+                        <Icon name="delete" size={16} color="red" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </>
+              )}
 
               {/* Supplier Invoice */}
               <View style={styles.section}>
@@ -232,7 +458,9 @@ const CreatePurchase = ({ navigation }: any) => {
                   </Text>
                   <Feather name="calendar" size={18} color="#FCA311" />
                 </TouchableOpacity>
-
+                {errors?.supplierDate && (
+                  <Text style={{ color: "red" }}>{errors?.supplierDate}</Text>
+                )}
                 <Text style={styles.inputLabel}>Serial Number</Text>
                 <TextInput
                   style={styles.textInput}
@@ -241,6 +469,9 @@ const CreatePurchase = ({ navigation }: any) => {
                   placeholder="Supplier Invoice Serial Number"
                   placeholderTextColor={"#777"}
                 />
+                {errors?.serialNo && (
+                  <Text style={{ color: "red" }}>{errors?.serialNo}</Text>
+                )}
               </View>
 
               {/* Optional Section */}
@@ -256,14 +487,17 @@ const CreatePurchase = ({ navigation }: any) => {
                   {
                     icon: "file-document-outline",
                     label: "Add References",
+                    state: "references",
                   },
                   {
                     icon: "note",
                     label: "Add Notes",
+                    state: "notes",
                   },
                   {
                     icon: "file-certificate-outline",
                     label: "Add Terms",
+                    state: "terms",
                   },
                   // {
                   //   icon: "truck",
@@ -351,19 +585,26 @@ const CreatePurchase = ({ navigation }: any) => {
                   <Text style={[styles.label, { marginRight: 15 }]}>
                     Discount
                   </Text>
-                  <View style={styles.inputGroup}>
-                    <TouchableOpacity style={styles.optionButton}>
-                      <Text style={styles.optionText}>%</Text>
-                    </TouchableOpacity>
-                    <TextInput
-                      value={discount}
-                      onChangeText={setDiscount}
-                      placeholder="0"
-                      style={styles.input}
-                      keyboardType="numeric"
-                    />
-                  </View>
+                  <TextInput
+                    value={discount?.pr}
+                    onChangeText={handlePercentChange}
+                    placeholder="0"
+                    placeholderTextColor="#ccc"
+                    style={styles.input}
+                    keyboardType="numeric"
+                  />
+                  <TextInput
+                    value={discount?.amount}
+                    onChangeText={handleAmountChange}
+                    placeholder="%"
+                    placeholderTextColor="#ccc"
+                    style={styles.input}
+                    keyboardType="numeric"
+                  />
                 </View>
+                {errors?.discount && (
+                  <Text style={{ color: "red" }}>{errors?.discount}</Text>
+                )}
 
                 {/* Payment Row */}
                 <View style={styles.row}>
@@ -399,59 +640,89 @@ const CreatePurchase = ({ navigation }: any) => {
                     ))}
                   </View>
                 </View>
-
-                {/* Advance Row */}
-                <View style={styles.row}>
-                  <Text style={[styles.label, { marginRight: 15 }]}>
-                    Advance
-                  </Text>
-                  <View style={styles.inputGroup}>
-                    <TextInput
-                      placeholder="Amount"
-                      style={styles.input}
-                      keyboardType="numeric"
-                    />
-                    {["Bank", "Cash"].map((type) => (
-                      <TouchableOpacity
-                        key={type}
-                        style={[
-                          styles.optionButton,
-                          selectedAdvanceType === type && styles.selectedButton,
-                        ]}
-                        onPress={() => setSelectedAdvanceType(type)}
-                      >
-                        <Text
-                          style={[
-                            styles.optionText,
-                            selectedAdvanceType === type && styles.selectedText,
-                          ]}
-                        >
-                          {type}
+                {selectedPayment !== "cash" && (
+                  <>
+                    {/* Advance Row */}
+                    <View style={styles.row}>
+                      <Text style={[styles.label, { marginRight: 15 }]}>
+                        Advance
+                      </Text>
+                      <View style={styles.inputGroup}>
+                        <TextInput
+                          placeholder="Amount"
+                          style={styles.input}
+                          keyboardType="numeric"
+                          value={advanceAmount}
+                          onChangeText={setAdvanceAmount}
+                        />
+                        {["Bank", "Cash"].map((type) => (
+                          <TouchableOpacity
+                            key={type}
+                            style={[
+                              styles.optionButton,
+                              selectedAdvanceType === type &&
+                                styles.selectedButton,
+                            ]}
+                            onPress={() => setSelectedAdvanceType(type)}
+                          >
+                            <Text
+                              style={[
+                                styles.optionText,
+                                selectedAdvanceType === type &&
+                                  styles.selectedText,
+                              ]}
+                            >
+                              {type}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+                      {errors?.advanceAmount && (
+                        <Text style={{ color: "red" }}>
+                          {errors?.advanceAmount}
                         </Text>
+                      )}
+                    </View>
+                    {selectedAdvanceType === "Bank" && (
+                      <>
+                        <CustomDropdown
+                          onSelect={setSelectedBank}
+                          placeholder="Select Bank"
+                          selectedValue={selectedBank?.name || ""}
+                          options={bankList}
+                          dropDownBoxStyle={{ marginTop: 10 }}
+                        />
+                        {errors?.advanceBank && (
+                          <Text style={{ color: "red" }}>
+                            {errors?.advanceBank}
+                          </Text>
+                        )}
+                      </>
+                    )}
+                    {/* Due Date Row */}
+                    <View style={styles.row}>
+                      <Text style={[styles.label, { marginRight: 15 }]}>
+                        Due Date
+                      </Text>
+                      <TouchableOpacity
+                        style={{ width: "30%" }}
+                        onPress={() => setDueDateCallModel(true)}
+                      >
+                        <TextInput
+                          placeholder="DD/MM/YYYY"
+                          value={dueDate}
+                          placeholderTextColor={"#777"}
+                          editable={false}
+                          style={[styles.inputFull, { width: "100%" }]}
+                          pointerEvents="none"
+                        />
                       </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-
-                {/* Due Date Row */}
-                <View style={styles.row}>
-                  <Text style={[styles.label, { marginRight: 15 }]}>
-                    Due Date
-                  </Text>
-                  <TouchableOpacity
-                    style={{ width: "30%" }}
-                    onPress={() => setDueDateCallModel(true)}
-                  >
-                    <TextInput
-                      placeholder="DD/MM/YYYY"
-                      value={dueDate}
-                      placeholderTextColor={"#777"}
-                      editable={false}
-                      style={[styles.inputFull, { width: "100%" }]}
-                      pointerEvents="none"
-                    />
-                  </TouchableOpacity>
-                </View>
+                    </View>
+                    {errors?.dueDate && (
+                      <Text style={{ color: "red" }}>{errors?.dueDate}</Text>
+                    )}
+                  </>
+                )}
               </View>
 
               {/* Proceed Button */}
@@ -487,13 +758,6 @@ const CreatePurchase = ({ navigation }: any) => {
                 onClose={() => setIsEditModalVisible(false)}
                 children={
                   <>
-                    <Text style={{ marginBottom: 5 }}>Purchase code</Text>
-                    <CustomTextInput
-                      value={purchasecode}
-                      onChangeText={setPurchasecode}
-                      placeholder="Enter Purchase code"
-                      autoCapitalize="characters"
-                    />
                     <TouchableOpacity
                       style={{ marginTop: 20 }}
                       onPress={() => setOpenCalendarModel(true)}
@@ -720,6 +984,8 @@ const CreatePurchase = ({ navigation }: any) => {
               <ProductSelectionModal
                 visible={showProductModal}
                 onClose={() => setShowProductModal(false)}
+                selectedProducts={selectedProducts}
+                setSelectedProducts={setSelectedProducts}
               />
             </ScrollView>
           </KeyboardAvoidingView>
@@ -760,6 +1026,28 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#888",
   },
+  tableHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#008BE1",
+    padding: 8,
+    marginTop: 10,
+  },
+  tableRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    backgroundColor: "#F5F5F5",
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    marginTop: 5,
+  },
+  tableText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: "500",
+    textAlign: "center",
+  },
   rowBetween: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -773,7 +1061,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF6E9",
     borderRadius: 6,
     padding: 12,
-    marginBottom: 12,
   },
   selectorText: {
     color: "#FCA311",
@@ -846,13 +1133,14 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 12,
+    marginTop: 12,
     flexWrap: "wrap",
+    gap: 5,
   },
   inputGroup: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: 5,
     alignItems: "center",
     marginTop: 10,
     marginLeft: 10,
@@ -884,6 +1172,9 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   input: {
+    flex: 1,
+    padding: 8,
+    backgroundColor: "#fff",
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 6,

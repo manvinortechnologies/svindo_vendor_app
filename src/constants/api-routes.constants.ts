@@ -36,13 +36,35 @@ export const API_ROUTES = {
   vendorList: "/vendor/vendor/",
   companyProfle: "/vendor/company-profile/",
   vendorCustomer: "/vendor/customer/",
+  vendorBank: "/vendor/get-bank/",
+  vendorCash: "vendor/cash-balance/",
+  vndorAddBank: "vendor/vendor-bank/",
+
+  getProductSettings: "/vendor/productsetting/",
+  productSettings: "/vendor/productsetting/update/",
+
+  // Reminder settings
+  reminderSettings: "/vendor/reminder-settings/",
 
   customer: "/customers",
   customerBaseData: "/customers/base-data",
 
   storeOnlineSetting: "/vendor/onlineStoreSetting/",
-  storeWorkingHour: "vendor/store-working-hour/",
-  storeWorkingHourBulk: "vendor/store-working-hour/",
+  storeWorkingHour: "/vendor/store-working-hour/",
+  storeWorkingHourBulk: "/vendor/store-working-hour/bulk/",
+
+  posSales: "/vendor/sales/",
+  invoiceNumber: "/vendor/get-next-invoiceno/",
 
   GET_VENDOR_LIST: "/getAllVendors",
+
+  purchaseNo: "/vendor/get-next-purchaseeno/",
+
+  expenseCategory: "/masters/get-expense-category/",
+  expense: "vendor/expense/",
+
+  paymnet: "/vendor/payments/",
+  addons: "/vendor/addon/",
+  spotlightProduct: "/vendor/spotlight-product/",
+  deliveryBoys: "/vendor/deliveryboys/",
 };

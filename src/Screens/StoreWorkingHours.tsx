@@ -73,21 +73,25 @@ const StoreWorkingHours = () => {
     }
   };
   const transformWorkingHoursFromBE = (data: any[]) => {
-    const formatted: {
-      [key: string]: { isOpen: boolean; openTime: string; closeTime: string };
-    } = {};
+    try {
+      const formatted: {
+        [key: string]: { isOpen: boolean; openTime: string; closeTime: string };
+      } = {};
 
-    data.forEach((item) => {
-      const dayKey = item.day.charAt(0).toUpperCase() + item.day.slice(1); // "sunday" → "Sunday"
+      data.map((item) => {
+        const dayKey = item.day.charAt(0).toUpperCase() + item.day.slice(1); // "sunday" → "Sunday"
 
-      formatted[dayKey] = {
-        isOpen: item.is_open,
-        openTime: convert24To12Hour(item.open_time),
-        closeTime: convert24To12Hour(item.close_time),
-      };
-    });
+        formatted[dayKey] = {
+          isOpen: item.is_open,
+          openTime: item.open_time,
+          closeTime: item.close_time,
+        };
+      });
 
-    return formatted;
+      return formatted;
+    } catch (error) {
+      console.log(error, "formatting and listing error");
+    }
   };
 
   const onTimeChange = (event: any, selectedTime?: Date) => {
@@ -125,15 +129,14 @@ const StoreWorkingHours = () => {
     try {
       setIsLoading(true);
       const payload = Object.entries(hours).map(([day, value]) => ({
-        day: day.toLowerCase(),
+        day: day,
         open_time: convertTo24Hour(value.openTime),
         close_time: convertTo24Hour(value.closeTime),
         is_open: value.isOpen,
       }));
 
-      console.log("Payload:", payload);
       const res = await api.post(API_ROUTES.storeWorkingHourBulk, payload);
-      console.log("res-->", res);
+
       if (res.status == 201) {
         Alert.alert("Success", "Store timing has been successfully updated.");
       }
@@ -146,6 +149,8 @@ const StoreWorkingHours = () => {
 
     // Add your API call here
   };
+
+  console.log(hours, "hours");
 
   return (
     <MainContainer>

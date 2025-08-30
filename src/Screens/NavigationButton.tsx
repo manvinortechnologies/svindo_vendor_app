@@ -1,5 +1,11 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet ,TextStyle } from "react-native";
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  TextStyle,
+  ViewStyle,
+} from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 
@@ -9,16 +15,27 @@ type NavigationButtonProps = {
   color?: string;
   fontSize?: number;
   fontWeight?: TextStyle["fontWeight"]; // safer typing
-
-
+  buttonStyle?: ViewStyle;
+  textStyle?: TextStyle;
 };
 
-const NavigationButton: React.FC<NavigationButtonProps> = ({ screen, label, color = "#000", fontSize=16 , fontWeight = "normal", }) => {
+const NavigationButton: React.FC<NavigationButtonProps> = ({
+  screen,
+  label,
+  color = "#000",
+  fontSize = 16,
+  fontWeight = "normal",
+  buttonStyle = {},
+  textStyle = {},
+}) => {
   const navigation = useNavigation<StackNavigationProp<any>>();
 
   return (
-    <TouchableOpacity onPress={() => navigation.navigate(screen as never)}>
-   <Text style={{ color, fontSize, fontWeight }}>{label}</Text>
+    <TouchableOpacity
+      onPress={() => navigation.navigate(screen as never)}
+      style={buttonStyle}
+    >
+      <Text style={{ color, fontSize, fontWeight, ...textStyle }}>{label}</Text>
     </TouchableOpacity>
   );
 };

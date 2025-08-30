@@ -102,6 +102,9 @@ import AddDeliveryBoy from "../Screens/AddDeliveryBoy";
 import WholesaleScreen from "../Screens/WholesaleScreen";
 import BillDetails from "../Screens/BillDetails";
 import OrderProductDetails from "../Screens/OrderProductDetails";
+import ReminderScreen from "../Screens/ReminderSettingScreen";
+import SalesLedger from "../Screens/SalesLedger";
+import AddAddOns from "../Screens/AddAddOns";
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
 
@@ -150,6 +153,10 @@ const AppNavigation = () => {
         <Stack.Screen
           name={HomeNavigation.ORDERPRODUCTDETAILS}
           component={OrderProductDetails}
+        />
+        <Stack.Screen
+          name={HomeNavigation.SALES_LEDGER}
+          component={SalesLedger}
         />
         <Stack.Screen
           name={HomeNavigation.STOCK_SCREEN}
@@ -335,6 +342,10 @@ const AppNavigation = () => {
           component={RemindersScreen}
         />
         <Stack.Screen
+          name={HomeNavigation.REMINDERSETTINGS}
+          component={ReminderScreen}
+        />
+        <Stack.Screen
           name={HomeNavigation.RATE_US_SCREEN}
           component={RateUsScreen}
         />
@@ -461,6 +472,7 @@ const AppNavigation = () => {
           name={HomeNavigation.ADDDELIVERYBOY}
           component={AddDeliveryBoy}
         />
+        <Stack.Screen name={HomeNavigation.ADD_ADDONS} component={AddAddOns} />
       </Stack.Navigator>
     </NavigationContainer>
   );

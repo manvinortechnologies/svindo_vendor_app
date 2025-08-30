@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -7,32 +7,63 @@ import {
   Switch,
   FlatList,
   Dimensions,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import Headerwithback from './Headerwithback';
-import CustomSwitch from './CustomSwitch';
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import Headerwithback from "./Headerwithback";
+import CustomSwitch from "./CustomSwitch";
+import api from "../services/api/api";
+import Loading from "../CommonComponent/Loading";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const AutoAssignDelivery = () => {
   const [isEnabled, setIsEnabled] = useState(true);
-  const toggleSwitch = () => setIsEnabled(previousState => !previousState);
+  const [loading, setLoading] = useState(true);
+  const toggleSwitch = async () => {
+    setLoading(true);
+    try {
+      await api.post("/vendor/deliverymode/", {
+        is_auto_assign_enabled: !isEnabled,
+      });
+      setIsEnabled((previousState) => !previousState);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getValues = async () => {
+    try {
+      const res = await api.get("/vendor/deliverymode/");
+      const value = res.data?.delivery_mode?.is_auto_assign_enabled;
+      setIsEnabled(value);
+    } catch (error) {
+      console.log(error, "getValues");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getValues();
+  }, []);
 
   const transactions = [
     {
-      id: '1',
-      amount: '500',
-      date: '4/27/2025',
-      time: '11:00 AM',
-      type: 'spent',
-      order: '12345',
+      id: "1",
+      amount: "500",
+      date: "4/27/2025",
+      time: "11:00 AM",
+      type: "spent",
+      order: "12345",
     },
     {
-      id: '2',
-      amount: '1000',
-      date: '4/27/2025',
-      time: '11:00 AM',
-      type: 'added',
+      id: "2",
+      amount: "1000",
+      date: "4/27/2025",
+      time: "11:00 AM",
+      type: "added",
       order: null,
     },
   ];
@@ -40,15 +71,14 @@ const AutoAssignDelivery = () => {
   return (
     <View style={styles.container}>
       <Headerwithback title="Auto Assign Delivery Partner" />
-
+      <Loading visible={loading} />
       {/* Assign Delivery Partner */}
       <View style={styles.box}>
         <View style={styles.rowSpace}>
-          <Text style={{color: '#5A5A5A', fontWeight: '600', fontSize: 16}}>Assign Delivery Partner</Text>
-          <CustomSwitch
-            onValueChange={toggleSwitch}
-            value={isEnabled}
-          />
+          <Text style={{ color: "#5A5A5A", fontWeight: "600", fontSize: 16 }}>
+            Assign Delivery Partner
+          </Text>
+          <CustomSwitch onValueChange={toggleSwitch} value={isEnabled} />
         </View>
         <Text style={styles.description}>
           Enabling this setting will automatically assign a delivery partner to
@@ -62,41 +92,59 @@ const AutoAssignDelivery = () => {
       </View>
 
       {/* Delivery Details */}
-      <View style={{borderWidth: 1, borderColor: '#C7C7C7', padding: 10, borderRadius: 8}}>
+      <View
+        style={{
+          borderWidth: 1,
+          borderColor: "#C7C7C7",
+          padding: 10,
+          borderRadius: 8,
+        }}
+      >
         <View style={styles.rowSpace}>
-        <Text style={styles.sectionTitle}>Delivery Details</Text>
-        <TouchableOpacity style={styles.filterButton}>
+          <Text style={styles.sectionTitle}>Delivery Details</Text>
+          <TouchableOpacity style={styles.filterButton}>
             <Text style={styles.filterButtonText}>Till day</Text>
-            <Icon name="chevron-down" size={20}/>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.summaryBox}>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Spent</Text>
-          <Text style={styles.summaryAmount}>Rs.2000.00</Text>
+            <Icon name="chevron-down" size={20} />
+          </TouchableOpacity>
         </View>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Available</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center' , justifyContent: 'space-between'}}>
-            <Text style={styles.summaryAmount}>Rs.1000.00</Text>
-            <Icon name="wallet" size={20} color="#FCA311" style={{ marginLeft: 4 }} />
+
+        <View style={styles.summaryBox}>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Spent</Text>
+            <Text style={styles.summaryAmount}>Rs.2000.00</Text>
+          </View>
+          <View style={styles.summaryItem}>
+            <Text style={styles.summaryLabel}>Available</Text>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <Text style={styles.summaryAmount}>Rs.1000.00</Text>
+              <Icon
+                name="wallet"
+                size={20}
+                color="#FCA311"
+                style={{ marginLeft: 4 }}
+              />
+            </View>
           </View>
         </View>
-      </View>
       </View>
 
       {/* Transactions */}
       <FlatList
         data={transactions}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.transactionCard}>
             <View>
               <Text
                 style={[
                   styles.amountText,
-                  { color: item.type === 'spent' ? '#005120' : '#492F99' },
+                  { color: item.type === "spent" ? "#005120" : "#492F99" },
                 ]}
               >
                 Rs. {item.amount}
@@ -107,16 +155,15 @@ const AutoAssignDelivery = () => {
                 <Text style={styles.orderText}>Added to wallet</Text>
               )}
             </View>
-            <View style={{ alignItems: 'flex-end' }}>
+            <View style={{ alignItems: "flex-end" }}>
               <Text style={styles.dateText}>Date: {item.date}</Text>
               <Text style={styles.dateText}>Time: {item.time}</Text>
-              
             </View>
             <Icon
-                name={item.type === 'spent' ? 'arrow-down' : 'arrow-up'}
-                size={20}
-                color={item.type === 'spent' ? '#005120' : '#492F99'}
-              />
+              name={item.type === "spent" ? "arrow-down" : "arrow-up"}
+              size={20}
+              color={item.type === "spent" ? "#005120" : "#492F99"}
+            />
           </View>
         )}
         style={{ marginTop: 12 }}
@@ -136,11 +183,11 @@ export default AutoAssignDelivery;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 16,
   },
   box: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     // borderWidth: 1,
     // borderColor: '#ddd',
     borderRadius: 8,
@@ -148,91 +195,91 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   rowSpace: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   sectionTitle: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 18,
-    color: '#FCA311'
+    color: "#FCA311",
   },
   description: {
     fontSize: 12,
-    color: '#5A5A5A',
+    color: "#5A5A5A",
     marginTop: 4,
   },
   filterButton: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 5,
     borderWidth: 1,
-    borderColor: '#C7C7C7',
+    borderColor: "#C7C7C7",
     paddingHorizontal: 16,
     paddingVertical: 4,
     borderRadius: 6,
   },
   filterButtonText: {
     fontSize: 12,
-    color: '#000',
+    color: "#000",
   },
   summaryBox: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginVertical: 12,
   },
   summaryItem: {
     flex: 0.48,
-    backgroundColor: '#FFF1D6',
+    backgroundColor: "#FFF1D6",
     borderRadius: 8,
     padding: 12,
   },
   summaryLabel: {
     fontSize: 18,
-    fontWeight: '600',
-    color: '#000',
+    fontWeight: "600",
+    color: "#000",
   },
   summaryAmount: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: "bold",
+    color: "#000",
     marginTop: 4,
   },
   transactionCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     borderRadius: 8,
     padding: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 10,
   },
   amountText: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 14,
   },
   orderText: {
     fontSize: 12,
-    color: '#000',
+    color: "#000",
     marginTop: 4,
-    fontWeight: '600'
+    fontWeight: "600",
   },
   dateText: {
     fontSize: 12,
-    color: '#000',
-    fontWeight: '600'
+    color: "#000",
+    fontWeight: "600",
   },
   addBtn: {
-    width: '40%',
-    alignSelf: 'flex-end',
-    backgroundColor: '#169729',
+    width: "40%",
+    alignSelf: "flex-end",
+    backgroundColor: "#169729",
     borderRadius: 20,
     paddingVertical: 10,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 12,
   },
   addBtnText: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
   },
 });

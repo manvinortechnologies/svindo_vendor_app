@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -6,41 +6,69 @@ import {
   TouchableOpacity,
   Switch,
   FlatList,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import Headerwithback from './Headerwithback';
-import CustomSwitch from './CustomSwitch';
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import Headerwithback from "./Headerwithback";
+import CustomSwitch from "./CustomSwitch";
+import api from "../services/api/api";
+import Loading from "../CommonComponent/Loading";
 
 const AssignOwnDeliveryBoy = () => {
   const [isEnabled, setIsEnabled] = useState(true);
-  const toggleSwitch = () => setIsEnabled(previous => !previous);
+  const [loading, setLoading] = useState(true);
+  const toggleSwitch = async () => {
+    setLoading(true);
+    try {
+      await api.post("/vendor/deliverymode/", {
+        is_self_delivery_enabled: !isEnabled,
+      });
+      setIsEnabled((previousState) => !previousState);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getValues = async () => {
+    try {
+      const res = await api.get("/vendor/deliverymode/");
+      const value = res.data?.delivery_mode?.is_self_delivery_enabled;
+      setIsEnabled(value);
+    } catch (error) {
+      console.log(error, "getValues");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    getValues();
+  }, []);
 
   const transactions = [
     {
-      id: '1',
-      amount: '500',
-      date: '4/27/2025',
-      time: '11:00 AM',
-      order: '12345',
+      id: "1",
+      amount: "500",
+      date: "4/27/2025",
+      time: "11:00 AM",
+      order: "12345",
     },
   ];
 
   return (
     <View style={styles.container}>
       <Headerwithback title="Manage Own Delivery Boy" />
-
+      <Loading visible={loading} />
       {/* Toggle Section */}
       <View style={styles.box}>
         <View style={styles.rowSpace}>
           <Text style={styles.sectionTitle}>Delivery orders by ourselves</Text>
-          <CustomSwitch
-            onValueChange={toggleSwitch}
-            value={isEnabled}
-          />
+          <CustomSwitch onValueChange={toggleSwitch} value={isEnabled} />
         </View>
-        <Text style={styles.description}>Note:
-          Enabling this setting will automatically assign a delivery boy you
-          created to your orders through svindo app. The fare charges are
+        <Text style={styles.description}>
+          Note: Enabling this setting will automatically assign a delivery boy
+          you created to your orders through svindo app. The fare charges are
           calculated by your input in delivery settings.
         </Text>
         <Text style={styles.description}>
@@ -56,7 +84,9 @@ const AssignOwnDeliveryBoy = () => {
 
       {/* Delivery Earnings */}
       <View style={styles.earningsBox}>
-        <Text style={{color: '#FCA311', fontSize: 20, fontWeight: '700'}}>Delivery Earnings</Text>
+        <Text style={{ color: "#FCA311", fontSize: 20, fontWeight: "700" }}>
+          Delivery Earnings
+        </Text>
         <View style={styles.summaryBox}>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Orders Delivered</Text>
@@ -64,7 +94,13 @@ const AssignOwnDeliveryBoy = () => {
           </View>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Earnings</Text>
-            <View style={{ flexDirection: 'row', alignItems: 'center' , justifyContent: 'space-between'}}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
               <Text style={styles.summaryAmount}>Rs.1000.00</Text>
               <Icon
                 name="wallet"
@@ -80,16 +116,16 @@ const AssignOwnDeliveryBoy = () => {
       {/* Transactions */}
       <FlatList
         data={transactions}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.transactionCard}>
             <View>
-              <Text style={[styles.amountText, { color: '#005120' }]}>
+              <Text style={[styles.amountText, { color: "#005120" }]}>
                 Rs. {item.amount}
               </Text>
               <Text style={styles.orderText}>Order no: {item.order}</Text>
             </View>
-            <View style={{ alignItems: 'flex-end', gap: 10 }}>
+            <View style={{ alignItems: "flex-end", gap: 10 }}>
               <Text style={styles.dateText}>Date: {item.date}</Text>
               <Text style={styles.dateText}>Time: {item.time}</Text>
               {/* <Icon name="arrow-down" size={20} color="#2EAE47" /> */}
@@ -108,96 +144,97 @@ export default AssignOwnDeliveryBoy;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 12,
-    paddingTop: 15
+    paddingTop: 15,
   },
   box: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
   },
   rowSpace: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   sectionTitle: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 16,
-    color: '#5A5A5A',
+    color: "#5A5A5A",
   },
   description: {
     fontSize: 14,
-    color: '#5A5A5A',
-    fontWeight: '500',
+    color: "#5A5A5A",
+    fontWeight: "500",
     marginTop: 4,
   },
   manageBtn: {
-    width: '42%',
-    alignSelf: 'flex-end',
-    backgroundColor: '#169729',
+    width: "42%",
+    alignSelf: "flex-end",
+    backgroundColor: "#169729",
     borderRadius: 20,
     paddingVertical: 8,
-    alignItems: 'center',
+    alignItems: "center",
     marginVertical: 12,
   },
   manageBtnText: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
   },
   earningsBox: {
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#C7C7C7', padding: 10,
-    borderRadius: 10
+    borderColor: "#C7C7C7",
+    padding: 10,
+    borderRadius: 10,
   },
   summaryBox: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginTop: 8,
   },
   summaryItem: {
     flex: 0.48,
-    backgroundColor: '#FFE8C2',
+    backgroundColor: "#FFE8C2",
     borderRadius: 8,
     padding: 12,
   },
   summaryLabel: {
-    fontWeight: '700',
-    color: '#000',
-    fontSize: 18
+    fontWeight: "700",
+    color: "#000",
+    fontSize: 18,
   },
   summaryAmount: {
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: "bold",
+    color: "#000",
     marginTop: 4,
   },
   transactionCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 8,
     padding: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 10,
     elevation: 10,
-    marginHorizontal: 10
+    marginHorizontal: 10,
   },
   amountText: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     fontSize: 16,
   },
   orderText: {
     fontSize: 13,
-    color: '#000',
-    fontWeight: '600',
+    color: "#000",
+    fontWeight: "600",
     marginTop: 4,
   },
   dateText: {
     fontSize: 13,
-    color: '#000',
-    fontWeight: '600',
+    color: "#000",
+    fontWeight: "600",
   },
 });

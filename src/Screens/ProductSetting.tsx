@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView, Text, View, StyleSheet, Alert } from "react-native";
 import MainContainer from "../CommonComponent/MainContainer";
 import Headerwithback from "./Headerwithback";
@@ -70,7 +70,7 @@ const settingKeyMap: { [key: string]: string } = {
   "Shop Exchange": "shop_exchange",
   "Shop Warranty": "shop_warranty",
   "Brand Warranty": "brand_warranty",
-  "On shop orders": "on_shop_orders",
+  "On shop orders": "shop_orders",
 
   // Catalog
   "Online Catalog only": "online_catalog_only",
@@ -95,6 +95,32 @@ const ProductSetting = ({ navigation }: any) => {
     return initial;
   });
 
+  const loadProductSettings = async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.get(API_ROUTES.getProductSettings);
+      const data = res?.data || {};
+      setSettings((prev) => {
+        const next: { [key: string]: boolean } = { ...prev };
+        allSettingsLabels.forEach((label) => {
+          const apiKey = settingKeyMap[label];
+          if (apiKey in data) {
+            next[label] = Boolean(data[apiKey]);
+          }
+        });
+        return next;
+      });
+    } catch (error) {
+      console.error("Failed to load product settings:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadProductSettings();
+  }, []);
+
   const handleToggle = (key: string) => {
     setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
   };
@@ -115,7 +141,7 @@ const ProductSetting = ({ navigation }: any) => {
       console.log("Sending payload:", payload);
 
       // Uncomment this when API is ready
-      const response = await api.post(API_ROUTES.updateProductSetting, payload);
+      const response = await api.post(API_ROUTES.productSettings, payload);
       if (response.status === 200 || response.status === 201) {
         console.log("Settings updated successfully:", response.data);
         Alert.alert("Success", "Product Settings updated successfully");
@@ -124,6 +150,33 @@ const ProductSetting = ({ navigation }: any) => {
       }
     } catch (error) {
       console.error("Failed to update settings:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const saveProductSettings = async () => {
+    try {
+      setIsLoading(true);
+      const payload = buildPayload();
+      // Expected payload shape:
+      // {
+      //   wholesale_price: true, stock: true, imei: true, low_stock_alert: true,
+      //   category: true, sub_category: false, brand_name: true, color: true, size: false,
+      //   batch_number: true, expiry_date: false, description: true, image: true, tax: true, food: false,
+      //   instant_delivery: true, self_pickup: true, general_delivery: false,
+      //   return_policy: true, cod: true, replacement: false, shop_exchange: false,
+      //   shop_warranty: false, brand_warranty: true, online_catalog_only: false
+      // }
+      const res = await api.post(API_ROUTES.productSettings, payload);
+      if (res.status === 200 || res.status === 201) {
+        Alert.alert("Success", "Product Settings saved successfully");
+      } else {
+        console.warn("Unexpected response while saving:", res);
+      }
+    } catch (error) {
+      console.error("Failed to save product settings:", error);
+      Alert.alert("Error", "Failed to save product settings");
     } finally {
       setIsLoading(false);
     }
@@ -168,10 +221,7 @@ const ProductSetting = ({ navigation }: any) => {
           </View>
 
           <View style={styles.section}>
-            <CustomButton
-              title="Update Setting"
-              onPress={updateProductSettings}
-            />
+            <CustomButton title="Save Settings" onPress={saveProductSettings} />
           </View>
           <Loading visible={isLoading} />
         </ScrollView>

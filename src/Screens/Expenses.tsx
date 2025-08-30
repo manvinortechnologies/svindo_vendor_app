@@ -8,6 +8,7 @@ import {
   Platform,
   StatusBar,
   ScrollView,
+  Image,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/MaterialCommunityIcons";
 import Headerwithback from "./Headerwithback";
@@ -15,8 +16,12 @@ import CustomTextInput from "../CommonComponent/CustomeTextInput";
 import CalendarModal from "../Modals/CalendarModal";
 import api from "../services/api/api";
 import { CategoryType } from "../modelType/CommonType";
-import CustomDropdown from "../CommonComponent/CustomDropdown";
+import CustomDropdown, {
+  DropDownOption,
+} from "../CommonComponent/CustomDropdown";
 import ModalUpdatePhoto from "../Modals/ModalUpdatePhoto";
+import { API_ROUTES } from "../constants/api-routes.constants";
+import Loading from "../CommonComponent/Loading";
 
 const Expenses = ({ navigation }: any) => {
   const [isPaid, setIsPaid] = useState(true);
@@ -28,12 +33,14 @@ const Expenses = ({ navigation }: any) => {
   const [paymentData, setPaymentDate] = useState<string>("");
   const [paymentCalModel, setPaymentCalModel] = useState<boolean>(false);
   const [allCategoryData, setAllCategoryData] = useState<CategoryType[]>([]);
+  const [bankList, setBankList] = useState<DropDownOption[]>([]);
   const [category, setCategory] = useState<CategoryType | null>();
   const [selectedBank, setSelectedBank] = useState("");
   const [description, setDescription] = useState<string>("");
   const [imageFile, setImageFile] = useState<any>();
   const [imageUrl, setImageUrl] = useState("");
   const [imagePickerModel, setImagePickerModel] = useState(false);
+  const [errors, setErrors] = useState({});
   const types = ["UPI", "Cash", "Card", "Cheque", "EMI", "Netbanking"];
   useEffect(() => {
     getAllCategory();
@@ -41,17 +48,56 @@ const Expenses = ({ navigation }: any) => {
   const getAllCategory = async () => {
     try {
       setIsLoading(true);
-      const res = await api.get("masters/get-expense-category/");
-      console.log("res-cegotry-->", res);
-      if (res.status == 200) {
-        setAllCategoryData(res.data);
+
+      const [expenseCatagory, banks] = await Promise.all([
+        api.get(API_ROUTES.expenseCategory),
+        api.get(API_ROUTES.vendorBank),
+      ]);
+
+      if (expenseCatagory.data) {
+        setAllCategoryData(expenseCatagory.data);
+      }
+
+      if (banks.data) {
+        const transformedBank: DropDownOption[] = banks.data?.map(
+          (item: any) => ({
+            id: item.id,
+            name: item.name || item.vendor_name,
+          })
+        );
+        setBankList(transformedBank);
       }
     } catch (error) {
+      console.log("Error loading data:", error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  const validateForm = () => {
+    let tempErrors: any = {};
+
+    if (!expense) tempErrors.expense = "Expense amount is required";
+    if (!expenseDate) tempErrors.expenseDate = "Expense date is required";
+    if (!category) tempErrors.category = "Category is required";
+    if (!description) tempErrors.description = "Description is required";
+
+    if (isPaid) {
+      if (!paymentData) {
+        tempErrors.paymentDate = "Payment date is required";
+      }
+      if (selectedType !== "Cash" && !selectedBank) {
+        tempErrors.bank = "Please select bank";
+      }
+    }
+
+    setErrors(tempErrors);
+    console.log(tempErrors, "errors");
+
+    return Object.keys(tempErrors).length === 0;
+  };
   const addExpensesData = async () => {
+    if (!validateForm()) return;
     try {
       setIsLoading(true);
 
@@ -69,7 +115,7 @@ const Expenses = ({ navigation }: any) => {
       }
 
       if (selectedBank) {
-        formData.append("bank", selectedBank);
+        formData.append("bank", selectedBank?.name);
       }
 
       if (description) {
@@ -84,7 +130,7 @@ const Expenses = ({ navigation }: any) => {
         });
       }
       console.log("formdata--->", formData);
-      const res = await api.post("vendor/expense/", formData, {
+      const res = await api.post(API_ROUTES.expense, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -101,6 +147,7 @@ const Expenses = ({ navigation }: any) => {
   return (
     <View style={styles.container}>
       <Headerwithback title="Create Expenses" />
+      <Loading visible={isLoading} />
       <ScrollView>
         {/* Expense Amount */}
         <Text style={styles.label}>Enter Expense Amount</Text>
@@ -112,7 +159,9 @@ const Expenses = ({ navigation }: any) => {
           styles={styles.input}
           keyboardType="decimal-pad"
         />
-
+        {errors?.expense && (
+          <Text style={{ color: "red" }}>{errors?.expense}</Text>
+        )}
         {/* Expense Date */}
         <Text style={styles.label}>Expense Date</Text>
         <TouchableOpacity
@@ -136,19 +185,25 @@ const Expenses = ({ navigation }: any) => {
             style={styles.iconRight}
           />
         </TouchableOpacity>
-
+        {errors?.expenseDate && (
+          <Text style={{ color: "red", marginBottom: 10 }}>
+            {errors?.expenseDate}
+          </Text>
+        )}
         {/* Category Dropdown */}
         <CustomDropdown
           placeholder="Select Category"
           onSelect={(option) => setCategory(option)}
           selectedValue={category?.name || ""}
           dropDownBoxStyle={styles.input}
+          styles={{ marginBottom: 0, marginTop: 10 }}
           options={allCategoryData}
         />
-        <View style={styles.inputRow}>
-          {/* <TextInput style={styles.input} placeholder="Select Category" editable={false} />
-          <Ionicons name="chevron-down" size={20} color="orange" style={styles.iconRight} /> */}
-        </View>
+        {errors?.category && (
+          <Text style={{ color: "red", marginBottom: 10 }}>
+            {errors?.category}
+          </Text>
+        )}
         <View style={styles.markpain}>
           {/* Mark as Paid */}
           <Text style={styles.label}>Mark as Paid</Text>
@@ -162,66 +217,86 @@ const Expenses = ({ navigation }: any) => {
             <Text style={{ color: "#fff" }}>{isPaid ? "Yes" : "No"}</Text>
           </TouchableOpacity>
         </View>
+        {isPaid && (
+          <>
+            {/* Select Type */}
+            <Text style={styles.label}>
+              Select Type <Text style={{ color: "red" }}>*</Text>
+            </Text>
+            <View style={styles.typeRow}>
+              {types.map((type) => {
+                const isSelected = selectedType === type;
+                return (
+                  <TouchableOpacity
+                    key={type}
+                    onPress={() => setSelectedType(type)}
+                    style={[
+                      styles.typeButton,
+                      isSelected && styles.typeButtonSelected,
+                    ]}
+                  >
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        gap: 6,
+                      }}
+                    >
+                      {isSelected && (
+                        <Ionicons name="check-circle" size={16} color="#fff" />
+                      )}
+                      <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                        {type}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
-        {/* Select Type */}
-        <Text style={styles.label}>
-          Select Type <Text style={{ color: "red" }}>*</Text>
-        </Text>
-        <View style={styles.typeRow}>
-          {types.map((type) => {
-            const isSelected = selectedType === type;
-            return (
-              <TouchableOpacity
-                key={type}
-                onPress={() => setSelectedType(type)}
-                style={[
-                  styles.typeButton,
-                  isSelected && styles.typeButtonSelected,
-                ]}
-              >
-                <View
-                  style={{ flexDirection: "row", alignItems: "center", gap: 6 }}
-                >
-                  {isSelected && (
-                    <Ionicons name="check-circle" size={16} color="#fff" />
-                  )}
-                  <Text style={{ color: "#fff", fontWeight: "bold" }}>
-                    {type}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
-
-        {/* Payment Date */}
-        <Text style={styles.label}>Payment Date</Text>
-        <TouchableOpacity
-          style={styles.inputRow}
-          onPress={() => {
-            setPaymentCalModel(true);
-          }}
-        >
-          <TextInput
-            placeholderTextColor="#999"
-            placeholder="Select Payment Date"
-            style={styles.input}
-            editable={false}
-            value={paymentData}
-          />
-          <Ionicons
-            name="calendar"
-            size={20}
-            color="orange"
-            style={styles.iconRight}
-          />
-        </TouchableOpacity>
-
-        {/* Add Bank */}
-        <TouchableOpacity style={styles.addBankBtn}>
-          <Ionicons name="add" size={16} color="#FCA311" />
-          <Text style={styles.addBankText}>Add Bank</Text>
-        </TouchableOpacity>
+            {/* Payment Date */}
+            <Text style={styles.label}>Payment Date</Text>
+            <TouchableOpacity
+              style={styles.inputRow}
+              onPress={() => {
+                setPaymentCalModel(true);
+              }}
+            >
+              <TextInput
+                placeholderTextColor="#999"
+                placeholder="Select Payment Date"
+                style={styles.input}
+                editable={false}
+                value={paymentData}
+              />
+              <Ionicons
+                name="calendar"
+                size={20}
+                color="orange"
+                style={styles.iconRight}
+              />
+            </TouchableOpacity>
+            {errors?.paymentDate && (
+              <Text style={{ color: "red" }}>{errors?.paymentDate}</Text>
+            )}
+            {/* Add Bank */}
+            {selectedType !== "Cash" && (
+              <>
+                <Text style={styles.addBankText}>Select Bank</Text>
+                <CustomDropdown
+                  onSelect={setSelectedBank}
+                  placeholder="Select Bank"
+                  selectedValue={selectedBank?.name || ""}
+                  options={bankList}
+                  dropDownBoxStyle={{ marginTop: 10 }}
+                />
+                {errors?.bank && (
+                  <Text style={{ color: "red" }}>{errors?.bank}</Text>
+                )}
+              </>
+            )}
+          </>
+        )}
 
         {/* Description */}
         <Text style={styles.label}>Description</Text>
@@ -233,23 +308,37 @@ const Expenses = ({ navigation }: any) => {
           onChangeText={setDescription}
           placeholderTextColor={"#999"}
         />
-
+        {errors?.description && (
+          <Text style={{ color: "red" }}>{errors?.description}</Text>
+        )}
         {/* Attachments */}
         <Text style={styles.label}>Attachments</Text>
         <View style={styles.attachmentRow}>
-          <TouchableOpacity
-            style={styles.attachmentBtn}
-            onPress={() => {
-              setImagePickerModel(true);
-            }}
-          >
-            <Ionicons name="camera" size={18} color="#000" />
-            <Text style={styles.attachmentText}>Camera</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.attachmentBtn}>
+          {!imageFile?.uri ? (
+            <TouchableOpacity
+              style={styles.attachmentBtn}
+              onPress={() => {
+                setImagePickerModel(true);
+              }}
+            >
+              <Ionicons name="camera" size={18} color="#000" />
+              <Text style={styles.attachmentText}>Upload File</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={() => setImagePickerModel(true)}
+              style={styles.imageBox}
+            >
+              <Image
+                source={{ uri: imageFile?.uri }}
+                style={styles.imagePreview}
+              />
+            </TouchableOpacity>
+          )}
+          {/* <TouchableOpacity style={styles.attachmentBtn}>
             <Ionicons name="document" size={18} color="#000" />
-            <Text style={styles.attachmentText}>Upload File</Text>
-          </TouchableOpacity>
+            <Text style={styles.attachmentText}>Camera</Text>
+          </TouchableOpacity> */}
         </View>
         <CalendarModal
           visible={openCallenderModel}
@@ -321,7 +410,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     position: "relative",
     width: "100%",
-    marginBottom: 10,
   },
   iconRight: {
     position: "absolute",
@@ -360,7 +448,6 @@ const styles = StyleSheet.create({
   addBankBtn: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 8,
   },
   addBankText: {
     color: "#FCA311",
@@ -386,6 +473,25 @@ const styles = StyleSheet.create({
   },
   attachmentText: {
     fontWeight: "600",
+  },
+  imageBox: {
+    width: 80,
+    height: 80,
+    borderWidth: 1,
+    borderColor: "#FCA311",
+    borderRadius: 6,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#fffbe6",
+    marginBottom: 12,
+  },
+  imagePreview: {
+    width: "100%",
+    height: "100%",
+  },
+  plusIcon: {
+    fontSize: 20,
+    color: "#000",
   },
   createBtn: {
     backgroundColor: "#FCA311",

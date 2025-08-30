@@ -58,6 +58,7 @@ export type THomeNavigation = {
   [HomeNavigation.CASH_IN_HAND]: undefined;
   [HomeNavigation.BANK_ACCOUNTS]: undefined;
   [HomeNavigation.MANAGE_CUSTOMERS]: undefined;
+  [HomeNavigation.SALES_LEDGER]: undefined;
   [HomeNavigation.MANAGE_VENDORS]: undefined;
   [HomeNavigation.MANAGE_ROLES]: undefined;
   [HomeNavigation.RECYCLE_BIN_SCREEN]: undefined;
@@ -71,6 +72,7 @@ export type THomeNavigation = {
   [HomeNavigation.INVOICE_SETTINGS]: undefined;
   [HomeNavigation.INVOICE_TEMPLATES]: undefined;
   [HomeNavigation.REMINDERS_SCREEN]: undefined;
+  [HomeNavigation.REMINDERSETTINGS]: undefined;
   [HomeNavigation.RATE_US_SCREEN]: undefined;
   [HomeNavigation.PRIVACY_POLICY_SCREEN]: undefined;
   [HomeNavigation.DELETE_ACCOUNT_SCREEN]: undefined;
@@ -104,6 +106,7 @@ export type THomeNavigation = {
   [HomeNavigation.AUTOASSIGNDELIVERY]: undefined;
   [HomeNavigation.ASSIGNOWNDELIVERYBOY]: undefined;
   [HomeNavigation.ADDDELIVERYBOY]: undefined;
+  [HomeNavigation.ADD_ADDONS]: undefined;
 };
 
 // export type TTabNavigation = {

@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useState } from 'react';
+import React, { FC, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -10,50 +10,45 @@ import {
   Alert,
   Platform,
   PermissionsAndroid,
-} from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
-import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import auth from '@react-native-firebase/auth';
-import { SignUpScreenProps, THomeNavigation } from '../type';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { HomeNavigation } from '../constants/app-routes.constants';
-import Loading from '../CommonComponent/Loading';
-
-
-
-
-
-
-
+} from "react-native";
+import LinearGradient from "react-native-linear-gradient";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import auth from "@react-native-firebase/auth";
+import { SignUpScreenProps, THomeNavigation } from "../type";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { HomeNavigation } from "../constants/app-routes.constants";
+import Loading from "../CommonComponent/Loading";
 
 const SignupScreen: FC<SignUpScreenProps> = () => {
-  const navigation = useNavigation<NativeStackNavigationProp<THomeNavigation>>();
+  const navigation =
+    useNavigation<NativeStackNavigationProp<THomeNavigation>>();
 
-  const route = useRoute<RouteProp<THomeNavigation, HomeNavigation.SIGNUP_SCREEN>>();
-  const { authType } = route?.params
-  const [phoneNumber, setPhoneNumber] = useState<string>('');
+  const route =
+    useRoute<RouteProp<THomeNavigation, HomeNavigation.SIGNUP_SCREEN>>();
+  const { authType } = route?.params;
+  const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [confirm, setConfirm] = useState<any>(null);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
-
-
-
   const handleContinue = async () => {
-
     if (phoneNumber.length !== 10) {
-      setError('Please enter a valid 10-digit phone number.');
+      setError("Please enter a valid 10-digit phone number.");
       return;
     }
 
     setLoading(true);
-    setError('');
+    setError("");
     try {
       const fullPhoneNumber = `+91${phoneNumber}`;
       const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
-      console.log("confirmaiton --->",confirmation)
+      console.log("confirmaiton --->", confirmation);
       setConfirm(confirmation);
-      navigation.navigate(HomeNavigation.OTP_SCREEN, { confirmAuth: confirmation, phoneNumber: fullPhoneNumber,authType:authType });
+      navigation.navigate(HomeNavigation.OTP_SCREEN, {
+        confirmAuth: confirmation,
+        phoneNumber: fullPhoneNumber,
+        authType,
+      });
       // Alert.alert('Verification code sent to your phone.');
     } catch (error: any) {
       setError(error.message);
@@ -63,7 +58,7 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
   };
 
   const requestSmsPermission = async () => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === "android") {
       try {
         const granted = await PermissionsAndroid.requestMultiple([
           PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
@@ -71,8 +66,10 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
         ]);
         // console.log('SMS permissions:', granted);
         if (
-          granted['android.permission.RECEIVE_SMS'] === PermissionsAndroid.RESULTS.GRANTED &&
-          granted['android.permission.READ_SMS'] === PermissionsAndroid.RESULTS.GRANTED
+          granted["android.permission.RECEIVE_SMS"] ===
+            PermissionsAndroid.RESULTS.GRANTED &&
+          granted["android.permission.READ_SMS"] ===
+            PermissionsAndroid.RESULTS.GRANTED
         ) {
           // console.log('SMS permissions granted');
         } else {
@@ -88,13 +85,12 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
     requestSmsPermission();
   }, []);
 
-
   return (
     <View style={styles.container}>
       {/* Logo & Title */}
-      <LinearGradient colors={['#F9C313', '#FCA511']} style={styles.header}>
+      <LinearGradient colors={["#F9C313", "#FCA511"]} style={styles.header}>
         <Image
-          source={require('../assets/logo.png')} // Replace with your logo
+          source={require("../assets/logo.png")} // Replace with your logo
           style={styles.logo}
         />
         <Text style={styles.title}> Svindo</Text>
@@ -113,7 +109,7 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
             style={styles.input}
             placeholderTextColor={"#909090"}
             value={phoneNumber}
-            onChangeText={text => setPhoneNumber(text)}
+            onChangeText={(text) => setPhoneNumber(text)}
             maxLength={10}
           />
         </View>
@@ -125,8 +121,9 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
           disabled={!phoneNumber}
         >
           <LinearGradient
-            colors={['#F9C313', '#FCA511']}
-            style={styles.continueButtonGradient}>
+            colors={["#F9C313", "#FCA511"]}
+            style={styles.continueButtonGradient}
+          >
             <Text style={styles.continueText}>Continue</Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -135,67 +132,62 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
       {/* Terms & Privacy - Pinned to Bottom */}
       <View style={styles.footer}>
         <Text style={styles.termsText}>
-          By continuing, you agree to our {'\n'}
-          <Text style={styles.linkText}>Terms of Service</Text> and{' '}
+          By continuing, you agree to our {"\n"}
+          <Text style={styles.linkText}>Terms of Service</Text> and{" "}
           <Text style={styles.linkText}>Privacy Policy</Text>.
         </Text>
       </View>
-      <Loading
-      visible={loading}
-      />
-
-
+      <Loading visible={loading} />
     </View>
   );
 };
 
 export default SignupScreen;
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
   },
   header: {
-    width: '100%',
-    height: '50%',
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: "100%",
+    height: "50%",
+    alignItems: "center",
+    justifyContent: "center",
     borderBottomLeftRadius: 60,
     borderBottomRightRadius: 60,
   },
   logo: {
     width: 120,
     height: 140,
-    resizeMode: 'contain',
+    resizeMode: "contain",
   },
   title: {
     fontSize: 50,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
   },
   subtitle: {
     fontSize: 22,
-    color: '#fff',
+    color: "#fff",
   },
   inputContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF7DD',
-    alignItems: 'center',
-    justifyContent: 'center',
+    flexDirection: "row",
+    backgroundColor: "#FFF7DD",
+    alignItems: "center",
+    justifyContent: "center",
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 10,
-    width: '90%',
+    width: "90%",
     marginBottom: 20,
     borderWidth: 1,
-    borderColor: '#FCA511',
+    borderColor: "#FCA511",
   },
   countryCode: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#555',
+    fontWeight: "bold",
+    color: "#555",
     marginRight: 10,
   },
   input: {
@@ -203,66 +195,61 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   continueButtonWrapper: {
-    width: '90%',
+    width: "90%",
     borderRadius: 30,
-    overflow: 'hidden', // Ensures the gradient stays within rounded corners
-    alignSelf: 'center',
+    overflow: "hidden", // Ensures the gradient stays within rounded corners
+    alignSelf: "center",
     marginBottom: 20,
   },
   continueButtonGradient: {
     paddingVertical: 15,
-    alignItems: 'center',
+    alignItems: "center",
   },
   continueText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   termsText: {
     fontSize: 12,
-    color: '#000',
-    textAlign: 'center',
-    width: '90%',
+    color: "#000",
+    textAlign: "center",
+    width: "90%",
   },
   linkText: {
-    color: '#FCA511',
-    textDecorationLine: 'underline',
+    color: "#FCA511",
+    textDecorationLine: "underline",
   },
-
 
   contentWrapper: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
+    justifyContent: "center",
+    alignItems: "center",
+    width: "100%",
     marginTop: -50,
   },
   footer: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 30,
-    width: '100%',
-    alignItems: 'center',
+    width: "100%",
+    alignItems: "center",
   },
 });
-
-
-
-
 
 // const handleAllow = () => {
 //   setModalVisible(false);
 //   navigation.navigate('OtpScreen');
 // };
 
-
-
 // const handleContinue = () => {
 //   setModalVisible(true); // Show the modal on Continue
 // };
 
-
-{/* Permission Popup */ }
-{/* <Modal transparent visible={isModalVisible} animationType="slide">
+{
+  /* Permission Popup */
+}
+{
+  /* <Modal transparent visible={isModalVisible} animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <Image
@@ -282,11 +269,8 @@ const styles = StyleSheet.create({
             </TouchableOpacity>
           </View>
         </View>
-      </Modal> */}
-
-
-
-
+      </Modal> */
+}
 
 // Modal Styles
 // modalOverlay: {
