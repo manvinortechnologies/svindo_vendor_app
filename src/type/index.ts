@@ -17,6 +17,7 @@ export type THomeNavigation = {
   [HomeNavigation.BOTTOM_NAVIGATION]: undefined;
   [HomeNavigation.DRAFT_SCREEN]: undefined;
   [HomeNavigation.ORDERS]: undefined;
+  [HomeNavigation.ORDERPRODUCTDETAILS]: undefined;
   [HomeNavigation.STOCK_SCREEN]: undefined;
   [HomeNavigation.CREATE_PRODUCT]: undefined;
   [HomeNavigation.ADD_PRODUCT_SCREEN]: undefined;

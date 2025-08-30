@@ -10,6 +10,7 @@ export enum HomeNavigation {
   BOTTOM_NAVIGATION = "Bottomnavigation",
   DRAFT_SCREEN = "DraftScreen",
   ORDERS = "Orders",
+  ORDERPRODUCTDETAILS = "OrderProductDetails",
   STOCK_SCREEN = "StockScreen",
   CREATE_PRODUCT = "CreateProduct",
   ADD_PRODUCT_SCREEN = "AddProductScreen",
