@@ -108,6 +108,8 @@ import AddAddOns from "../Screens/AddAddOns";
 import ProductDetails from "../Screens/ProductDetails";
 import BankNameScreen from "../Screens/BankNameScreen";
 import ExpensesDetailScreen from "../Screens/ExpensesDetailScreen";
+import NotificationScreen from "../Screens/NotificationScreen";
+import ModelReminderScreen from "../Screens/ModelReminderScreen";
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
 
@@ -140,6 +142,14 @@ const AppNavigation = () => {
           component={SelectLocationScreen}
         />
         <Stack.Screen name={HomeNavigation.STATISTICS} component={Statistics} />
+        <Stack.Screen
+          name={HomeNavigation.NOTIFICATION_SCREEN}
+          component={NotificationScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.MODEL_REMINDER_SCREEN}
+          component={ModelReminderScreen}
+        />
         <Stack.Screen
           name={HomeNavigation.STATISTICS_SCREEN}
           component={StatisticsScreen}

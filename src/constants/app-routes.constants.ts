@@ -7,6 +7,8 @@ export enum HomeNavigation {
   SELECT_LOCATION_SCREEN = "SelectLocationScreen",
   STATISTICS = "Statistics",
   STATISTICS_SCREEN = "StatisticsScreen",
+  NOTIFICATION_SCREEN = "NotificationScreen",
+  MODEL_REMINDER_SCREEN = "ModelReminderScreen",
   BOTTOM_NAVIGATION = "Bottomnavigation",
   DRAFT_SCREEN = "DraftScreen",
   ORDERS = "Orders",

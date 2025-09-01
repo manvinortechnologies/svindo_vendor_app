@@ -228,12 +228,16 @@ const StatisticsScreen = ({ navigation }: any) => {
             value={deliveryDiscountEnabled}
             onValueChange={setDeliveryDiscountEnabled}
           />
-          <Icon
-            name="bell-outline"
-            size={28}
-            color="#000"
-            style={styles.notificationIcon}
-          />
+          <TouchableOpacity
+            onPress={() => navigation.navigate("NotificationScreen")}
+          >
+            <Icon
+              name="bell-outline"
+              size={28}
+              color="#000"
+              style={styles.notificationIcon}
+            />
+          </TouchableOpacity>
         </View>
       </View>
       <ScrollView style={{ paddingHorizontal: 10 }}>

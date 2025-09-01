@@ -14,6 +14,8 @@ export type THomeNavigation = {
   [HomeNavigation.SELECT_LOCATION_SCREEN]: undefined;
   [HomeNavigation.STATISTICS]: undefined;
   [HomeNavigation.STATISTICS_SCREEN]: undefined;
+  [HomeNavigation.NOTIFICATION_SCREEN]: undefined;
+  [HomeNavigation.MODEL_REMINDER_SCREEN]:undefined;
   [HomeNavigation.BOTTOM_NAVIGATION]: undefined;
   [HomeNavigation.DRAFT_SCREEN]: undefined;
   [HomeNavigation.ORDERS]: undefined;
