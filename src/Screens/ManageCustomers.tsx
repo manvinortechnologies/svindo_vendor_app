@@ -1,32 +1,41 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, TextInput, FlatList, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import Headerwithback from './Headerwithback';
-import Bottomnavigation from './Bottomnavigation';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
-import Loading from '../CommonComponent/Loading';
-import { Customer } from '../type/Customers';
-import api from '../services/api/api';
-
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  TextInput,
+  FlatList,
+  Image,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import Headerwithback from "./Headerwithback";
+import Bottomnavigation from "./Bottomnavigation";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import Loading from "../CommonComponent/Loading";
+import { Customer } from "../type/Customers";
+import api from "../services/api/api";
 
 type RootStackParamList = {
   ManageCustomer: undefined;
   AddCustomer: undefined;
 };
 
-export type SecurityScreenNavigationProp = StackNavigationProp<RootStackParamList, 'ManageCustomer'>;
-
+export type SecurityScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "ManageCustomer"
+>;
 
 const customers = [
   {
-    id: '1',
-    name: 'Raigun Enterprise',
-    phone: '9876543210',
-    email: 'Raigunenterprises@gmail.com',
-    closingBalance: 'Rs 0',
-    initials: 'RE',
+    id: "1",
+    name: "Raigun Enterprise",
+    phone: "9876543210",
+    email: "Raigunenterprises@gmail.com",
+    closingBalance: "Rs 0",
+    initials: "RE",
   },
 ];
 
@@ -34,7 +43,7 @@ const ManageCustomers = ({ navigation }: any) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [customersList, setCustomersList] = useState<Customer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   useFocusEffect(
     useCallback(() => {
@@ -45,7 +54,7 @@ const ManageCustomers = ({ navigation }: any) => {
   const getCustomerData = async () => {
     try {
       setIsLoading(true);
-      const res = await api.get('vendor/customer/');
+      const res = await api.get("vendor/customer/");
       setCustomersList(res.data);
       setFilteredCustomers(res.data); // initially show all
     } catch (error) {
@@ -57,9 +66,10 @@ const ManageCustomers = ({ navigation }: any) => {
 
   useEffect(() => {
     if (customersList) {
-      const filtered = customersList.filter((customer) =>
-        customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        customer.contact.toLowerCase().includes(searchTerm.toLowerCase())
+      const filtered = customersList.filter(
+        (customer) =>
+          customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          customer.contact.toLowerCase().includes(searchTerm.toLowerCase())
       );
       setFilteredCustomers(filtered);
     }
@@ -82,7 +92,7 @@ const ManageCustomers = ({ navigation }: any) => {
               onChangeText={setSearchTerm}
             />
           </View>
-          <TouchableOpacity onPress={() => navigation.navigate('AddCustomer')}>
+          <TouchableOpacity onPress={() => navigation.navigate("AddCustomer")}>
             <Text style={styles.addText}>+ Add New Customer</Text>
           </TouchableOpacity>
         </View>
@@ -106,7 +116,12 @@ const ManageCustomers = ({ navigation }: any) => {
           data={filteredCustomers}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <View style={styles.customerRow}>
+            <TouchableOpacity
+              style={styles.customerRow}
+              onPress={() =>
+                navigation.navigate("CustomerLedger", { customer: item })
+              }
+            >
               <View style={styles.nameColumn}>
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>
@@ -122,16 +137,17 @@ const ManageCustomers = ({ navigation }: any) => {
               <View style={styles.nameColumn}>
                 <Text style={styles.balanceText}>{item.balance}</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           )}
-          ListEmptyComponent={!isLoading ? (
-            <View style={{ alignItems: 'center', marginTop: 40 }}>
-              <Text style={{ fontSize: 16, color: '#888' }}>
-                No customers found.
-              </Text>
-            </View>
-          ) : null}
-
+          ListEmptyComponent={
+            !isLoading ? (
+              <View style={{ alignItems: "center", marginTop: 40 }}>
+                <Text style={{ fontSize: 16, color: "#888" }}>
+                  No customers found.
+                </Text>
+              </View>
+            ) : null
+          }
         />
 
         <Loading visible={isLoading} />
@@ -146,23 +162,21 @@ export default ManageCustomers;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 16,
     gap: 12,
   },
   searchBox: {
-
-    flexDirection: 'row',
-    backgroundColor: '#f3f3f3',
+    flexDirection: "row",
+    backgroundColor: "#f3f3f3",
     paddingHorizontal: 12,
     borderRadius: 8,
-    alignItems: 'center',
+    alignItems: "center",
     width: "80%",
-
   },
   searchInput: {
     flex: 1,
@@ -170,102 +184,92 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   addText: {
-    color: '#000',
-    fontWeight: '600',
+    color: "#000",
+    fontWeight: "600",
     fontSize: 12,
     textAlign: "right",
     width: "60%",
   },
   summaryContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     paddingHorizontal: 16,
     marginBottom: 12,
   },
   summaryBox: {
     borderWidth: 1,
-    borderColor: '#FCA311',
+    borderColor: "#FCA311",
     borderRadius: 6,
     padding: 8,
-    minWidth: '40%',
-    alignItems: 'center',
+    minWidth: "40%",
+    alignItems: "center",
   },
   summaryText: {
     fontSize: 14,
-    color: '#000',
-    fontWeight: '500',
+    color: "#000",
+    fontWeight: "500",
   },
   tableHeader: {
-    flexDirection: 'row',
-    backgroundColor: '#f3f3f3',
+    flexDirection: "row",
+    backgroundColor: "#f3f3f3",
     paddingHorizontal: 16,
     paddingVertical: 8,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   headerText: {
     flex: 1,
-    fontWeight: '700',
+    fontWeight: "700",
     fontSize: 13,
-    color: '#000',
+    color: "#000",
   },
   customerRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderColor: '#eee',
+    borderColor: "#eee",
     gap: 10,
     justifyContent: "space-between",
-
   },
   nameColumn: {
-
-    flexDirection: 'row',
-    alignItems: 'center',
-    width: "30%"
-
-
-
+    flexDirection: "row",
+    alignItems: "center",
+    width: "30%",
   },
   avatar: {
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: '#FCA311',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "#FCA311",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 8,
   },
   avatarText: {
-    color: '#fff',
-    fontWeight: '700',
+    color: "#fff",
+    fontWeight: "700",
     fontSize: 12,
   },
   nameText: {
     fontSize: 13,
-    fontWeight: '600',
-    color: '#000',
-
+    fontWeight: "600",
+    color: "#000",
   },
   contactColumn: {
     flex: 1,
-    textAlign: 'right',
-    width: "35%"
-
+    textAlign: "right",
+    width: "35%",
   },
   contactText: {
     fontSize: 12,
-    color: '#333',
+    color: "#333",
   },
   balanceText: {
     flex: 1,
-    textAlign: 'center',
-    fontWeight: '600',
+    textAlign: "center",
+    fontWeight: "600",
     fontSize: 13,
-    color: 'green',
+    color: "green",
     width: "auto",
-
   },
 });
-
-

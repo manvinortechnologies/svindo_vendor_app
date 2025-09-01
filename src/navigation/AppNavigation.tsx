@@ -110,6 +110,8 @@ import BankNameScreen from "../Screens/BankNameScreen";
 import ExpensesDetailScreen from "../Screens/ExpensesDetailScreen";
 import NotificationScreen from "../Screens/NotificationScreen";
 import ModelReminderScreen from "../Screens/ModelReminderScreen";
+import CustomerLedger from "../Screens/CustomerLedger";
+import VendorLedger from "../Screens/VendorLedger";
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
 
@@ -317,8 +319,16 @@ const AppNavigation = () => {
           component={ManageCustomers}
         />
         <Stack.Screen
+          name={HomeNavigation.CUSTOMER_LEDGER}
+          component={CustomerLedger}
+        />
+        <Stack.Screen
           name={HomeNavigation.MANAGE_VENDORS}
           component={ManageVendors}
+        />
+        <Stack.Screen
+          name={HomeNavigation.VENDOR_LEDGER}
+          component={VendorLedger}
         />
         <Stack.Screen
           name={HomeNavigation.MANAGE_ROLES}

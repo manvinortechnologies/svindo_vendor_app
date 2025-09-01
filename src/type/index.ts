@@ -62,8 +62,10 @@ export type THomeNavigation = {
   [HomeNavigation.BANK_ACCOUNTS]: undefined;
   [HomeNavigation.BANK_NAME]: undefined;
   [HomeNavigation.MANAGE_CUSTOMERS]: undefined;
+  [HomeNavigation.CUSTOMER_LEDGER]:undefined;
   [HomeNavigation.SALES_LEDGER]: undefined;
   [HomeNavigation.MANAGE_VENDORS]: undefined;
+  [HomeNavigation.VENDOR_LEDGER]:undefined;
   [HomeNavigation.MANAGE_ROLES]: undefined;
   [HomeNavigation.RECYCLE_BIN_SCREEN]: undefined;
   [HomeNavigation.CLOSE_YEAR_SCREEN]: undefined;

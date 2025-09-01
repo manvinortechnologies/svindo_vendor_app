@@ -114,7 +114,12 @@ const ManageVendors = ({ navigation }: any) => {
           data={filteredVendors}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <View style={styles.customerRow}>
+            <TouchableOpacity
+              style={styles.customerRow}
+              onPress={() =>
+                navigation.navigate("VendorLedger", { customer: item })
+              }
+            >
               <View style={styles.nameColumn}>
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>{item.name.slice(0, 2)}</Text>
@@ -130,7 +135,7 @@ const ManageVendors = ({ navigation }: any) => {
               <View style={{ width: "30%", alignItems: "center" }}>
                 <Text style={styles.balanceText}>{item.balance}</Text>
               </View>
-            </View>
+            </TouchableOpacity>
           )}
           ListEmptyComponent={
             !isLoading ? (
