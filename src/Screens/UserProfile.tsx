@@ -19,6 +19,10 @@ import api from "../services/api/api";
 import CustomTextInput from "../CommonComponent/CustomeTextInput";
 import CustomButton from "../CommonComponent/CustomeButton";
 import { API_ROUTES } from "../constants/api-routes.constants";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { HomeNavigation } from "../constants/app-routes.constants";
+import { Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 type RootStackParamList = {
   MyAccount: undefined;
   DeleteAccountScreen: undefined;
@@ -56,8 +60,46 @@ const UserProfile = ({ navigation }: any) => {
     }
   };
 
+  const handleLogout = () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout? This will clear all your data and you'll need to sign in again.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: performLogout,
+        },
+      ]
+    );
+  };
+
+  const performLogout = async () => {
+    try {
+      setIsLoading(true);
+
+      // Clear all storage data
+      AsyncStorage.clear();
+
+      // Reset navigation to welcome screen
+      navigation.reset({
+        index: 0,
+        routes: [{ name: HomeNavigation.WELCOME_SCREEN }],
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+      Alert.alert("Error", "Failed to logout. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Headerwithback title="User Profile" />
       <ScrollView contentContainerStyle={styles.formcontainer}>
         {/* <View style={styles.avatar}>
@@ -109,13 +151,16 @@ const UserProfile = ({ navigation }: any) => {
           </TouchableOpacity>
         </View>
 
-        <TouchableOpacity style={styles.outlinedFullButton}>
+        <TouchableOpacity
+          style={styles.outlinedFullButton}
+          onPress={handleLogout}
+        >
           <Text style={styles.outlinedButtonText}>Logout of all devices</Text>
         </TouchableOpacity>
       </ScrollView>
       <Loading visible={isLoading} />
       <Bottomnavigation />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -125,7 +170,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 40 : 0,
   },
   formcontainer: {
     padding: 20,

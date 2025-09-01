@@ -130,7 +130,7 @@ const CreatePurchase = ({ navigation }: any) => {
       }must be a valid positive number`;
     }
 
-    if (selectedPayment !== "Cash") {
+    if (selectedPayment !== "cash") {
       if (!dueDate) {
         tempErrors.dueDate = "Due date is required";
       }
@@ -252,6 +252,7 @@ const CreatePurchase = ({ navigation }: any) => {
         advance_amount: Number(advanceAmount) || 0,
         advance_mode: selectedAdvanceType.toLowerCase(), // bank / cash
         due_date: dueDate,
+        advance_bank: selectedBank?.id,
         dispatch_address: formData.dispatchAddress,
         references: formData.references,
         notes: formData.notes,
@@ -1047,6 +1048,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "500",
     textAlign: "center",
+    color: "#000",
   },
   rowBetween: {
     flexDirection: "row",
@@ -1085,6 +1087,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginBottom: 4,
     fontWeight: "bold",
+    color: "#000",
   },
   inputField: {
     borderWidth: 1,
@@ -1192,5 +1195,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     fontSize: 13,
+    color: "#000",
   },
 });

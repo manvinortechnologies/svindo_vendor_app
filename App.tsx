@@ -1,36 +1,30 @@
-import React from 'react';
-import AppNavigation from './src/navigation/AppNavigation';
-import { Provider } from 'react-redux';
-import { store } from './src/services/store/api-store';
-
-
+import React from "react";
+import AppNavigation from "./src/navigation/AppNavigation";
+import { Provider } from "react-redux";
+import { store } from "./src/services/store/api-store";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 const App = () => {
   return (
     <Provider store={store}>
-      <AppNavigation />
-  </Provider>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <AppNavigation />
+      </GestureHandlerRootView>
+    </Provider>
   );
 };
 export default App;
 
-
-
-
-
 // import React, { useState } from 'react';
 // import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, Image } from 'react-native';
 // import auth from '@react-native-firebase/auth';
-
-
 
 // export default function App({ navigation }) {
 //   const [phoneNumber, setPhoneNumber] = useState('');
 //   const [verificationCode, setVerificationCode] = useState('');
 //   const [confirm, setConfirm] = useState(null);
 //   const [error, setError] = useState('');
-//   const [loading, setLoading] = useState(false); 
-
+//   const [loading, setLoading] = useState(false);
 
 //   const handleSendCode = async () => {
 
@@ -39,33 +33,31 @@ export default App;
 //       return;
 //     }
 
-//     setLoading(true); 
+//     setLoading(true);
 //     setError('');
 //     try {
 //       const fullPhoneNumber = `+91${phoneNumber}`;
 //       const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
 //       console.log(confirmation)
 
-      
 //       setConfirm(confirmation);
 //       Alert.alert('Verification code sent to your phone.');
 //     } catch (error) {
 //       setError(error.message);
 //     } finally {
-//       setLoading(false); 
+//       setLoading(false);
 //     }
 //   };
 
-
 //   const handleConfirmCode = async () => {
-//     setLoading(true); 
-//     setError(''); 
+//     setLoading(true);
+//     setError('');
 //     try {
 //       const userCredential = await confirm.confirm(verificationCode);
 //     console.log('User info:', userCredential?.user);
 //      const idToken = await userCredential.user.getIdToken();
 //      console.log('Firebase ID Token:', idToken);
-//       // await AsyncStorage.setItem('isLoggedIn', 'true'); 
+//       // await AsyncStorage.setItem('isLoggedIn', 'true');
 
 //       navigation.replace('Home');
 //     } catch (error) {
@@ -77,7 +69,7 @@ export default App;
 
 //   return (
 //     <View style={styles.container}>
-      
+
 //       <View style={{alignItems:'center', justifyContent:'center', marginBottom:20,}}>
 
 //         <Text style={{color:"#000000"}}>Need Help? Call Now</Text>

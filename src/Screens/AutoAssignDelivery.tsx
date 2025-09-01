@@ -13,6 +13,7 @@ import Headerwithback from "./Headerwithback";
 import CustomSwitch from "./CustomSwitch";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
@@ -69,7 +70,7 @@ const AutoAssignDelivery = () => {
   ];
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Headerwithback title="Auto Assign Delivery Partner" />
       <Loading visible={loading} />
       {/* Assign Delivery Partner */}
@@ -174,7 +175,7 @@ const AutoAssignDelivery = () => {
       <TouchableOpacity style={styles.addBtn}>
         <Text style={styles.addBtnText}>Add Amount</Text>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -184,7 +185,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    padding: 16,
+    paddingHorizontal: 16,
   },
   box: {
     backgroundColor: "#FFF",

@@ -22,6 +22,7 @@ import CustomDropdown, {
 import ModalUpdatePhoto from "../Modals/ModalUpdatePhoto";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Expenses = ({ navigation }: any) => {
   const [isPaid, setIsPaid] = useState(true);
@@ -107,7 +108,7 @@ const Expenses = ({ navigation }: any) => {
       formData.append("expense_date", expenseDate);
       formData.append("category", category?.id);
       formData.append("is_paid", isPaid);
-      formData.append("payment_type", selectedType.toLowerCase());
+      formData.append("payment_method", selectedType.toLowerCase());
 
       // Optional fields
       if (paymentData) {
@@ -115,7 +116,7 @@ const Expenses = ({ navigation }: any) => {
       }
 
       if (selectedBank) {
-        formData.append("bank", selectedBank?.name);
+        formData.append("bank", selectedBank?.id);
       }
 
       if (description) {
@@ -145,7 +146,7 @@ const Expenses = ({ navigation }: any) => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Headerwithback title="Create Expenses" />
       <Loading visible={isLoading} />
       <ScrollView>
@@ -370,7 +371,7 @@ const Expenses = ({ navigation }: any) => {
           <Text style={styles.createText}>Create</Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -379,7 +380,6 @@ const styles = StyleSheet.create({
     padding: 10,
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 40 : 0,
   },
   header: {
     flexDirection: "row",
@@ -396,6 +396,7 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 4,
     fontSize: 16,
+    color: "#000",
   },
   input: {
     borderWidth: 1,
@@ -404,6 +405,7 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: "#FFF5E9",
     width: "100%",
+    color: "#000",
   },
   inputRow: {
     flexDirection: "row",

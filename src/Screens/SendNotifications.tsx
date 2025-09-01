@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -8,16 +8,17 @@ import {
   ScrollView,
   Platform,
   StatusBar,
-} from 'react-native';
-import Headerwithback from './Headerwithback';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+} from "react-native";
+import Headerwithback from "./Headerwithback";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const SendNotifications = () => {
-  const [redirect, setRedirect] = useState('store');
+  const [redirect, setRedirect] = useState("store");
 
   return (
-    <View style={styles.container}>
-      <Headerwithback title={'Send Notification'} />
+    <SafeAreaView style={styles.container}>
+      <Headerwithback title={"Send Notification"} />
       <ScrollView contentContainerStyle={styles.contentContainer}>
         {/* Upload Banner */}
         <TouchableOpacity style={styles.uploadBox}>
@@ -55,7 +56,9 @@ const SendNotifications = () => {
         <View style={styles.noteBox}>
           <Text style={styles.noteLabel}>Note:</Text>
           <Text style={styles.noteText}>
-            This notification is pushed only to your followers, visible only for 7 days after approval. At a time only 1 notification can be active.{"\n\n"}
+            This notification is pushed only to your followers, visible only for
+            7 days after approval. At a time only 1 notification can be active.
+            {"\n\n"}
             To send notification to wider audience contact svindo support.
           </Text>
         </View>
@@ -65,7 +68,7 @@ const SendNotifications = () => {
           <Text style={styles.submitText}>Submit for approval</Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -74,8 +77,7 @@ export default SendNotifications;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 40 : 0,
+    backgroundColor: "#fff",
   },
   contentContainer: {
     padding: 16,
@@ -83,74 +85,74 @@ const styles = StyleSheet.create({
   },
   uploadBox: {
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     borderRadius: 8,
-    backgroundColor: '#f9f9f9',
-    alignItems: 'center',
+    backgroundColor: "#f9f9f9",
+    alignItems: "center",
     paddingVertical: 20,
     marginBottom: 20,
   },
   uploadText: {
     fontSize: 30,
-    color: '#333',
+    color: "#333",
   },
   uploadInfo: {
     fontSize: 12,
-    color: '#555',
+    color: "#555",
   },
   label: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: "500",
     marginBottom: 6,
-    color: '#000',
+    color: "#000",
   },
   input: {
     borderWidth: 1,
-    borderColor: '#FCA311',
+    borderColor: "#FCA311",
     borderRadius: 6,
     padding: 10,
     marginBottom: 16,
   },
   dropdown: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     borderWidth: 1,
-    borderColor: '#FCA311',
+    borderColor: "#FCA311",
     borderRadius: 6,
     padding: 10,
     marginBottom: 16,
   },
   dropdownText: {
-    color: '#000',
+    color: "#000",
     fontSize: 14,
   },
   noteBox: {
-    backgroundColor: '#fff1dc',
+    backgroundColor: "#fff1dc",
     borderWidth: 1,
-    borderColor: '#FCA311',
+    borderColor: "#FCA311",
     borderRadius: 6,
     padding: 12,
     marginBottom: 20,
   },
   noteLabel: {
-    color: '#FCA311',
-    fontWeight: 'bold',
+    color: "#FCA311",
+    fontWeight: "bold",
     marginBottom: 4,
   },
   noteText: {
     fontSize: 12,
-    color: '#555',
+    color: "#555",
   },
   submitButton: {
-    backgroundColor: '#169729',
+    backgroundColor: "#169729",
     borderRadius: 20,
     paddingVertical: 14,
-    alignItems: 'center',
-    marginHorizontal: 20
+    alignItems: "center",
+    marginHorizontal: 20,
   },
   submitText: {
-    color: '#fff',
-    fontWeight: '700',
+    color: "#fff",
+    fontWeight: "700",
   },
 });

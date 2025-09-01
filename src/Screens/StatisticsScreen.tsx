@@ -20,6 +20,7 @@ import RequestFromBuyers from "../CommonComponent/RequestFromBuyers";
 import GroupedBars from "./BarChart";
 import LineCharts from "./LineChart";
 import { HomeNavigation } from "../constants/app-routes.constants";
+import { SafeAreaView } from "react-native-safe-area-context";
 NavigationButton;
 
 const screenWidth = Dimensions.get("window").width - 20;
@@ -206,7 +207,7 @@ const StatisticsScreen = ({ navigation }: any) => {
   const filters = ["Today", "This Week", "This Month", "This Year"];
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerleft}>
           <Image
@@ -508,7 +509,7 @@ const StatisticsScreen = ({ navigation }: any) => {
         </TouchableOpacity>
       </View>
       <Bottomnavigation />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -517,7 +518,6 @@ const styles = StyleSheet.create({
     // padding: 10,
     backgroundColor: "#FFF",
     flex: 1,
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 40 : 0,
   },
   header: {
     flexDirection: "row",

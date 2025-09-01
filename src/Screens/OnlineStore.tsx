@@ -8,6 +8,7 @@ import {
   StatusBar,
   Platform,
   Alert,
+  SafeAreaView,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Icons from "react-native-vector-icons/AntDesign";
@@ -24,6 +25,7 @@ import api from "../services/api/api";
 import Headerwithback from "./Headerwithback";
 import MainContainer from "../CommonComponent/MainContainer";
 import { API_ROUTES } from "../constants/api-routes.constants";
+import CustomHeader from "../CommonComponent/CustomHeader";
 
 // ✅ Define the type for the navigation stack
 type RootStackParamList = {
@@ -94,14 +96,9 @@ const OnlineStore = ({ navigation }: any) => {
   };
   return (
     <MainContainer>
-      <View style={styles.container}>
-        {/* <Header
-        title="Online Store Setting"
-        backgroundColor="#FFF"
-        textColor="#333"
-        borderBottomColor="#ccc"
-      /> */}
-        <Headerwithback title="Online Store Setting" />
+      <SafeAreaView style={styles.container}>
+        <CustomHeader title="Online Store Setting" />
+        {/* <Headerwithback title="Online Store Setting" /> */}
 
         <ScrollView>
           <View style={styles.storepage}>
@@ -110,7 +107,7 @@ const OnlineStore = ({ navigation }: any) => {
               <Text style={styles.mytext}>Store Page</Text>
             </View>
             <View>
-              <Text style={{ marginLeft: 28 }}>
+              <Text style={{ marginLeft: 28, color: "#000" }}>
                 This option helps you hide/ un-hide your store and product on
                 svindo app
               </Text>
@@ -150,7 +147,7 @@ const OnlineStore = ({ navigation }: any) => {
               <Text style={styles.mytext}>Store Location </Text>
             </View>
             <View>
-              <Text style={{ marginLeft: 28 }}>
+              <Text style={{ marginLeft: 28, color: "#000" }}>
                 This option helps you to Hide / Un-hide your store location on
                 svindo app.
               </Text>
@@ -190,7 +187,7 @@ const OnlineStore = ({ navigation }: any) => {
               </View>
             </View>
             <View>
-              <Text style={{ marginLeft: 28 }}>
+              <Text style={{ marginLeft: 28, color: "#000" }}>
                 Enabling this option, makes the products posted online into a
                 catalog that is the customer will not be able to place order.
                 But can enquire through chat box. .
@@ -222,7 +219,7 @@ const OnlineStore = ({ navigation }: any) => {
               </View>
             </View>
             <View>
-              <Text style={{ marginLeft: 28 }}>
+              <Text style={{ marginLeft: 28, color: "#000" }}>
                 Enabling this option, makes the products posted online into a
                 catalog that is the customer will not be able to place order.
                 But can enquire through chat box. .
@@ -260,7 +257,7 @@ const OnlineStore = ({ navigation }: any) => {
         </View>
 
         <Bottomnavigation />
-      </View>
+      </SafeAreaView>
     </MainContainer>
   );
 };
@@ -310,7 +307,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
 
-  menuText: { fontSize: 14, marginLeft: 8, fontWeight: "600" },
+  menuText: { fontSize: 14, marginLeft: 8, fontWeight: "600", color: "#000" },
   bottomNav: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -386,6 +383,7 @@ const styles = StyleSheet.create({
   mytext: {
     paddingHorizontal: 5,
     fontWeight: "600",
+    color: "#000",
   },
 });
 

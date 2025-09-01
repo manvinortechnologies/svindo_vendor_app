@@ -19,6 +19,7 @@ import { API_ROUTES } from "../constants/api-routes.constants";
 import api from "../services/api/api";
 import { useNavigation } from "@react-navigation/native";
 import CalendarModal from "../Modals/CalendarModal";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -131,7 +132,7 @@ const PaymentsScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Headerwithback title="Payments" />
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -359,7 +360,7 @@ const PaymentsScreen = () => {
         onClose={() => setPaymentCalModel(false)}
         onSelect={setPaymentDate}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -369,7 +370,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: 15,
   },
   content: {
     padding: 16,

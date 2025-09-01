@@ -7,9 +7,9 @@ import {
   Dimensions,
   Image,
   TouchableOpacity,
-  SafeAreaView,
 } from "react-native";
 import Headerwithback from "./Headerwithback";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const screenWidth = Dimensions.get("window").width;
 const cardWidth = screenWidth / 2 - 24;
@@ -60,7 +60,7 @@ const products = [
 ];
 
 const SelectSpotlightProduct = () => {
-  const renderItem = ({ item }: { item: typeof products[0] }) => (
+  const renderItem = ({ item }: { item: (typeof products)[0] }) => (
     <View style={styles.card}>
       <View style={styles.stockBadge}>
         <Text style={styles.stockText}>{item.stock}</Text>

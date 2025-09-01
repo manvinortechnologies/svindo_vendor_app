@@ -8,14 +8,15 @@ import {
 } from "react-native";
 import React, { useState } from "react";
 import Headerwithback from "./Headerwithback";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const CreateRequestScreen = () => {
-  const [selectedType, setSelectedType] = useState<
-    "Business" | "Personal"
-  >("Business");
+  const [selectedType, setSelectedType] = useState<"Business" | "Personal">(
+    "Business"
+  );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Headerwithback title={"Create Request"} />
 
       <ScrollView contentContainerStyle={styles.listContainer}>
@@ -129,112 +130,111 @@ const CreateRequestScreen = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
 export default CreateRequestScreen;
 
-
 const styles = StyleSheet.create({
-    container: {
-    padding: 10, 
-    backgroundColor: '#fff',
-    paddingBottom: 20
-    },
-    listContainer: {
+  container: {
+    paddingHorizontal: 10,
+    backgroundColor: "#fff",
+    flex: 1,
+  },
+  listContainer: {
     padding: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   formContainer: {
     flex: 1,
   },
   typeRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 16,
   },
   typeButton: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#FCA311',
+    borderColor: "#FCA311",
     paddingVertical: 8,
     borderRadius: 6,
     marginRight: 8,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   typeButtonSelected: {
-    backgroundColor: '#FCA311',
+    backgroundColor: "#FCA311",
   },
   typeText: {
-    textAlign: 'center',
-    color: '#FCA311',
-    fontWeight: '500',
+    textAlign: "center",
+    color: "#FCA311",
+    fontWeight: "500",
   },
   typeTextSelected: {
-    color: '#fff',
+    color: "#fff",
   },
   label: {
-    color: '#727272',
+    color: "#727272",
     fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 2
+    fontWeight: "500",
+    marginBottom: 2,
   },
   input: {
     borderWidth: 1,
-    borderColor: '#FCA311',
+    borderColor: "#FCA311",
     borderRadius: 6,
     padding: 10,
     marginBottom: 12,
     fontSize: 14,
-    backgroundColor: '#FFF3E1'
+    backgroundColor: "#FFF3E1",
   },
   textArea: {
     borderWidth: 1,
-    borderColor: '#FCA311',
+    borderColor: "#FCA311",
     borderRadius: 6,
     padding: 10,
     marginBottom: 12,
     fontSize: 14,
     minHeight: 100,
-    textAlignVertical: 'top',
-    backgroundColor: '#FFF3E1'
+    textAlignVertical: "top",
+    backgroundColor: "#FFF3E1",
   },
   uploadButton: {
-    width: '30%',
+    width: "30%",
     height: 100,
-    alignSelf: 'center',
+    alignSelf: "center",
     borderWidth: 1,
-    borderColor: '#FCA311',
+    borderColor: "#FCA311",
     borderRadius: 6,
     paddingVertical: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     padding: 10,
     marginBottom: 20,
   },
   uploadText: {
-    color: '#FCA311',
-    fontWeight: '500',
-    textAlign: 'center'
+    color: "#FCA311",
+    fontWeight: "500",
+    textAlign: "center",
   },
   note: {
     fontSize: 12,
-    color: '#727272',
-    fontWeight: '600',
+    color: "#727272",
+    fontWeight: "600",
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
   submitButton: {
-    width: '40%',
-    alignSelf: 'center',
-    backgroundColor: '#FCA311',
+    width: "40%",
+    alignSelf: "center",
+    backgroundColor: "#FCA311",
     borderRadius: 6,
     paddingVertical: 8,
-    alignItems: 'center',
-    marginBottom: 40
+    alignItems: "center",
+    marginBottom: 40,
   },
   submitText: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
   },
-})
+});
