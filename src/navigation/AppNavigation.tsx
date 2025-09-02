@@ -113,6 +113,8 @@ import ModelReminderScreen from "../Screens/ModelReminderScreen";
 import CustomerLedger from "../Screens/CustomerLedger";
 import VendorLedger from "../Screens/VendorLedger";
 import SmsScreen from "../Screens/SmsScreen";
+import BoostPostSpotlight from "../Screens/BoostPostSpotlight";
+import ManageNotification from "../Screens/ManageNotification";
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
 
@@ -490,12 +492,20 @@ const AppNavigation = () => {
           component={PaymentsScreen}
         />
         <Stack.Screen
+          name={HomeNavigation.MANAGENOTIFICATION}
+          component={ManageNotification}
+        />
+        <Stack.Screen
           name={HomeNavigation.SENDNOTIFICATION}
           component={SendNotifications}
         />
         <Stack.Screen
           name={HomeNavigation.PROMOTESTORE}
           component={PromoteStore}
+        />
+        <Stack.Screen
+          name={HomeNavigation.BOOSTPOSTSPOTLIGHT}
+          component={BoostPostSpotlight}
         />
         <Stack.Screen
           name={HomeNavigation.AUTOASSIGNDELIVERY}

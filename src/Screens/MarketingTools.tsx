@@ -7,21 +7,14 @@ import {
   StyleSheet,
   StatusBar,
   Platform,
-<<<<<<< HEAD
-=======
   SafeAreaView,
->>>>>>> 2206434bc567e7c3e73ab77e32c9f7ee7a45bfc6
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Icons from "react-native-vector-icons/AntDesign";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useNavigation } from "@react-navigation/native";
 import Bottomnavigation from "./Bottomnavigation";
-<<<<<<< HEAD
 import Header from "./Header";
-=======
-import CustomHeader from "../CommonComponent/CustomHeader";
->>>>>>> 2206434bc567e7c3e73ab77e32c9f7ee7a45bfc6
 
 // ✅ Define the type for the navigation stack
 type RootStackParamList = {
@@ -33,34 +26,31 @@ type RootStackParamList = {
   Chats: undefined;
   DownloadQRCode: undefined;
   WhatsAppMessage: undefined;
-<<<<<<< HEAD
   SmsScreen: undefined;
-=======
->>>>>>> 2206434bc567e7c3e73ab77e32c9f7ee7a45bfc6
   Emails: undefined;
   ManageDelivery: undefined;
   TransactionMessages: undefined;
   MarketingTools: undefined;
 };
 
-// ✅ Define the type for navigation prop
-export type SecurityScreenNavigationProp = StackNavigationProp<
+// ✅ Define the type for navigation prop (fixed)
+export type MarketingToolsNavigationProp = StackNavigationProp<
   RootStackParamList,
-  "OnlineStore"
+  "MarketingTools"
 >;
 
 const MarketingTools = () => {
-  const navigation = useNavigation<SecurityScreenNavigationProp>(); // ✅ Corrected navigation type
-<<<<<<< HEAD
+  const navigation = useNavigation<MarketingToolsNavigationProp>();
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Header
         title="Marketing Tools"
         backgroundColor="#FFF"
         textColor="#333"
         borderBottomColor="#ccc"
       />
+
       <ScrollView>
         <View style={styles.menuContainer}>
           {menuItems.map((item) => (
@@ -81,55 +71,8 @@ const MarketingTools = () => {
           ))}
         </View>
       </ScrollView>
-      {/* <Bottompopup/> */}
-      <View style={styles.bottomcontainer}>
-        <TouchableOpacity
-          style={styles.option}
-          onPress={() => navigation.navigate("OnlineStore")}
-        >
-          <Icon name="storefront" size={20} color="#555" />
-          <Text style={styles.optionText}>Online Store</Text>
-        </TouchableOpacity>
 
-        <View style={styles.divider} />
-
-        <TouchableOpacity
-          style={styles.option}
-          onPress={() => navigation.navigate("MarketingTools")}
-        >
-          <Icons name="setting" size={20} color="#f7931e" />
-          <Text style={[styles.optionText, { color: "#f7931e" }]}>Tools</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Bottomnavigation />
-    </View>
-=======
-
-  return (
-    <SafeAreaView style={styles.container}>
-      <CustomHeader title="Marketing Tools" />
-      <ScrollView>
-        <View style={styles.menuContainer}>
-          {menuItems.map((item) => (
-            <TouchableOpacity
-              key={item.title}
-              style={styles.menuItem}
-              onPress={() => item.screen && navigation.navigate(item.screen)} // ✅ Corrected navigation
-            >
-              <Icon name={item.icon} size={24} color="#000" />
-              <Text style={styles.menuText}>{item.title}</Text>
-              <Icon
-                name="chevron-right"
-                size={24}
-                color="#000"
-                style={{ marginLeft: "auto" }}
-              />
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
-      {/* <Bottompopup/> */}
+      {/* Bottom options row */}
       <View style={styles.bottomcontainer}>
         <TouchableOpacity
           style={styles.option}
@@ -152,7 +95,6 @@ const MarketingTools = () => {
 
       <Bottomnavigation />
     </SafeAreaView>
->>>>>>> 2206434bc567e7c3e73ab77e32c9f7ee7a45bfc6
   );
 };
 
@@ -163,7 +105,6 @@ type MenuItemType = {
   screen?: keyof RootStackParamList;
 };
 
-// ✅ Ensure screen names match the navigation stack
 const menuItems: MenuItemType[] = [
   {
     title: "Online Store Settings",
@@ -181,10 +122,7 @@ const menuItems: MenuItemType[] = [
   { title: "Chats", icon: "chat", screen: "Chats" },
   { title: "Download Shop QR Code", icon: "qrcode", screen: "DownloadQRCode" },
   { title: "WhatsApp Message", icon: "whatsapp", screen: "WhatsAppMessage" },
-<<<<<<< HEAD
   { title: "SMS", icon: "message-text-outline", screen: "SmsScreen" },
-=======
->>>>>>> 2206434bc567e7c3e73ab77e32c9f7ee7a45bfc6
   { title: "Emails", icon: "email-outline", screen: "Emails" },
   {
     title: "Manage Delivery",
@@ -202,17 +140,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-<<<<<<< HEAD
     paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 40 : 0,
-=======
->>>>>>> 2206434bc567e7c3e73ab77e32c9f7ee7a45bfc6
   },
-  imageContainer: {
-    alignContent: "center",
-    justifyContent: "center",
-    margin: 10,
-  },
-  banner: { width: "100%", height: 180, resizeMode: "cover", borderRadius: 20 },
   menuContainer: {
     marginHorizontal: 10,
     backgroundColor: "#fff",
@@ -228,21 +157,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     borderRadius: 10,
   },
-<<<<<<< HEAD
-  menuText: { fontSize: 14, marginLeft: 8, fontWeight: "600" },
-=======
   menuText: { fontSize: 14, marginLeft: 8, fontWeight: "600", color: "#000" },
->>>>>>> 2206434bc567e7c3e73ab77e32c9f7ee7a45bfc6
-  bottomNav: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    padding: 12,
-    borderTopWidth: 0.5,
-    borderTopColor: "#ccc",
-  },
-  navItem: { alignItems: "center" },
-  navText: { fontSize: 12, marginTop: 4 },
-  activeText: { color: "#007bff" },
   bottomcontainer: {
     flexDirection: "row",
     borderWidth: 1,
@@ -264,7 +179,6 @@ const styles = StyleSheet.create({
   option: {
     flexDirection: "row",
     alignItems: "center",
-    textAlign: "center",
     justifyContent: "center",
   },
   optionText: {

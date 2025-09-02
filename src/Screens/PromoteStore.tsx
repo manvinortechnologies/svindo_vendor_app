@@ -60,7 +60,7 @@ const sampleData = [
   },
 ];
 
-const PromoteStore = () => {
+const PromoteStore = ({ navigation }: any) => {
   const [boosted, setBoosted] = useState(false);
 
   return (
@@ -185,7 +185,10 @@ const PromoteStore = () => {
         />
 
         {/* Boost Button */}
-        <TouchableOpacity style={styles.boostButton}>
+        <TouchableOpacity
+          style={styles.boostButton}
+          onPress={() => navigation.navigate("BoostPostSpotlight")}
+        >
           <Text style={styles.boostText}>Boost</Text>
         </TouchableOpacity>
       </ScrollView>

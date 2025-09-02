@@ -21,6 +21,7 @@ type RootStackParamList = {
   PromoteStore: undefined;
   DiscountCoupons: undefined;
   DeliveryCashback: undefined;
+  ManageNotification: undefined;
   SendNotifications: undefined;
   CouponsScreen: undefined;
 };
@@ -91,7 +92,7 @@ const menuItems: MenuItemType[] = [
   {
     title: "Send Notifications on svindo app",
     icon: "bell-outline",
-    screen: "SendNotifications",
+    screen: "ManageNotification",
   },
 ];
 const styles = StyleSheet.create({
