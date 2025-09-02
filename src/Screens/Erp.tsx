@@ -363,6 +363,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     fontWeight: "600",
+    color: "#000",
   },
 
   menuContainer: { marginHorizontal: 10 },
@@ -377,7 +378,7 @@ const styles = StyleSheet.create({
     marginVertical: 5,
     borderRadius: 8,
   },
-  menuText: { fontSize: 14, marginLeft: 8, fontWeight: "600" },
+  menuText: { fontSize: 14, marginLeft: 8, fontWeight: "600", color: "#000" },
   sectionTitle: {
     marginLeft: 16,
     marginVertical: 10,

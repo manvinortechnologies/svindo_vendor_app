@@ -107,6 +107,7 @@ export default CustomDropdown;
 const styles = StyleSheet.create({
   dropdownContainer: {
     marginBottom: height * 0.01,
+    zIndex: 1000,
   },
   dropdown: {
     flexDirection: "row",
@@ -136,6 +137,7 @@ const styles = StyleSheet.create({
     zIndex: 999,
     marginTop: 50,
     maxHeight: height * 0.3,
+    elevation: 10, // For Android
   },
   searchInput: {
     padding: 10,
@@ -151,6 +153,7 @@ const styles = StyleSheet.create({
   },
   dropdownItemText: {
     fontSize: width * 0.04,
+    color: "#000",
   },
   noResultText: {
     textAlign: "center",

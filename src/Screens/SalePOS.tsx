@@ -26,6 +26,7 @@ import CompanySelectModal from "../Modals/CompanySelectModal";
 import { useNavigation } from "@react-navigation/native";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import CalendarModal from "../Modals/CalendarModal";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const SalePOS = () => {
   const navigation: any = useNavigation();
@@ -246,13 +247,8 @@ const SalePOS = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Headerwithback
-        title="Sales & POS"
-        rightIcons={[
-          <Icon name="magnify" size={20} color="black" key="search" />,
-        ]}
-      />
+    <SafeAreaView style={styles.container}>
+      <Headerwithback title="Sales & POS" />
 
       <ScrollView
         keyboardShouldPersistTaps="always"
@@ -580,7 +576,7 @@ const SalePOS = () => {
         }}
       />
       {/* <Bottomnavigation /> */}
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -590,7 +586,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 40 : 0,
   },
   scrollContent: {
     padding: 15,
@@ -681,6 +676,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "500",
     textAlign: "center",
+    color: "#000",
   },
   bottomBox: {
     marginTop: 20,
@@ -702,6 +698,7 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 6,
     backgroundColor: "#fff",
+    color: "#000",
   },
   paymentOptions: {
     flexDirection: "row",

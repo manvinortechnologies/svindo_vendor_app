@@ -241,6 +241,7 @@ const styles = StyleSheet.create({
   noteLabel: {
     fontWeight: "bold",
     marginBottom: 4,
+    color: "#000",
   },
   noteText: {
     fontSize: 13,
@@ -262,6 +263,7 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: "600",
     flex: 1,
+    color: "#000",
   },
   openText: {
     fontSize: 13,

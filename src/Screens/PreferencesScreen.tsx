@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,14 +7,14 @@ import {
   ScrollView,
   Platform,
   StatusBar,
-} from 'react-native';
-import Headerwithback from './Headerwithback';
-import Bottomnavigation from './Bottomnavigation';
-import CustomSwitch from './CustomSwitch'; // Make sure this path is correct
-
+} from "react-native";
+import Headerwithback from "./Headerwithback";
+import Bottomnavigation from "./Bottomnavigation";
+import CustomSwitch from "./CustomSwitch"; // Make sure this path is correct
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const PreferencesScreen = () => {
-  const [sortBy, setSortBy] = useState<'created' | 'document'>('created');
+  const [sortBy, setSortBy] = useState<"created" | "document">("created");
   const [roundOff, setRoundOff] = useState(false);
   const [sendEmail, setSendEmail] = useState(true);
   const [sendSMS, setSendSMS] = useState(false);
@@ -22,7 +22,7 @@ const PreferencesScreen = () => {
   const [trackDeliveryInventory, setTrackDeliveryInventory] = useState(true);
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Headerwithback title="Preferences" />
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -31,20 +31,20 @@ const PreferencesScreen = () => {
           <View style={styles.radioRow}>
             <TouchableOpacity
               style={styles.radioOption}
-              onPress={() => setSortBy('created')}
+              onPress={() => setSortBy("created")}
             >
               <View style={styles.radioCircle}>
-                {sortBy === 'created' && <View style={styles.radioDot} />}
+                {sortBy === "created" && <View style={styles.radioDot} />}
               </View>
               <Text style={styles.radioLabel}>Created Date</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={styles.radioOption}
-              onPress={() => setSortBy('document')}
+              onPress={() => setSortBy("document")}
             >
               <View style={styles.radioCircle}>
-                {sortBy === 'document' && <View style={styles.radioDot} />}
+                {sortBy === "document" && <View style={styles.radioDot} />}
               </View>
               <Text style={styles.radioLabel}>Document Date</Text>
             </TouchableOpacity>
@@ -62,7 +62,9 @@ const PreferencesScreen = () => {
           {/* Send Email */}
           <View style={styles.switchRow}>
             <View>
-              <Text style={styles.switchTitle}>Send Email on record payment</Text>
+              <Text style={styles.switchTitle}>
+                Send Email on record payment
+              </Text>
               <Text style={styles.switchDesc}>loremipsumloreimpsum</Text>
             </View>
             <CustomSwitch value={sendEmail} onValueChange={setSendEmail} />
@@ -88,102 +90,98 @@ const PreferencesScreen = () => {
 
           {/* Track for delivery challan */}
           <View style={styles.switchRow}>
-            <Text style={styles.switchTitle}>Track Inventory for Delivery Challan</Text>
+            <Text style={styles.switchTitle}>
+              Track Inventory for Delivery Challan
+            </Text>
             <CustomSwitch
               value={trackDeliveryInventory}
               onValueChange={setTrackDeliveryInventory}
             />
           </View>
         </View>
-
-       
       </ScrollView>
       <TouchableOpacity style={styles.updateBtn}>
-          <Text style={styles.updateText}>Update</Text>
-        </TouchableOpacity>
+        <Text style={styles.updateText}>Update</Text>
+      </TouchableOpacity>
       <Bottomnavigation />
-    </View>
+    </SafeAreaView>
   );
 };
 
 export default PreferencesScreen;
 
 const styles = StyleSheet.create({
-    container: {  backgroundColor: "#FFF",
-        flex:1,
-        paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 40 : 0,
-    
-       },
- content: { padding: 16, paddingBottom: 100 },
+  container: { backgroundColor: "#FFF", flex: 1 },
+  content: { padding: 16, paddingBottom: 100 },
   card: {
-    backgroundColor: '#fff7ec',
+    backgroundColor: "#fff7ec",
     borderWidth: 1,
-    borderColor: '#f8b14d',
+    borderColor: "#f8b14d",
     borderRadius: 10,
     padding: 16,
   },
   cardTitle: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 10,
     fontSize: 15,
   },
   radioRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 20,
     gap: 20,
   },
   radioOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   radioCircle: {
     width: 18,
     height: 18,
     borderRadius: 9,
     borderWidth: 2,
-    borderColor: '#f8b14d',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderColor: "#f8b14d",
+    justifyContent: "center",
+    alignItems: "center",
     marginRight: 6,
   },
   radioDot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#f8b14d',
+    backgroundColor: "#f8b14d",
   },
   radioLabel: {
     fontSize: 14,
-    color: '#000',
+    color: "#000",
   },
   switchRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 20,
   },
   switchTitle: {
-    fontWeight: '600',
+    fontWeight: "600",
     fontSize: 14,
-    color: '#000',
+    color: "#000",
   },
   switchDesc: {
-    color: '#999',
+    color: "#999",
     fontSize: 12,
   },
   updateBtn: {
-    backgroundColor: '#FCA311',
+    backgroundColor: "#FCA311",
     marginTop: 40,
     paddingVertical: 14,
-    alignItems: 'center',
+    alignItems: "center",
     borderRadius: 10,
-    width:"50%",
-    alignSelf:"center",
-    marginBottom:10,
+    width: "50%",
+    alignSelf: "center",
+    marginBottom: 10,
   },
   updateText: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: "bold",
+    color: "#000",
   },
 });

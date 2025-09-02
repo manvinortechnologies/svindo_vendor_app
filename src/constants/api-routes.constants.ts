@@ -67,4 +67,5 @@ export const API_ROUTES = {
   addons: "/vendor/addon/",
   spotlightProduct: "/vendor/spotlight-product/",
   deliveryBoys: "/vendor/deliveryboys/",
+  orders: "/vendor/orders/",
 };

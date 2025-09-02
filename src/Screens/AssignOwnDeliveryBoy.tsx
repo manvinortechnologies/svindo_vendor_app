@@ -12,6 +12,7 @@ import Headerwithback from "./Headerwithback";
 import CustomSwitch from "./CustomSwitch";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const AssignOwnDeliveryBoy = () => {
   const [isEnabled, setIsEnabled] = useState(true);
@@ -57,7 +58,7 @@ const AssignOwnDeliveryBoy = () => {
   ];
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Headerwithback title="Manage Own Delivery Boy" />
       <Loading visible={loading} />
       {/* Toggle Section */}
@@ -135,7 +136,7 @@ const AssignOwnDeliveryBoy = () => {
         style={{ marginTop: 12 }}
         showsVerticalScrollIndicator={false}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -146,7 +147,6 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     padding: 12,
-    paddingTop: 15,
   },
   box: {
     backgroundColor: "#FFF",

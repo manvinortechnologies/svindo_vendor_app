@@ -371,7 +371,7 @@ const BillDetails: React.FC = () => {
                     onValueChange={() => toggleOption(idx)}
                     tintColors={{ true: "#ff9800", false: "#ccc" }}
                   />
-                  <Text>{opt.label}</Text>
+                  <Text style={{ color: "#000" }}>{opt.label}</Text>
                 </View>
               ))}
             </View>
@@ -419,7 +419,12 @@ const styles = StyleSheet.create({
     marginTop: 10,
     marginHorizontal: 10,
   },
-  company: { fontSize: 16, fontWeight: "bold", paddingHorizontal: 10 },
+  company: {
+    fontSize: 16,
+    fontWeight: "bold",
+    paddingHorizontal: 10,
+    color: "#000",
+  },
   tag: {
     backgroundColor: "#ffeb3b",
     alignSelf: "center",
@@ -428,13 +433,14 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginLeft: 10,
   },
-  tagText: { fontSize: 12, fontWeight: "bold" },
+  tagText: { fontSize: 12, fontWeight: "bold", color: "#000" },
   sectionTitle: {
     marginLeft: 10,
     marginTop: 5,
     fontWeight: "bold",
     marginHorizontal: 10,
     paddingHorizontal: 10,
+    color: "#000",
   },
   sectionSubtitle: {
     marginLeft: 10,
@@ -460,6 +466,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
     paddingVertical: 6,
+    color: "#000",
   },
   serialCell: {
     textAlign: "center",
@@ -480,11 +487,13 @@ const styles = StyleSheet.create({
   invoiceTitle: {
     fontWeight: "bold",
     fontSize: 18,
+    color: "#000",
   },
   invoiceNumber: {
     fontWeight: "bold",
     fontSize: 16,
     textAlign: "right",
+    color: "#000",
   },
   invoiceDate: {
     fontSize: 12,

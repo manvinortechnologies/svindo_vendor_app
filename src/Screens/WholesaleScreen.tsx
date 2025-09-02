@@ -9,7 +9,6 @@ import {
   KeyboardTypeOptions,
   StatusBar,
   Platform,
-  SafeAreaView,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Headerwithback from "./Headerwithback"; // Use your actual path
@@ -18,7 +17,10 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import Loading from "../CommonComponent/Loading";
 import moment from "moment";
 
@@ -169,12 +171,7 @@ export default function WholesaleScreen() {
   }, [selectedType?.name]);
 
   return (
-    <SafeAreaView
-      style={[
-        styles.container,
-        { paddingBottom: insets.bottom, paddingTop: insets.top },
-      ]}
-    >
+    <SafeAreaView style={[styles.container]}>
       <Loading visible={isLoading} />
       <Headerwithback
         title="Wholesale"
@@ -189,7 +186,10 @@ export default function WholesaleScreen() {
       />
       <ScrollView
         style={styles.content}
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: insets.bottom }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingBottom: insets.bottom + 30,
+        }}
       >
         {/* Document Type Selector */}
         <View style={styles.typeSelector}>
@@ -335,6 +335,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
     marginBottom: 12,
+    color: "#000",
   },
   optionalList: {
     backgroundColor: "#FCA3111C",

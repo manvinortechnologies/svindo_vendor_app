@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -7,15 +7,16 @@ import {
   ScrollView,
   Platform,
   StatusBar,
-} from 'react-native';
-import Headerwithback from './Headerwithback';
-import Bottomnavigation from './Bottomnavigation';
-import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
+} from "react-native";
+import Headerwithback from "./Headerwithback";
+import Bottomnavigation from "./Bottomnavigation";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // Define your navigation types if needed
 type RootStackParamList = {
- PreferencesScreen: undefined;
+  PreferencesScreen: undefined;
   Sales: undefined;
   Purchases: undefined;
   DiscountSettings: undefined;
@@ -24,22 +25,22 @@ type RootStackParamList = {
 
 type SettingsScreenNavigationProp = StackNavigationProp<
   RootStackParamList,
-  'PreferencesScreen'
+  "PreferencesScreen"
 >;
 
 const SettingsScreen = () => {
   const navigation = useNavigation<SettingsScreenNavigationProp>();
 
   const settingsOptions = [
-    { label: 'Preferences', route: 'PreferencesScreen' },
-    { label: 'Sales', route: 'Sales' },
-    { label: 'Purchases', route: 'Purchase' },
-    { label: 'Discount Settings', route: 'DiscountSettings' },
-    { label: 'Taxes & GST', route: 'TaxesAndGST' },
+    { label: "Preferences", route: "PreferencesScreen" },
+    { label: "Sales", route: "Sales" },
+    { label: "Purchases", route: "Purchase" },
+    { label: "Discount Settings", route: "DiscountSettings" },
+    { label: "Taxes & GST", route: "TaxesAndGST" },
   ];
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Headerwithback title="Settings" />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {settingsOptions.map((item, index) => (
@@ -49,45 +50,41 @@ const SettingsScreen = () => {
             onPress={() => navigation.navigate(item.route as any)}
           >
             <Text style={styles.cardText}>{item.label}</Text>
-            <Text style={styles.arrow}>{'>'}</Text>
+            <Text style={styles.arrow}>{">"}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
       <Bottomnavigation />
-    </View>
+    </SafeAreaView>
   );
 };
 
 export default SettingsScreen;
 
 const styles = StyleSheet.create({
-   container: {  backgroundColor: "#FFF",
-         flex:1,
-         paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 40 : 0,
-     
-        },
+  container: { backgroundColor: "#FFF", flex: 1 },
   scrollContent: {
     padding: 16,
     paddingBottom: 100,
   },
   card: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 10,
     padding: 16,
     marginBottom: 12,
-    backgroundColor: '#fff',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    backgroundColor: "#fff",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   cardText: {
     fontSize: 15,
-    fontWeight: '500',
-    color: '#000',
+    fontWeight: "500",
+    color: "#000",
   },
   arrow: {
     fontSize: 16,
-    color: '#999',
+    color: "#999",
   },
 });

@@ -1,71 +1,88 @@
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, FlatList, Dimensions } from 'react-native'
-import React from 'react';
-import Headerwithback from './Headerwithback';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  TouchableOpacity,
+  FlatList,
+  Dimensions,
+} from "react-native";
+import React from "react";
+import Headerwithback from "./Headerwithback";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-const { width } = Dimensions.get('window');
-
+const { width } = Dimensions.get("window");
 
 const CreateOffer = () => {
-    const renderForm = () => (
-        <View style={styles.formContainer}>
-            {/* Upload Media Box */}
-            <TouchableOpacity style={styles.uploadBox}>
-                <Icon name="add" size={24} color="#727272" />
-                <Text style={styles.uploadText}>Upload Media</Text>
-                <Text style={styles.uploadNote}>
-                    For Photos keep the dimension ratio 1:1
-                </Text>
-            </TouchableOpacity>
-            {/* Heading */}
-             <Text style={styles.label}>Heading</Text>
-             <TextInput placeholder="Enter here" style={styles.input} />
+  const renderForm = () => (
+    <View style={styles.formContainer}>
+      {/* Upload Media Box */}
+      <TouchableOpacity style={styles.uploadBox}>
+        <Icon name="add" size={24} color="#727272" />
+        <Text style={styles.uploadText}>Upload Media</Text>
+        <Text style={styles.uploadNote}>
+          For Photos keep the dimension ratio 1:1
+        </Text>
+      </TouchableOpacity>
+      {/* Heading */}
+      <Text style={styles.label}>Heading</Text>
+      <TextInput placeholder="Enter here" style={styles.input} />
 
-             {/* Select Product */}
-             <Text style={styles.label}>
-                Select Product to connect (Optional - for retail only)
-             </Text>
-             <TextInput placeholder='Select product' style={styles.input} />
+      {/* Select Product */}
+      <Text style={styles.label}>
+        Select Product to connect (Optional - for retail only)
+      </Text>
+      <TextInput placeholder="Select product" style={styles.input} />
 
-             {/* Selling Price */}
-             <Text style={styles.label}>Selling Price</Text>
-             <TextInput placeholder='Enter Amount' style={styles.input} keyboardType='numeric'
-             />
+      {/* Selling Price */}
+      <Text style={styles.label}>Selling Price</Text>
+      <TextInput
+        placeholder="Enter Amount"
+        style={styles.input}
+        keyboardType="numeric"
+      />
 
-             {/* Description */}
-             <Text style={styles.label}>Description</Text>
-             <TextInput placeholder='Enter details' style={styles.textArea} multiline numberOfLines={4}
-             />
-             {/* Note */}
-             <Text style={styles.note}>
-                Note:{"\n"}Use short description and lowest sales price to increase your
-               chances of sales.{"\n"}Offer will be valid for 7 days.
-             </Text>
+      {/* Description */}
+      <Text style={styles.label}>Description</Text>
+      <TextInput
+        placeholder="Enter details"
+        style={styles.textArea}
+        multiline
+        numberOfLines={4}
+      />
+      {/* Note */}
+      <Text style={styles.note}>
+        Note:{"\n"}Use short description and lowest sales price to increase your
+        chances of sales.{"\n"}Offer will be valid for 7 days.
+      </Text>
 
-             {/* Submit Offer Button */}
-             <TouchableOpacity style={styles.submitButton}>
-                <Text style={styles.submitText}>Submit Offer</Text>
-             </TouchableOpacity>
-        </View>
-    );
-  return (
-    <View style={styles.container}>
-        <Headerwithback title={'Create Offer'} />
-        <FlatList data={["form"]}
-        keyExtractor={(item) => item}
-        renderItem={renderForm} contentContainerStyle={styles.listContainer}
-        />
+      {/* Submit Offer Button */}
+      <TouchableOpacity style={styles.submitButton}>
+        <Text style={styles.submitText}>Submit Offer</Text>
+      </TouchableOpacity>
     </View>
+  );
+  return (
+    <SafeAreaView style={styles.container}>
+      <Headerwithback title={"Create Offer"} />
+      <FlatList
+        data={["form"]}
+        keyExtractor={(item) => item}
+        renderItem={renderForm}
+        contentContainerStyle={styles.listContainer}
+      />
+    </SafeAreaView>
   );
 };
 
-export default CreateOffer
+export default CreateOffer;
 
 const styles = StyleSheet.create({
-    container: {
+  container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingVertical: 20
+    // paddingVertical: 20
   },
   listContainer: {
     padding: 16,
@@ -89,7 +106,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   uploadNote: {
-    
     color: "#727272",
     fontWeight: "600",
     marginTop: 2,
@@ -128,8 +144,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   submitButton: {
-    width: '40%',
-    alignSelf: 'center',
+    width: "40%",
+    alignSelf: "center",
     backgroundColor: "#FCA311",
     borderRadius: 6,
     paddingVertical: 8,
@@ -140,4 +156,4 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 16,
   },
-})
+});

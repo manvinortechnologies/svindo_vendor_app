@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -18,6 +18,10 @@ import Bottomnavigation from "./Bottomnavigation";
 import NavigationButton from "./NavigationButton";
 import { useNavigation } from "@react-navigation/native";
 import OrderProductDetails from "./OrderProductDetails";
+import { SafeAreaView } from "react-native-safe-area-context";
+import api from "../services/api/api";
+import { API_ROUTES } from "../constants/api-routes.constants";
+import Loading from "../CommonComponent/Loading";
 
 const Orders = ({ navigation }: any) => {
   const [selectedStatus, setSelectedStatus] = useState("All");
@@ -43,59 +47,94 @@ const Orders = ({ navigation }: any) => {
     "Oldest First",
   ];
 
-  const orders = [
-    {
-      id: "SVIND0123456",
-      customer: "Customer Name",
-      date: "20 Jan 2025",
-      time: "1:15 PM",
-      items: 5,
-      type: "On-Shop Order",
-      amount: "$ 500.00",
-      status: "Order Accepted",
-      payment: "Unpaid",
-    },
-  ];
+  const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get(API_ROUTES.orders);
+        setOrders(response.data);
+        setFilteredOrders(response.data); // Initially set filtered orders to all orders
+        setLoading(false);
+      } catch (error) {
+        console.error("Failed to fetch orders:", error);
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, []);
+
+  useEffect(() => {
+    let filtered = [...orders];
+
+    // Status filter
+    if (selectedStatus !== "All") {
+      filtered = filtered.filter(
+        (order: any) =>
+          order.status.toLowerCase() === selectedStatus.toLowerCase()
+      );
+    }
+
+    // Type filter
+    if (selectedType !== "On Shop") {
+      filtered = filtered.filter(
+        (order: any) => order.delivery_type === selectedType
+      );
+    }
+
+    // Sorting filter
+    if (selectedFilter === "Price: Low to High") {
+      filtered.sort(
+        (a: any, b: any) => (a.total_amount ?? 0) - (b.total_amount ?? 0)
+      );
+    } else if (selectedFilter === "Price: High to Low") {
+      filtered.sort(
+        (a: any, b: any) => (b.total_amount ?? 0) - (a.total_amount ?? 0)
+      );
+    } else if (selectedFilter === "Newest First") {
+      filtered.sort(
+        (a: any, b: any) =>
+          new Date(b.created_at ?? 0).getTime() -
+          new Date(a.created_at ?? 0).getTime()
+      );
+    } else if (selectedFilter === "Oldest First") {
+      filtered.sort(
+        (a: any, b: any) =>
+          new Date(a.created_at ?? 0).getTime() -
+          new Date(b.created_at ?? 0).getTime()
+      );
+    }
+
+    setFilteredOrders(filtered);
+  }, [selectedStatus, selectedType, selectedFilter, orders]);
 
   return (
-    <View style={styles.container}>
-      <Header
+    <SafeAreaView style={styles.container}>
+      {/* <Header
         title="Orders/Sales"
         backgroundColor="#FFF"
         textColor="#333"
         borderBottomColor="#ccc"
-      />
-
+      /> */}
+      <Loading visible={loading} />
       <ScrollView style={styles.midcontent}>
         <View style={styles.header}>
-          <View style={styles.searchBar}>
-            <Image
-              source={require("../assets/search.png")}
-              style={styles.searchIcon}
-            />
-            <TextInput
-              placeholder="Search"
-              placeholderTextColor="#006EB2"
-              style={styles.searchInput}
-            />
-            <TouchableOpacity>
-              <Image
-                source={require("../assets/mic.png")}
-                style={styles.micIcon}
-              />
-            </TouchableOpacity>
-          </View>
-          <View>
-            <TouchableOpacity
-              style={styles.filterButton}
-              onPress={() => setFilterModalVisible(true)}
-            >
-              <Text style={styles.filterText}>
-                {selectedFilter === "None" ? "Filters" : selectedFilter}
-              </Text>
-              <Icon name="chevron-down-outline" size={16} color="#333" />
-            </TouchableOpacity>
-          </View>
+          <Text style={{ fontSize: 18, fontWeight: "700", color: "#000" }}>
+            Orders/Sales
+          </Text>
+          <TouchableOpacity
+            style={styles.filterButton}
+            onPress={() => setFilterModalVisible(true)}
+          >
+            <Text style={styles.filterText}>
+              {selectedFilter === "None" ? "Filters" : selectedFilter}
+            </Text>
+            <Icon name="chevron-down-outline" size={16} color="#333" />
+          </TouchableOpacity>
         </View>
 
         {/* Filter Modal */}
@@ -164,34 +203,35 @@ const Orders = ({ navigation }: any) => {
 
         {/* 📦 Order List */}
         <FlatList
-          data={orders}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
+          data={filteredOrders}
+          keyExtractor={(item: any) => item.id.toString()}
+          renderItem={({ item }: { item: any }) => (
             <TouchableOpacity
               style={styles.orderCard}
-              onPress={() => navigation.navigate("OrderProductDetails")}
+              onPress={() =>
+                navigation.navigate("OrderProductDetails", { orderId: item.id })
+              }
             >
               <View style={styles.orderHeader}>
-                <Text style={styles.customerName}>{item.customer}</Text>
+                <Text style={styles.customerName}>{item.customer_name}</Text>
                 <Text style={styles.orderDate}>
-                  {item.date}
-                  {"\n"}
-                  {item.time}
+                  {new Date(item.created_at).toLocaleDateString()}
                 </Text>
               </View>
               <Text style={styles.orderDetails}>
-                <Text style={styles.boldText}>Order #{item.id}</Text>
-                {"\n"}
-                {item.items} Item
+                <Text style={styles.boldText}>Order #{item.order_id}</Text>{" "}
+                {item.items.length} Item
               </Text>
               <View style={styles.onshop}>
-                <Text style={styles.orderDetails}>{item.type}</Text>
-                <Text style={styles.orderAmount}>{item.amount}</Text>
+                <Text style={styles.orderDetails}>{item.delivery_type}</Text>
+                <Text style={styles.orderAmount}>$ {item.total_amount}</Text>
               </View>
 
               <View style={styles.statusRow}>
                 <Text style={styles.orderStatus}>{item.status}</Text>
-                <Text style={styles.paymentStatus}>{item.payment} ➜</Text>
+                <Text style={styles.paymentStatus}>
+                  {item.is_paid ? "Paid" : "Unpaid"} ➜
+                </Text>
               </View>
             </TouchableOpacity>
           )}
@@ -230,7 +270,7 @@ const Orders = ({ navigation }: any) => {
       </View>
 
       <Bottomnavigation />
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -240,7 +280,6 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: "#fff",
     flex: 1,
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 40 : 0,
   },
   midcontent: {
     padding: 10,
@@ -251,7 +290,7 @@ const styles = StyleSheet.create({
     alignContent: "center",
     borderBottomWidth: 2,
     borderColor: "#ECECEC",
-
+    paddingBottom: 10,
     marginVertical: 10,
   },
   searchBar: {
@@ -298,6 +337,7 @@ const styles = StyleSheet.create({
   },
   filterText: {
     marginRight: 5,
+    color: "#000",
   },
   statusScroll: {
     marginBottom: 10,

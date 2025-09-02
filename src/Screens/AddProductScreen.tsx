@@ -1406,6 +1406,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginRight: 10,
     width: 50,
+    color: "#000",
   },
   optionGroup: {
     flexDirection: "row",

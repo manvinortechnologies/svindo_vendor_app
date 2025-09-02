@@ -18,6 +18,7 @@ import { SignUpScreenProps, THomeNavigation } from "../type";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import Loading from "../CommonComponent/Loading";
+import Icon from "react-native-vector-icons/Ionicons";
 
 const SignupScreen: FC<SignUpScreenProps> = () => {
   const navigation =
@@ -87,6 +88,14 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
 
   return (
     <View style={styles.container}>
+      {/* Back Button */}
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.goBack()}
+      >
+        <Icon name="chevron-back" size={24} color="#fff" />
+      </TouchableOpacity>
+
       {/* Logo & Title */}
       <LinearGradient colors={["#F9C313", "#FCA511"]} style={styles.header}>
         <Image
@@ -149,6 +158,26 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#F5F5F5",
   },
+  backButton: {
+    position: "absolute",
+    top: 20,
+    left: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 25,
+    backgroundColor: "#FF9800",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 2,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
   header: {
     width: "100%",
     height: "50%",
@@ -193,6 +222,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     fontSize: 16,
+    color: "#000",
   },
   continueButtonWrapper: {
     width: "90%",

@@ -14,31 +14,36 @@ import {
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import NavigationButton from "./NavigationButton";
 import Bottomnavigation from "./Bottomnavigation";
+import { useNavigation } from "@react-navigation/native";
+import Ionicons from "react-native-vector-icons/Ionicons";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const CreateProduct = () => {
+  const navigation = useNavigation();
+
   return (
-    <View style={styles.container}>
-      {/* Search Bar */}
+    <SafeAreaView style={styles.container}>
+      {/* Header with Back Button and Search Bar */}
       <View style={styles.header}>
+        {/* Back Button */}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="chevron-back" size={24} color="#fff" />
+        </TouchableOpacity>
+
+        {/* Search Bar */}
         <View style={styles.searchBar}>
           <Image
             source={require("../assets/search.png")}
             style={styles.searchIcon}
           />
           <TextInput
-            placeholder="Search"
-            placeholderTextColor="#006EB2"
+            placeholder="Searched Product/Service"
+            placeholderTextColor="#666"
             style={styles.searchInput}
           />
-          <TouchableOpacity>
-            <Image
-              source={require("../assets/mic.png")}
-              style={styles.micIcon}
-            />
-          </TouchableOpacity>
-        </View>
-        <View style={styles.drafttext}>
-          <Icon name="tooltip-image" color={"#000"} size={24} />
         </View>
       </View>
 
@@ -64,7 +69,7 @@ const CreateProduct = () => {
       </View>
 
       <Bottomnavigation></Bottomnavigation>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -73,7 +78,6 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#FFF",
     flex: 1,
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 40 : 0,
   },
   floatingButtons: {
     position: "absolute",
@@ -93,52 +97,55 @@ const styles = StyleSheet.create({
     borderColor: "#00630F",
   },
   buttongreen: { color: "#00630F", fontWeight: "bold" },
-  drafttext: {
-    fontSize: 18,
-    flexDirection: "row",
+  backButton: {
+    width: 35,
+    height: 35,
+    borderRadius: 20,
+    backgroundColor: "#FF9800",
+    alignItems: "center",
     justifyContent: "center",
-    alignContent: "center",
+    marginRight: 15,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 2,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   header: {
     flexDirection: "row",
-    justifyContent: "center",
-    alignContent: "center",
-    borderBottomWidth: 2,
-    borderColor: "#ECECEC",
-    width: "100%",
-    marginVertical: 10,
     alignItems: "center",
+    paddingVertical: 10,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ECECEC",
   },
   searchBar: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#006EB21C",
-    paddingHorizontal: 10,
+    backgroundColor: "#FFF7DD",
+    paddingHorizontal: 15,
     borderRadius: 25,
-    marginHorizontal: 15,
-    marginBottom: 10,
-    height: 40,
-    width: "80%",
+    height: 45,
+    borderWidth: 1,
+    borderColor: "#FFB74D",
   },
 
   searchIcon: {
-    width: 18,
-    height: 18,
-    tintColor: "#006EB2",
-    marginRight: 5,
+    width: 20,
+    height: 20,
+    tintColor: "#000",
+    marginRight: 10,
   },
 
   searchInput: {
     flex: 1,
     color: "#000",
-    fontSize: 14,
-  },
-
-  micIcon: {
-    width: 18,
-    height: 18,
-    tintColor: "red",
-    marginLeft: 5,
+    fontSize: 16,
+    fontWeight: "400",
   },
   addsection: {
     flexDirection: "row",
