@@ -7,6 +7,7 @@ import {
   ScrollView,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import CustomHeader from "../CommonComponent/CustomHeader";
 
 const ProductDetails = () => {
   const files = [
@@ -34,12 +35,7 @@ const ProductDetails = () => {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity>
-          <Icon name="arrow-back" size={24} color="#000" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Product Details</Text>
-      </View>
+      <CustomHeader title="Product Details" />
 
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Product Name */}
@@ -65,10 +61,13 @@ const ProductDetails = () => {
           <Text style={styles.addonTitle}>Add on:</Text>
           <View style={styles.addonRow}>
             {addons.map((addon, i) => (
-              <View
-                key={i}
-                style={[styles.addonBox, { backgroundColor: addon.color }]}
-              >
+              <View key={i} style={styles.addonBox}>
+                <View
+                  style={[
+                    styles.addonColorBox,
+                    { backgroundColor: addon.color },
+                  ]}
+                />
                 <Text style={styles.addonLabel}>{addon.label}</Text>
                 <Text style={styles.addonCost}>
                   Cost - $ {addon.cost.toFixed(2)}
@@ -87,23 +86,9 @@ export default ProductDetails;
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
 
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 15,
-    borderBottomWidth: 1,
-    borderColor: "#eee",
-  },
-  headerTitle: {
-    flex: 1,
-    textAlign: "center",
-    fontSize: 18,
-    fontWeight: "bold",
-    marginRight: 24,
-  },
-
   productName: {
     fontSize: 16,
+    color: "#000",
     fontWeight: "bold",
     margin: 15,
   },
@@ -117,7 +102,11 @@ const styles = StyleSheet.create({
     elevation: 3,
     position: "relative",
   },
-  fileText: { fontWeight: "bold", marginBottom: 5 },
+  fileText: {
+    fontWeight: "bold",
+    marginBottom: 5,
+    color: "#000",
+  },
   downloadBtn: {
     position: "absolute",
     right: 15,
@@ -131,8 +120,17 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     elevation: 3,
   },
-  addonTitle: { fontWeight: "bold", marginBottom: 10 },
-  addonRow: { flexDirection: "row", justifyContent: "space-between" },
+  addonTitle: {
+    fontWeight: "bold",
+    marginBottom: 5,
+    color: "#000",
+    textAlign: "center",
+    fontSize: 16,
+  },
+  addonRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
   addonBox: {
     flex: 1,
     marginHorizontal: 5,
@@ -140,6 +138,20 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
   },
-  addonLabel: { fontWeight: "bold", textAlign: "center" },
-  addonCost: { fontSize: 12, marginTop: 5 },
+  addonColorBox: {
+    width: 80,
+    height: 70,
+    borderRadius: 10,
+  },
+  addonLabel: {
+    fontWeight: "500",
+    textAlign: "center",
+    fontSize: 12,
+    color: "#000",
+  },
+  addonCost: {
+    fontSize: 8,
+    fontWeight: "600",
+    color: "#000",
+  },
 });

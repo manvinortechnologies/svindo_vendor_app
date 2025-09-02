@@ -39,6 +39,7 @@ export enum HomeNavigation {
   COMPANY_PROFILE = "CompanyProfile",
   USER_PROFILE = "UserProfile",
   MANAGE_COMPANIES = "ManageCompanies",
+  POSSCREEN = "PosScreen",
   SALE_POS = "SalePOS",
   CREATE_PURCHASE = "CreatePurchase",
   BARCODE = "Barcode",

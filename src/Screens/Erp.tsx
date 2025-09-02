@@ -55,7 +55,7 @@ const Erp = () => {
     {
       label: "Sale & POS",
       icon: "cart-outline",
-      screen: HomeNavigation.SALE_POS,
+      screen: "PosScreen",
     },
     { label: "Purchases", icon: "cart-arrow-down", screen: "CreatePurchase" },
     {

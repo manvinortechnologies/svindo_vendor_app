@@ -44,6 +44,7 @@ export type THomeNavigation = {
   [HomeNavigation.COMPANY_PROFILE]: undefined;
   [HomeNavigation.USER_PROFILE]: undefined;
   [HomeNavigation.MANAGE_COMPANIES]: undefined;
+  [HomeNavigation.POSSCREEN]: undefined;
   [HomeNavigation.SALE_POS]: undefined;
   [HomeNavigation.CREATE_PURCHASE]: undefined;
   [HomeNavigation.BARCODE]: undefined;

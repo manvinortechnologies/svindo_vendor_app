@@ -115,6 +115,7 @@ import VendorLedger from "../Screens/VendorLedger";
 import SmsScreen from "../Screens/SmsScreen";
 import BoostPostSpotlight from "../Screens/BoostPostSpotlight";
 import ManageNotification from "../Screens/ManageNotification";
+import PosScreen from "../Screens/PosScreen";
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
 
@@ -257,6 +258,7 @@ const AppNavigation = () => {
           name={HomeNavigation.MANAGE_COMPANIES}
           component={ManageCompanies}
         />
+        <Stack.Screen name={HomeNavigation.POSSCREEN} component={PosScreen} />
         <Stack.Screen name={HomeNavigation.SALE_POS} component={SalePOS} />
         <Stack.Screen
           name={HomeNavigation.CREATE_PURCHASE}

@@ -54,7 +54,7 @@ interface Order {
   items: OrderItem[];
 }
 
-const OrderProductDetails = () => {
+const OrderProductDetails = ({ navigation }: any) => {
   const route = useRoute();
   const { orderId } = route.params as OrderProductDetailsRouteParams;
   const [order, setOrder] = useState<Order | null>(null);
@@ -323,7 +323,10 @@ const OrderProductDetails = () => {
           swipeableRef.current?.close();
         }}
       >
-        <View style={styles.acceptBtn}>
+        <TouchableOpacity
+          style={styles.acceptBtn}
+          onPress={() => navigation.navigate("ProductDetails")}
+        >
           <View style={styles.swipeIndicator}>
             <Icon name="arrow-forward-outline" size={20} color="#FF9800" />
           </View>
@@ -331,7 +334,7 @@ const OrderProductDetails = () => {
             <Text style={styles.acceptText}>Accept Order</Text>
             <Text style={styles.acceptSub}>Swipe to change status</Text>
           </View>
-        </View>
+        </TouchableOpacity>
       </Swipeable>
     </SafeAreaView>
   );
@@ -565,7 +568,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     // backgroundColor: "#FF9800",
-    paddingVertical: 15,
+    paddingVertical: 5,
     paddingHorizontal: 20,
     width: "100%",
     borderRadius: 12,
