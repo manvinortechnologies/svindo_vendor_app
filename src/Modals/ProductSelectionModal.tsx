@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -10,10 +10,18 @@ import {
   StyleSheet,
   SafeAreaView,
 } from "react-native";
+import { useNavigation } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialIcons";
+
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
+import { HomeNavigation } from "../constants/app-routes.constants";
 
+// Constants
+const INITIAL_QUANTITY = 1;
+const MIN_QUANTITY = 0;
+
+// Types
 interface Product {
   id: number;
   name: string;
@@ -22,18 +30,35 @@ interface Product {
   image: string;
 }
 
-const ProductSelectionModal = ({
+interface CartItem {
+  id: number;
+  quantity: number;
+}
+
+interface ProductSelectionModalProps {
+  visible: boolean;
+  onClose: () => void;
+  setSelectedProducts: (products: Product[]) => void;
+  selectedProducts: Product[];
+}
+
+/**
+ * ProductSelectionModal - Modal for selecting products and managing quantities
+ * Features:
+ * - Product search and filtering
+ * - Quantity management with increment/decrement buttons
+ * - Direct quantity input
+ * - Cart state management
+ * - Integration with parent component's selected products
+ */
+const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
   visible,
   onClose,
   setSelectedProducts,
   selectedProducts,
-}: {
-  visible: boolean;
-  onClose: () => void;
-  setSelectedProducts: (x: []) => void;
-  selectedProducts: Product[];
 }) => {
-  const [cart, setCart] = useState<{ [key: number]: number }>({});
+  const navigation = useNavigation();
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [searchText, setSearchText] = useState("");
   const [productList, setProductList] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -64,86 +89,201 @@ const ProductSelectionModal = ({
     }
   };
 
-  const increment = (id: number) => {
-    setCart((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
-  };
-
-  const decrement = (id: number) => {
-    setCart((prev: any) => {
-      const newCount = (prev[id] || 1) - 1;
-      const updated = { ...prev };
-      if (newCount <= 0) {
-        delete updated[id];
-      } else {
-        updated[id] = newCount;
-      }
-      return updated;
-    });
-  };
-
-  const filteredProducts = productList.filter((product) =>
-    product.name.toLowerCase().includes(searchText.toLowerCase())
+  // Cart Management Functions
+  /**
+   * Finds a cart item by its ID
+   * @param id - Product ID to search for
+   * @returns CartItem if found, undefined otherwise
+   */
+  const findCartItem = useCallback(
+    (id: number): CartItem | undefined => {
+      return cart.find((item) => item.id === id);
+    },
+    [cart]
   );
 
-  const renderItem = ({ item }: { item: Product }) => {
-    const quantity = cart[item.id] || 0;
-    return (
-      <View style={styles.card}>
-        <Image source={{ uri: item.image }} style={styles.image} />
-        <Text style={styles.title}>{item.name}</Text>
-        <Text style={styles.desc}>{item.desc}</Text>
-        <View style={styles.bottomRow}>
-          {quantity === 0 ? (
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => increment(item.id)}
-            >
-              <Text style={styles.addButtonText}>Add</Text>
-            </TouchableOpacity>
-          ) : (
-            <View style={styles.qtyRow}>
-              <TouchableOpacity onPress={() => decrement(item.id)}>
-                <Text style={styles.qtyBtn}>-</Text>
-              </TouchableOpacity>
-              <Text style={styles.qtyText}>{quantity}</Text>
-              <TouchableOpacity onPress={() => increment(item.id)}>
-                <Text style={styles.qtyBtn}>+</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-          <Text style={styles.price}>₹ {item.price}</Text>
-        </View>
-      </View>
+  /**
+   * Updates the quantity of a cart item or removes it if quantity is 0
+   * @param id - Product ID
+   * @param quantity - New quantity value
+   */
+  const updateCartItemQuantity = useCallback((id: number, quantity: number) => {
+    setCart((prev) => {
+      if (quantity <= MIN_QUANTITY) {
+        return prev.filter((item) => item.id !== id);
+      }
+
+      const existingItem = prev.find((item) => item.id === id);
+      if (existingItem) {
+        return prev.map((item) =>
+          item.id === id ? { ...item, quantity } : item
+        );
+      } else {
+        return [...prev, { id, quantity }];
+      }
+    });
+  }, []);
+
+  /**
+   * Increments the quantity of a product in the cart
+   * @param id - Product ID to increment
+   */
+  const increment = useCallback(
+    (id: number) => {
+      const currentItem = findCartItem(id);
+      const newQuantity = currentItem
+        ? currentItem.quantity + 1
+        : INITIAL_QUANTITY;
+      updateCartItemQuantity(id, newQuantity);
+    },
+    [findCartItem, updateCartItemQuantity]
+  );
+
+  /**
+   * Decrements the quantity of a product in the cart
+   * @param id - Product ID to decrement
+   */
+  const decrement = useCallback(
+    (id: number) => {
+      const currentItem = findCartItem(id);
+      if (currentItem) {
+        const newQuantity = currentItem.quantity - 1;
+        updateCartItemQuantity(id, newQuantity);
+      }
+    },
+    [findCartItem, updateCartItemQuantity]
+  );
+
+  // Search and Filter Functions
+  /**
+   * Filters products based on search text
+   * @returns Filtered array of products
+   */
+  const filteredProducts = useCallback(() => {
+    if (!searchText.trim()) {
+      return productList;
+    }
+    return productList.filter((product) =>
+      product.name.toLowerCase().includes(searchText.toLowerCase())
     );
-  };
+  }, [productList, searchText]);
 
-  const handleProceed = () => {
-    setSelectedProducts((prev) => {
-      // Filter out items not in cart
-      const updated = prev.filter((p) => cart[p.id] !== undefined);
+  const handleSearchChange = useCallback((text: string) => {
+    setSearchText(text);
+  }, []);
 
-      // Map cart items to product objects
-      const cartItems = productList
-        .filter((item) => cart[item.id] !== undefined)
-        .map((item) => ({
-          ...item,
-          quantity: cart[item.id],
-        }));
+  /**
+   * Handles quantity change from text input
+   * @param itemId - Product ID
+   * @param text - Input text value
+   */
+  const handleQuantityChange = useCallback(
+    (itemId: number, text: string) => {
+      const quantity = parseInt(text) || 0;
+      if (quantity >= 0) {
+        updateCartItemQuantity(itemId, quantity);
+      }
+    },
+    [updateCartItemQuantity]
+  );
 
-      // Merge: replace or add
-      cartItems.forEach((prod) => {
-        const index = updated.findIndex((p) => p.id === prod.id);
-        if (index >= 0) {
-          updated[index] = prod; // update
+  const renderQuantityControls = useCallback(
+    (item: Product, quantity: number) => {
+      if (quantity === 0) {
+        return (
+          <TouchableOpacity
+            style={styles.addButton}
+            onPress={() => increment(item.id)}
+          >
+            <Text style={styles.addButtonText}>Add</Text>
+          </TouchableOpacity>
+        );
+      }
+
+      return (
+        <View style={styles.qtyRow}>
+          <TouchableOpacity onPress={() => decrement(item.id)}>
+            <Text style={styles.qtyBtn}>-</Text>
+          </TouchableOpacity>
+          <TextInput
+            style={styles.qtyInput}
+            value={quantity.toString()}
+            onChangeText={(text) => handleQuantityChange(item.id, text)}
+            keyboardType="numeric"
+            selectTextOnFocus
+          />
+          <TouchableOpacity onPress={() => increment(item.id)}>
+            <Text style={styles.qtyBtn}>+</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    },
+    [increment, decrement, handleQuantityChange]
+  );
+
+  const renderItem = useCallback(
+    ({ item }: { item: Product }) => {
+      const quantity = findCartItem(item.id)?.quantity || 0;
+
+      return (
+        <View style={styles.card}>
+          <Image source={{ uri: item.image }} style={styles.image} />
+          <Text style={styles.title}>{item.name}</Text>
+          <Text style={styles.desc}>{item.desc}</Text>
+          <View style={styles.bottomRow}>
+            {renderQuantityControls(item, quantity)}
+            <Text style={styles.price}>₹ {item.price}</Text>
+          </View>
+        </View>
+      );
+    },
+    [findCartItem, renderQuantityControls]
+  );
+
+  const convertCartToProducts = useCallback((): Product[] => {
+    return cart
+      .map((cartItem) => {
+        const product = productList.find((item) => item.id === cartItem.id);
+        return product ? { ...product, quantity: cartItem.quantity } : null;
+      })
+      .filter((product): product is Product => product !== null);
+  }, [cart, productList]);
+
+  const mergeProductsWithCart = useCallback(
+    (existingProducts: Product[], cartProducts: Product[]): Product[] => {
+      const cartIds = cart.map((cartItem) => cartItem.id);
+      const filteredExisting = existingProducts.filter((product) =>
+        cartIds.includes(product.id)
+      );
+
+      cartProducts.forEach((cartProduct) => {
+        const existingIndex = filteredExisting.findIndex(
+          (product) => product.id === cartProduct.id
+        );
+        if (existingIndex >= 0) {
+          filteredExisting[existingIndex] = cartProduct;
         } else {
-          updated.push(prod); // add
+          filteredExisting.push(cartProduct);
         }
       });
 
-      return updated;
+      return filteredExisting;
+    },
+    [cart]
+  );
+
+  const handleProceed = useCallback(() => {
+    setSelectedProducts((prev: Product[]) => {
+      const cartProducts = convertCartToProducts();
+      return mergeProductsWithCart(prev, cartProducts);
     });
     onClose();
-  };
+  }, [
+    convertCartToProducts,
+    mergeProductsWithCart,
+    setSelectedProducts,
+    onClose,
+  ]);
 
   return (
     <Modal visible={visible} animationType="slide">
@@ -156,12 +296,12 @@ const ProductSelectionModal = ({
             placeholder="Search Product/Service"
             style={styles.searchInput}
             value={searchText}
-            onChangeText={setSearchText}
+            onChangeText={handleSearchChange}
           />
         </View>
 
         <FlatList
-          data={filteredProducts}
+          data={filteredProducts()}
           numColumns={2}
           columnWrapperStyle={{ justifyContent: "space-between" }}
           contentContainerStyle={styles.list}
@@ -175,7 +315,12 @@ const ProductSelectionModal = ({
               <Icon name="qr-code-scanner" size={20} color="#fff" />
               <Text style={styles.scanText}>Scan</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.addProductBtn}>
+            <TouchableOpacity
+              style={styles.addProductBtn}
+              onPress={() =>
+                navigation.navigate(HomeNavigation.ADD_PRODUCT_SCREEN)
+              }
+            >
               <Text style={styles.addProductText}>Add Product</Text>
             </TouchableOpacity>
           </View>
@@ -264,9 +409,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     paddingHorizontal: 6,
   },
-  qtyText: {
+  qtyInput: {
     color: "#fff",
-    marginHorizontal: 4,
+    textAlign: "center",
+    fontSize: 16,
+    fontWeight: "bold",
+    maxWidth: 60,
+    paddingHorizontal: 2,
+    paddingVertical: 0,
   },
   price: {
     fontWeight: "bold",

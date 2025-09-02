@@ -156,26 +156,23 @@ const StockScreen = () => {
         />
       </ScrollView>
       <View style={styles.floatingButtons}>
-        <TouchableOpacity style={styles.addButtonGreen}>
-          <Text style={styles.buttongreen}>
-            {" "}
-            <NavigationButton
-              screen={
-                selectedType === "Product/Service"
-                  ? "CreateProduct"
-                  : "AddAddOns"
-              }
-              label={
-                selectedType === "Product/Service"
-                  ? "Add Product"
-                  : "Add Add Ons"
-              }
-              color="#00630F"
-              fontSize={16}
-              fontWeight="bold"
-            />
-          </Text>
-        </TouchableOpacity>
+        {/* <TouchableOpacity style={styles.addButtonGreen}>
+          <Text style={styles.buttongreen}> */}
+        <NavigationButton
+          screen={
+            selectedType === "Product/Service" ? "CreateProduct" : "AddAddOns"
+          }
+          label={
+            selectedType === "Product/Service" ? "Add Product" : "Add Add Ons"
+          }
+          color="#00630F"
+          fontSize={16}
+          fontWeight="bold"
+          buttonStyle={styles.addButtonGreen}
+          textStyle={styles.buttongreen}
+        />
+        {/* </Text>
+        </TouchableOpacity> */}
       </View>
       <View style={styles.ButtonContainer}>
         <View style={styles.typeButtonWrapper}>

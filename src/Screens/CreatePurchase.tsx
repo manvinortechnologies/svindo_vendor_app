@@ -18,6 +18,7 @@ import Headerwithback from "./Headerwithback";
 import Loading from "../CommonComponent/Loading";
 import api from "../services/api/api";
 import { Vendor } from "../type/Vendor";
+import formatNumber from "../utils/priceFormatter";
 import VendorModal from "../Modals/VendorModal";
 import CustomModal from "../Modals/CustomModal";
 import CustomTextInput from "../CommonComponent/CustomeTextInput";
@@ -46,6 +47,8 @@ const CreatePurchase = ({ navigation }: any) => {
   const [selectedAdvanceType, setSelectedAdvanceType] = useState("Bank");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isVendorModalVisible, setIsVendorModalVisible] = useState(false);
+  const [isPurchasePlanModalVisible, setIsPurchasePlanModalVisible] =
+    useState(false);
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [allVendorList, setAllVendorList] = useState<Vendor[]>();
   const [allProductList, setAllProductList] = useState<Product[]>();
@@ -246,7 +249,10 @@ const CreatePurchase = ({ navigation }: any) => {
       const data = {
         purchase_date: purchaseDate,
         vendor: selectedVendor?.id,
-        payment_method: selectedPayment, // cash / credit / card / upi
+        payment_method:
+          selectedPayment === "In Credit"
+            ? "credit"
+            : selectedPayment.toLowerCase(),
         discount_percent: Number(discount) || 0,
         discount_amount: Number(extraDiscount) || 0,
         advance_amount: Number(advanceAmount) || 0,
@@ -366,7 +372,7 @@ const CreatePurchase = ({ navigation }: any) => {
               </View>
 
               {!!selectedProducts.length && (
-                <>
+                <View style={{ marginBottom: 12 }}>
                   {/* Table Header */}
                   <View style={styles.tableHeader}>
                     <Text
@@ -409,7 +415,6 @@ const CreatePurchase = ({ navigation }: any) => {
                     >
                       Amount
                     </Text>
-                    {/* <Text style={[styles.tableText, {color: '#fff', fontWeight: '500'}]}>Action</Text> */}
                   </View>
 
                   {/* Product List */}
@@ -422,15 +427,44 @@ const CreatePurchase = ({ navigation }: any) => {
                       >
                         {item.name}
                       </Text>
-                      <Text style={styles.tableText}>{item.quantity}</Text>
+                      <TextInput
+                        style={[styles.tableText, styles.quantityInput]}
+                        value={item.quantity.toString()}
+                        onChangeText={(text) => {
+                          const newQuantity = parseInt(text) || 0;
+                          if (newQuantity >= 0) {
+                            const updatedProducts = [...selectedProducts];
+                            if (newQuantity === 0) {
+                              // Remove item if quantity is 0
+                              updatedProducts.splice(index, 1);
+                            } else {
+                              // Update quantity
+                              updatedProducts[index] = {
+                                ...item,
+                                quantity: newQuantity,
+                              };
+                            }
+                            setSelectedProducts(updatedProducts);
+                          }
+                        }}
+                        keyboardType="numeric"
+                        selectTextOnFocus
+                      />
+                      <TouchableOpacity
+                        style={{
+                          flex: 1,
+                          flexDirection: "row",
+                        }}
+                        onPress={() => setIsPurchasePlanModalVisible(true)}
+                      >
+                        <Text style={styles.tableText}>
+                          {formatNumber(Number(item?.purchase_price))}
+                        </Text>
+                      </TouchableOpacity>
                       <Text style={styles.tableText}>
-                        {Number(item?.purchase_price).toFixed(2)}
+                        {formatNumber(item?.purchase_price * item?.quantity)}
                       </Text>
-                      <Text style={styles.tableText}>
-                        {Number(item?.purchase_price * item?.quantity).toFixed(
-                          2
-                        )}
-                      </Text>
+
                       <TouchableOpacity
                         onPress={() => {
                           const updated = selectedProducts.filter(
@@ -443,7 +477,7 @@ const CreatePurchase = ({ navigation }: any) => {
                       </TouchableOpacity>
                     </View>
                   ))}
-                </>
+                </View>
               )}
 
               {/* Supplier Invoice */}
@@ -613,35 +647,28 @@ const CreatePurchase = ({ navigation }: any) => {
                     Payment
                   </Text>
                   <View style={styles.optionsRow}>
-                    {[
-                      { name: "UPI", id: "upi" },
-                      { name: "Card", id: "card" },
-                      { name: "Cash", id: "cash" },
-                      { name: "Credit", id: "credit" },
-                    ].map((method) => (
+                    {["UPI", "Card", "Cash", "In Credit"].map((method) => (
                       <TouchableOpacity
-                        key={method.id}
+                        key={method}
                         style={[
                           styles.optionButton,
-                          selectedPayment === method.id &&
-                            styles.selectedButton,
+                          selectedPayment === method && styles.selectedButton,
                         ]}
-                        onPress={() => setSelectedPayment(method.id)}
+                        onPress={() => setSelectedPayment(method)}
                       >
                         <Text
                           style={[
                             styles.optionText,
-                            selectedPayment === method.id &&
-                              styles.selectedText,
+                            selectedPayment === method && styles.selectedText,
                           ]}
                         >
-                          {method.name}
+                          {method}
                         </Text>
                       </TouchableOpacity>
                     ))}
                   </View>
                 </View>
-                {selectedPayment !== "cash" && (
+                {selectedPayment === "In Credit" && (
                   <>
                     {/* Advance Row */}
                     <View style={styles.row}>
@@ -988,6 +1015,32 @@ const CreatePurchase = ({ navigation }: any) => {
                 selectedProducts={selectedProducts}
                 setSelectedProducts={setSelectedProducts}
               />
+
+              {/* Purchase Plan Info Modal */}
+              <CustomModal
+                visible={isPurchasePlanModalVisible}
+                onClose={() => setIsPurchasePlanModalVisible(false)}
+              >
+                <View style={styles.infoModalContent}>
+                  <Icon
+                    name="information"
+                    size={48}
+                    color="#FCA311"
+                    style={styles.infoIcon}
+                  />
+                  <Text style={styles.infoModalTitle}>Purchase Plan</Text>
+                  <Text style={styles.infoModalMessage}>
+                    Please create a new to add a new stock with updated purchase
+                    price
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.infoModalButton}
+                    onPress={() => setIsPurchasePlanModalVisible(false)}
+                  >
+                    <Text style={styles.infoModalButtonText}>OK</Text>
+                  </TouchableOpacity>
+                </View>
+              </CustomModal>
             </ScrollView>
           </KeyboardAvoidingView>
         </TouchableWithoutFeedback>
@@ -1037,11 +1090,13 @@ const styles = StyleSheet.create({
   tableRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     backgroundColor: "#F5F5F5",
     paddingVertical: 8,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
     marginTop: 5,
+    paddingRight: 10,
   },
   tableText: {
     flex: 1,
@@ -1049,6 +1104,58 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     textAlign: "center",
     color: "#000",
+  },
+  quantityInput: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 4,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    backgroundColor: "#f9f9f9",
+  },
+  purchasePlanButton: {
+    backgroundColor: "#FCA311",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 4,
+    marginRight: 5,
+  },
+  purchasePlanButtonText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  infoModalContent: {
+    alignItems: "center",
+    padding: 20,
+  },
+  infoIcon: {
+    marginBottom: 15,
+  },
+  infoModalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  infoModalMessage: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  infoModalButton: {
+    backgroundColor: "#FCA311",
+    paddingVertical: 10,
+    paddingHorizontal: 30,
+    borderRadius: 6,
+  },
+  infoModalButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
   rowBetween: {
     flexDirection: "row",

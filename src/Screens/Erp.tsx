@@ -88,6 +88,31 @@ const Erp = () => {
       icon: "book-open-variant",
       screen: HomeNavigation.ADD_ADDONS,
     },
+    {
+      title: "Create Invoice",
+      icon: "book-open-variant",
+      screen: HomeNavigation.CREATE_INVOICE,
+    },
+    {
+      title: "Create Credit Note",
+      icon: "book-open-variant",
+      screen: HomeNavigation.CREATE_CREDIT_NOTE,
+    },
+    {
+      title: "Create Quation",
+      icon: "book-open-variant",
+      screen: HomeNavigation.CREATE_QUATION,
+    },
+    {
+      title: "Create pro farma invoice",
+      icon: "book-open-variant",
+      screen: HomeNavigation.CREATE_PRO_FARMA_INVOICE,
+    },
+    {
+      title: "Delivery Challan",
+      icon: "book-open-variant",
+      screen: HomeNavigation.DELIVERY_CHALLAN,
+    },
     { title: "Day Book", icon: "book-open-variant", screen: "DayBookScreen" },
     { title: "Bank Accounts", icon: "bank-outline", screen: "BankAccounts" },
     { title: "Bank Name", icon: "bank-outline", screen: "BankNameScreen" },

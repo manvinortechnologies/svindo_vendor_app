@@ -13,6 +13,7 @@ import Orders from "../Screens/Orders";
 import StockScreen from "../Screens/StockScreen";
 import CreateProduct from "../Screens/CreateProduct";
 import AddProductScreen from "../Screens/AddProductScreen";
+import ProductAddedSuccess from "../Screens/ProductAddedSuccess";
 import Storescreen from "../Screens/Storescreen";
 import MarketingTools from "../Screens/MarketingTools";
 import OnlineStore from "../Screens/OnlineStore";
@@ -192,6 +193,10 @@ const AppNavigation = () => {
         <Stack.Screen
           name={HomeNavigation.ADD_PRODUCT_SCREEN}
           component={AddProductScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.PRODUCT_ADDED_SUCCESS}
+          component={ProductAddedSuccess}
         />
         <Stack.Screen
           name={HomeNavigation.STORE_SCREEN}

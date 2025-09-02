@@ -19,6 +19,7 @@ export enum HomeNavigation {
   STOCK_SCREEN = "StockScreen",
   CREATE_PRODUCT = "CreateProduct",
   ADD_PRODUCT_SCREEN = "AddProductScreen",
+  PRODUCT_ADDED_SUCCESS = "ProductAddedSuccess",
   STORE_SCREEN = "Storescreen",
   MARKETING_TOOLS = "MarketingTools",
   ONLINE_STORE = "OnlineStore",

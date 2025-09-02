@@ -7,12 +7,14 @@ import {
   Image,
   Dimensions,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Headerwithback from "./Headerwithback";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { s } from "react-native-size-matters";
+import Carousel from "react-native-reanimated-carousel";
 
 const { width } = Dimensions.get("window");
 
@@ -21,24 +23,50 @@ const tabs = ["Wholesale", "Retail", "Requested"];
 const buyersRequests = [
   {
     id: "1",
-    productName: "Product Name",
-    category: "Category",
-    subCategory: "Sub-Category",
+    productName: "Premium Smartphone",
+    category: "Electronics",
+    subCategory: "Mobile Phones",
     userId: "svindouser_12345",
-    city: "city name",
-    description: "Show full detail",
-    budget: "1000",
+    city: "Mumbai",
+    description:
+      "Looking for latest smartphone with good camera quality and long battery life. Must be in excellent condition.",
+    budget: "25000",
     image: require("../assets/product/product4.png"),
   },
   {
     id: "2",
-    productName: "Another Product",
-    category: "Category",
-    subCategory: "Sub-Category",
+    productName: "Gaming Laptop",
+    category: "Electronics",
+    subCategory: "Computers",
     userId: "svindouser_67890",
-    city: "another city",
-    description: "Show full detail",
-    budget: "2000",
+    city: "Delhi",
+    description:
+      "Need a high-performance gaming laptop for professional work and gaming. Prefer RTX graphics card.",
+    budget: "80000",
+    image: require("../assets/product/product4.png"),
+  },
+  {
+    id: "3",
+    productName: "Designer Watch",
+    category: "Fashion",
+    subCategory: "Accessories",
+    userId: "svindouser_11111",
+    city: "Bangalore",
+    description:
+      "Looking for luxury watch for special occasions. Must be authentic and in perfect working condition.",
+    budget: "15000",
+    image: require("../assets/product/product4.png"),
+  },
+  {
+    id: "4",
+    productName: "Home Speaker System",
+    category: "Electronics",
+    subCategory: "Audio",
+    userId: "svindouser_22222",
+    city: "Chennai",
+    description:
+      "Want wireless speaker system for home entertainment. Should have good bass and clear sound quality.",
+    budget: "12000",
     image: require("../assets/product/product4.png"),
   },
 ];
@@ -56,7 +84,6 @@ type BuyersRequestScreenNavigationProp = NativeStackNavigationProp<
 
 const BuyersRequestScreen: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState("Wholesale");
-
   const navigation = useNavigation<BuyersRequestScreenNavigationProp>();
   return (
     <SafeAreaView style={styles.container}>
@@ -93,15 +120,35 @@ const BuyersRequestScreen: React.FC = () => {
           </TouchableOpacity>
         ))}
       </View>
-      {/* Buyer Requests */}
-      <FlatList
+      {/* Buyer Requests - Full Screen Paging */}
+      <Carousel
+        vertical={true}
+        pagingEnabled={true}
+        loop={false}
+        width={width}
+        height={Dimensions.get("window").height}
         data={buyersRequests}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        onProgressChange={() => {}}
         renderItem={({ item }) => (
-          <View style={styles.card}>
+          <View style={styles.fullScreenCard}>
             {/* Product Image */}
-            <Image source={item.image} style={styles.productImage} />
+            <View style={styles.imageContainer}>
+              <Image
+                source={item.image}
+                style={styles.fullScreenProductImage}
+              />
+              {selectedTab === "Requested" && (
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => {
+                    // Handle delete functionality
+                    console.log("Delete request:", item.id);
+                  }}
+                >
+                  <Icon name="delete" size={20} color="#fff" />
+                </TouchableOpacity>
+              )}
+            </View>
 
             {/* Customer wants to buy */}
             <View style={styles.rowBetween}>
@@ -163,6 +210,7 @@ const BuyersRequestScreen: React.FC = () => {
           </View>
         )}
       />
+
       {/* Show Your Request & Offers for you button  */}
       {selectedTab === "Requested" && (
         <View style={styles.requestBox}>
@@ -207,7 +255,7 @@ const styles = StyleSheet.create({
   filterTopButton: {
     position: "absolute",
     right: 10,
-    top: 35,
+    top: 15,
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
@@ -266,12 +314,50 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 10,
   },
+  fullScreenCard: {
+    backgroundColor: "#FFFAF2",
+    marginHorizontal: 12,
+    // marginVertical: 6,
+    borderRadius: 12,
+    padding: 15,
+    height: Dimensions.get("window").height - s(130), // Exact height for paging
+    justifyContent: "space-between",
+  },
   productImage: {
     width: "100%",
     height: width * 0.6,
     borderRadius: 20,
     marginBottom: 8,
     resizeMode: "cover",
+  },
+  imageContainer: {
+    position: "relative",
+    marginBottom: 12,
+  },
+  fullScreenProductImage: {
+    width: "100%",
+    height: width * 0.6,
+    borderRadius: 20,
+    resizeMode: "cover",
+  },
+  deleteButton: {
+    position: "absolute",
+    bottom: 10,
+    right: 10,
+    backgroundColor: "rgba(255, 0, 0, 0.8)",
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   rowBetween: {
     flexDirection: "row",
@@ -368,7 +454,7 @@ const styles = StyleSheet.create({
     right: 20,
     flexDirection: "row",
     justifyContent: "space-around",
-    backgroundColor: "#FFF3E1",
+    backgroundColor: "#FFF3E1CC",
     paddingVertical: 12,
     borderRadius: 8,
     borderWidth: 1,

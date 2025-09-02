@@ -108,7 +108,7 @@ const ManageCustomers = ({ navigation }: any) => {
         <View style={styles.tableHeader}>
           <Text style={styles.headerText}>Name</Text>
           <Text style={styles.headerText}>Contact Info</Text>
-          <Text style={styles.headerText}>Closing Balance</Text>
+          <Text style={styles.headerText}>Opening Balance</Text>
         </View>
 
         {/* Customer List */}

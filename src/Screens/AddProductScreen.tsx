@@ -31,28 +31,29 @@ import Loading from "../CommonComponent/Loading";
 import ModalUpdatePhoto from "../Modals/ModalUpdatePhoto";
 import ImeiModal from "../Modals/ImeiModal";
 import api from "../services/api/api";
+import { HomeNavigation } from "../constants/app-routes.constants";
 
 // Constants
 const PRODUCT_TYPES = ["product", "service", "print"];
 const FOR_OPTIONS = ["offline", "both"];
 const FOOD_TYPES = ["veg", "non_veg"];
 const COLOR_OPTIONS = [
-  { name: "Red", id: "Red" },
-  { name: "Green", id: "Green" },
-  { name: "Blue", id: "Blue" },
-  { name: "Yellow", id: "Yellow" },
-  { name: "Orange", id: "Orange" },
-  { name: "Purple", id: "Purple" },
-  { name: "Pink", id: "Pink" },
-  { name: "Black", id: "Black" },
-  { name: "White", id: "White" },
-  { name: "Gray", id: "Gray" },
-  { name: "Brown", id: "Brown" },
-  { name: "Sky Blue", id: "Sky Blue" },
-  { name: "Teal", id: "Teal" },
-  { name: "Gold", id: "Gold" },
-  { name: "Silver", id: "Silver" },
-  { name: "Multicolor", id: "Multicolor" },
+  { name: "Red", id: "Red", color: "#FF0000" },
+  { name: "Green", id: "Green", color: "#00FF00" },
+  { name: "Blue", id: "Blue", color: "#0000FF" },
+  { name: "Yellow", id: "Yellow", color: "#FFFF00" },
+  { name: "Orange", id: "Orange", color: "#FFA500" },
+  { name: "Purple", id: "Purple", color: "#800080" },
+  { name: "Pink", id: "Pink", color: "#FFC0CB" },
+  { name: "Black", id: "Black", color: "#000000" },
+  { name: "White", id: "White", color: "#FFFFFF" },
+  { name: "Gray", id: "Gray", color: "#808080" },
+  { name: "Brown", id: "Brown", color: "#A52A2A" },
+  { name: "Sky Blue", id: "Sky Blue", color: "#87CEEB" },
+  { name: "Teal", id: "Teal", color: "#008080" },
+  { name: "Gold", id: "Gold", color: "#FFD700" },
+  { name: "Silver", id: "Silver", color: "#C0C0C0" },
+  { name: "Multicolor", id: "Multicolor", color: "#FF69B4" },
 ];
 
 // Validation Schema
@@ -90,7 +91,7 @@ const getValidationSchema = (selectedType: string, selectedFor: string) =>
       otherwise: (schema) => schema.notRequired(),
     }),
     description: Yup.string().required("Description is required"),
-    image1: Yup.mixed().required("At least one image is required"),
+    image1: Yup.mixed().notRequired(),
     food_type: Yup.string().when("product_type", {
       is: "food",
       then: (schema) => schema.required("Food type is required"),
@@ -264,7 +265,7 @@ const ToggleRow = ({ label, value, onValueChange }) => (
 
 const ImageUploader = ({ images, onImagePress, selectedFor }) => (
   <View style={styles.section}>
-    <Text style={styles.sectionTitle}>Images</Text>
+    <Text style={styles.sectionTitle}>Images (Optional)</Text>
     <TouchableOpacity
       onPress={() => onImagePress("image1")}
       style={styles.imageBox}
@@ -322,7 +323,7 @@ const PrintVariant = ({ variant, index, onUpdate, onRemove, variantData }) => (
             }))}
             placeholder="Select Paper"
             onSelect={(val) => onUpdate("paper", val.id)}
-            selectedValue={variant.paper || ""}
+            selectedValue={variant.paper}
             dropDownBoxStyle={styles.dropdownStyle}
           />
         </FormField>
@@ -337,7 +338,7 @@ const PrintVariant = ({ variant, index, onUpdate, onRemove, variantData }) => (
             }))}
             placeholder="Select Color Type"
             onSelect={(val) => onUpdate("color_type", val.id)}
-            selectedValue={variant.color_type || ""}
+            selectedValue={variant.color_type}
             dropDownBoxStyle={styles.dropdownStyle}
           />
         </FormField>
@@ -355,7 +356,7 @@ const PrintVariant = ({ variant, index, onUpdate, onRemove, variantData }) => (
             }))}
             placeholder="Select Sides"
             onSelect={(val) => onUpdate("sided", val.id)}
-            selectedValue={variant.sided || ""}
+            selectedValue={variant.sided}
             dropDownBoxStyle={styles.dropdownStyle}
           />
         </FormField>
@@ -401,7 +402,7 @@ const PrintVariant = ({ variant, index, onUpdate, onRemove, variantData }) => (
 );
 
 // Main Component
-const AddProductScreen = () => {
+const AddProductScreen = ({ navigation }: { navigation: any }) => {
   const formikRef = useRef<FormikProps<FormValues> | null>(null);
 
   // State Management
@@ -494,10 +495,10 @@ const AddProductScreen = () => {
         is_popular: values.is_popular || false,
         is_featured: values.is_featured || false,
         is_active: true,
-        image1: values.image1,
-        image2: values.image2,
-        image3: values.image3,
-        image4: values.image4,
+        image1: values.image1 || null,
+        image2: values.image2 || null,
+        image3: values.image3 || null,
+        image4: values.image4 || null,
         addons:
           values.selectedAddons?.map((addon) => ({ addon: addon.id })) || [],
         print_variants:
@@ -510,7 +511,13 @@ const AddProductScreen = () => {
 
       const res = await api.post("vendor/product/", payload);
       if (res.status === 201) {
-        Alert.alert("Success", "Product added successfully");
+        navigation.replace(HomeNavigation.PRODUCT_ADDED_SUCCESS, {
+          productId: res.data.id,
+          productName: values.name,
+          productDescription: values.description,
+          productImage: values.image1?.uri,
+          stock: values.opening_stock,
+        });
       }
     } catch (error) {
       console.error("Error saving product:", error);
@@ -600,6 +607,9 @@ const AddProductScreen = () => {
             <ScrollView
               style={{ paddingHorizontal: 10 }}
               keyboardShouldPersistTaps="always"
+              nestedScrollEnabled={true}
+              showsVerticalScrollIndicator={true}
+              scrollEventThrottle={16}
             >
               <View style={{ padding: 16 }}>
                 <TypeSelector
@@ -770,7 +780,7 @@ const AddProductScreen = () => {
                               }))}
                               placeholder="Select Unit"
                               onSelect={(val) => setFieldValue("unit", val.id)}
-                              selectedValue={values.unit || ""}
+                              selectedValue={values.unit}
                               dropDownBoxStyle={styles.dropdownStyle}
                             />
                           </FormField>
@@ -922,11 +932,7 @@ const AddProductScreen = () => {
                         <CustomDropdown
                           placeholder="Select Category"
                           onSelect={(opt) => setFieldValue("category", opt.id)}
-                          selectedValue={
-                            categoryList?.find(
-                              (cat) => cat.id === values.category
-                            )?.name || ""
-                          }
+                          selectedValue={values.category}
                           options={categoryList}
                         />
                       </FormField>
@@ -939,11 +945,7 @@ const AddProductScreen = () => {
                           onSelect={(opt) =>
                             setFieldValue("sub_category", opt.id)
                           }
-                          selectedValue={
-                            subCategoryList?.find(
-                              (cat) => cat.id === values.sub_category
-                            )?.name || ""
-                          }
+                          selectedValue={values.sub_category}
                           placeholder="Select Sub Category"
                           options={subCategoryList}
                         />
@@ -965,13 +967,7 @@ const AddProductScreen = () => {
                               onSelect={(opt) =>
                                 setFieldValue("food_type", opt.id)
                               }
-                              selectedValue={
-                                [
-                                  { id: "veg", name: "Veg" },
-                                  { id: "non_veg", name: "Non Veg" },
-                                ]?.find((cat) => cat.id === values.food_type)
-                                  ?.name || ""
-                              }
+                              selectedValue={values.food_type}
                               options={[
                                 { id: "veg", name: "Veg" },
                                 { id: "non_veg", name: "Non Veg" },
@@ -1001,23 +997,42 @@ const AddProductScreen = () => {
                           </FormField>
                         )}
 
-                        <FormField label="Pick Color">
-                          <CustomDropdown
-                            options={COLOR_OPTIONS}
-                            placeholder="Select Color"
-                            onSelect={(val) => setFieldValue("color", val.id)}
-                            selectedValue={values.color || ""}
-                          />
-                        </FormField>
+                        {selectedType !== "service" && (
+                          <FormField label="Pick Color">
+                            <View style={styles.colorPickerContainer}>
+                              <View style={styles.colorDropdownWrapper}>
+                                <CustomDropdown
+                                  options={COLOR_OPTIONS}
+                                  placeholder="Select Color"
+                                  onSelect={(val) =>
+                                    setFieldValue("color", val.id)
+                                  }
+                                  selectedValue={values.color}
+                                />
+                              </View>
+                              <View
+                                style={[
+                                  styles.colorIndicator,
+                                  {
+                                    backgroundColor:
+                                      values.color?.toLowerCase() || "#E5E5E5",
+                                  },
+                                ]}
+                              />
+                            </View>
+                          </FormField>
+                        )}
 
-                        <FormField label="Select Size">
-                          <InputBox
-                            placeholder="Enter here"
-                            background="#FFF8EB"
-                            value={values.size}
-                            onChangeText={handleChange("size")}
-                          />
-                        </FormField>
+                        {selectedType !== "service" && (
+                          <FormField label="Select Size">
+                            <InputBox
+                              placeholder="Enter here"
+                              background="#FFF8EB"
+                              value={values.size}
+                              onChangeText={handleChange("size")}
+                            />
+                          </FormField>
+                        )}
 
                         {selectedType !== "service" && (
                           <>
@@ -1075,6 +1090,9 @@ const AddProductScreen = () => {
                             background="#FFF8EB"
                             value={values.description}
                             onChangeText={handleChange("description")}
+                            numberOfLines={5}
+                            multiline={true}
+                            textInputStyle={styles.descriptionInput}
                           />
                         </FormField>
                       </View>
@@ -1234,6 +1252,9 @@ const AddProductScreen = () => {
                             background="#FFF8EB"
                             value={values.description}
                             onChangeText={handleChange("description")}
+                            numberOfLines={4}
+                            multiline={true}
+                            textInputStyle={styles.descriptionInput}
                           />
                         </FormField>
                       </View>
@@ -1265,11 +1286,7 @@ const AddProductScreen = () => {
                                       opt.id
                                     )
                                   }
-                                  selectedValue={
-                                    addonData?.find(
-                                      (cat) => cat.id === addon.id
-                                    )?.name || ""
-                                  }
+                                  selectedValue={addon.id}
                                   options={addonData}
                                 />
                               </View>
@@ -1298,9 +1315,6 @@ const AddProductScreen = () => {
                       onImagePress={setActiveImageModal}
                       selectedFor={selectedFor}
                     />
-                    {touched.image1 && errors.image1 && (
-                      <Text style={styles.errorText}>{errors.image1}</Text>
-                    )}
 
                     {/* Delivery Details Section */}
                     {selectedFor === "both" && (
@@ -1451,6 +1465,7 @@ const styles = StyleSheet.create({
   stockLabel: {
     fontWeight: "600",
     fontSize: 14,
+    color: "#000",
   },
   optionalText: {
     fontSize: 12,
@@ -1479,6 +1494,7 @@ const styles = StyleSheet.create({
     borderColor: "#ECECEC",
     borderRadius: 10,
     padding: 10,
+    overflow: "visible", // Allow dropdown to extend beyond section bounds
   },
   sectionTitle: {
     color: "#FCA311",
@@ -1615,5 +1631,33 @@ const styles = StyleSheet.create({
     color: "red",
     marginBottom: 8,
     fontSize: 12,
+  },
+  descriptionInput: {
+    height: 100,
+    textAlignVertical: "top",
+    paddingTop: 10,
+  },
+  colorPickerContainer: {
+    flexDirection: "row",
+    // alignItems: "center",
+    gap: 10,
+  },
+  colorDropdownWrapper: {
+    flex: 1,
+  },
+  colorIndicator: {
+    width: 50,
+    height: 50,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: "#E5E5E5",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
   },
 });

@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import CustomModal from "./CustomModal";
 import { useState } from "react";
+import { useNavigation } from "@react-navigation/native";
+import { HomeNavigation } from "../constants/app-routes.constants";
 
 const { width, height } = Dimensions.get("window");
 
@@ -36,27 +38,44 @@ export default function CompanySelectModal({
   title,
 }: CompanySelectModalProps) {
   const [search, setSearch] = useState<string>("");
+  const navigation = useNavigation();
 
-  const filteredOptions = options.filter(
-    (item: any) =>
+  const filteredOptions = options.filter((item: any) => {
+    const nameMatch =
       typeof item.name === "string" &&
-      item.name.toLowerCase().includes(search.toLowerCase())
-  );
+      item.name.toLowerCase().includes(search.toLowerCase());
+    const contactMatch =
+      item.contact && item.contact.toString().includes(search);
+    return nameMatch || contactMatch;
+  });
 
   return (
     <CustomModal
       modalStyle={{ minHeight: height * 0.48 }}
       visible={visible}
       onClose={onClose}
-      title={title || "Select Option"}
     >
+      {/* Custom Header with Title and Add Button */}
+      <View style={styles.headerContainer}>
+        <Text style={styles.title}>{title || "Select Option"}</Text>
+        <TouchableOpacity
+          style={styles.addCustomerButton}
+          onPress={() => {
+            onClose();
+            navigation.navigate(HomeNavigation.ADDCUSTOMER as never);
+          }}
+        >
+          <Text style={styles.addCustomerButtonText}>+ Add</Text>
+        </TouchableOpacity>
+      </View>
       <TextInput
         style={styles.searchInput}
-        placeholder="Search by name"
+        placeholder="Search by name or contact"
         value={search}
         onChangeText={setSearch}
         placeholderTextColor="#999"
       />
+
       <View style={styles.dropdownMenu}>
         <FlatList
           data={filteredOptions}
@@ -72,7 +91,12 @@ export default function CompanySelectModal({
                 setSearch("");
               }}
             >
-              <Text style={styles.dropdownItemText}>{item.name}</Text>
+              <View style={styles.itemContent}>
+                <Text style={styles.dropdownItemText}>{item.name}</Text>
+                {item.contact && (
+                  <Text style={styles.contactText}>{item.contact}</Text>
+                )}
+              </View>
             </TouchableOpacity>
           )}
           ListEmptyComponent={
@@ -106,13 +130,49 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
+  itemContent: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   dropdownItemText: {
     fontSize: width * 0.04,
+    color: "#000",
+    flex: 1,
+  },
+  contactText: {
+    fontSize: width * 0.035,
+    color: "#666",
+    marginLeft: 10,
   },
   noResultText: {
     textAlign: "center",
     padding: 10,
     color: "#888",
     fontSize: width * 0.038,
+  },
+  headerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 15,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#FCA311",
+    flex: 1,
+  },
+  addCustomerButton: {
+    backgroundColor: "#FCA311",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+    alignItems: "center",
+  },
+  addCustomerButtonText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
   },
 });

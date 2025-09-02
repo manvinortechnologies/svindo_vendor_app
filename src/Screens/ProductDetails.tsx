@@ -45,10 +45,16 @@ const ProductDetails = () => {
         {files.map((file, index) => (
           <View key={index} style={styles.fileCard}>
             <Text style={styles.fileText}>File : {file.name}</Text>
-            <Text>Number of copies : {file.copies}</Text>
-            {file.pages && <Text>Page number : {file.pages}</Text>}
-            <Text>Page count : {file.pageCount}</Text>
-            <Text>Instructions - {file.instructions}</Text>
+            <Text style={styles.fileText}>
+              Number of copies : {file.copies}
+            </Text>
+            {file.pages && (
+              <Text style={styles.fileText}>Page number : {file.pages}</Text>
+            )}
+            <Text style={styles.fileText}>Page count : {file.pageCount}</Text>
+            <Text style={styles.fileText}>
+              Instructions - {file.instructions}
+            </Text>
 
             <TouchableOpacity style={styles.downloadBtn}>
               <Icon name="file-download" size={22} color="#1976D2" />
@@ -91,6 +97,7 @@ const styles = StyleSheet.create({
     color: "#000",
     fontWeight: "bold",
     margin: 15,
+    color: "#000",
   },
 
   fileCard: {

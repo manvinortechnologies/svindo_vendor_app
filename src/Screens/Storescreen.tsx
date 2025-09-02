@@ -1,12 +1,22 @@
 import { useState } from "react";
-import { View, Text, Image, TouchableOpacity, StyleSheet, ScrollView, StatusBar, Platform, FlatList, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  ScrollView,
+  StatusBar,
+  Platform,
+  FlatList,
+  Dimensions,
+} from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import MaterialIcon from "react-native-vector-icons/MaterialIcons";
 import Header from "./Header";
 import Bottomnavigation from "./Bottomnavigation";
 import NavigationButton from "./NavigationButton";
 import CustomSwitch from "./CustomSwitch";
-
 
 const screenWidth = Dimensions.get("window").width - 20;
 
@@ -19,16 +29,66 @@ interface Product {
 const orderTypes = ["Online Store", " | ", "Tools"];
 
 const products = [
-  { id: "1", name: "Product 1", discount: "30", description: "This is product 1", price: "10", image: require("../assets/product.png"), type: "Top Liked" },
-  { id: "2", name: "Product 2", discount: "30", description: "This is product 2", price: "20", image: require("../assets/product.png"), type: "Top Liked" },
-  { id: "3", name: "Product 3", discount: "30", description: "This is product 3", price: "30", image: require("../assets/product.png"), type: "Top Liked" },
-  { id: "4", name: "Product 4", discount: "30", description: "This is product 4", price: "40", image: require("../assets/product.png"), type: "Top Rated" },
-  { id: "5", name: "Product 5", discount: "30", description: "This is product 5", price: "50", image: require("../assets/product.png"), type: "Top Rated" },
-  { id: "6", name: "Product 6", discount: "30", description: "This is product 6", price: "60", image: require("../assets/product.png"), type: "Top Rated" },
+  {
+    id: "1",
+    name: "Product 1",
+    discount: "30",
+    description: "This is product 1",
+    price: "10",
+    image: require("../assets/product.png"),
+    type: "Top Liked",
+  },
+  {
+    id: "2",
+    name: "Product 2",
+    discount: "30",
+    description: "This is product 2",
+    price: "20",
+    image: require("../assets/product.png"),
+    type: "Top Liked",
+  },
+  {
+    id: "3",
+    name: "Product 3",
+    discount: "30",
+    description: "This is product 3",
+    price: "30",
+    image: require("../assets/product.png"),
+    type: "Top Liked",
+  },
+  {
+    id: "4",
+    name: "Product 4",
+    discount: "30",
+    description: "This is product 4",
+    price: "40",
+    image: require("../assets/product.png"),
+    type: "Top Rated",
+  },
+  {
+    id: "5",
+    name: "Product 5",
+    discount: "30",
+    description: "This is product 5",
+    price: "50",
+    image: require("../assets/product.png"),
+    type: "Top Rated",
+  },
+  {
+    id: "6",
+    name: "Product 6",
+    discount: "30",
+    description: "This is product 6",
+    price: "60",
+    image: require("../assets/product.png"),
+    type: "Top Rated",
+  },
 ];
 
 const getFilteredProducts = (type: string) => {
-  return products.filter(product => product.type === type).slice(0, type === "Low Stock" ? 6 : 3);
+  return products
+    .filter((product) => product.type === type)
+    .slice(0, type === "Low Stock" ? 6 : 3);
 };
 const videoData = [
   { id: 1, source: require("../assets/product/product3.png") },
@@ -37,21 +97,44 @@ const videoData = [
   { id: 4, source: require("../assets/product/product3.png") },
 ];
 const spotlightProducts = [
-  { id: 1, image: require("../assets/product/spotlight.png"), discount: "50% OFF" },
-  { id: 2, image: require("../assets/product/spotlight1.png"), discount: "40% OFF" },
-  { id: 3, image: require("../assets/product/spotlight3.png"), discount: "30% OFF" },
-  { id: 4, image: require("../assets/product/spotlight1.png"), discount: "20% OFF" },
-  { id: 5, image: require("../assets/product/spotlight.png"), discount: "10% OFF" },
-  { id: 6, image: require("../assets/product/spotlight3.png"), discount: "60% OFF" },
+  {
+    id: 1,
+    image: require("../assets/product/spotlight.png"),
+    discount: "50% OFF",
+  },
+  {
+    id: 2,
+    image: require("../assets/product/spotlight1.png"),
+    discount: "40% OFF",
+  },
+  {
+    id: 3,
+    image: require("../assets/product/spotlight3.png"),
+    discount: "30% OFF",
+  },
+  {
+    id: 4,
+    image: require("../assets/product/spotlight1.png"),
+    discount: "20% OFF",
+  },
+  {
+    id: 5,
+    image: require("../assets/product/spotlight.png"),
+    discount: "10% OFF",
+  },
+  {
+    id: 6,
+    image: require("../assets/product/spotlight3.png"),
+    discount: "60% OFF",
+  },
 ];
 const Storescreen = ({ navigation }: any) => {
-  const [disabletab, setdisable] = useState(true)
+  const [disabletab, setdisable] = useState(true);
   const [selectedTab, setSelectedTab] = useState("Products");
   const [selectedType, setSelectedType] = useState("On Shop");
 
   return (
     <View style={styles.container}>
-
       <Header
         title="Store"
         backgroundColor="#FFF"
@@ -59,29 +142,48 @@ const Storescreen = ({ navigation }: any) => {
         borderBottomColor="#ccc"
       />
 
-      <TouchableOpacity style={{position: 'absolute', top:25, right: 15, padding:5, backgroundColor: '#006EB2', borderRadius: 8}}>
-        <Text style={{color: '#fff'}}>View Store</Text>
+      <TouchableOpacity
+        style={{
+          position: "absolute",
+          top: 25,
+          right: 15,
+          padding: 5,
+          backgroundColor: "#006EB2",
+          borderRadius: 8,
+        }}
+      >
+        <Text style={{ color: "#fff" }}>View Store</Text>
       </TouchableOpacity>
 
       <ScrollView>
         {/* Top Header */}
 
         {/* Store Banner */}
-        <Image source={require("../assets/product/product2.png")} style={styles.banner} />
+        <Image
+          source={require("../assets/product/product2.png")}
+          style={styles.banner}
+        />
 
         {/* Store Details Card */}
         <View style={styles.detailsCardContainer}>
           <View style={styles.detailsCard}>
             {/* Store Logo */}
             <View style={styles.logoContainer}>
-              <Image source={require("../assets/product/storelogo.png")} style={styles.logo} />
+              <Image
+                source={require("../assets/product/storelogo.png")}
+                style={styles.logo}
+              />
               <Text style={styles.openLabel}>Edit Logo</Text>
               <View style={styles.storeContainer}>
                 <Text style={styles.storetext}>Business Name</Text>
                 <TouchableOpacity>
-                  <Icon name="pencil-outline" size={28} color="#000" style={styles.actionIcon} />
+                  <Icon
+                    name="pencil-outline"
+                    size={28}
+                    color="#000"
+                    style={styles.actionIcon}
+                  />
                 </TouchableOpacity>
-
               </View>
             </View>
 
@@ -93,8 +195,6 @@ const Storescreen = ({ navigation }: any) => {
                   {"\n"}
                   banner
                 </Text>
-
-
               </View>
               <View style={styles.ratingContainer}>
                 <MaterialIcon name="location-on" size={25} color="#006EB2" />
@@ -103,161 +203,254 @@ const Storescreen = ({ navigation }: any) => {
               {/* Follow Button and Icons */}
               <View style={styles.actionsContainer}>
                 {/* <Icon name="bell-outline" size={24} color="#000" style={styles.actionIcon} /> */}
-                <CustomSwitch value={disabletab} onValueChange={setdisable}
+                <CustomSwitch
+                  value={disabletab}
+                  onValueChange={setdisable}
                   activeColor="#830002"
                   inactiveColor="#999"
-                  borderColor="#4CAF50" />
+                  borderColor="#4CAF50"
+                />
 
                 <TouchableOpacity style={styles.followButton}>
                   <Text style={styles.followText}>Disable</Text>
                 </TouchableOpacity>
               </View>
             </View>
-
-
           </View>
           <View style={styles.textContainer}>
             <Text style={styles.textheader}>About</Text>
-            <Text style={styles.additionalText}>Lorem ipsum dolor sit amet consectetur. Nulla eget consequat et volutpat dolor sodales sem. Egestas pulvinar nibh amet a nunc velit amet in. Tristique ipsum enim turpis porttitor amet at volutpat. Rhoncus orci consequat sed aenean.</Text>
-            <TouchableOpacity style={{alignSelf: 'flex-end'}}>
-              <Icon name="pencil-outline" size={28} color="#000"  />
+            <Text style={styles.additionalText}>
+              Lorem ipsum dolor sit amet consectetur. Nulla eget consequat et
+              volutpat dolor sodales sem. Egestas pulvinar nibh amet a nunc
+              velit amet in. Tristique ipsum enim turpis porttitor amet at
+              volutpat. Rhoncus orci consequat sed aenean.
+            </Text>
+            <TouchableOpacity style={{ alignSelf: "flex-end" }}>
+              <Icon name="pencil-outline" size={28} color="#000" />
             </TouchableOpacity>
           </View>
         </View>
         {/* Additional Text at the Bottom */}
 
-
         <View style={styles.Containertitle}>
-          <View style={{backgroundColor: '#FCA311', padding: 6, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 8}}>
-            <Text style={{color: '#fff', fontWeight: '700', fontSize: 16}}>Add Banners</Text>
+          <View
+            style={{
+              backgroundColor: "#FCA311",
+              padding: 6,
+              borderRadius: 8,
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 8,
+            }}
+          >
+            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
+              Add Banners
+            </Text>
           </View>
           <Text style={styles.sectionTitleRight}>Max - 3</Text>
         </View>
         {/* Scrollable Banner */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.bannerScroll}>
-          <Image source={require("../assets/product/banner.png")} style={styles.scrollBanner} />
-          <Image source={require("../assets/product/banner.png")} style={styles.scrollBanner} />
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.bannerScroll}
+        >
+          <Image
+            source={require("../assets/product/banner.png")}
+            style={styles.scrollBanner}
+          />
+          <Image
+            source={require("../assets/product/banner.png")}
+            style={styles.scrollBanner}
+          />
         </ScrollView>
 
-
-
         <View style={styles.spotlightSection}>
-
           <View style={styles.Containerspotlight}>
-            <TouchableOpacity style={{backgroundColor: '#FCA311', padding: 6, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 8}} onPress={() => {
-              navigation.navigate("AddSpotlightScreen")
-            }}>
-            <Text style={{color: '#fff', fontWeight: '700', fontSize: 16}}>Add Spotlight</Text>
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#FCA311",
+                padding: 6,
+                borderRadius: 8,
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 8,
+              }}
+              onPress={() => {
+                navigation.navigate("AddSpotlightScreen");
+              }}
+            >
+              <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
+                Add Spotlight
+              </Text>
             </TouchableOpacity>
 
-            <Text style={styles.sectionTitleRight}>Max - 4  Max - 8</Text>
-
-
+            <Text style={styles.sectionTitleRight}>Max - 4 Max - 8</Text>
           </View>
 
           <View style={styles.productcontainer}>
-            {["Top Liked", "Top Rated", "Most Bought"].map(category => (
+            {["Top Liked", "Top Rated", "Most Bought"].map((category) => (
               <View key={category} style={styles.categoryContainer}>
-
                 <View style={styles.productRow}>
                   {getFilteredProducts(category).map((product) => (
                     <View key={product.id} style={styles.productCard}>
                       <View style={styles.stockBadgeAbove}>
-                        <Text style={styles.stockText}>{product.discount} % OFF</Text>
+                        <Text style={styles.stockText}>
+                          {product.discount} % OFF
+                        </Text>
                       </View>
-                      <Image source={product.image} style={styles.productImage} />
+                      <Image
+                        source={product.image}
+                        style={styles.productImage}
+                      />
 
                       <View style={styles.productDetails}>
-
                         <View style={styles.productTextContainer}>
                           <Text style={styles.productName}>{product.name}</Text>
-                          <Text style={styles.productDescription}>{product.description.slice(0, 15)}...</Text>
+                          <Text style={styles.productDescription}>
+                            {product.description.slice(0, 15)}...
+                          </Text>
                         </View>
                         <View>
-                          <Text style={styles.productPrice}>Rs {product.price}</Text>
+                          <Text style={styles.productPrice}>
+                            Rs {product.price}
+                          </Text>
                           <Text style={styles.addbtn}>Remove</Text>
                         </View>
                       </View>
                     </View>
                   ))}
                 </View>
-
               </View>
             ))}
           </View>
-          <View>
-          </View>
+          <View></View>
         </View>
-
-
 
         <View style={styles.highlightsSection}>
           <View style={styles.Containertitle}>
-            <TouchableOpacity style={{backgroundColor: '#FCA311', padding: 6, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 8}} onPress={() => {
-              navigation.navigate("AddPostScreen")
-            }}>
-              <Text style={{color: '#fff', fontWeight: '700', fontSize: 16}}>Add Posts</Text>
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#FCA311",
+                padding: 6,
+                borderRadius: 8,
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 8,
+              }}
+              onPress={() => {
+                navigation.navigate("AddPostScreen");
+              }}
+            >
+              <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
+                Add Posts
+              </Text>
             </TouchableOpacity>
-            
+
             <Text style={styles.sectionTitleRight}>Max - 4</Text>
           </View>
 
           <View style={styles.highlightCard}>
-            <Image source={require("../assets/product/product2.png")} style={styles.highlightImage} />
+            <Image
+              source={require("../assets/product/product2.png")}
+              style={styles.highlightImage}
+            />
           </View>
           <View style={styles.postcontainer}>
-              <Text style={styles.highlightDescription}>Lorem ipsum dolor sit amet consectetur Lorem ipsum dolor sit amet consectetur Lorem ipsum dolor sit amet consectetur.</Text>
+            <Text style={styles.highlightDescription}>
+              Lorem ipsum dolor sit amet consectetur Lorem ipsum dolor sit amet
+              consectetur Lorem ipsum dolor sit amet consectetur.
+            </Text>
 
-              <View style={styles.highlightControls}>
-
-                <TouchableOpacity style={styles.openButton}><Text style={styles.openText}>Boost</Text></TouchableOpacity>
-                <Icon name="tray-arrow-up" size={24} color="#000" />
-                <Icon name="dots-vertical" size={24} color="#000" />
-              </View>
+            <View style={styles.highlightControls}>
+              <TouchableOpacity style={styles.openButton}>
+                <Text style={styles.openText}>Boost</Text>
+              </TouchableOpacity>
+              <Icon name="tray-arrow-up" size={24} color="#000" />
+              <Icon name="dots-vertical" size={24} color="#000" />
             </View>
-
+          </View>
         </View>
         <View style={styles.Containerspotlight}>
-          <TouchableOpacity style={{backgroundColor: '#FCA311', padding: 6, borderRadius: 8, alignItems: 'center', justifyContent: 'center', marginBottom: 8}} onPress={() => {
-            navigation.navigate("AddPostScreen")
-          }}>
-            <Text style={{color: '#fff', fontWeight: '700', fontSize: 16}}>Add Reel</Text>
-          </TouchableOpacity> 
+          <TouchableOpacity
+            style={{
+              backgroundColor: "#FCA311",
+              padding: 6,
+              borderRadius: 8,
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: 8,
+            }}
+            onPress={() => {
+              navigation.navigate("AddPostScreen");
+            }}
+          >
+            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
+              Add Reel
+            </Text>
+          </TouchableOpacity>
           <Text style={styles.sectionTitleRight}>Max - 4</Text>
         </View>
         <View style={styles.videoSection}>
-
-          {Array.from({ length: Math.ceil(videoData.length / 2) }, (_, rowIndex) => (
-            <View key={rowIndex} style={styles.videoRow}>
-              {videoData.slice(rowIndex * 2, rowIndex * 2 + 2).map((video) => (
-                <View key={video.id} style={styles.videoCard}>
-                  <Image source={video.source} style={styles.videoImage} />
-                  <Icon name="play-circle-outline" size={40} color="#fff" style={styles.playIcon} />
-                  <Icon name="cards-heart" size={24} color="red" style={styles.videoIcon} />
-                  <Icon name="briefcase-upload-outline" size={24} color="#000" style={styles.videoIcon1} />
-                </View>
-              ))}
-            </View>
-          ))}
+          {Array.from(
+            { length: Math.ceil(videoData.length / 2) },
+            (_, rowIndex) => (
+              <View key={rowIndex} style={styles.videoRow}>
+                {videoData
+                  .slice(rowIndex * 2, rowIndex * 2 + 2)
+                  .map((video) => (
+                    <View key={video.id} style={styles.videoCard}>
+                      <Image source={video.source} style={styles.videoImage} />
+                      <Icon
+                        name="play-circle-outline"
+                        size={40}
+                        color="#fff"
+                        style={styles.playIcon}
+                      />
+                      <Icon
+                        name="cards-heart"
+                        size={24}
+                        color="red"
+                        style={styles.videoIcon}
+                      />
+                      <Icon
+                        name="briefcase-upload-outline"
+                        size={24}
+                        color="#000"
+                        style={styles.videoIcon1}
+                      />
+                    </View>
+                  ))}
+              </View>
+            )
+          )}
         </View>
-        <View style={[styles.highlightsSection,]}
-        >
+        <View style={[styles.highlightsSection]}>
           <View style={styles.Containerspotlight}>
             <Text style={styles.sectionTitle}>Live Review</Text>
 
-            <View style={{flexDirection: 'row',  alignItems: "flex-end", justifyContent: "flex-end", marginBottom: 10}}>
-                {/* <Icon name="bell-outline" size={24} color="#000" style={styles.actionIcon} /> */}
-                <CustomSwitch value={disabletab} onValueChange={setdisable}
-                  activeColor="#830002"
-                  inactiveColor="#999"
-                  borderColor="#4CAF50" />
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "flex-end",
+                justifyContent: "flex-end",
+                marginBottom: 10,
+              }}
+            >
+              {/* <Icon name="bell-outline" size={24} color="#000" style={styles.actionIcon} /> */}
+              <CustomSwitch
+                value={disabletab}
+                onValueChange={setdisable}
+                activeColor="#830002"
+                inactiveColor="#999"
+                borderColor="#4CAF50"
+              />
 
-                <TouchableOpacity style={styles.followButton}>
-                  <Text style={styles.followText}>Disabled</Text>
-                </TouchableOpacity>
+              <TouchableOpacity style={styles.followButton}>
+                <Text style={styles.followText}>Disabled</Text>
+              </TouchableOpacity>
             </View>
           </View>
-
 
           <View style={styles.reviewContainer}>
             <View style={styles.starContainer}>
@@ -265,10 +458,11 @@ const Storescreen = ({ navigation }: any) => {
               <Icon name="star" size={25} color="#FCA311" />
               <Icon name="star" size={25} color="#FCA311" />
               <Icon name="star" size={25} color="#FCA311" />
-
             </View>
             <View>
-              <Text style={styles.reviewtext}>Very good brand to purchase T-Shirts, good quality products</Text>
+              <Text style={styles.reviewtext}>
+                Very good brand to purchase T-Shirts, good quality products
+              </Text>
               <Text style={styles.reviewuser}>Nikita</Text>
             </View>
           </View>
@@ -279,28 +473,46 @@ const Storescreen = ({ navigation }: any) => {
             <Text style={styles.title}>Keep Shopping</Text>
             <View style={styles.line} />
           </View>
-          <Text style={styles.location}>@ Lacoste, Panjaguga, Hyderabad - A.P.<TouchableOpacity>
-            <Icon name="pencil-outline" size={20} color="#000" style={styles.actionIcon} />
-          </TouchableOpacity></Text>
-          
+          <Text style={styles.location}>
+            @ Lacoste, Panjaguga, Hyderabad - A.P.
+            <TouchableOpacity>
+              <Icon
+                name="pencil-outline"
+                size={20}
+                color="#000"
+                style={styles.actionIcon}
+              />
+            </TouchableOpacity>
+          </Text>
         </View>
       </ScrollView>
 
       <View style={styles.bottomcontainer}>
         <TouchableOpacity style={styles.option}>
           <Icon name="storefront" size={20} color="#FCA511" />
-          <Text style={styles.optionText}> <NavigationButton screen="MarketingTools" label="Online Store" color="#FCA511" fontSize={16} fontWeight="bold" /></Text>
+          <Text style={[styles.optionText, { color: "#FCA511" }]}>
+            Online Store
+            {/* <NavigationButton
+              screen="MarketingTools"
+              label="Online Store"
+              color="#FCA511"
+              fontSize={16}
+              fontWeight="bold"
+            /> */}
+          </Text>
         </TouchableOpacity>
 
         <View style={styles.divider} />
 
-        <TouchableOpacity style={styles.option}>
+        <TouchableOpacity
+          style={styles.option}
+          onPress={() => navigation.navigate("MarketingTools")}
+        >
           <Icon name="cog-outline" size={20} color="#000" />
-          <Text style={[styles.optionText, { color: '#f7931e' }]}><NavigationButton screen="MarketingTools" label="Tools" color="#000" fontSize={16} /></Text>
+          <Text style={[styles.optionText]}>Tools</Text>
         </TouchableOpacity>
       </View>
       <Bottomnavigation />
-
     </View>
   );
 };
@@ -378,16 +590,13 @@ const styles = StyleSheet.create({
     elevation: 5,
     borderRadius: 15,
     padding: 15,
-
   },
   detailsCard: {
     width: "95%",
 
-
     flexDirection: "row",
     alignItems: "center",
     paddingVertical: 30,
-
   },
   logoContainer: {
     width: 200,
@@ -395,7 +604,6 @@ const styles = StyleSheet.create({
     borderRadius: 45,
 
     justifyContent: "flex-start",
-
 
     position: "absolute",
     top: -50,
@@ -411,16 +619,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingBottom: 10,
     borderEndStartRadius: 10,
-
   },
   storetext: {
-
     fontWeight: "bold",
     fontSize: 20,
   },
   storeContainer: {
     flexDirection: "row",
-
   },
 
   logo: {
@@ -441,7 +646,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#006EB2",
     borderRadius: 20,
     padding: 6,
-    marginLeft: 5
+    marginLeft: 5,
   },
 
   editbannner: {
@@ -502,7 +707,7 @@ const styles = StyleSheet.create({
   followText: {
     fontWeight: "bold",
     color: "#AA0000",
-    fontSize: 16
+    fontSize: 16,
   },
 
   actionIcon: {
@@ -532,7 +737,6 @@ const styles = StyleSheet.create({
   },
   subContainerspotlight: {
     flexDirection: "row",
-
   },
   sectionTitle: {
     fontSize: 18,
@@ -544,7 +748,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 15,
-    color: '#505050'
+    color: "#505050",
   },
 
   filterButton: {
@@ -576,9 +780,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     textAlign: "center",
   },
-  bannerScroll: {
-
-  },
+  bannerScroll: {},
   scrollBanner: {
     width: 380, // Adjust width based on content
     height: 150,
@@ -605,17 +807,50 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#ff0000",
   },
-  discountBadge: { position: "absolute", top: 10, left: 10, backgroundColor: "#B9DAEE", padding: 5, borderRadius: 5 },
-  discountlikeBadge: { position: "absolute", top: 10, right: 10, padding: 5, borderRadius: 5, justifyContent: "flex-end" },
+  discountBadge: {
+    position: "absolute",
+    top: 10,
+    left: 10,
+    backgroundColor: "#B9DAEE",
+    padding: 5,
+    borderRadius: 5,
+  },
+  discountlikeBadge: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    padding: 5,
+    borderRadius: 5,
+    justifyContent: "flex-end",
+  },
   discountText: { color: "#006EB2", fontSize: 12 },
 
   rating: { color: "gray", fontSize: 12 },
   price: { fontWeight: "bold" },
   mrp: { textDecorationLine: "line-through", color: "gray", marginLeft: 5 },
 
-  buttonContainer: { flexDirection: "row", marginTop: 10, justifyContent: "space-between" },
-  buyButton: { backgroundColor: "#006EB2", padding: 10, borderRadius: 5, flex: 1, alignItems: "center", marginRight: 5, width: "48%" },
-  cartButton: { padding: 10, backgroundColor: "#006EB2", borderRadius: 5, alignItems: "center", justifyContent: "center", width: "48%" },
+  buttonContainer: {
+    flexDirection: "row",
+    marginTop: 10,
+    justifyContent: "space-between",
+  },
+  buyButton: {
+    backgroundColor: "#006EB2",
+    padding: 10,
+    borderRadius: 5,
+    flex: 1,
+    alignItems: "center",
+    marginRight: 5,
+    width: "48%",
+  },
+  cartButton: {
+    padding: 10,
+    backgroundColor: "#006EB2",
+    borderRadius: 5,
+    alignItems: "center",
+    justifyContent: "center",
+    width: "48%",
+  },
   buttonText: { color: "white", fontWeight: "bold" },
   bottomNav: {
     flexDirection: "row",
@@ -630,7 +865,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     marginTop: 40,
   },
-
 
   highlightCard: {
     backgroundColor: "#fff",
@@ -669,11 +903,10 @@ const styles = StyleSheet.create({
     maxWidth: "65%",
     textAlign: "left",
     padding: 5,
-
   },
   postcontainer: {
     flexDirection: "row",
-    gap: 5
+    gap: 5,
   },
   videoSection: {
     paddingHorizontal: 10,
@@ -698,7 +931,6 @@ const styles = StyleSheet.create({
   videoImage: {
     width: "100%",
     height: 350,
-
   },
   playIcon: {
     position: "absolute",
@@ -715,14 +947,13 @@ const styles = StyleSheet.create({
     bottom: 10,
     right: 10,
   },
-  reviewContainer:
-  {
+  reviewContainer: {
     backgroundColor: "#FFF",
     paddingVertical: 15,
     paddingHorizontal: 20,
     borderRadius: 10,
     marginHorizontal: 15,
-    elevation: 5
+    elevation: 5,
   },
   starContainer: {
     flexDirection: "row",
@@ -733,11 +964,9 @@ const styles = StyleSheet.create({
     textAlign: "right",
     fontSize: 18,
     fontWeight: 600,
-
   },
   reviewtext: {
     fontSize: 16,
-
   },
 
   line: {
@@ -756,8 +985,7 @@ const styles = StyleSheet.create({
     color: "#006EB2",
     textAlign: "center",
     textTransform: "uppercase",
-    fontStyle: 'italic'
-    
+    fontStyle: "italic",
   },
   location: {
     fontSize: 16,
@@ -789,20 +1017,45 @@ const styles = StyleSheet.create({
     shadowRadius: 5,
     elevation: 3,
   },
-  productImage: { width: "100%", height: 100, borderRadius: 8, resizeMode: "cover" },
+  productImage: {
+    width: "100%",
+    height: 100,
+    borderRadius: 8,
+    resizeMode: "cover",
+  },
 
-  productDetails: { flexDirection: "row", justifyContent: "space-between", width: "100%", paddingVertical: 10 },
+  productDetails: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: "100%",
+    paddingVertical: 10,
+  },
   productTextContainer: { flex: 1 },
   productName: { fontSize: 10, fontWeight: "bold", textAlign: "left" },
-  productDescription: { fontSize: 8, textAlign: "left", color: "#6B6B6B", marginHorizontal: 5, fontWeight: '500' },
-  productPrice: { fontSize: 10, fontWeight: "bold", textAlign: "right", color: "#FCA311" },
-  productRow: { flexDirection: "row", justifyContent: "space-between", flexWrap: "wrap" },
+  productDescription: {
+    fontSize: 8,
+    textAlign: "left",
+    color: "#6B6B6B",
+    marginHorizontal: 5,
+    fontWeight: "500",
+  },
+  productPrice: {
+    fontSize: 10,
+    fontWeight: "bold",
+    textAlign: "right",
+    color: "#FCA311",
+  },
+  productRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+  },
   addbtn: {
     borderWidth: 1,
     paddingHorizontal: 4,
     borderRadius: 5,
     fontSize: 10,
-    marginTop: 5
+    marginTop: 5,
   },
   drafttext: {
     fontSize: 18,
@@ -821,7 +1074,6 @@ const styles = StyleSheet.create({
     elevation: 2,
     borderColor: "#C3C3C3",
     borderWidth: 1,
-
   },
 
   typeButton: {
@@ -830,7 +1082,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: "#fff",
     marginHorizontal: 10,
-
   },
 
   selectedType: {
@@ -846,16 +1097,16 @@ const styles = StyleSheet.create({
     color: "#ffb347",
   },
   bottomcontainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
     borderRadius: 10,
     paddingVertical: 10,
     paddingHorizontal: 20,
-    backgroundColor: '#fff',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    shadowColor: '#000',
+    backgroundColor: "#fff",
+    justifyContent: "space-between",
+    alignItems: "center",
+    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
@@ -864,19 +1115,19 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   option: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   optionText: {
     marginLeft: 6,
-    fontSize: 14,
-    color: '#333',
-    fontWeight: '500',
+    fontSize: 16,
+    color: "#333",
+    fontWeight: "500",
   },
   divider: {
     width: 1,
     height: 20,
-    backgroundColor: '#ccc',
+    backgroundColor: "#ccc",
     marginHorizontal: 12,
   },
 });

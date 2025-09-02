@@ -1,16 +1,6 @@
-import React, { useState } from "react";
-import {
-  Dimensions,
-  FlatList,
-  StyleProp,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  ViewStyle,
-} from "react-native";
-import Icon from "react-native-vector-icons/Ionicons";
+import React from "react";
+import { Dimensions, StyleProp, StyleSheet, ViewStyle } from "react-native";
+import { Dropdown } from "react-native-element-dropdown";
 
 const { width, height } = Dimensions.get("window");
 export interface DropDownOption {
@@ -22,7 +12,7 @@ interface CustomDropdownProps {
   placeholder: string;
   options?: DropDownOption[];
   onSelect: (value: any) => void;
-  selectedValue: string;
+  selectedValue: string | number | null;
   styles?: StyleProp<ViewStyle>;
   dropDownBoxStyle?: StyleProp<ViewStyle>;
 }
@@ -35,130 +25,59 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   styles: customStyles,
   dropDownBoxStyle,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState("");
-
-  const filteredOptions = options.filter(
-    (item) =>
-      typeof item.name === "string" &&
-      item.name.toLowerCase().includes(search.toLowerCase())
-  );
-
   return (
-    <View style={[styles.dropdownContainer, customStyles]}>
-      <TouchableOpacity
-        style={[styles.dropdown, dropDownBoxStyle]}
-        onPress={() => setIsOpen(!isOpen)}
-      >
-        <Text
-          style={[
-            styles.dropdownText,
-            placeholder && !selectedValue && { color: "#888" },
-          ]}
-        >
-          {selectedValue || placeholder}
-        </Text>
-        <Icon
-          name="chevron-down-outline"
-          size={20}
-          color="#888"
-          style={styles.dropdownArrow}
-        />
-      </TouchableOpacity>
-
-      {isOpen && (
-        <View style={styles.dropdownMenu}>
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search by name"
-            value={search}
-            onChangeText={setSearch}
-            placeholderTextColor="#999"
-          />
-          <FlatList
-            data={filteredOptions}
-            keyExtractor={(item) => item.id.toString()}
-            keyboardShouldPersistTaps="handled"
-            nestedScrollEnabled={true} // Important for Android
-            renderItem={({ item }) => (
-              <TouchableOpacity
-                style={styles.dropdownItem}
-                onPress={() => {
-                  onSelect(item);
-                  setIsOpen(false);
-                  setSearch("");
-                }}
-              >
-                <Text style={styles.dropdownItemText}>{item.name}</Text>
-              </TouchableOpacity>
-            )}
-            ListEmptyComponent={
-              <Text style={styles.noResultText}>No results found</Text>
-            }
-          />
-        </View>
-      )}
-    </View>
+    <Dropdown
+      style={[styles.dropdown, dropDownBoxStyle, customStyles]}
+      placeholderStyle={styles.placeholderStyle}
+      selectedTextStyle={styles.selectedTextStyle}
+      inputSearchStyle={styles.inputSearchStyle}
+      iconStyle={styles.iconStyle}
+      itemTextStyle={styles.itemTextStyle}
+      data={options}
+      search
+      maxHeight={300}
+      labelField="name"
+      valueField="id"
+      placeholder={placeholder}
+      searchPlaceholder="Search..."
+      value={selectedValue}
+      onChange={(item) => onSelect(item)}
+      renderLeftIcon={() => null}
+      renderRightIcon={() => null}
+    />
   );
 };
 
 export default CustomDropdown;
 
 const styles = StyleSheet.create({
-  dropdownContainer: {
-    marginBottom: height * 0.01,
-    zIndex: 1000,
-  },
   dropdown: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    borderWidth: 1,
+    height: 50,
     borderColor: "#ccc",
+    borderWidth: 1,
     borderRadius: 5,
-    padding: width * 0.03,
+    paddingHorizontal: 12,
     backgroundColor: "#FAFAFC",
+    marginBottom: height * 0.01,
   },
-  dropdownText: {
+  placeholderStyle: {
     fontSize: width * 0.038,
-    color: "#666",
-  },
-  dropdownArrow: {
-    fontSize: width * 0.05,
-    color: "#666",
-  },
-  dropdownMenu: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 5,
-    backgroundColor: "#fff",
-    position: "absolute",
-    width: "100%",
-    zIndex: 999,
-    marginTop: 50,
-    maxHeight: height * 0.3,
-    elevation: 10, // For Android
-  },
-  searchInput: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    fontSize: width * 0.038,
-    color: "#000",
-  },
-  dropdownItem: {
-    padding: width * 0.03,
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-  },
-  dropdownItemText: {
-    fontSize: width * 0.04,
-    color: "#000",
-  },
-  noResultText: {
-    textAlign: "center",
-    padding: 10,
     color: "#888",
+  },
+  selectedTextStyle: {
     fontSize: width * 0.038,
+    color: "#666",
+  },
+  iconStyle: {
+    width: 20,
+    height: 20,
+  },
+  inputSearchStyle: {
+    height: 40,
+    fontSize: width * 0.038,
+    color: "#000",
+  },
+  itemTextStyle: {
+    color: "#000",
   },
 });

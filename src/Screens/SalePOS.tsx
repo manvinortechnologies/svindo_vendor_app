@@ -27,10 +27,12 @@ import { useNavigation } from "@react-navigation/native";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import CalendarModal from "../Modals/CalendarModal";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useIsFocused } from "@react-navigation/native";
+import formatNumber from "../utils/priceFormatter";
 
 const SalePOS = () => {
   const navigation: any = useNavigation();
-
+  const isFoxcused = useIsFocused();
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [companyList, setCompanyList] = useState<DropDownOption[]>();
@@ -58,7 +60,7 @@ const SalePOS = () => {
 
   useEffect(() => {
     fetchAllData();
-  }, []);
+  }, [isFoxcused]);
 
   useEffect(() => {
     handleAmountChange(discount?.amount);
@@ -90,6 +92,7 @@ const SalePOS = () => {
         (item: any) => ({
           id: item.id,
           name: item.name || item.customer_name,
+          ...item,
         })
       );
       setCustomerList(transformedCustomer);
@@ -99,6 +102,7 @@ const SalePOS = () => {
         (item: any) => ({
           id: item.id,
           name: item.name || item.vendor_name,
+          ...item,
         })
       );
       setVendorList(transformedVendor);
@@ -107,6 +111,7 @@ const SalePOS = () => {
         (item: any) => ({
           id: item.id,
           name: item.name || item.vendor_name,
+          ...item,
         })
       );
       setBankList(transformedBank);
@@ -172,7 +177,7 @@ const SalePOS = () => {
     // if (!discount.pr || Number(discount.pr) < 0) {
     //   tempErrors.pr = "Discount percentage must be a valid positive number";
     // }
-    if (paymentMode !== "Cash") {
+    if (paymentMode === "In Credit") {
       if (!dueDate) {
         tempErrors.dueDate = "Due date is required";
       }
@@ -201,13 +206,16 @@ const SalePOS = () => {
       const totalDiscountedAmount = totalAmount - Number(discount.amount);
 
       const data = {
-        payment_method: paymentMode.toLocaleLowerCase(),
+        payment_method:
+          paymentMode === "In Credit"
+            ? "credit"
+            : paymentMode.toLocaleLowerCase(),
         company_profile: companySelected?.id,
         // //   "party": 2,
         customer: selectedCustomer?.id,
         discount_percentage: Number(discount?.pr),
         credit_date:
-          paymentMode !== "Cash" ? new Date(dueDate).toISOString() : "",
+          paymentMode === "In Credit" ? new Date(dueDate).toISOString() : "",
         is_wholesale_rate: wholesale,
         items: products.map((p) => ({
           product: p.id,
@@ -220,7 +228,7 @@ const SalePOS = () => {
         discount_amount: discount.amount,
         total_amount: totalDiscountedAmount,
         balance_amount:
-          paymentMode !== "Cash"
+          paymentMode === "In Credit"
             ? totalDiscountedAmount - Number(advanceAmount)
             : 0,
         wholesale_invoice_details: null,
@@ -261,14 +269,14 @@ const SalePOS = () => {
             <Text style={styles.changeText}>Change</Text>
           </TouchableOpacity> */}
         </View>
-        <View style={styles.optionContainer}>
+        {/* <View style={styles.optionContainer}>
           <Text style={styles.optionLabel}>
             Company - {companySelected?.name}
           </Text>
           <TouchableOpacity onPress={() => setShowCompanyModal(true)}>
             <Text style={styles.change}>Change</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
         {/* <Text style={styles.label}>Select Party Type</Text> */}
         {/* <View style={styles.radioGroup}>
           {["None", "Customer", "Vendor"].map((type) => (
@@ -290,8 +298,11 @@ const SalePOS = () => {
           <Text style={styles.optionLabel}>
             Customer - {selectedCustomer?.name}
           </Text>
-          <TouchableOpacity onPress={() => setShowCustomerModal(true)}>
-            <Text style={styles.change}>Change</Text>
+          <TouchableOpacity
+            onPress={() => setShowCustomerModal(true)}
+            style={styles.changeButton}
+          >
+            <Text style={styles.changeButtonText}>Add/Select</Text>
           </TouchableOpacity>
         </View>
 
@@ -358,7 +369,7 @@ const SalePOS = () => {
           <Text
             style={[
               styles.tableText,
-              { flex: 3, color: "#fff", fontWeight: "500" },
+              { flex: 2, color: "#fff", fontWeight: "500" },
             ]}
           >
             Item
@@ -385,22 +396,41 @@ const SalePOS = () => {
         {products.map((item, index) => (
           <View key={index} style={styles.tableRow}>
             <Text style={styles.tableText}>{index + 1}</Text>
-            <Text style={[styles.tableText, { flex: 3 }]} numberOfLines={2}>
+            <Text style={[styles.tableText, { flex: 2 }]} numberOfLines={2}>
               {item.name}
             </Text>
-            <Text style={styles.tableText}>{item.quantity}</Text>
+            <TextInput
+              style={[styles.tableText, styles.quantityInput]}
+              value={item.quantity.toString()}
+              onChangeText={(text) => {
+                const newQuantity = parseInt(text) || 0;
+                if (newQuantity >= 0) {
+                  const updatedProducts = [...products];
+                  if (newQuantity === 0) {
+                    // Remove item if quantity is 0
+                    updatedProducts.splice(index, 1);
+                  } else {
+                    // Update quantity
+                    updatedProducts[index] = { ...item, quantity: newQuantity };
+                  }
+                  setProducts(updatedProducts);
+                }
+              }}
+              keyboardType="numeric"
+              selectTextOnFocus
+            />
             <Text style={styles.tableText}>
-              {Number(wholesale ? item?.wholesale_price : item?.price).toFixed(
-                2
-              )}
+              {/* {Number(wholesale ? item?.wholesale_price : item?.price).toFixed(0)} */}
+              {formatNumber(wholesale ? item?.wholesale_price : item?.price)}
             </Text>
             <Text style={styles.tableText}>
-              {Number(
+              {formatNumber(
                 (wholesale ? item?.wholesale_price : item?.price) *
                   item?.quantity
-              ).toFixed(2)}
+              )}
             </Text>
             <TouchableOpacity
+              style={{ marginEnd: 5 }}
               onPress={() => {
                 const updated = products.filter((_, i) => i !== index);
                 setProducts(updated);
@@ -441,7 +471,7 @@ const SalePOS = () => {
           <View style={{ flexDirection: "row", gap: 20 }}>
             <Text style={styles.label}>Payment</Text>
             <View style={styles.paymentOptions}>
-              {["UPI", "Card", "Cash", "Credit"].map((method) => (
+              {["UPI", "Card", "Cash", "In Credit"].map((method) => (
                 <TouchableOpacity
                   key={method}
                   onPress={() => setPaymentMode(method)}
@@ -464,7 +494,7 @@ const SalePOS = () => {
           </View>
 
           {/* Advance */}
-          {paymentMode !== "Cash" && (
+          {paymentMode === "In Credit" && (
             <>
               <View style={{ flexDirection: "row", gap: 20 }}>
                 <Text style={styles.label}>Advance</Text>
@@ -665,6 +695,7 @@ const styles = StyleSheet.create({
   tableRow: {
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     backgroundColor: "#F5F5F5",
     paddingVertical: 8,
     borderBottomWidth: 1,
@@ -677,6 +708,15 @@ const styles = StyleSheet.create({
     fontWeight: "500",
     textAlign: "center",
     color: "#000",
+  },
+  quantityInput: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 4,
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    backgroundColor: "#f9f9f9",
+    // minWidth: 40,
   },
   bottomBox: {
     marginTop: 20,
@@ -785,10 +825,17 @@ const styles = StyleSheet.create({
     color: "#222",
     fontWeight: "normal",
   },
-  change: {
-    fontSize: 18,
-    color: "#FFA700",
-    fontWeight: "bold",
-    marginLeft: 4,
+  changeButton: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: "#FCA311",
+    borderRadius: 6,
+    backgroundColor: "#FFF",
+  },
+  changeButtonText: {
+    fontSize: 14,
+    color: "#FCA311",
+    fontWeight: "500",
   },
 });
