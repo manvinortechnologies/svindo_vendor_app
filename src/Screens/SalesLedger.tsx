@@ -52,22 +52,7 @@ const SalesLedger = () => {
   const [salesData, setSalesData] = useState<SalesEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    fetchSalesData();
-  }, []);
-
-  const fetchSalesData = async () => {
-    try {
-      setIsLoading(true);
-      const response = await api.get(API_ROUTES.posSales);
-      setSalesData(response.data || []);
-    } catch (error) {
-      console.error("Failed to fetch sales data:", error);
-      Alert.alert("Error", "Failed to load sales data");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

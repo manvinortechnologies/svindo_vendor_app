@@ -35,6 +35,7 @@ export type THomeNavigation = {
   [HomeNavigation.CHATS]: undefined;
   [HomeNavigation.DOWNLOAD_QR_CODE]: undefined;
   [HomeNavigation.WHATSAPP_MESSAGE]: undefined;
+  [HomeNavigation.SMS_SCREEN]:undefined;
   [HomeNavigation.EMAILS]: undefined;
   [HomeNavigation.MANAGE_DELIVERY]: undefined;
   [HomeNavigation.ERP]: undefined;

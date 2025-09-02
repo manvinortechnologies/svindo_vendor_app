@@ -112,6 +112,7 @@ import NotificationScreen from "../Screens/NotificationScreen";
 import ModelReminderScreen from "../Screens/ModelReminderScreen";
 import CustomerLedger from "../Screens/CustomerLedger";
 import VendorLedger from "../Screens/VendorLedger";
+import SmsScreen from "../Screens/SmsScreen";
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
 
@@ -227,6 +228,7 @@ const AppNavigation = () => {
           name={HomeNavigation.WHATSAPP_MESSAGE}
           component={WhatsAppMessage}
         />
+        <Stack.Screen name={HomeNavigation.SMS_SCREEN} component={SmsScreen} />
         <Stack.Screen name={HomeNavigation.EMAILS} component={Emails} />
         <Stack.Screen
           name={HomeNavigation.MANAGE_DELIVERY}

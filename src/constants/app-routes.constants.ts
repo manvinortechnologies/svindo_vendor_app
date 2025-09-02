@@ -1,3 +1,5 @@
+import SmsScreen from "../Screens/SmsScreen";
+
 export enum HomeNavigation {
   SPLASH_SCREEN = "SplashScreen",
   WELCOME_SCREEN = "WelcomeScreen",
@@ -28,6 +30,7 @@ export enum HomeNavigation {
   CHATS = "Chats",
   DOWNLOAD_QR_CODE = "DownloadQRCode",
   WHATSAPP_MESSAGE = "WhatsAppMessage",
+  SMS_SCREEN = "SmsScreen",
   EMAILS = "Emails",
   MANAGE_DELIVERY = "ManageDelivery",
   ERP = "Erp",
