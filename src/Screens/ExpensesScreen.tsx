@@ -16,30 +16,79 @@ import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import { useIsFocused } from "@react-navigation/native";
 import { API_ROUTES } from "../constants/api-routes.constants";
+import { ScaledSheet } from "react-native-size-matters";
 
 const ExpensesScreen = ({ navigation }: any) => {
   const isFocused = useIsFocused();
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [expensesList, setExpenseseList] = useState<Expense[]>([]);
+  const [groupedExpenses, setGroupedExpenses] = useState<{
+    [key: string]: Expense[];
+  }>({});
   const [total, setTotal] = useState<number>(0);
 
   useEffect(() => {
     getAllExpenses();
   }, [isFocused]);
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return "Today";
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return "Yesterday";
+    } else {
+      return date.toLocaleDateString("en-GB", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+    }
+  };
+
+  const groupExpensesByDate = (expenses: Expense[]) => {
+    const grouped: { [key: string]: Expense[] } = {};
+
+    expenses.forEach((expense) => {
+      const date = expense.expense_date;
+      if (!grouped[date]) {
+        grouped[date] = [];
+      }
+      grouped[date].push(expense);
+    });
+
+    // Sort dates in descending order (newest first)
+    const sortedDates = Object.keys(grouped).sort(
+      (a, b) => new Date(b).getTime() - new Date(a).getTime()
+    );
+
+    const sortedGrouped: { [key: string]: Expense[] } = {};
+    sortedDates.forEach((date) => {
+      sortedGrouped[date] = grouped[date];
+    });
+
+    return sortedGrouped;
+  };
+
   const getAllExpenses = async () => {
     try {
       setIsLoading(true);
       const res = await api.get(API_ROUTES.expense);
-      console.log("res--->", res);
       if (res.data.length > 0) {
         setExpenseseList(res.data);
+        const grouped = groupExpensesByDate(res.data);
+        setGroupedExpenses(grouped);
+
         let temptotal = 0;
         res.data.map((item: Expense) => {
           temptotal = temptotal + parseInt(item.amount);
         });
-        console.log("total --->", temptotal);
         setTotal(temptotal);
       }
     } catch (error) {
@@ -47,44 +96,47 @@ const ExpensesScreen = ({ navigation }: any) => {
       setIsLoading(false);
     }
   };
-  const renderExpenese = ({
-    item,
-    index,
-  }: {
-    item: Expense;
-    index: number;
-  }) => {
+  const renderExpenseItem = (item: Expense) => {
     return (
-      <View style={styles.scrollContainer}>
-        {/* Date Section */}
-        <Text style={styles.dateText}>Date {item.expense_date}</Text>
+      <TouchableOpacity
+        key={item.id}
+        style={styles.expenseCard}
+        onPress={() => {
+          navigation.navigate("ExpensesDetailScreen", { expenseData: item });
+        }}
+      >
+        <View style={styles.expenseHeader}>
+          <Text style={styles.cellText}>
+            {(item as any).category_details?.name || "Category"}
+          </Text>
+          <Text style={styles.cellText}>
+            {(item as any).payment_method?.toUpperCase() ||
+              item.payment_type?.toUpperCase() ||
+              "CASH"}
+          </Text>
+          <Text style={styles.cellText}>{item.payment_date}</Text>
+          <Text style={styles.pendingText}>
+            {item.is_paid ? "Paid" : "Pending"}
+          </Text>
+        </View>
 
-        {/* Expense Card */}
-        <TouchableOpacity
-          style={styles.expenseCard}
-          onPress={() => {
-            navigation.navigate("ExpensesDetailScreen");
-          }}
-        >
-          <View style={styles.expenseHeader}>
-            <Text style={styles.cellText}>Category</Text>
-            <Text style={styles.cellText}>Cash</Text>
-            <Text style={styles.cellText}>Payment date</Text>
-            <Text style={styles.pendingText}>Pending</Text>
-          </View>
+        <View style={styles.expenseRow}>
+          <Text style={styles.descText} numberOfLines={2}>
+            {item.description}
+          </Text>
+          <Text style={styles.descText} numberOfLines={2}>
+            {item.amount}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
-          <View style={styles.expenseRow}>
-            <Text style={styles.descText} numberOfLines={2}>
-              {item.description}
-            </Text>
-
-            <Text style={styles.descText}>{item.amount}</Text>
-            <Text style={styles.descText}>{item.payment_date}</Text>
-            <Text style={[styles.descText, { textAlign: "right" }]}>
-              {item.is_paid ? "No" : "Yes"}
-            </Text>
-          </View>
-        </TouchableOpacity>
+  const renderDateSection = (date: string, expenses: Expense[]) => {
+    return (
+      <View key={date} style={styles.dateSection}>
+        <Text style={styles.dateText}>{formatDate(date)}</Text>
+        {expenses.map((expense) => renderExpenseItem(expense))}
       </View>
     );
   };
@@ -112,15 +164,14 @@ const ExpensesScreen = ({ navigation }: any) => {
         {/* Ledger */}
         <View style={styles.ledger}>
           <Text style={styles.ledgerText}></Text>
-          <Text style={[styles.ledgerText, { marginLeft: 50 }]}>Ledger</Text>
+          <Text style={[styles.ledgerText]}>Ledger</Text>
           <Text style={styles.ledgerAmount}>{total}</Text>
         </View>
-        <FlatList
-          data={expensesList}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderExpenese}
-          contentContainerStyle={{ paddingBottom: 80 }}
-        />
+        <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
+          {Object.entries(groupedExpenses).map(([date, expenses]) =>
+            renderDateSection(date, expenses)
+          )}
+        </ScrollView>
 
         {/* Add Expense Button */}
         <TouchableOpacity
@@ -140,7 +191,7 @@ const ExpensesScreen = ({ navigation }: any) => {
 export default ExpensesScreen;
 const { width, height } = Dimensions.get("window");
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
@@ -175,6 +226,8 @@ const styles = StyleSheet.create({
   },
   ledgerText: {
     fontWeight: "bold",
+    fontSize: "12@s",
+    color: "#000",
   },
   ledgerAmount: {
     color: "green",
@@ -184,12 +237,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     // paddingBottom: 80,
   },
+  dateSection: {
+    paddingHorizontal: 15,
+    marginBottom: 10,
+  },
   dateText: {
-    marginTop: 15,
-    fontSize: 13,
-    fontWeight: "500",
-    color: "#404040",
+    marginTop: "8@s",
+    // marginBottom: 8,
+    fontSize: "12@s",
+    fontWeight: "600",
+    color: "#000",
     alignSelf: "center",
+    // backgroundColor: "#F5F5F5",
+    // paddingHorizontal: 12,
+    // paddingVertical: 6,
+    borderRadius: 12,
   },
   expenseCard: {
     backgroundColor: "#FFF6EF",

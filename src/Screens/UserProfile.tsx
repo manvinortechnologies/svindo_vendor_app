@@ -159,7 +159,6 @@ const UserProfile = ({ navigation }: any) => {
         </TouchableOpacity>
       </ScrollView>
       <Loading visible={isLoading} />
-      <Bottomnavigation />
     </SafeAreaView>
   );
 };

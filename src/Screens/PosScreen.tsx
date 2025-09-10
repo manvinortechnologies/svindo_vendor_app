@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,10 +8,15 @@ import {
   FlatList,
   Image,
   Dimensions,
-  SafeAreaView,
+  ActivityIndicator,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 import CustomHeader from "../CommonComponent/CustomHeader";
+import api from "../services/api/api";
+import { API_ROUTES } from "../constants/api-routes.constants";
+import { ScaledSheet } from "react-native-size-matters";
+import { HomeNavigation } from "../constants/app-routes.constants";
 
 const { width } = Dimensions.get("window");
 
@@ -49,9 +54,70 @@ const dummyProducts = [
   },
 ];
 
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  image?: string;
+  description?: string;
+  category?: string;
+  stock?: number;
+}
+
 const PosScreen = ({ navigation }: any) => {
-  const [products, setProducts] = useState(dummyProducts);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<{ [key: string]: number }>({});
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Fetch products from API
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(API_ROUTES.vendorProduct);
+
+      // Transform API response to match our Product interface
+      const transformedProducts = response.data.map((item: any) => ({
+        id: item.id?.toString() || item.product_id?.toString(),
+        name: item.name || item.product_name || "Unknown Product",
+        price: parseFloat(item.price || item.sales_price || 0),
+        image: item.image || item.product_image,
+        description: item.description,
+        category: item.category,
+        stock: item.stock || item.quantity,
+      }));
+
+      setProducts(transformedProducts);
+      setFilteredProducts(transformedProducts);
+    } catch (error) {
+      console.error("Failed to fetch products:", error);
+      // Fallback to dummy data if API fails
+      setProducts(dummyProducts);
+      setFilteredProducts(dummyProducts);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Search functionality
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (query.trim() === "") {
+      setFilteredProducts(products);
+    } else {
+      const filtered = products.filter(
+        (product) =>
+          product.name.toLowerCase().includes(query.toLowerCase()) ||
+          product.category?.toLowerCase().includes(query.toLowerCase())
+      );
+      setFilteredProducts(filtered);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const handleAdd = (id: string) => {
     setCart((prev) => ({ ...prev, [id]: (prev[id] || 0) + 1 }));
@@ -69,12 +135,16 @@ const PosScreen = ({ navigation }: any) => {
     });
   };
 
-  const renderProduct = ({ item }: any) => {
+  const renderProduct = ({ item }: { item: Product }) => {
     const quantity = cart[item.id] || 0;
     return (
       <View style={styles.card}>
         <Image
-          source={item.image}
+          source={
+            item.image && typeof item.image === "string"
+              ? { uri: item.image }
+              : item.image || require("../assets/product.png")
+          }
           style={styles.productImage}
           resizeMode="contain"
         />
@@ -107,7 +177,7 @@ const PosScreen = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <CustomHeader title="" />
+      <CustomHeader title="Sales & POS" />
       {/* Search Bar */}
       <View style={styles.searchWrapper}>
         <Icon
@@ -118,18 +188,34 @@ const PosScreen = ({ navigation }: any) => {
         />
         <TextInput
           placeholder="Search Product/Service"
+          placeholderTextColor="#ccc"
           style={styles.searchInput}
+          value={searchQuery}
+          onChangeText={handleSearch}
         />
       </View>
 
-      {/* Product Grid */}
-      <FlatList
-        data={products}
-        keyExtractor={(item) => item.id}
-        renderItem={renderProduct}
-        numColumns={2}
-        contentContainerStyle={{ paddingBottom: 100 }}
-      />
+      {/* Loading State */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FCA311" />
+          <Text style={styles.loadingText}>Loading products...</Text>
+        </View>
+      ) : (
+        /* Product Grid */
+        <FlatList
+          data={filteredProducts}
+          keyExtractor={(item) => item.id}
+          renderItem={renderProduct}
+          numColumns={2}
+          contentContainerStyle={{ paddingBottom: 100 }}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No products found</Text>
+            </View>
+          }
+        />
+      )}
 
       {/* Floating Buttons */}
       <View style={styles.fabWrapper}>
@@ -137,7 +223,10 @@ const PosScreen = ({ navigation }: any) => {
           <Icon name="barcode-outline" size={20} color="#FF914D" />
           <Text style={styles.scanText}>Scan</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.addProductBtn}>
+        <TouchableOpacity
+          style={styles.addProductBtn}
+          onPress={() => navigation.navigate(HomeNavigation.ADD_PRODUCT_SCREEN)}
+        >
           <Text style={styles.addProductText}>Add Product</Text>
         </TouchableOpacity>
       </View>
@@ -155,7 +244,7 @@ const PosScreen = ({ navigation }: any) => {
 
 export default PosScreen;
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
@@ -244,8 +333,8 @@ const styles = StyleSheet.create({
   },
   fabWrapper: {
     position: "absolute",
-    bottom: 60,
-    right: 15,
+    bottom: "60@s",
+    right: "15@s",
     alignItems: "center",
   },
   scanBtn: {
@@ -276,7 +365,7 @@ const styles = StyleSheet.create({
   },
   proceedBtn: {
     position: "absolute",
-    bottom: 15,
+    bottom: "25@s",
     alignSelf: "center",
     backgroundColor: "#92F1A0",
     width: width * 0.3,
@@ -288,5 +377,27 @@ const styles = StyleSheet.create({
     color: "#000",
     fontSize: 16,
     fontWeight: "600",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 50,
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#666",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 50,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
   },
 });

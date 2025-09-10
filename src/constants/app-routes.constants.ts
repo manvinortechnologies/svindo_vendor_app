@@ -18,6 +18,7 @@ export enum HomeNavigation {
   PRODUCTDETAILS = "ProductDetails",
   STOCK_SCREEN = "StockScreen",
   CREATE_PRODUCT = "CreateProduct",
+  CREATE_ADDONS = "CreateAddons",
   ADD_PRODUCT_SCREEN = "AddProductScreen",
   PRODUCT_ADDED_SUCCESS = "ProductAddedSuccess",
   STORE_SCREEN = "Storescreen",
@@ -114,4 +115,6 @@ export enum HomeNavigation {
   ASSIGNOWNDELIVERYBOY = "AssignOwnDeliveryBoy",
   ADDDELIVERYBOY = "AddDeliveryBoy",
   ADD_ADDONS = "AddAddOns",
+  ADDON_SUCCESS = "AddonSuccess",
+  SELECT_ADDONS = "SelectAddons",
 }

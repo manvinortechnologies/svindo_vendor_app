@@ -233,30 +233,6 @@ const OnlineStore = ({ navigation }: any) => {
           />
         </ScrollView>
         <Loading visible={isLoading} />
-        {/* <Bottompopup/> */}
-        <View style={styles.bottomcontainer}>
-          <TouchableOpacity
-            style={styles.option}
-            onPress={() => navigation.navigate("OnlineStore")}
-          >
-            <Icon name="storefront-outline" size={20} color="#f7931e" />
-            <Text style={[styles.optionText, { color: "#f7931e" }]}>
-              Online Store
-            </Text>
-          </TouchableOpacity>
-
-          <View style={styles.divider} />
-
-          <TouchableOpacity
-            style={styles.option}
-            onPress={() => navigation.navigate("MarketingTools")}
-          >
-            <Icons name="setting" size={20} color="#555" />
-            <Text style={styles.optionText}>Tools</Text>
-          </TouchableOpacity>
-        </View>
-
-        <Bottomnavigation />
       </SafeAreaView>
     </MainContainer>
   );

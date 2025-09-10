@@ -16,6 +16,7 @@ import CustomDropdown from "../CommonComponent/CustomDropdown";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Swipeable } from "react-native-gesture-handler";
 import Icon from "react-native-vector-icons/Ionicons";
+import { s } from "react-native-size-matters";
 
 type OrderProductDetailsRouteParams = {
   orderId: string;
@@ -145,7 +146,20 @@ const OrderProductDetails = ({ navigation }: any) => {
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Header */}
-        <CustomHeader title={order.customer_name} />
+        <CustomHeader
+          title={order.customer_name}
+          rightIcon={
+            <TouchableOpacity
+              onPress={() => {
+                // Handle chat functionality
+                console.log("Chat button pressed");
+              }}
+              style={styles.chatButton}
+            >
+              <Icon name="chatbox-ellipses" size={s(22)} color="#FCA511" />
+            </TouchableOpacity>
+          }
+        />
 
         {/* Order status */}
         <View style={styles.orderStatusRow}>
@@ -288,23 +302,36 @@ const OrderProductDetails = ({ navigation }: any) => {
         </View>
 
         {/* Delivery Details */}
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>CUSTOMER DETAILS</Text>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Name:</Text>
-            <Text style={styles.detailValue}>{order.customer_name}</Text>
+        <View style={styles.deliveryCard}>
+          <Text style={styles.deliveryTitle}>Delivery Details</Text>
+
+          <View style={styles.deliverySection}>
+            <Text style={styles.deliveryLabel}>Address :</Text>
+            <Text style={styles.addressText}>{order.customer_name}</Text>
+            <Text style={styles.addressText}>{order.customer_address}</Text>
+            <Text style={styles.addressText}>
+              Mobile - {order.customer_mobile}
+            </Text>
           </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Mobile:</Text>
-            <Text style={styles.detailValue}>{order.customer_mobile}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Address:</Text>
-            <Text style={styles.detailValue}>{order.customer_address}</Text>
-          </View>
-          <View style={styles.detailRow}>
-            <Text style={styles.detailLabel}>Payment Mode:</Text>
-            <Text style={styles.detailValue}>{order.payment_mode}</Text>
+
+          <View
+            style={[
+              styles.deliverySection,
+              {
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+              },
+            ]}
+          >
+            <Text style={styles.paymentModeLabel}>
+              Payment Mode :{" "}
+              <Text style={styles.paymentModeValue}>{order.payment_mode}</Text>
+            </Text>
+            <TouchableOpacity style={styles.callButton}>
+              <Icon name="call" size={16} color="#fff" />
+              <Text style={styles.callButtonText}>Call</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -550,17 +577,19 @@ const styles = StyleSheet.create({
   },
   detailRow: {
     flexDirection: "row",
+    // justifyContent: "space-between",
+    gap: 10,
     marginBottom: 8,
-    alignItems: "flex-start",
+    alignItems: "center",
   },
   detailLabel: {
     fontWeight: "bold",
     color: "#333",
-    width: 100,
+    // width: 100,
     fontSize: 14,
   },
   detailValue: {
-    flex: 1,
+    // flex: 1,
     color: "#666",
     fontSize: 14,
   },
@@ -599,5 +628,85 @@ const styles = StyleSheet.create({
     color: "#FFE0B2",
     fontSize: 12,
     textAlign: "center",
+  },
+  deliveryCard: {
+    backgroundColor: "#fff",
+    margin: 10,
+    paddingHorizontal: 15,
+    borderRadius: 12,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    position: "relative",
+  },
+  deliveryTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+    textAlign: "center",
+    marginVertical: 20,
+  },
+  deliverySection: {
+    marginBottom: 15,
+  },
+  deliveryLabel: {
+    fontSize: 14,
+    color: "#888",
+    marginBottom: 5,
+  },
+
+  customerNameText: {
+    fontSize: 16,
+    color: "#000",
+    fontWeight: "500",
+    marginBottom: 2,
+  },
+  addressText: {
+    fontSize: 14,
+    color: "#000",
+    lineHeight: 20,
+  },
+  mobileLabel: {
+    fontSize: 14,
+    color: "#000",
+    fontWeight: "500",
+  },
+  mobileValue: {
+    fontSize: 14,
+    color: "#000",
+    marginTop: 2,
+  },
+  paymentModeLabel: {
+    fontSize: 14,
+    color: "#888",
+    // marginBottom: 5,
+  },
+  paymentModeValue: {
+    fontSize: 14,
+    color: "#000",
+  },
+  callButton: {
+    // position: "absolute",
+    // bottom: 15,
+    // right: 15,
+    backgroundColor: "#4CAF50",
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  callButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "500",
+    marginLeft: 5,
+  },
+  chatButton: {
+    // backgroundColor: "#FCA511",
+    // borderRadius: 20,
+    padding: 6,
   },
 });

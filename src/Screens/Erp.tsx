@@ -55,68 +55,88 @@ const Erp = () => {
     {
       label: "Sale & POS",
       icon: "cart-outline",
-      screen: "PosScreen",
+      screen: HomeNavigation.SALE_POS,
     },
-    { label: "Purchases", icon: "cart-arrow-down", screen: "CreatePurchase" },
+    {
+      label: "Purchases",
+      icon: "cart-arrow-down",
+      screen: HomeNavigation.CREATE_PURCHASE,
+    },
     {
       label: "Expenses",
       icon: "file-document-outline",
-      screen: "ExpensesScreen",
+      screen: HomeNavigation.EXPENESES_SCREEN,
     },
-    { label: "Payments", icon: "cash-multiple", screen: "PaymentScreen" },
+    {
+      label: "Payments",
+      icon: "cash-multiple",
+      screen: HomeNavigation.PAYMENTSCREEN,
+    },
   ];
 
   const menuItems = [
     {
       title: "Company Profile",
       icon: "office-building-outline",
-      screen: "CompanyProfile",
+      screen: HomeNavigation.COMPANY_PROFILE,
     },
-    { title: "User Profile", icon: "account-outline", screen: "UserProfile" },
+    {
+      title: "User Profile",
+      icon: "account-outline",
+      screen: HomeNavigation.USER_PROFILE,
+    },
     {
       title: "Manage Companies",
       icon: "account-group-outline",
-      screen: "ManageCompanies",
+      screen: HomeNavigation.MANAGE_COMPANIES,
     },
     {
       title: "Sales Ledger",
       icon: "book-open-variant",
       screen: HomeNavigation.SALES_LEDGER,
     },
+    // {
+    //   title: "Add Addon",
+    //   icon: "book-open-variant",
+    //   screen: HomeNavigation.ADD_ADDONS,
+    // },
+    // {
+    //   title: "Create Invoice",
+    //   icon: "book-open-variant",
+    //   screen: HomeNavigation.CREATE_INVOICE,
+    // },
+    // {
+    //   title: "Create Credit Note",
+    //   icon: "book-open-variant",
+    //   screen: HomeNavigation.CREATE_CREDIT_NOTE,
+    // },
+    // {
+    //   title: "Create Quation",
+    //   icon: "book-open-variant",
+    //   screen: HomeNavigation.CREATE_QUATION,
+    // },
+    // {
+    //   title: "Create pro farma invoice",
+    //   icon: "book-open-variant",
+    //   screen: HomeNavigation.CREATE_PRO_FARMA_INVOICE,
+    // },
+    // {
+    //   title: "Delivery Challan",
+    //   icon: "book-open-variant",
+    //   screen: HomeNavigation.DELIVERY_CHALLAN,
+    // },
+    // { title: "Day Book", icon: "book-open-variant", screen: "DayBookScreen" },
     {
-      title: "Add Addon",
-      icon: "book-open-variant",
-      screen: HomeNavigation.ADD_ADDONS,
+      title: "Bank Accounts",
+      icon: "bank-outline",
+      screen: HomeNavigation.BANK_ACCOUNTS,
     },
+    // { title: "Bank Name", icon: "bank-outline", screen: "BankNameScreen" },
     {
-      title: "Create Invoice",
-      icon: "book-open-variant",
-      screen: HomeNavigation.CREATE_INVOICE,
+      title: "Cash in Hand",
+      icon: "cash-multiple",
+      screen: HomeNavigation.CASH_IN_HAND,
     },
-    {
-      title: "Create Credit Note",
-      icon: "book-open-variant",
-      screen: HomeNavigation.CREATE_CREDIT_NOTE,
-    },
-    {
-      title: "Create Quation",
-      icon: "book-open-variant",
-      screen: HomeNavigation.CREATE_QUATION,
-    },
-    {
-      title: "Create pro farma invoice",
-      icon: "book-open-variant",
-      screen: HomeNavigation.CREATE_PRO_FARMA_INVOICE,
-    },
-    {
-      title: "Delivery Challan",
-      icon: "book-open-variant",
-      screen: HomeNavigation.DELIVERY_CHALLAN,
-    },
-    { title: "Day Book", icon: "book-open-variant", screen: "DayBookScreen" },
-    { title: "Bank Accounts", icon: "bank-outline", screen: "BankAccounts" },
-    { title: "Bank Name", icon: "bank-outline", screen: "BankNameScreen" },
-    { title: "Cash in Hand", icon: "cash-multiple", screen: "CashInHand" },
     { title: "Cheques", icon: "credit-card-outline", screen: "Cheques" },
     {
       title: "Loan Accounts",
@@ -126,29 +146,29 @@ const Erp = () => {
     {
       title: "Manage Customers",
       icon: "account-group",
-      screen: "ManageCustomers",
+      screen: HomeNavigation.MANAGE_CUSTOMERS,
     },
     {
       title: "Manage Vendors",
       icon: "account-tie-outline",
-      screen: "ManageVendors",
+      screen: HomeNavigation.MANAGE_VENDORS,
     },
     {
       title: "Recycle Bin",
       icon: "delete-restore",
-      screen: "RecycleBinScreen",
+      screen: HomeNavigation.RECYCLE_BIN_SCREEN,
     },
-    {
-      title: "Close Financial Year",
-      icon: "calendar-plus",
-      screen: "CloseYearScreen",
-    },
-    { title: "Settings", icon: "cog-outline", screen: "SettingsScreen" },
-    {
-      title: "Invoice Settings",
-      icon: "file-document-outline",
-      screen: "InvoiceSettings",
-    },
+    // {
+    //   title: "Close Financial Year",
+    //   icon: "calendar-plus",
+    //   screen: HomeNavigation.CLOSE_YEAR_SCREEN,
+    // },
+    // { title: "Settings", icon: "cog-outline", screen: "SettingsScreen" },
+    // {
+    //   title: "Invoice Settings",
+    //   icon: "file-document-outline",
+    //   screen: HomeNavigation.INVOICE_SETTINGS,
+    // },
     {
       title: "Product Settings",
       icon: "cog-outline",
@@ -157,26 +177,21 @@ const Erp = () => {
     {
       title: "Reminders",
       icon: "bell-alert-outline",
-      screen: "RemindersScreen",
+      screen: HomeNavigation.REMINDERS_SCREEN,
     },
-    {
-      title: "Reminders Setting",
-      icon: "bell-alert-outline",
-      screen: HomeNavigation.REMINDERSETTINGS,
-    },
-    {
-      title: "Sales Ledger",
-      icon: "bell-alert-outline",
-      screen: HomeNavigation.REMINDERSETTINGS,
-    },
+    // {
+    //   title: "Reminders Setting",
+    //   icon: "bell-alert-outline",
+    //   screen: HomeNavigation.REMINDERSETTINGS,
+    // },
+    // {
+    //   title: "Sales Ledger",
+    //   icon: "bell-alert-outline",
+    //   screen: HomeNavigation.REMINDERSETTINGS,
+    // },
   ];
 
   const webItems = [
-    {
-      title: "Login to Svindo Business Web",
-      icon: "web",
-      screen: "WebAppScreen",
-    },
     { title: "Barcode Generator", icon: "barcode-scan", screen: "Barcode" },
     { title: "Reports", icon: "file-chart-outline", screen: "Reports" },
     {
@@ -207,12 +222,12 @@ const Erp = () => {
     {
       title: "Rate Us on Playstore",
       icon: "star-outline",
-      screen: "RateUsScreen",
+      screen: HomeNavigation.RATE_US_SCREEN,
     },
     {
       title: "Privacy Policy",
       icon: "shield-lock-outline",
-      screen: "PrivacyPolicyScreen",
+      screen: HomeNavigation.PRIVACY_POLICY_SCREEN,
     },
     {
       title: "Svindo Business Premium",
@@ -280,7 +295,42 @@ const Erp = () => {
         </View>
 
         {/* Web Items */}
-        <View style={styles.menuContainer}>
+        <View
+          style={{
+            borderWidth: 1,
+            borderColor: "#ddd",
+            margin: 8,
+            borderRadius: 10,
+          }}
+        >
+          <TouchableOpacity
+            style={{
+              flexDirection: "row",
+              justifyContent: "space-between",
+              borderBottomWidth: 1,
+              borderColor: "#ECECEC",
+            }}
+          >
+            <Text style={styles.sectionTitle}>
+              Login to Svindo Business Web
+            </Text>
+            <Icon
+              name="chevron-right"
+              size={22}
+              color="#000"
+              style={{ marginLeft: "auto", marginTop: 5, marginRight: 10 }}
+            />
+          </TouchableOpacity>
+          <View style={styles.helpContainer}>
+            {webItems.map((item) => (
+              <View key={item.title} style={styles.helpItem}>
+                <Icon name={item.icon} size={22} color="#000" />
+                <Text style={styles.webText}>{item.title}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+        {/* <View style={styles.menuContainer}>
           {webItems.map((item) => (
             <TouchableOpacity
               key={item.title}
@@ -297,7 +347,7 @@ const Erp = () => {
               />
             </TouchableOpacity>
           ))}
-        </View>
+        </View> */}
 
         {/* Help & Support */}
         <View
@@ -358,8 +408,6 @@ const Erp = () => {
           ))}
         </View>
       </ScrollView>
-
-      <Bottomnavigation />
     </View>
   );
 };
@@ -422,6 +470,7 @@ const styles = StyleSheet.create({
     margin: 2,
   },
   helpText: { marginLeft: 6, color: "#FCA311", fontWeight: "600" },
+  webText: { marginLeft: 6, color: "#000", fontWeight: "600" },
 });
 
 export default Erp;

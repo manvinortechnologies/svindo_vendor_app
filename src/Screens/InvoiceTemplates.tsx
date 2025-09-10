@@ -115,9 +115,6 @@ const InvoiceTemplates = () => {
           <Text style={styles.updateText}>Save and Update</Text>
         </TouchableOpacity>
       </ScrollView>
-
-      {/* Bottom Navigation Placeholder */}
-      <Bottomnavigation />
     </SafeAreaView>
   );
 };

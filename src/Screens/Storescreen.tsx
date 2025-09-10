@@ -486,33 +486,6 @@ const Storescreen = ({ navigation }: any) => {
           </Text>
         </View>
       </ScrollView>
-
-      <View style={styles.bottomcontainer}>
-        <TouchableOpacity style={styles.option}>
-          <Icon name="storefront" size={20} color="#FCA511" />
-          <Text style={[styles.optionText, { color: "#FCA511" }]}>
-            Online Store
-            {/* <NavigationButton
-              screen="MarketingTools"
-              label="Online Store"
-              color="#FCA511"
-              fontSize={16}
-              fontWeight="bold"
-            /> */}
-          </Text>
-        </TouchableOpacity>
-
-        <View style={styles.divider} />
-
-        <TouchableOpacity
-          style={styles.option}
-          onPress={() => navigation.navigate("MarketingTools")}
-        >
-          <Icon name="cog-outline" size={20} color="#000" />
-          <Text style={[styles.optionText]}>Tools</Text>
-        </TouchableOpacity>
-      </View>
-      <Bottomnavigation />
     </View>
   );
 };
@@ -1095,40 +1068,6 @@ const styles = StyleSheet.create({
 
   selectedTypeText: {
     color: "#ffb347",
-  },
-  bottomcontainer: {
-    flexDirection: "row",
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: "#fff",
-    justifyContent: "space-between",
-    alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-    elevation: 3,
-    marginHorizontal: 10,
-    marginBottom: 10,
-  },
-  option: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  optionText: {
-    marginLeft: 6,
-    fontSize: 16,
-    color: "#333",
-    fontWeight: "500",
-  },
-  divider: {
-    width: 1,
-    height: 20,
-    backgroundColor: "#ccc",
-    marginHorizontal: 12,
   },
 });
 

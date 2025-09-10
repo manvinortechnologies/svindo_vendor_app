@@ -20,6 +20,7 @@ import Loading from "../CommonComponent/Loading";
 
 const AddVendor = ({ navigation }: any) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [basicDetails, setBasicDetails] = useState({
     name: "",
     mobile: "",
@@ -43,7 +44,37 @@ const AddVendor = ({ navigation }: any) => {
     country: "",
   });
 
+  const validateForm = () => {
+    let tempErrors: { [key: string]: string } = {};
+
+    // Validate required fields
+    if (!basicDetails.name.trim()) {
+      tempErrors.name = "Vendor name is required";
+    }
+    if (!basicDetails.mobile.trim()) {
+      tempErrors.mobile = "Mobile number is required";
+    } else if (basicDetails.mobile.length !== 10) {
+      tempErrors.mobile = "Mobile number must be 10 digits";
+    }
+    if (!basicDetails.email.trim()) {
+      tempErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(basicDetails.email)) {
+      tempErrors.email = "Please enter a valid email";
+    }
+    if (!basicDetails.opening_balance.trim()) {
+      tempErrors.opening_balance = "Opening balance is required";
+    } else if (isNaN(Number(basicDetails.opening_balance))) {
+      tempErrors.opening_balance = "Opening balance must be a number";
+    }
+
+    setErrors(tempErrors);
+    return Object.keys(tempErrors).length === 0;
+  };
+
   const handleSave = async () => {
+    if (!validateForm()) {
+      return;
+    }
     try {
       setIsLoading(true);
       const payload = {
@@ -67,7 +98,6 @@ const AddVendor = ({ navigation }: any) => {
 
       console.log("Payload to submit:", payload);
       const res = await api.post("vendor/vendor/", payload);
-      console.log("res--->", res);
       if (res.status == 201) {
         Alert.alert("Success", "Customer information saved successfully.");
         navigation.goBack();
@@ -110,7 +140,7 @@ const AddVendor = ({ navigation }: any) => {
                       <TextInput
                         placeholder={`Enter ${label}`}
                         placeholderTextColor="#999"
-                        style={styles.input}
+                        style={[styles.input, errors[key] && styles.inputError]}
                         keyboardType={
                           key === "mobile"
                             ? "numeric"
@@ -122,10 +152,17 @@ const AddVendor = ({ navigation }: any) => {
                         }
                         maxLength={key === "mobile" ? 10 : 100}
                         value={basicDetails[key]}
-                        onChangeText={(text) =>
-                          setBasicDetails((prev) => ({ ...prev, [key]: text }))
-                        }
+                        onChangeText={(text) => {
+                          setBasicDetails((prev) => ({ ...prev, [key]: text }));
+                          // Clear error when user starts typing
+                          if (errors[key]) {
+                            setErrors((prev) => ({ ...prev, [key]: "" }));
+                          }
+                        }}
                       />
+                      {errors[key] && (
+                        <Text style={styles.errorText}>{errors[key]}</Text>
+                      )}
                     </View>
                   ))}
                 </View>
@@ -286,5 +323,15 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
     fontSize: 15,
+  },
+  inputError: {
+    borderColor: "#f44336",
+    backgroundColor: "#ffebee",
+  },
+  errorText: {
+    color: "#f44336",
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
   },
 });

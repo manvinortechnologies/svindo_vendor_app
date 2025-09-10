@@ -1,8 +1,8 @@
 // api.js
-import axios from 'axios';
-import { Alert } from 'react-native';
-import { storage } from '../../utils/storage';
-import { APP_CONSTANTS } from '../../constants/app.constants';
+import axios from "axios";
+import { Alert } from "react-native";
+import { storage } from "../../utils/storage";
+import { APP_CONSTANTS } from "../../constants/app.constants";
 
 const api = axios.create({
   baseURL: APP_CONSTANTS.API_BASE_URL,
@@ -13,13 +13,12 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config: any) => {
     try {
-      const tokenString = await storage.getString('accessToken');
+      const tokenString = await storage.getString("accessToken");
       if (tokenString) {
-        console.log("Access token →", tokenString);
         config.headers.Authorization = `Bearer ${tokenString}`;
       }
     } catch (err) {
-      console.error('Token fetch error:', err);
+      console.error("Token fetch error:", err);
     }
     return config;
   },
@@ -42,10 +41,10 @@ api.interceptors.response.use(
     }
 
     if (error.response?.status === 401) {
-      console.log('Unauthorized - redirecting to login...');
+      console.log("Unauthorized - redirecting to login...");
       // Optionally trigger logout or redirect here
     } else {
-      console.log('Error message:', error.message);
+      console.log("Error message:", error.message);
     }
 
     return Promise.reject(error);

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -7,27 +7,46 @@ import {
   Image,
   StyleSheet,
   SafeAreaView,
-} from 'react-native';
-import { widthPercentageToDP as wp, heightPercentageToDP as hp } from 'react-native-responsive-screen';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import MainContainer from '../CommonComponent/MainContainer';
-import CustomDropdown from '../CommonComponent/CustomDropdown';
-import CustomHeader from '../CommonComponent/CustomHeader';
-import { useFocusEffect } from '@react-navigation/native';
-import Loading from '../CommonComponent/Loading';
-import { BannerCampaign } from '../type/common';
-import api from '../services/api/api';
+} from "react-native";
+import {
+  widthPercentageToDP as wp,
+  heightPercentageToDP as hp,
+} from "react-native-responsive-screen";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import MainContainer from "../CommonComponent/MainContainer";
+import CustomDropdown from "../CommonComponent/CustomDropdown";
+import CustomHeader from "../CommonComponent/CustomHeader";
+import { useFocusEffect } from "@react-navigation/native";
+import Loading from "../CommonComponent/Loading";
+import { BannerCampaign } from "../type/common";
+import api from "../services/api/api";
 
 const getStatusStyle = (status: string) => {
   switch (status) {
-    case 'Active':
-      return { borderColor: '#4CAF50', labelColor: '#4CAF50', bgColor: '#E8F5E9' };
-    case 'Ended':
-      return { borderColor: '#9E9E9E', labelColor: '#757575', bgColor: '#ECEFF1' };
-    case 'Pending':
-      return { borderColor: '#FFC107', labelColor: '#FF9800', bgColor: '#FFF8E1' };
-    case 'Rejected':
-      return { borderColor: '#F44336', labelColor: '#F44336', bgColor: '#FFEBEE' };
+    case "Active":
+      return {
+        borderColor: "#4CAF50",
+        labelColor: "#4CAF50",
+        bgColor: "#E8F5E9",
+      };
+    case "Ended":
+      return {
+        borderColor: "#9E9E9E",
+        labelColor: "#757575",
+        bgColor: "#ECEFF1",
+      };
+    case "Pending":
+      return {
+        borderColor: "#FFC107",
+        labelColor: "#FF9800",
+        bgColor: "#FFF8E1",
+      };
+    case "Rejected":
+      return {
+        borderColor: "#F44336",
+        labelColor: "#F44336",
+        bgColor: "#FFEBEE",
+      };
     default:
       return {};
   }
@@ -40,7 +59,7 @@ const BannerAds = ({ navigation }: any) => {
   useFocusEffect(
     useCallback(() => {
       getBannerData();
-      return () => { };
+      return () => {};
     }, [])
   );
 
@@ -61,14 +80,29 @@ const BannerAds = ({ navigation }: any) => {
     const statusStyle = getStatusStyle(status);
 
     return (
-      <View style={[styles.card, { backgroundColor: statusStyle.bgColor, borderColor: statusStyle.borderColor }]}>
+      <View
+        style={[
+          styles.card,
+          {
+            backgroundColor: statusStyle.bgColor,
+            borderColor: statusStyle.borderColor,
+          },
+        ]}
+      >
         <View style={styles.cardHeader}>
-          <View style={[styles.statusBadge, { backgroundColor: statusStyle.labelColor + '20' }]}>
-            <Text style={[styles.statusText, { color: statusStyle.labelColor }]}>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: statusStyle.labelColor + "20" },
+            ]}
+          >
+            <Text
+              style={[styles.statusText, { color: statusStyle.labelColor }]}
+            >
               {status}
             </Text>
           </View>
-          {(status === 'Active' || status === 'Pending') && (
+          {(status === "Active" || status === "Pending") && (
             <TouchableOpacity>
               <Icon name="stop-circle" size={24} color="#D32F2F" />
             </TouchableOpacity>
@@ -84,18 +118,25 @@ const BannerAds = ({ navigation }: any) => {
         {/* New Row for campaign on left and others on right */}
         <View style={styles.rowBetween}>
           <View style={{ width: "40%" }}>
-            <Text style={styles.campaignTitle}>Campaign: {item.campaign_name}</Text>
+            <Text style={styles.campaignTitle}>
+              Campaign: {item.campaign_name}
+            </Text>
           </View>
-          <View style={{ alignItems: 'flex-end' }}>
-            <Text style={styles.budgetText}>Budget: ₹{parseFloat(item.budget).toFixed(2)}</Text>
-            <Text style={styles.dateText}>Start: {new Date(item.created_at).toLocaleString('en-IN', {
-              day: '2-digit',
-              month: 'short',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true,
-            })}</Text>
+          <View style={{ alignItems: "flex-end" }}>
+            <Text style={styles.budgetText}>
+              Budget: ₹{parseFloat(item.budget).toFixed(2)}
+            </Text>
+            <Text style={styles.dateText}>
+              Start:{" "}
+              {new Date(item.created_at).toLocaleString("en-IN", {
+                day: "2-digit",
+                month: "short",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: true,
+              })}
+            </Text>
           </View>
         </View>
       </View>
@@ -110,20 +151,24 @@ const BannerAds = ({ navigation }: any) => {
 
         {/* Summary Box */}
         <View style={styles.summaryContainer}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
             <Text style={{ color: "#FCA311", fontSize: 20, fontWeight: "600" }}>
               Campaign Details
             </Text>
             <CustomDropdown
-              onSelect={() => { }}
+              onSelect={() => {}}
               placeholder="Select Day"
               options={[{ id: "day", name: "Till Day" }]}
-              selectedValue=""
+              selectedValue="day"
               dropDownBoxStyle={{ height: hp(5) }}
             />
           </View>
 
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+          <View
+            style={{ flexDirection: "row", justifyContent: "space-between" }}
+          >
             <View style={styles.spentActiveView}>
               <Text style={styles.summaryTitle}>Spent</Text>
               <Text style={styles.summaryValue}>₹2000.00</Text>
@@ -137,7 +182,9 @@ const BannerAds = ({ navigation }: any) => {
 
         {/* Campaign List */}
         {bannerData.length === 0 && !isLoading ? (
-          <Text style={{ textAlign: 'center', marginTop: 20 }}>No banners found</Text>
+          <Text style={{ textAlign: "center", marginTop: 20 }}>
+            No banners found
+          </Text>
         ) : (
           <FlatList
             data={bannerData}
@@ -162,7 +209,7 @@ const BannerAds = ({ navigation }: any) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingHorizontal: wp(4),
   },
   summaryContainer: {
@@ -171,18 +218,18 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderColor: "#C7C7C7",
     padding: 10,
-    marginTop: hp(1)
+    marginTop: hp(1),
   },
   summaryTitle: {
-    color: '#000',
-    fontWeight: '600',
+    color: "#000",
+    fontWeight: "600",
     fontSize: wp(5),
   },
   summaryValue: {
     paddingBottom: wp(2),
     borderRadius: 6,
     marginTop: 4,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   listContainer: {
     paddingBottom: hp(10),
@@ -194,8 +241,8 @@ const styles = StyleSheet.create({
     marginBottom: hp(2),
   },
   cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: hp(1),
   },
   statusBadge: {
@@ -204,42 +251,43 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   statusText: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
   logo: {
     height: hp(12),
-    width: '100%',
+    width: "100%",
     borderRadius: 8,
     marginVertical: hp(1),
   },
   campaignTitle: {
-    fontWeight: '600',
+    fontWeight: "600",
     fontSize: 12,
     marginBottom: hp(1),
+    color: "#000",
   },
   detailsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 4,
   },
   dateText: {
     fontSize: wp(2.8),
-    color: '#000',
+    color: "#000",
   },
   addBannerBtn: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: "#4CAF50",
     padding: wp(3),
     borderRadius: 50,
-    position: 'absolute',
+    position: "absolute",
     bottom: hp(2),
-    alignSelf: 'center',
-    width: '40%',
-    alignItems: 'center',
+    alignSelf: "center",
+    width: "40%",
+    alignItems: "center",
     right: 10,
   },
   addBannerText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
     fontSize: wp(4),
   },
   spentActiveView: {
@@ -247,18 +295,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFE8C2",
     paddingHorizontal: 20,
     borderRadius: 10,
-    paddingVertical: 10
+    paddingVertical: 10,
   },
   rowBetween: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginTop: 8,
   },
   budgetText: {
     fontSize: 10,
-    fontWeight: '500',
-    color: '#333',
+    fontWeight: "500",
+    color: "#333",
   },
 });
 

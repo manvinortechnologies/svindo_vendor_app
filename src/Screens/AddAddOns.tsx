@@ -18,6 +18,7 @@ import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import { useNavigation } from "@react-navigation/native";
+import { HomeNavigation } from "../constants/app-routes.constants";
 
 interface AddonFormData {
   description: string;
@@ -116,7 +117,14 @@ const AddAddOns = () => {
           "Content-Type": "multipart/form-data",
         },
       });
-      navigation.goBack();
+
+      // Navigate to success screen with product details
+      (navigation as any).navigate(HomeNavigation.ADDON_SUCCESS, {
+        productName: formData.name,
+        productDescription: formData.description,
+        productImage: formData.image?.uri,
+        stock: 5, // Default stock or get from response
+      });
     } catch (error) {
       console.error("Error creating addon:", error);
       Alert.alert("Error", "Failed to create addon");
@@ -156,7 +164,7 @@ const AddAddOns = () => {
               placeholder="Select Category"
               options={categories}
               onSelect={(option) =>
-                handleInputChange("product_category", option.id.toString())
+                handleInputChange("product_category", option.id)
               }
               selectedValue={formData.product_category}
               dropDownBoxStyle={styles.inputField}
@@ -181,6 +189,7 @@ const AddAddOns = () => {
             <TextInput
               style={styles.descriptionInput}
               placeholder="Enter description here..."
+              placeholderTextColor="#888"
               value={formData.description}
               onChangeText={(text) => handleInputChange("description", text)}
               multiline

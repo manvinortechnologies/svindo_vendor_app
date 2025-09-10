@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Image,
   Dimensions,
+  Modal,
 } from "react-native";
 import React, { useRef, useState } from "react";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -15,6 +16,7 @@ import Headerwithback from "./Headerwithback";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { s } from "react-native-size-matters";
 import Carousel from "react-native-reanimated-carousel";
+import CustomDropdown from "../CommonComponent/CustomDropdown";
 
 const { width } = Dimensions.get("window");
 
@@ -84,7 +86,34 @@ type BuyersRequestScreenNavigationProp = NativeStackNavigationProp<
 
 const BuyersRequestScreen: React.FC = () => {
   const [selectedTab, setSelectedTab] = useState("Wholesale");
+  const [filterModalVisible, setFilterModalVisible] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<any>(null);
+  const [selectedSubCategory, setSelectedSubCategory] = useState<any>(null);
+  const [selectedNearby, setSelectedNearby] = useState<any>(null);
   const navigation = useNavigation<BuyersRequestScreenNavigationProp>();
+
+  // Sample data for dropdowns
+  const categories = [
+    { id: 1, name: "Electronics" },
+    { id: 2, name: "Fashion" },
+    { id: 3, name: "Home & Garden" },
+    { id: 4, name: "Sports" },
+    { id: 5, name: "Books" },
+  ];
+  const subCategories = [
+    { id: 1, name: "Mobile Phones" },
+    { id: 2, name: "Computers" },
+    { id: 3, name: "Audio" },
+    { id: 4, name: "Accessories" },
+    { id: 5, name: "Clothing" },
+  ];
+  const nearbyOptions = [
+    { id: 1, name: "Within 5km" },
+    { id: 2, name: "Within 10km" },
+    { id: 3, name: "Within 20km" },
+    { id: 4, name: "Within 50km" },
+    { id: 5, name: "Any distance" },
+  ];
   return (
     <SafeAreaView style={styles.container}>
       {/* Reuse your Headerwithback */}
@@ -93,9 +122,7 @@ const BuyersRequestScreen: React.FC = () => {
       {/* Filter Button */}
       <TouchableOpacity
         style={styles.filterTopButton}
-        onPress={() => {
-          console.log("Filter pressed");
-        }}
+        onPress={() => setFilterModalVisible(true)}
       >
         <Text style={styles.filterTopText}>Filter</Text>
         <Icon name="chevron-down" size={20} color="#000" />
@@ -120,6 +147,90 @@ const BuyersRequestScreen: React.FC = () => {
           </TouchableOpacity>
         ))}
       </View>
+
+      {/* Filter Modal */}
+      <Modal
+        visible={filterModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setFilterModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Filter Options</Text>
+              <TouchableOpacity
+                onPress={() => setFilterModalVisible(false)}
+                style={styles.closeButton}
+              >
+                <Icon name="close" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+
+            {/* Category Dropdown */}
+            <View style={styles.dropdownContainer}>
+              <Text style={styles.dropdownLabel}>Category</Text>
+              <CustomDropdown
+                placeholder="Select Category"
+                options={categories}
+                onSelect={setSelectedCategory}
+                selectedValue={selectedCategory?.id || null}
+              />
+            </View>
+
+            {/* Sub Category Dropdown */}
+            <View style={styles.dropdownContainer}>
+              <Text style={styles.dropdownLabel}>Sub Category</Text>
+              <CustomDropdown
+                placeholder="Select Sub Category"
+                options={subCategories}
+                onSelect={setSelectedSubCategory}
+                selectedValue={selectedSubCategory?.id || null}
+              />
+            </View>
+
+            {/* Nearby Dropdown */}
+            <View style={styles.dropdownContainer}>
+              <Text style={styles.dropdownLabel}>Nearby</Text>
+              <CustomDropdown
+                placeholder="Select Distance"
+                options={nearbyOptions}
+                onSelect={setSelectedNearby}
+                selectedValue={selectedNearby?.id || null}
+              />
+            </View>
+
+            {/* Action Buttons */}
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={styles.clearButton}
+                onPress={() => {
+                  setSelectedCategory(null);
+                  setSelectedSubCategory(null);
+                  setSelectedNearby(null);
+                }}
+              >
+                <Text style={styles.clearButtonText}>Clear All</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.applyButton}
+                onPress={() => {
+                  // Apply filters logic here
+                  console.log("Applied filters:", {
+                    category: selectedCategory?.name,
+                    subCategory: selectedSubCategory?.name,
+                    nearby: selectedNearby?.name,
+                  });
+                  setFilterModalVisible(false);
+                }}
+              >
+                <Text style={styles.applyButtonText}>Apply Filters</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       {/* Buyer Requests - Full Screen Paging */}
       <Carousel
         vertical={true}
@@ -157,7 +268,13 @@ const BuyersRequestScreen: React.FC = () => {
                   ? "You want to buy"
                   : "Customer wants to buy"}
               </Text>
-              <TouchableOpacity style={styles.sellButton}>
+              <TouchableOpacity
+                style={styles.sellButton}
+                onPress={() =>
+                  selectedTab !== "Requested" &&
+                  navigation.navigate("CreateRequest")
+                }
+              >
                 <Text style={styles.sellButtonText}>
                   {selectedTab === "Requested" ? "Show offers" : "Sell now"}
                 </Text>
@@ -481,5 +598,79 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: "#fff",
     fontWeight: "800",
+  },
+  // Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    width: "90%",
+    maxHeight: "80%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    paddingBottom: 15,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  closeButton: {
+    padding: 5,
+  },
+  // Dropdown Styles
+  dropdownContainer: {
+    marginBottom: 20,
+  },
+  dropdownLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000",
+    marginBottom: 8,
+  },
+  // Action Buttons
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+    gap: 10,
+  },
+  clearButton: {
+    flex: 1,
+    backgroundColor: "#f5f5f5",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#ddd",
+  },
+  clearButtonText: {
+    fontSize: 14,
+    color: "#666",
+    fontWeight: "600",
+  },
+  applyButton: {
+    flex: 1,
+    backgroundColor: "#F59E0B",
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  applyButtonText: {
+    fontSize: 14,
+    color: "#fff",
+    fontWeight: "600",
   },
 });

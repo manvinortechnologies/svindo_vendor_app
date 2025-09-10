@@ -290,10 +290,11 @@ const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity onPress={onClose}>
-            <Icon name="arrow-back" size={24} />
+            <Icon name="arrow-back" size={24} color="#000" />
           </TouchableOpacity>
           <TextInput
             placeholder="Search Product/Service"
+            placeholderTextColor="#ccc"
             style={styles.searchInput}
             value={searchText}
             onChangeText={handleSearchChange}
@@ -353,6 +354,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     paddingHorizontal: 15,
     height: 40,
+    color: "#000",
   },
   list: {
     paddingBottom: 130,

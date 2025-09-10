@@ -181,8 +181,6 @@ const CustomerFeedback = () => {
           </View>
         ))}
       </ScrollView>
-
-      <Bottomnavigation />
     </View>
   );
 };

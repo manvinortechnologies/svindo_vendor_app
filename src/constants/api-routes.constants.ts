@@ -29,6 +29,7 @@ export const API_ROUTES = {
 
   product: "/products",
   productBaseData: "/products/base-data",
+  vendorProduct: "/vendor/product/",
   updateProductSetting: "/vendor/productsetting/update/",
 
   vendor: "/vendors",
@@ -36,9 +37,14 @@ export const API_ROUTES = {
   vendorList: "/vendor/vendor/",
   companyProfle: "/vendor/company-profile/",
   vendorCustomer: "/vendor/customer/",
+  customerLedger: "/vendor/customer/:id/ledger/",
+  vendorLedger: "/vendor/vendor/:id/ledger/",
   vendorBank: "/vendor/get-bank/",
+  bankLedger: "/vendor/bank/:id/ledger/",
   vendorCash: "vendor/cash-balance/",
-  vndorAddBank: "vendor/vendor-bank/",
+  adjustCash: "vendor/cash-balance/adjust/",
+  cashTransfer: "/vendor/cash-transfers/",
+  vendorAddBank: "vendor/vendor-bank/",
 
   getProductSettings: "/vendor/productsetting/",
   productSettings: "/vendor/productsetting/update/",

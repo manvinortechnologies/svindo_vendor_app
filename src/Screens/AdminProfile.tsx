@@ -73,7 +73,6 @@ const AdminProfile = ({ navigation }: any) => {
     try {
       setIsLoading(true);
       const res = await api.put("users/profile/me/", data);
-      console.log("res--->", res);
       if (res.status == DEFAULT_STATUS_CODE_SUCCESS) {
         navigation.navigate(HomeNavigation.SIGNUP_DETAIL_SCREEN);
       }

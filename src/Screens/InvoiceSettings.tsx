@@ -236,7 +236,6 @@ const InvoiceSettings = () => {
       <TouchableOpacity style={styles.updateBtn}>
         <Text style={styles.updateText}>Save and Update</Text>
       </TouchableOpacity>
-      <Bottomnavigation />
     </SafeAreaView>
   );
 };

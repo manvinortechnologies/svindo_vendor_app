@@ -7,7 +7,7 @@ import SignupDetailScreen from "../Screens/SignupDetailScreen";
 import SelectLocationScreen from "../Screens/SelectLocationScreen";
 import Statistics from "../Statistics";
 import StatisticsScreen from "../Screens/StatisticsScreen";
-import Bottomnavigation from "../Screens/Bottomnavigation";
+import BottomTabNavigator from "./BottomTabNavigator";
 import DraftScreen from "../Screens/DraftScreen";
 import Orders from "../Screens/Orders";
 import StockScreen from "../Screens/StockScreen";
@@ -117,6 +117,9 @@ import SmsScreen from "../Screens/SmsScreen";
 import BoostPostSpotlight from "../Screens/BoostPostSpotlight";
 import ManageNotification from "../Screens/ManageNotification";
 import PosScreen from "../Screens/PosScreen";
+import AddonSuccessScreen from "../Screens/AddonSuccessScreen";
+import SelectAddonsScreen from "../Screens/SelectAddonsScreen";
+import CreateAddons from "../Screens/CreateAddons";
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
 
@@ -157,13 +160,10 @@ const AppNavigation = () => {
           name={HomeNavigation.MODEL_REMINDER_SCREEN}
           component={ModelReminderScreen}
         />
-        <Stack.Screen
-          name={HomeNavigation.STATISTICS_SCREEN}
-          component={StatisticsScreen}
-        />
+
         <Stack.Screen
           name={HomeNavigation.BOTTOM_NAVIGATION}
-          component={Bottomnavigation}
+          component={BottomTabNavigator}
         />
         <Stack.Screen
           name={HomeNavigation.DRAFT_SCREEN}
@@ -191,25 +191,23 @@ const AppNavigation = () => {
           component={CreateProduct}
         />
         <Stack.Screen
+          name={HomeNavigation.CREATE_ADDONS}
+          component={CreateAddons}
+        />
+        <Stack.Screen
           name={HomeNavigation.ADD_PRODUCT_SCREEN}
           component={AddProductScreen}
         />
         <Stack.Screen
           name={HomeNavigation.PRODUCT_ADDED_SUCCESS}
-          component={ProductAddedSuccess}
+          component={ProductAddedSuccess as any}
         />
-        <Stack.Screen
-          name={HomeNavigation.STORE_SCREEN}
-          component={Storescreen}
-        />
-        <Stack.Screen
-          name={HomeNavigation.MARKETING_TOOLS}
-          component={MarketingTools}
-        />
+
         <Stack.Screen
           name={HomeNavigation.ONLINE_STORE}
           component={OnlineStore}
         />
+
         <Stack.Screen name={HomeNavigation.AD_WALLET} component={AdWallet} />
         <Stack.Screen
           name={HomeNavigation.BOOST_SALES}
@@ -527,6 +525,14 @@ const AppNavigation = () => {
           component={AddDeliveryBoy}
         />
         <Stack.Screen name={HomeNavigation.ADD_ADDONS} component={AddAddOns} />
+        <Stack.Screen
+          name={HomeNavigation.ADDON_SUCCESS}
+          component={AddonSuccessScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.SELECT_ADDONS}
+          component={SelectAddonsScreen}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

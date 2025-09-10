@@ -119,7 +119,6 @@ const Purchase = () => {
       <TouchableOpacity style={styles.updateBtn}>
         <Text style={styles.updateText}>Update</Text>
       </TouchableOpacity>
-      {/* <Bottomnavigation /> */}
     </SafeAreaView>
   );
 };

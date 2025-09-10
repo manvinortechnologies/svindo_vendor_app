@@ -58,8 +58,6 @@ const BoostSales = () => {
           ))}
         </View>
       </ScrollView>
-
-      <Bottomnavigation />
     </SafeAreaView>
   );
 };

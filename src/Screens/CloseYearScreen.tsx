@@ -78,7 +78,6 @@ const CloseYearScreen = () => {
           maximumDate={new Date()}
         />
       </ScrollView>
-      <Bottomnavigation />
     </SafeAreaView>
   );
 };

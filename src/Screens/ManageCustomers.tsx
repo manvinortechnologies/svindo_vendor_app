@@ -151,7 +151,6 @@ const ManageCustomers = ({ navigation }: any) => {
         />
 
         <Loading visible={isLoading} />
-        <Bottomnavigation />
       </SafeAreaView>
     </View>
   );
@@ -254,6 +253,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: "#000",
+    width: "80%",
   },
   contactColumn: {
     flex: 1,

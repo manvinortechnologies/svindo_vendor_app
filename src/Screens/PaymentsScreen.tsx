@@ -20,6 +20,7 @@ import api from "../services/api/api";
 import { useNavigation } from "@react-navigation/native";
 import CalendarModal from "../Modals/CalendarModal";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Loading from "../CommonComponent/Loading";
 
 const screenWidth = Dimensions.get("window").width;
 
@@ -34,24 +35,29 @@ const PaymentsScreen = () => {
     useState<string>("UPI");
   const [imagePickerModel, setImagePickerModel] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoadingParties, setIsLoadingParties] = useState<boolean>(false);
+  const [isLoadingBanks, setIsLoadingBanks] = useState<boolean>(false);
   const [imageFile, setImageFile] = useState<any>();
-  const [selectedBank, setSelectedBank] = useState("");
+  const [selectedBank, setSelectedBank] = useState<DropDownOption | null>(null);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [paymentDate, setPaymentDate] = useState<string>("");
   const [partyName, setPartyName] = useState<string>("");
+  const [selectedPartyId, setSelectedPartyId] = useState<number | null>(null);
+  const [partyList, setPartyList] = useState<DropDownOption[]>([]);
   const [bankList, setBankList] = useState<DropDownOption[]>([]);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [paymentCalModel, setPaymentCalModel] = useState<boolean>(false);
 
-  const paymentMethods = ["UPI", "Cash", "Card", "Cheque", "EMI", "Netbanking"];
+  const paymentMethods = ["UPI", "Card", "Cash", "In Credit"];
 
   useEffect(() => {
     getAllCategory();
-  }, []);
+    fetchPartyData();
+  }, [selectedParty]);
   const getAllCategory = async () => {
     try {
-      setIsLoading(true);
+      setIsLoadingBanks(true);
 
       const [banks] = await Promise.all([api.get(API_ROUTES.vendorBank)]);
 
@@ -67,8 +73,44 @@ const PaymentsScreen = () => {
     } catch (error) {
       console.log("Error loading data:", error);
     } finally {
-      setIsLoading(false);
+      setIsLoadingBanks(false);
     }
+  };
+
+  const fetchPartyData = async () => {
+    try {
+      setIsLoadingParties(true);
+      const apiEndpoint =
+        selectedParty === "Customer"
+          ? API_ROUTES.vendorCustomer
+          : API_ROUTES.vendorList;
+
+      const response = await api.get(apiEndpoint);
+
+      if (response.data) {
+        const transformedParties: DropDownOption[] = response.data?.map(
+          (item: any) => ({
+            id: item.id,
+            name:
+              item.name ||
+              item.customer_name ||
+              item.vendor_name ||
+              item.party_name,
+          })
+        );
+        setPartyList(transformedParties);
+      }
+    } catch (error) {
+      console.log("Error loading party data:", error);
+    } finally {
+      setIsLoadingParties(false);
+    }
+  };
+
+  const handlePartyTypeChange = (partyType: "Customer" | "Vendor") => {
+    setSelectedParty(partyType);
+    setSelectedPartyId(null);
+    setPartyName("");
   };
 
   const validateForm = () => {
@@ -76,8 +118,8 @@ const PaymentsScreen = () => {
 
     if (!amount) tempErrors.amount = "Amount is required";
     if (!paymentDate) tempErrors.paymentDate = "Payment date is required";
-    if (!partyName) tempErrors.partyName = "Party name is required";
-    if (selectedPaymentMethod !== "Cash" && !selectedBank) {
+    if (!selectedPartyId) tempErrors.party = "Please select a party";
+    if (selectedPaymentMethod === "In Credit" && !selectedBank) {
       tempErrors.bank = "Please select bank";
     }
 
@@ -94,19 +136,31 @@ const PaymentsScreen = () => {
 
       const formData = new FormData();
 
+      const selectedPartyData = partyList.find(
+        (party) => party.id === selectedPartyId
+      );
       formData.append("type", selectedType ? "gave" : "received");
       formData.append("party", selectedParty.toLocaleLowerCase());
-      formData.append("party_name", partyName);
+      formData.append("party_name", selectedPartyData?.name || "");
+      formData.append(
+        selectedParty === "Vendor" ? "vendor" : "customer",
+        selectedPartyData?.id
+      );
       formData.append("amount", Number(amount).toFixed(2));
       formData.append("payment_date", paymentDate);
-      formData.append("payment_type", selectedPaymentMethod.toLowerCase());
+      formData.append(
+        "payment_type",
+        selectedPaymentMethod === "In Credit"
+          ? "credit"
+          : selectedPaymentMethod.toLowerCase()
+      );
 
       // Optional fields
       if (description) {
         formData.append("notes", description);
       }
-      if (selectedPaymentMethod !== "Cash" && selectedBank) {
-        formData.append("account", selectedBank?.name);
+      if (selectedPaymentMethod === "In Credit" && selectedBank) {
+        formData.append("account", selectedBank.name);
       }
 
       if (imageFile) {
@@ -122,7 +176,6 @@ const PaymentsScreen = () => {
           "Content-Type": "multipart/form-data",
         },
       });
-      console.log("res--->", res);
       navigation.goBack();
     } catch (error) {
       console.log("error-->", error);
@@ -134,6 +187,8 @@ const PaymentsScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <Headerwithback title="Payments" />
+
+      {isLoading && <Loading visible={isLoading} />}
 
       <ScrollView contentContainerStyle={styles.content}>
         {/* Type */}
@@ -179,7 +234,7 @@ const PaymentsScreen = () => {
               styles.toggleButton,
               selectedParty === "Customer" && styles.activeButton,
             ]}
-            onPress={() => setSelectedParty("Customer")}
+            onPress={() => handlePartyTypeChange("Customer")}
           >
             <Text
               style={[
@@ -195,7 +250,7 @@ const PaymentsScreen = () => {
               styles.toggleButton,
               selectedParty === "Vendor" && styles.activeButton,
             ]}
-            onPress={() => setSelectedParty("Vendor")}
+            onPress={() => handlePartyTypeChange("Vendor")}
           >
             <Text
               style={[
@@ -210,16 +265,26 @@ const PaymentsScreen = () => {
 
         {/* Select Party */}
         <Text style={styles.label}>Select Party</Text>
-        <TextInput
-          placeholder="Search"
-          placeholderTextColor="#999"
-          style={styles.input}
-          value={partyName}
-          onChangeText={setPartyName}
-        />
-        {errors?.partyName && (
+        {isLoadingParties ? (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>
+              Loading {selectedParty.toLowerCase()}s...
+            </Text>
+          </View>
+        ) : (
+          <CustomDropdown
+            placeholder={`Select ${selectedParty}`}
+            options={partyList}
+            onSelect={(option) => {
+              setSelectedPartyId(option.id);
+              setPartyName(option.name);
+            }}
+            selectedValue={selectedPartyId}
+          />
+        )}
+        {errors?.party && (
           <Text style={{ color: "red", marginBottom: 10 }}>
-            {errors?.partyName}
+            {errors?.party}
           </Text>
         )}
 
@@ -290,16 +355,22 @@ const PaymentsScreen = () => {
         </View>
 
         {/* Select Account */}
-        {selectedPaymentMethod !== "Cash" && (
+        {selectedPaymentMethod === "In Credit" && (
           <>
             <Text style={styles.addBankText}>Select Bank</Text>
-            <CustomDropdown
-              onSelect={setSelectedBank}
-              placeholder="Select Bank"
-              selectedValue={selectedBank?.name || ""}
-              options={bankList}
-              dropDownBoxStyle={{ marginTop: 10 }}
-            />
+            {isLoadingBanks ? (
+              <View style={[styles.loadingContainer, { marginTop: 10 }]}>
+                <Text style={styles.loadingText}>Loading banks...</Text>
+              </View>
+            ) : (
+              <CustomDropdown
+                onSelect={(option) => setSelectedBank(option)}
+                placeholder="Select Bank"
+                selectedValue={selectedBank?.id || null}
+                options={bankList}
+                dropDownBoxStyle={{ marginTop: 10 }}
+              />
+            )}
             {errors?.bank && (
               <Text style={{ color: "red" }}>{errors?.bank}</Text>
             )}
@@ -410,6 +481,7 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     padding: 10,
     backgroundColor: "#FFF8EB",
+    color: "#000",
   },
   inputRow: {
     flexDirection: "row",
@@ -456,6 +528,7 @@ const styles = StyleSheet.create({
     padding: 10,
     minHeight: 80,
     backgroundColor: "#FFF8EB",
+    color: "#000",
   },
   attachmentButton: {
     flexDirection: "row",
@@ -502,5 +575,20 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
     fontSize: 18,
+  },
+  loadingContainer: {
+    borderWidth: 1,
+    borderColor: "#FCA311",
+    borderRadius: 6,
+    padding: 12,
+    backgroundColor: "#FFF8EB",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 50,
+  },
+  loadingText: {
+    color: "#FCA311",
+    fontSize: 14,
+    fontWeight: "500",
   },
 });

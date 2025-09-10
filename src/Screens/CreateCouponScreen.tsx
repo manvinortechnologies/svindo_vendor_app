@@ -21,7 +21,6 @@ import Loading from "../CommonComponent/Loading";
 import ModalUpdatePhoto from "../Modals/ModalUpdatePhoto";
 import CalendarModal from "../Modals/CalendarModal";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { setPersistence } from "@react-native-firebase/auth";
 import { formatToISOString } from "../utils/dateandTime";
 import api from "../services/api/api";
 
@@ -93,7 +92,6 @@ const CreateCouponScreen = () => {
           "Content-Type": "multipart/form-data",
         },
       });
-      console.log("res--->", res);
       if (res.status == 201) {
         Alert.alert("Success", "Coupon code added successfully!");
       }

@@ -21,6 +21,7 @@ import GroupedBars from "./BarChart";
 import LineCharts from "./LineChart";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ScaledSheet } from "react-native-size-matters";
 NavigationButton;
 
 const screenWidth = Dimensions.get("window").width - 20;
@@ -492,28 +493,20 @@ const StatisticsScreen = ({ navigation }: any) => {
           <Icon name="file-document-outline" size={18} color="#000" />
           <Text style={styles.buttonBlue}> Payments</Text>
         </TouchableOpacity>
-
-        <TouchableOpacity style={styles.addButtonGreen}>
+        <TouchableOpacity
+          style={styles.addButtonGreen}
+          onPress={() => navigation.navigate("PosScreen")}
+        >
           <Icon name="cart-outline" size={18} color="#000" />
 
-          <Text style={styles.buttongreen}>
-            {" "}
-            <NavigationButton
-              screen="DraftScreen"
-              label="+ New Sale"
-              color="#00630F"
-              fontSize={12}
-              fontWeight="bold"
-            />
-          </Text>
+          <Text style={styles.buttongreen}>+ New Sale</Text>
         </TouchableOpacity>
       </View>
-      <Bottomnavigation />
     </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     // padding: 10,
     backgroundColor: "#FFF",
@@ -597,10 +590,11 @@ const styles = StyleSheet.create({
   floatingButtons: {
     position: "absolute",
     alignSelf: "center",
-    right: 20,
+    // right: "16@s",
     flexDirection: "row",
-    gap: 20,
-    bottom: 80,
+    justifyContent: "space-between",
+    gap: "20@s",
+    bottom: "10@s",
   },
   viewall: { fontSize: 16 },
   categoryTitlesection: {

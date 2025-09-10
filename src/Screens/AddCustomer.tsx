@@ -56,8 +56,40 @@ const AddCustomer = ({ navigation }: any) => {
 
   const [transportName, setTransportName] = useState("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  const validateForm = () => {
+    let tempErrors: { [key: string]: string } = {};
+
+    // Validate required fields
+    if (!basicDetails.name.trim()) {
+      tempErrors.name = "Customer name is required";
+    }
+    if (!basicDetails.mobile.trim()) {
+      tempErrors.mobile = "Mobile number is required";
+    } else if (basicDetails.mobile.length !== 10) {
+      tempErrors.mobile = "Mobile number must be 10 digits";
+    }
+    if (!basicDetails.email.trim()) {
+      tempErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(basicDetails.email)) {
+      tempErrors.email = "Please enter a valid email";
+    }
+    if (!basicDetails.opening_balance.trim()) {
+      tempErrors.opening_balance = "Opening balance is required";
+    } else if (isNaN(Number(basicDetails.opening_balance))) {
+      tempErrors.opening_balance = "Opening balance must be a number";
+    }
+
+    setErrors(tempErrors);
+    return Object.keys(tempErrors).length === 0;
+  };
 
   const handelSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
     try {
       setIsLoading(true);
       const payload = {
@@ -87,7 +119,6 @@ const AddCustomer = ({ navigation }: any) => {
       };
       console.log("payloads-->", payload);
       const res = await api.post("vendor/customer/", payload);
-      console.log("res--->", res);
       if (res.status == 201) {
         Alert.alert("Success", "Customer information saved successfully.");
         navigation.goBack();
@@ -146,7 +177,7 @@ const AddCustomer = ({ navigation }: any) => {
                       <TextInput
                         placeholder={`Enter ${label}`}
                         placeholderTextColor="#999"
-                        style={styles.input}
+                        style={[styles.input, errors[key] && styles.inputError]}
                         value={basicDetails[key]}
                         keyboardType={
                           key === "mobile"
@@ -158,10 +189,17 @@ const AddCustomer = ({ navigation }: any) => {
                             : "ascii-capable"
                         }
                         maxLength={key === "mobile" ? 10 : 100}
-                        onChangeText={(text) =>
-                          setBasicDetails((prev) => ({ ...prev, [key]: text }))
-                        }
+                        onChangeText={(text) => {
+                          setBasicDetails((prev) => ({ ...prev, [key]: text }));
+                          // Clear error when user starts typing
+                          if (errors[key]) {
+                            setErrors((prev) => ({ ...prev, [key]: "" }));
+                          }
+                        }}
                       />
+                      {errors[key] && (
+                        <Text style={styles.errorText}>{errors[key]}</Text>
+                      )}
                     </View>
                   ))}
                   <TouchableOpacity
@@ -391,5 +429,15 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "600",
     fontSize: 15,
+  },
+  inputError: {
+    borderColor: "#f44336",
+    backgroundColor: "#ffebee",
+  },
+  errorText: {
+    color: "#f44336",
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
   },
 });

@@ -50,7 +50,6 @@ const ManageVendors = ({ navigation }: any) => {
     try {
       setIsLoading(true);
       const res = await api.get(API_ROUTES.vendorList);
-      console.log("res===>", res);
       setVendorList(res.data);
       setFilteredVendors(res.data); // initialize filtered data
     } catch (error) {
@@ -117,7 +116,7 @@ const ManageVendors = ({ navigation }: any) => {
             <TouchableOpacity
               style={styles.customerRow}
               onPress={() =>
-                navigation.navigate("VendorLedger", { customer: item })
+                navigation.navigate("VendorLedger", { vendor: item })
               }
             >
               <View style={styles.nameColumn}>
@@ -148,8 +147,6 @@ const ManageVendors = ({ navigation }: any) => {
           }
         />
         <Loading visible={isLoading} />
-
-        <Bottomnavigation />
       </SafeAreaView>
     </View>
   );

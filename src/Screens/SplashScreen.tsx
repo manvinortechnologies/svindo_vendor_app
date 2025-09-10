@@ -20,7 +20,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
         } else if (idToken && !signUp) {
           navigation.reset({
             index: 0,
-            routes: [{ name: HomeNavigation.STATISTICS_SCREEN }],
+            routes: [{ name: HomeNavigation.BOTTOM_NAVIGATION }],
           });
         } else {
           navigation.reset({

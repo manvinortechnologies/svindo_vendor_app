@@ -65,8 +65,6 @@ const ManageDelivery = () => {
             ))}
           </View>
         </ScrollView>
-
-        <Bottomnavigation />
       </View>
     </MainContainer>
   );

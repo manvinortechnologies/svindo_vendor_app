@@ -97,7 +97,6 @@ const Reports = () => {
           </View>
         ))}
       </ScrollView>
-      <Bottomnavigation />
     </SafeAreaView>
   );
 };

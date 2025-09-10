@@ -7,21 +7,24 @@ import {
   Image,
   ScrollView,
   Alert,
+  FlatList,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Headerwithback from "./Headerwithback";
-import Bottomnavigation from "./Bottomnavigation";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import AddBankDetailsModal from "../Modals/AddBankDetailsModal";
 import { BankDetails } from "../type/common";
 import { API_ROUTES } from "../constants/api-routes.constants";
+import { ScaledSheet } from "react-native-size-matters";
 
 const BankAccounts = ({ navigation }: any) => {
   const [cash, setCash] = useState<string>("00.00");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
-
+  const [bankList, setBankList] = useState<any[]>([]);
+  const [refreshing, setRefreshing] = useState<boolean>(false);
   useEffect(() => {
     getCash();
   }, []);
@@ -29,23 +32,37 @@ const BankAccounts = ({ navigation }: any) => {
     try {
       setIsLoading(true);
       const res = await api.get(API_ROUTES.vendorCash);
+      const res2 = await api.get(API_ROUTES.vendorAddBank);
       if (res.data) {
         setCash(res.data.balance);
+      }
+      if (res2.data) {
+        setBankList(res2.data);
       }
     } catch (error) {
     } finally {
       setIsLoading(false);
     }
   };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await getCash();
+    } catch (error) {
+      console.log("Refresh error:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const handleSaveBankDetails = async (details: BankDetails) => {
     console.log("Bank details submitted:", details);
     try {
       setIsLoading(true);
-      const res = await api.post(API_ROUTES.vndorAddBank, details);
+      const res = await api.post(API_ROUTES.vendorAddBank, details);
       console.log("res-->", res);
-      if (res.status == 201) {
-        Alert.alert("Success", "Bank details added successfully");
-      }
+      getCash();
     } catch (error) {
       console.log("bank api Error 41--", error);
     } finally {
@@ -54,93 +71,125 @@ const BankAccounts = ({ navigation }: any) => {
     // Submit to API or save locally
   };
   return (
-    <View style={styles.container}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <Headerwithback title="Bank Account" />
-        <ScrollView contentContainerStyle={styles.content}>
-          {/* Add Bank Card */}
-          <View style={styles.card}>
+    <SafeAreaView style={styles.container}>
+      <Headerwithback title="Bank Account" />
+
+      <FlatList
+        contentContainerStyle={styles.contentContainer}
+        keyExtractor={(item) => item.id.toString()}
+        data={bankList}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#FCA311"]} // Android
+            tintColor="#FCA311" // iOS
+          />
+        }
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate("BankNameScreen", { bankId: item.id })
+            }
+            style={[styles.card, styles.accCard]}
+          >
             <View style={styles.row}>
               <Image
                 source={require("../assets/bank.png")}
                 style={styles.icon}
               />
               <View>
-                <Text style={styles.title}>
-                  Add your bank & UPI to Invoices
-                </Text>
-                <Text style={styles.description}>
-                  Let your customers pay you directly from the invoice no fuss,
-                  no delays
-                </Text>
+                <Text style={styles.title}>{item.name}</Text>
+                <Text style={styles.accName}>{item.account_holder}</Text>
               </View>
             </View>
-          </View>
-
-          {/* Accounts Label */}
-          <Text style={styles.sectionTitle}>Accounts</Text>
-
-          {/* Cash Card */}
-          <View style={styles.card}>
-            <View style={styles.row}>
-              <Image
-                source={require("../assets/money.png")}
-                style={styles.icon}
-              />
-              <View>
-                <Text style={styles.title}>Cash</Text>
-                <Text style={styles.amount}>Rs {cash}</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Transfer Funds Card */}
-          <View style={styles.card}>
-            <View style={styles.row}>
-              <Image
-                source={require("../assets/transfer.png")}
-                style={styles.icon}
-              />
-              <View>
-                <Text style={styles.title}>Transfer funds</Text>
-                <Text style={styles.description}>
-                  Transfer funds between internal banks
-                </Text>
-              </View>
-            </View>
-          </View>
-        </ScrollView>
-
-        {/* Add New Bank Button */}
-        <View style={styles.footer}>
-          <TouchableOpacity
-            onPress={() => {
-              setIsModalVisible(true);
-            }}
-            style={styles.button}
-          >
-            <Text style={styles.buttonText}>Add New Bank</Text>
+            <Text style={styles.accBalance}>{item.balance}</Text>
           </TouchableOpacity>
-        </View>
-        <AddBankDetailsModal
-          visible={isModalVisible}
-          onClose={() => setIsModalVisible(false)}
-          onSubmit={handleSaveBankDetails}
-        />
-        <Loading visible={isLoading} />
-      </SafeAreaView>
-      <Bottomnavigation />
-    </View>
+        )}
+        ListHeaderComponent={() => (
+          <View>
+            {/* Add Bank Card */}
+            <View style={styles.card}>
+              <View style={styles.row}>
+                <Image
+                  source={require("../assets/bank.png")}
+                  style={styles.icon}
+                />
+                <View>
+                  <Text style={styles.title}>
+                    Add your bank & UPI to Invoices
+                  </Text>
+                  <Text style={styles.description}>
+                    Let your customers pay you directly from the invoice no
+                    fuss, no delays
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Accounts Label */}
+            <Text style={styles.sectionTitle}>Accounts</Text>
+
+            {/* Cash Card */}
+            <View style={styles.card}>
+              <View style={styles.row}>
+                <Image
+                  source={require("../assets/money.png")}
+                  style={styles.icon}
+                />
+                <View>
+                  <Text style={styles.title}>Cash</Text>
+                  <Text style={styles.amount}>Rs {cash}</Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Transfer Funds Card */}
+            <View style={styles.card}>
+              <View style={styles.row}>
+                <Image
+                  source={require("../assets/transfer.png")}
+                  style={styles.icon}
+                />
+                <View>
+                  <Text style={styles.title}>Transfer funds</Text>
+                  <Text style={styles.description}>
+                    Transfer funds between internal banks
+                  </Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+      />
+
+      {/* Add New Bank Button */}
+      <TouchableOpacity
+        onPress={() => {
+          setIsModalVisible(true);
+        }}
+        style={styles.button}
+      >
+        <Text style={styles.buttonText}>Add New Bank</Text>
+      </TouchableOpacity>
+      <AddBankDetailsModal
+        visible={isModalVisible}
+        onClose={() => setIsModalVisible(false)}
+        onSubmit={handleSaveBankDetails}
+      />
+      <Loading visible={isLoading} />
+    </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
   },
-  content: {
-    padding: 16,
+  contentContainer: {
+    padding: "16@s",
+    paddingBottom: "60@s",
   },
   card: {
     backgroundColor: "#FFF7EB",
@@ -155,50 +204,69 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   icon: {
-    width: 34,
-    height: 34,
-    marginRight: 12,
+    width: "26@s",
+    height: "26@s",
+    marginRight: "8@s",
     resizeMode: "contain",
   },
   title: {
-    fontSize: 14,
+    fontSize: "12@s",
     fontWeight: "600",
     color: "#000",
   },
   description: {
-    fontSize: 12,
+    fontSize: "10@s",
     color: "#333",
     marginTop: 2,
     width: "80%",
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: "14@s",
     fontWeight: "700",
     marginBottom: 8,
     color: "#000",
   },
   amount: {
-    fontSize: 16,
+    fontSize: "14@s",
     color: "green",
     fontWeight: "700",
   },
+  accName: {
+    fontSize: "10@s",
+    color: "#000",
+  },
+  accBalance: {
+    fontSize: "10@s",
+    color: "#000",
+  },
+  accCard: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   footer: {
-    padding: 16,
+    padding: "16@s",
     backgroundColor: "#fff",
   },
   button: {
+    position: "absolute",
+    bottom: "20@s",
+    left: 0,
+    right: 0,
+    zIndex: 1000,
     backgroundColor: "#FCA311",
-    paddingVertical: 12,
-    borderRadius: 8,
+    paddingVertical: "10@s",
+    paddingHorizontal: "20@s",
+    borderRadius: "8@s",
     alignItems: "center",
     justifyContent: "center",
     alignContent: "center",
     alignSelf: "center",
-    width: "60%",
+    marginHorizontal: "100@s",
   },
   buttonText: {
     color: "#fff",
-    fontSize: 14,
+    fontSize: "12@s",
     fontWeight: "600",
   },
 });

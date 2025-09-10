@@ -18,7 +18,7 @@ import { useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-const CreateProduct = () => {
+const CreateAddons = () => {
   const navigation = useNavigation();
 
   return (
@@ -58,7 +58,7 @@ const CreateProduct = () => {
       </ScrollView>
       <View style={styles.floatingButtons}>
         <NavigationButton
-          screen="AddProductScreen"
+          screen="AddAddOns"
           label="Create New"
           color="#000"
           fontSize={16}
@@ -157,4 +157,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default CreateProduct;
+export default CreateAddons;

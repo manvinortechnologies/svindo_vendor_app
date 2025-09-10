@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,19 +6,19 @@ import {
   TouchableOpacity,
   Platform,
   Modal,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import DateTimePickerModal from 'react-native-modal-datetime-picker';
-import moment from 'moment';
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import moment from "moment";
 
-import ReportHeader from './ReportHeader';
-import Bottomnavigation from './Bottomnavigation';
+import ReportHeader from "./ReportHeader";
+import Bottomnavigation from "./Bottomnavigation";
 
 const ProfitLossScreen = () => {
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
-  const [startDate, setStartDate] = useState(new Date('2025-02-01'));
-  const [endDate, setEndDate] = useState(new Date('2025-02-28'));
+  const [startDate, setStartDate] = useState(new Date("2025-02-01"));
+  const [endDate, setEndDate] = useState(new Date("2025-02-28"));
   const [selectingStart, setSelectingStart] = useState(true);
   const [monthModalVisible, setMonthModalVisible] = useState(false);
 
@@ -36,16 +36,16 @@ const ProfitLossScreen = () => {
     setDatePickerVisible(false);
   };
 
-  const handleMonthSelect = (type: 'this' | 'last') => {
+  const handleMonthSelect = (type: "this" | "last") => {
     const today = new Date();
     let start, end;
 
-    if (type === 'this') {
-      start = moment().startOf('month').toDate();
-      end = moment().endOf('month').toDate();
+    if (type === "this") {
+      start = moment().startOf("month").toDate();
+      end = moment().endOf("month").toDate();
     } else {
-      start = moment().subtract(1, 'months').startOf('month').toDate();
-      end = moment().subtract(1, 'months').endOf('month').toDate();
+      start = moment().subtract(1, "months").startOf("month").toDate();
+      end = moment().subtract(1, "months").endOf("month").toDate();
     }
 
     setStartDate(start);
@@ -58,9 +58,9 @@ const ProfitLossScreen = () => {
       <SafeAreaView style={{ flex: 1 }}>
         <ReportHeader
           title="Purchase Report"
-          onBack={() => console.log('Back pressed')}
-          onPdfPress={() => console.log('Download PDF')}
-          onXlsPress={() => console.log('Download XLS')}
+          onBack={() => console.log("Back pressed")}
+          onPdfPress={() => console.log("Download PDF")}
+          onXlsPress={() => console.log("Download XLS")}
         />
 
         <View style={styles.tabContainer}>
@@ -71,32 +71,36 @@ const ProfitLossScreen = () => {
             <Text style={styles.tabText}>Choose Month</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.tab} onPress={() => showDatePicker(true)}>
+          <TouchableOpacity
+            style={styles.tab}
+            onPress={() => showDatePicker(true)}
+          >
             <Icon name="calendar-month-outline" size={16} color="#000" />
             <Text style={[styles.tabText, { marginLeft: 6 }]}>
-              {moment(startDate).format('DD/MM/YYYY')} To {moment(endDate).format('DD/MM/YYYY')}
+              {moment(startDate).format("DD/MM/YYYY")} To{" "}
+              {moment(endDate).format("DD/MM/YYYY")}
             </Text>
             <Icon name="chevron-down" size={16} color="#000" />
           </TouchableOpacity>
         </View>
 
         <View style={styles.filterSection}>
-        {/* <View style={styles.filterHeader}>
+          {/* <View style={styles.filterHeader}>
           <Icon name="filter-variant" size={18} color="#333" />
           <Text style={styles.filterText}>Filters applied</Text>
         </View> */}
 
-        <View style={styles.filterTags}>
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>Gross Profit</Text>
-            <Text style={styles.tagvalue}>Rs 0.00</Text>
-          </View>
-          <View style={styles.tag}>
-            <Text style={styles.tagText}>Net Profit</Text>
-            <Text style={styles.tagvalue}>Rs 0.00</Text>
+          <View style={styles.filterTags}>
+            <View style={styles.tag}>
+              <Text style={styles.tagText}>Gross Profit</Text>
+              <Text style={styles.tagvalue}>Rs 0.00</Text>
+            </View>
+            <View style={styles.tag}>
+              <Text style={styles.tagText}>Net Profit</Text>
+              <Text style={styles.tagvalue}>Rs 0.00</Text>
+            </View>
           </View>
         </View>
-      </View>
       </SafeAreaView>
 
       <DateTimePickerModal
@@ -116,10 +120,10 @@ const ProfitLossScreen = () => {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <TouchableOpacity onPress={() => handleMonthSelect('this')}>
+            <TouchableOpacity onPress={() => handleMonthSelect("this")}>
               <Text style={styles.modalOption}>This Month</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => handleMonthSelect('last')}>
+            <TouchableOpacity onPress={() => handleMonthSelect("last")}>
               <Text style={styles.modalOption}>Last Month</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setMonthModalVisible(false)}>
@@ -128,139 +132,127 @@ const ProfitLossScreen = () => {
           </View>
         </View>
       </Modal>
-
-      <Bottomnavigation />
     </View>
   );
 };
 
-
-
-
 const styles = StyleSheet.create({
-     container: {
-        flex: 1,
-        backgroundColor: '#fff',
-        // paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0,
-      },
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+    // paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 0 : 0,
+  },
   header: {
-    flexDirection: 'row',
+    flexDirection: "row",
     padding: 16,
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    alignItems: "center",
+    justifyContent: "space-between",
     borderBottomWidth: 1,
-    borderColor: '#ddd',
+    borderColor: "#ddd",
   },
   title: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     flex: 1,
     marginLeft: 12,
-    color: '#000',
+    color: "#000",
   },
   exportButtons: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 12,
   },
   pdf: {
-    color: 'red',
-    fontWeight: 'bold',
+    color: "red",
+    fontWeight: "bold",
   },
   xls: {
-    color: 'green',
-    fontWeight: 'bold',
+    color: "green",
+    fontWeight: "bold",
   },
-  tagvalue:{
-    fontSize:12,
-    color:"green",
+  tagvalue: {
+    fontSize: 12,
+    color: "green",
   },
 
   tabContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderBottomWidth: 1,
-    borderColor: '#ccc',
-    paddingHorizontal:10,
-    justifyContent:"space-between"
+    borderColor: "#ccc",
+    paddingHorizontal: 10,
+    justifyContent: "space-between",
   },
-  mothtab:{
-    flexDirection: 'row',
-    alignItems: 'center',
+  mothtab: {
+    flexDirection: "row",
+    alignItems: "center",
     padding: 12,
-    borderEndWidth:1,
-    width:"40%",
+    borderEndWidth: 1,
+    width: "40%",
   },
 
   tab: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     padding: 12,
-    
   },
   tabText: {
     fontSize: 13,
-    color: '#333',
+    color: "#333",
   },
   filterSection: {
     padding: 16,
   },
   filterHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 8,
     gap: 6,
   },
   filterText: {
-    fontWeight: '600',
-    color: '#333',
+    fontWeight: "600",
+    color: "#333",
   },
   filterTags: {
-    flexDirection: 'row',
-    flexWrap: 'wrap', // Allow wrapping if needed
-    justifyContent:"space-around",
+    flexDirection: "row",
+    flexWrap: "wrap", // Allow wrapping if needed
+    justifyContent: "space-around",
     gap: 8,
   },
-  
+
   tag: {
-    backgroundColor: '#FFF0E1',
+    backgroundColor: "#FFF0E1",
     paddingVertical: 4,
     paddingHorizontal: 40,
     borderRadius: 5,
-    borderWidth:1,
-    borderColor:"#FCA311",
+    borderWidth: 1,
+    borderColor: "#FCA311",
   },
   tagText: {
     fontSize: 12,
-    color: '#000',
-    fontWeight:"600",
-   
+    color: "#000",
+    fontWeight: "600",
   },
   modalOverlay: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.4)',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.4)",
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 20,
     borderRadius: 10,
-    width: '80%',
-    alignItems: 'center',
+    width: "80%",
+    alignItems: "center",
   },
   modalOption: {
     fontSize: 16,
     paddingVertical: 10,
-    color: '#333',
+    color: "#333",
   },
   modalClose: {
     marginTop: 10,
-    color: 'red',
+    color: "red",
   },
 });
 
-
-
-
-
-
-export default ProfitLossScreen
+export default ProfitLossScreen;

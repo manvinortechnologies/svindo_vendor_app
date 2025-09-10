@@ -9,6 +9,10 @@ import {
 } from "react-native";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import CustomSwitch from "../CommonComponent/CustomSwitch";
+import { API_ROUTES } from "../constants/api-routes.constants";
+import api from "../services/api/api";
+import { HomeNavigation } from "../constants/app-routes.constants";
+import Loading from "../CommonComponent/Loading";
 
 interface ProductAddedSuccessProps {
   navigation: any;
@@ -19,6 +23,7 @@ interface ProductAddedSuccessProps {
       productDescription: string;
       productImage?: string;
       stock?: number;
+      payload?: any;
     };
   };
 }
@@ -27,25 +32,49 @@ const ProductAddedSuccess: React.FC<ProductAddedSuccessProps> = ({
   navigation,
   route,
 }) => {
-  const { productId, productName, productDescription, productImage, stock } =
-    route.params || {};
+  const {
+    // productId,
+    productName,
+    productDescription,
+    productImage,
+    stock,
+    payload,
+  } = route.params || {};
 
   const [isSpotlightEnabled, setIsSpotlightEnabled] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
   const handleAddVariant = () => {
     // Navigate to add variant screen
     console.log("Add Variant pressed");
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     // Navigate back to home or product list
-    navigation.navigate("Home");
+    try {
+      setIsLoading(true);
+      const res = await api.post("vendor/product/", payload);
+      if (isSpotlightEnabled) {
+        const payloads = {
+          product: parseInt(res.data.id),
+          discount_tag: "",
+          boost: isSpotlightEnabled,
+          budget: payload.sales_price,
+        };
+        const response = await api.post(API_ROUTES.spotlightProduct, payloads);
+      }
+      // const res = await api.post("vendor/product/", payload);
+      navigation.navigate(HomeNavigation.BOTTOM_NAVIGATION);
+    } catch (error) {
+      console.log("error--->", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <SafeAreaView style={styles.container}>
       <CustomHeader title="Product Added successfully" />
-
+      <Loading visible={isLoading} />
       <View style={styles.content}>
         {/* Product Card */}
         <View style={styles.productCard}>

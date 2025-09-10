@@ -15,7 +15,7 @@ export type THomeNavigation = {
   [HomeNavigation.STATISTICS]: undefined;
   [HomeNavigation.STATISTICS_SCREEN]: undefined;
   [HomeNavigation.NOTIFICATION_SCREEN]: undefined;
-  [HomeNavigation.MODEL_REMINDER_SCREEN]:undefined;
+  [HomeNavigation.MODEL_REMINDER_SCREEN]: undefined;
   [HomeNavigation.BOTTOM_NAVIGATION]: undefined;
   [HomeNavigation.DRAFT_SCREEN]: undefined;
   [HomeNavigation.ORDERS]: undefined;
@@ -35,7 +35,7 @@ export type THomeNavigation = {
   [HomeNavigation.CHATS]: undefined;
   [HomeNavigation.DOWNLOAD_QR_CODE]: undefined;
   [HomeNavigation.WHATSAPP_MESSAGE]: undefined;
-  [HomeNavigation.SMS_SCREEN]:undefined;
+  [HomeNavigation.SMS_SCREEN]: undefined;
   [HomeNavigation.EMAILS]: undefined;
   [HomeNavigation.MANAGE_DELIVERY]: undefined;
   [HomeNavigation.ERP]: undefined;
@@ -64,10 +64,10 @@ export type THomeNavigation = {
   [HomeNavigation.BANK_ACCOUNTS]: undefined;
   [HomeNavigation.BANK_NAME]: undefined;
   [HomeNavigation.MANAGE_CUSTOMERS]: undefined;
-  [HomeNavigation.CUSTOMER_LEDGER]:undefined;
+  [HomeNavigation.CUSTOMER_LEDGER]: undefined;
   [HomeNavigation.SALES_LEDGER]: undefined;
   [HomeNavigation.MANAGE_VENDORS]: undefined;
-  [HomeNavigation.VENDOR_LEDGER]:undefined;
+  [HomeNavigation.VENDOR_LEDGER]: undefined;
   [HomeNavigation.MANAGE_ROLES]: undefined;
   [HomeNavigation.RECYCLE_BIN_SCREEN]: undefined;
   [HomeNavigation.CLOSE_YEAR_SCREEN]: undefined;
@@ -118,6 +118,10 @@ export type THomeNavigation = {
   [HomeNavigation.ASSIGNOWNDELIVERYBOY]: undefined;
   [HomeNavigation.ADDDELIVERYBOY]: undefined;
   [HomeNavigation.ADD_ADDONS]: undefined;
+  [HomeNavigation.ADDON_SUCCESS]: undefined;
+  [HomeNavigation.SELECT_ADDONS]: undefined;
+  [HomeNavigation.PRODUCT_ADDED_SUCCESS]: undefined;
+  [HomeNavigation.CREATE_ADDONS]: undefined;
 };
 
 // export type TTabNavigation = {

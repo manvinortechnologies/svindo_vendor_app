@@ -15,6 +15,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { useNavigation } from "@react-navigation/native";
 import Bottomnavigation from "./Bottomnavigation";
 import Header from "./Header";
+import { HomeNavigation } from "../constants/app-routes.constants";
 
 // ✅ Define the type for the navigation stack
 type RootStackParamList = {
@@ -71,29 +72,6 @@ const MarketingTools = () => {
           ))}
         </View>
       </ScrollView>
-
-      {/* Bottom options row */}
-      <View style={styles.bottomcontainer}>
-        <TouchableOpacity
-          style={styles.option}
-          onPress={() => navigation.navigate("OnlineStore")}
-        >
-          <Icon name="storefront" size={20} color="#555" />
-          <Text style={styles.optionText}>Online Store</Text>
-        </TouchableOpacity>
-
-        <View style={styles.divider} />
-
-        <TouchableOpacity
-          style={styles.option}
-          onPress={() => navigation.navigate("MarketingTools")}
-        >
-          <Icons name="setting" size={20} color="#f7931e" />
-          <Text style={[styles.optionText, { color: "#f7931e" }]}>Tools</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Bottomnavigation />
     </SafeAreaView>
   );
 };

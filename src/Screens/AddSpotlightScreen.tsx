@@ -17,6 +17,7 @@ import CustomDropdown from "../CommonComponent/CustomDropdown";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
@@ -135,103 +136,111 @@ const AddSpotlightScreen = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* Header */}
-      <Headerwithback title={"Add Spotlight Product"} />
-      <Loading visible={isLoading} />
+    <SafeAreaView style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.container}>
+        {/* Header */}
+        <Headerwithback title={"Add Spotlight Product"} />
+        <Loading visible={isLoading} />
 
-      <View style={{ marginTop: 10 }}>
-        {/* Select Product */}
-        <Text style={styles.label}>Select Product</Text>
-        <CustomDropdown
-          placeholder="Search by Product name"
-          options={products}
-          onSelect={(option) =>
-            handleInputChange("product", option.id.toString())
-          }
-          selectedValue={formData.product}
-          dropDownBoxStyle={styles.dropdownStyle}
-        />
-        {errors.product && (
-          <Text style={styles.errorText}>{errors.product}</Text>
-        )}
-
-        {/* Discount Tag */}
-        <Text style={styles.label}>Discount Tag</Text>
-        <TextInput
-          style={styles.inputField}
-          placeholder="Enter discount tag"
-          placeholderTextColor="#555"
-          value={formData.discount_tag}
-          onChangeText={(text) => handleInputChange("discount_tag", text)}
-        />
-        {errors.discount_tag && (
-          <Text style={styles.errorText}>{errors.discount_tag}</Text>
-        )}
-
-        {/* Boost Spotlight Product */}
-        <View style={styles.boostRow}>
-          <Text style={styles.boostText}>Boost Spotlight Product</Text>
-          <CustomSwitch
-            value={formData.boost}
-            onValueChange={(value) => handleInputChange("boost", value)}
+        <View style={{ marginTop: 10 }}>
+          {/* Select Product */}
+          <Text style={styles.label}>Select Product</Text>
+          <CustomDropdown
+            placeholder="Search by Product name"
+            options={products}
+            onSelect={(option) =>
+              handleInputChange("product", option.id.toString())
+            }
+            selectedValue={formData.product}
+            dropDownBoxStyle={styles.dropdownStyle}
           />
-        </View>
+          {errors.product && (
+            <Text style={styles.errorText}>{errors.product}</Text>
+          )}
 
-        {/* Budget */}
-        <Text style={styles.budgetLabel}>Budget (Minimum - 10 Rupees)</Text>
-        <TextInput
-          style={styles.inputField}
-          placeholder="Enter Amount"
-          placeholderTextColor="#555"
-          keyboardType="numeric"
-          value={formData.budget}
-          onChangeText={(text) => handleInputChange("budget", text)}
-        />
-        {errors.budget && <Text style={styles.errorText}>{errors.budget}</Text>}
+          {/* Discount Tag */}
+          <Text style={styles.label}>Discount Tag</Text>
+          <TextInput
+            style={styles.inputField}
+            placeholder="Enter discount tag"
+            placeholderTextColor="#555"
+            value={formData.discount_tag}
+            onChangeText={(text) => handleInputChange("discount_tag", text)}
+          />
+          {errors.discount_tag && (
+            <Text style={styles.errorText}>{errors.discount_tag}</Text>
+          )}
 
-        {/* Approximate Costing */}
-        <View style={styles.costBox}>
-          {/* Approximate Costing Title */}
-          <Text
-            style={[styles.costText, { fontWeight: "600", color: "#FCA311" }]}
-          >
-            Approximate Costing
-          </Text>
+          {/* Boost Spotlight Product */}
+          <View style={styles.boostRow}>
+            <Text style={styles.boostText}>Boost Spotlight Product</Text>
+            <CustomSwitch
+              value={formData.boost}
+              onValueChange={(value) => handleInputChange("boost", value)}
+            />
+          </View>
 
-          {/* Row with per view costs */}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              marginTop: 4,
-            }}
-          >
-            <Text>
-              per view cost:{" "}
-              <Text style={{ color: "#000", fontWeight: "600" }}>10 paisa</Text>
+          {/* Budget */}
+          <Text style={styles.budgetLabel}>Budget (Minimum - 10 Rupees)</Text>
+          <TextInput
+            style={styles.inputField}
+            placeholder="Enter Amount"
+            placeholderTextColor="#555"
+            keyboardType="numeric"
+            value={formData.budget}
+            onChangeText={(text) => handleInputChange("budget", text)}
+          />
+          {errors.budget && (
+            <Text style={styles.errorText}>{errors.budget}</Text>
+          )}
+
+          {/* Approximate Costing */}
+          <View style={styles.costBox}>
+            {/* Approximate Costing Title */}
+            <Text
+              style={[styles.costText, { fontWeight: "600", color: "#FCA311" }]}
+            >
+              Approximate Costing
             </Text>
-            <Text>
-              per view cost:{" "}
-              <Text style={{ color: "#000", fontWeight: "600" }}>10 paisa</Text>
+
+            {/* Row with per view costs */}
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                marginTop: 4,
+              }}
+            >
+              <Text>
+                per view cost:{" "}
+                <Text style={{ color: "#000", fontWeight: "600" }}>
+                  10 paisa
+                </Text>
+              </Text>
+              <Text>
+                per view cost:{" "}
+                <Text style={{ color: "#000", fontWeight: "600" }}>
+                  10 paisa
+                </Text>
+              </Text>
+            </View>
+
+            {/* Caution */}
+            <Text style={[styles.cautionText, { marginTop: 8 }]}>Caution:</Text>
+            <Text style={styles.cautionDescription}>
+              Please follow platforms{" "}
+              <Text style={{ color: "#FF0000" }}>terms & conditions</Text> for
+              speedy approval of campaigns
             </Text>
           </View>
 
-          {/* Caution */}
-          <Text style={[styles.cautionText, { marginTop: 8 }]}>Caution:</Text>
-          <Text style={styles.cautionDescription}>
-            Please follow platforms{" "}
-            <Text style={{ color: "#FF0000" }}>terms & conditions</Text> for
-            speedy approval of campaigns
-          </Text>
+          {/* Submit Button */}
+          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+            <Text style={styles.submitButtonText}>Submit for approval</Text>
+          </TouchableOpacity>
         </View>
-
-        {/* Submit Button */}
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitButtonText}>Submit for approval</Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </SafeAreaView>
   );
 };
 

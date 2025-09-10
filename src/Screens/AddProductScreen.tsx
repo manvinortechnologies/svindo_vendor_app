@@ -32,6 +32,7 @@ import ModalUpdatePhoto from "../Modals/ModalUpdatePhoto";
 import ImeiModal from "../Modals/ImeiModal";
 import api from "../services/api/api";
 import { HomeNavigation } from "../constants/app-routes.constants";
+import { ScaledSheet } from "react-native-size-matters";
 
 // Constants
 const PRODUCT_TYPES = ["product", "service", "print"];
@@ -62,22 +63,25 @@ const getValidationSchema = (selectedType: string, selectedFor: string) =>
     name: Yup.string().required("Product name is required"),
     sales_price: Yup.string().required("Sales price is required"),
     unit: Yup.string().required("Unit is required"),
-    category: Yup.number().nullable().required("Category is required"),
-    sub_category:
-      selectedFor === "both"
-        ? Yup.number().nullable().required("Sub category is required")
-        : Yup.mixed().notRequired(),
+    category: Yup.number().nullable().notRequired(),
+    sub_category: Yup.number().nullable().notRequired(),
     opening_stock:
       selectedType === "product"
         ? Yup.number().when("is_stock_enabled", {
             is: true,
-            then: (schema) => schema.required("Opening stock is required"),
+            then: (schema) =>
+              schema
+                .required("Opening stock is required")
+                .min(1, "Opening stock must be greater than 0"),
             otherwise: (schema) => schema.notRequired(),
           })
         : Yup.number().notRequired(),
     low_stock_quantity: Yup.number().when("low_stock_alert", {
       is: true,
-      then: (schema) => schema.required("Low stock quantity is required"),
+      then: (schema) =>
+        schema
+          .required("Low stock quantity is required")
+          .min(1, "Low stock quantity must be greater than 0"),
       otherwise: (schema) => schema.notRequired(),
     }),
     batch_number: Yup.string().when("batchSwitch", {
@@ -90,7 +94,7 @@ const getValidationSchema = (selectedType: string, selectedFor: string) =>
       then: (schema) => schema.required("Expiry date is required"),
       otherwise: (schema) => schema.notRequired(),
     }),
-    description: Yup.string().required("Description is required"),
+    description: Yup.string().notRequired(),
     image1: Yup.mixed().notRequired(),
     food_type: Yup.string().when("product_type", {
       is: "food",
@@ -509,16 +513,17 @@ const AddProductScreen = ({ navigation }: { navigation: any }) => {
             : [],
       };
 
-      const res = await api.post("vendor/product/", payload);
-      if (res.status === 201) {
-        navigation.replace(HomeNavigation.PRODUCT_ADDED_SUCCESS, {
-          productId: res.data.id,
-          productName: values.name,
-          productDescription: values.description,
-          productImage: values.image1?.uri,
-          stock: values.opening_stock,
-        });
-      }
+      // const res = await api.post("vendor/product/", payload);
+      // if (res.status === 201) {
+      navigation.replace(HomeNavigation.PRODUCT_ADDED_SUCCESS, {
+        // productId: res.data.id,
+        productName: values.name,
+        productDescription: values.description,
+        productImage: values.image1?.uri,
+        stock: values.opening_stock,
+        payload,
+      });
+      // }
     } catch (error) {
       console.error("Error saving product:", error);
       Alert.alert("Error", "Failed to save product");
@@ -705,37 +710,51 @@ const AddProductScreen = ({ navigation }: { navigation: any }) => {
                         />
                       </View>
 
-                      <ToggleRow
-                        label="Wholesale Price (Optional)"
-                        value={isWholesaleEnabled}
-                        onValueChange={setIsWholesaleEnabled}
-                      />
-
-                      {isWholesaleEnabled && (
-                        <FormField>
-                          <InputBox
-                            placeholder="Enter here"
-                            background="#FFF8EB"
-                            value={values.wholesale_price}
-                            keyboardType="number-pad"
-                            onChangeText={handleChange("wholesale_price")}
-                          />
-                        </FormField>
-                      )}
-
-                      <View style={styles.priceRow}>
-                        <View style={styles.inputHalf}>
-                          <FormField label="Purchase Price (Optional)">
-                            <InputBox
-                              placeholder="Enter here"
-                              background="#FFF8EB"
-                              value={values.purchase_price}
-                              keyboardType="number-pad"
-                              onChangeText={handleChange("purchase_price")}
+                      {/* 2-Column Grid Layout */}
+                      <View style={styles.pricingGrid}>
+                        {/* Wholesale Price Toggle - Full Width */}
+                        {selectedType !== "print" && (
+                          <View style={styles.gridItemFullWidth}>
+                            <ToggleRow
+                              label="Wholesale Price (Optional)"
+                              value={isWholesaleEnabled}
+                              onValueChange={setIsWholesaleEnabled}
                             />
-                          </FormField>
-                        </View>
-                        <View style={styles.inputHalf}>
+                          </View>
+                        )}
+
+                        {/* Wholesale Price Input - Full Width */}
+                        {selectedType !== "print" && isWholesaleEnabled && (
+                          <View style={styles.gridItemFullWidth}>
+                            <FormField>
+                              <InputBox
+                                placeholder="Enter here"
+                                background="#FFF8EB"
+                                value={values.wholesale_price}
+                                keyboardType="number-pad"
+                                onChangeText={handleChange("wholesale_price")}
+                              />
+                            </FormField>
+                          </View>
+                        )}
+
+                        {/* Purchase Price - Left Column */}
+                        {selectedType !== "print" && (
+                          <View style={styles.gridItemHalf}>
+                            <FormField label="Purchase Price (Optional)">
+                              <InputBox
+                                placeholder="Enter here"
+                                background="#FFF8EB"
+                                value={values.purchase_price}
+                                keyboardType="number-pad"
+                                onChangeText={handleChange("purchase_price")}
+                              />
+                            </FormField>
+                          </View>
+                        )}
+
+                        {/* Sales Price/Base Price - Right Column */}
+                        <View style={styles.gridItemHalf}>
                           <FormField
                             label={
                               selectedType === "print"
@@ -753,21 +772,24 @@ const AddProductScreen = ({ navigation }: { navigation: any }) => {
                             />
                           </FormField>
                         </View>
-                      </View>
 
-                      <View style={styles.priceRow}>
-                        <View style={styles.inputHalf}>
-                          <FormField label="MRP">
-                            <InputBox
-                              placeholder="Enter here"
-                              background="#FFF8EB"
-                              value={values.mrp}
-                              keyboardType="number-pad"
-                              onChangeText={handleChange("mrp")}
-                            />
-                          </FormField>
-                        </View>
-                        <View style={styles.inputHalf}>
+                        {/* MRP - Left Column */}
+                        {selectedType !== "print" && (
+                          <View style={styles.gridItemHalf}>
+                            <FormField label="MRP">
+                              <InputBox
+                                placeholder="Enter here"
+                                background="#FFF8EB"
+                                value={values.mrp}
+                                keyboardType="number-pad"
+                                onChangeText={handleChange("mrp")}
+                              />
+                            </FormField>
+                          </View>
+                        )}
+
+                        {/* Unit - Right Column */}
+                        <View style={styles.gridItemHalf}>
                           <FormField
                             label="Unit"
                             error={touched.unit && errors.unit}
@@ -785,10 +807,9 @@ const AddProductScreen = ({ navigation }: { navigation: any }) => {
                             />
                           </FormField>
                         </View>
-                      </View>
 
-                      <View style={styles.priceRow}>
-                        <View style={styles.inputHalf}>
+                        {/* HSN - Left Column */}
+                        <View style={styles.gridItemHalf}>
                           <FormField label="HSN">
                             <InputBox
                               placeholder="Enter here"
@@ -798,7 +819,9 @@ const AddProductScreen = ({ navigation }: { navigation: any }) => {
                             />
                           </FormField>
                         </View>
-                        <View style={styles.inputHalf}>
+
+                        {/* GST % - Right Column */}
+                        <View style={styles.gridItemHalf}>
                           <FormField label="GST">
                             <InputBox
                               placeholder="ex: 5%"
@@ -1404,7 +1427,7 @@ const AddProductScreen = ({ navigation }: { navigation: any }) => {
 
 export default AddProductScreen;
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: "#fff",
@@ -1417,9 +1440,9 @@ const styles = StyleSheet.create({
   },
   label: {
     fontWeight: "600",
-    fontSize: 16,
-    marginRight: 10,
-    width: 50,
+    fontSize: "14@s",
+    marginRight: "10@s",
+    width: "50@s",
     color: "#000",
   },
   optionGroup: {
@@ -1434,8 +1457,8 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 6,
     backgroundColor: "#fff",
-    marginRight: 10,
-    marginBottom: 8,
+    // marginRight: 10,
+    // marginBottom: 8,
   },
   selectedButton: {
     backgroundColor: "#FCA311",
@@ -1450,6 +1473,7 @@ const styles = StyleSheet.create({
   },
   optionText: {
     color: "#333",
+    fontSize: "10@s",
   },
   selectedText: {
     color: "#fff",
@@ -1464,11 +1488,11 @@ const styles = StyleSheet.create({
   },
   stockLabel: {
     fontWeight: "600",
-    fontSize: 14,
+    fontSize: "12@s",
     color: "#000",
   },
   optionalText: {
-    fontSize: 12,
+    fontSize: "10@s",
     color: "#555",
     marginLeft: 4,
   },
@@ -1480,11 +1504,11 @@ const styles = StyleSheet.create({
     borderBottomColor: "#EEE",
   },
   itemText: {
-    fontSize: 16,
+    fontSize: "14@s",
     color: "#333",
   },
   stockWarning: {
-    fontSize: 12,
+    fontSize: "10@s",
     color: "red",
     marginBottom: 12,
   },
@@ -1498,12 +1522,12 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: "#FCA311",
-    fontSize: 16,
+    fontSize: "14@s",
     fontWeight: "700",
     marginBottom: 12,
   },
   smallLabel: {
-    fontSize: 13,
+    fontSize: "11@s",
     color: "#555",
     marginBottom: 4,
     marginRight: 5,
@@ -1515,6 +1539,20 @@ const styles = StyleSheet.create({
   },
   inputHalf: {
     flex: 0.48,
+  },
+  // Grid Layout Styles
+  pricingGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+  gridItemHalf: {
+    width: "48%",
+    marginBottom: 12,
+  },
+  gridItemFullWidth: {
+    width: "100%",
+    marginBottom: 12,
   },
   toggleRow: {
     flexDirection: "row",
@@ -1537,8 +1575,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   imageBox: {
-    width: 80,
-    height: 80,
+    width: "80@s",
+    height: "80@s",
     borderWidth: 1,
     borderColor: "#FCA311",
     borderRadius: 6,
@@ -1556,7 +1594,7 @@ const styles = StyleSheet.create({
     height: "100%",
   },
   plusIcon: {
-    fontSize: 20,
+    fontSize: "20@s",
     color: "#000",
   },
   addButtonSmall: {
@@ -1567,7 +1605,7 @@ const styles = StyleSheet.create({
   },
   addButtonTextSmall: {
     color: "#fff",
-    fontSize: 13,
+    fontSize: "11@s",
     fontWeight: "600",
   },
   footer: {
@@ -1585,7 +1623,7 @@ const styles = StyleSheet.create({
   addButtonText: {
     color: "#fff",
     fontWeight: "600",
-    fontSize: 16,
+    fontSize: "14@s",
   },
   variantContainer: {
     borderWidth: 1,

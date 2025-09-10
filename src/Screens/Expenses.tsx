@@ -10,6 +10,7 @@ import {
   ScrollView,
   Image,
 } from "react-native";
+import { useRoute } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/MaterialCommunityIcons";
 import Headerwithback from "./Headerwithback";
 import CustomTextInput from "../CommonComponent/CustomeTextInput";
@@ -23,10 +24,14 @@ import ModalUpdatePhoto from "../Modals/ModalUpdatePhoto";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { HomeNavigation } from "../constants/app-routes.constants";
 
 const Expenses = ({ navigation }: any) => {
+  const route = useRoute();
+  const { editMode = false, expenseData = null } = (route.params as any) || {};
+
   const [isPaid, setIsPaid] = useState(true);
-  const [selectedType, setSelectedType] = useState("Cash");
+  const [selectedType, setSelectedType] = useState("cash");
   const [expense, setExpense] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [openCallenderModel, setOpenCallenderModel] = useState<boolean>(false);
@@ -41,11 +46,59 @@ const Expenses = ({ navigation }: any) => {
   const [imageFile, setImageFile] = useState<any>();
   const [imageUrl, setImageUrl] = useState("");
   const [imagePickerModel, setImagePickerModel] = useState(false);
-  const [errors, setErrors] = useState({});
-  const types = ["UPI", "Cash", "Card", "Cheque", "EMI", "Netbanking"];
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const types = ["UPI", "Card", "Cash", "In Credit"];
+
   useEffect(() => {
     getAllCategory();
   }, []);
+
+  useEffect(() => {
+    if (
+      editMode &&
+      expenseData &&
+      allCategoryData.length > 0 &&
+      bankList.length > 0
+    ) {
+      populateFormWithData();
+    }
+  }, [editMode, expenseData, allCategoryData, bankList]);
+
+  const populateFormWithData = () => {
+    console.log("expenseData--->", expenseData);
+    if (expenseData) {
+      setExpense(expenseData.amount?.toString() || "");
+      setExpenseDate(expenseData.expense_date ? expenseData.expense_date : "");
+      setPaymentDate(expenseData.payment_date ? expenseData.payment_date : "");
+      setDescription(expenseData.description || "");
+      setIsPaid(expenseData.is_paid || false);
+      setSelectedType(expenseData.payment_method || "cash");
+      setImageUrl(expenseData.attachment || "");
+
+      // Set category if available
+      if (expenseData.category) {
+        const matchingCategory = allCategoryData.find(
+          (cat) => cat.id === expenseData.category
+        );
+        console.log("matchingCategory--->", matchingCategory);
+
+        if (matchingCategory) {
+          setCategory(matchingCategory);
+        }
+      }
+
+      // Set bank if available
+      if (expenseData.bank) {
+        const matchingBank = bankList.find(
+          (bank) => bank.id === expenseData.bank
+        );
+        if (matchingBank) {
+          setSelectedBank(matchingBank.id.toString());
+        }
+      }
+    }
+  };
+
   const getAllCategory = async () => {
     try {
       setIsLoading(true);
@@ -81,13 +134,9 @@ const Expenses = ({ navigation }: any) => {
     if (!expense) tempErrors.expense = "Expense amount is required";
     if (!expenseDate) tempErrors.expenseDate = "Expense date is required";
     if (!category) tempErrors.category = "Category is required";
-    if (!description) tempErrors.description = "Description is required";
 
     if (isPaid) {
-      if (!paymentData) {
-        tempErrors.paymentDate = "Payment date is required";
-      }
-      if (selectedType !== "Cash" && !selectedBank) {
+      if (selectedType === "in credit" && !selectedBank) {
         tempErrors.bank = "Please select bank";
       }
     }
@@ -108,7 +157,10 @@ const Expenses = ({ navigation }: any) => {
       formData.append("expense_date", expenseDate);
       formData.append("category", category?.id);
       formData.append("is_paid", isPaid);
-      formData.append("payment_method", selectedType.toLowerCase());
+      formData.append(
+        "payment_method",
+        selectedType === "in credit" ? "credit" : selectedType.toLowerCase()
+      );
 
       // Optional fields
       if (paymentData) {
@@ -116,7 +168,7 @@ const Expenses = ({ navigation }: any) => {
       }
 
       if (selectedBank) {
-        formData.append("bank", selectedBank?.id);
+        formData.append("bank", selectedBank);
       }
 
       if (description) {
@@ -130,14 +182,28 @@ const Expenses = ({ navigation }: any) => {
           type: imageFile.type || "image/jpeg",
         });
       }
-      console.log("formdata--->", formData);
-      const res = await api.post(API_ROUTES.expense, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      console.log("res--->", res);
-      navigation.goBack();
+
+      let res;
+      if (editMode) {
+        // Update existing expense
+        res = await api.put(
+          `${API_ROUTES.expense}/${expenseData.id}/`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+      } else {
+        // Create new expense
+        res = await api.post(API_ROUTES.expense, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+      }
+      navigation.navigate(HomeNavigation.EXPENESES_SCREEN as never);
     } catch (error) {
       console.log("error-->", error);
     } finally {
@@ -147,7 +213,7 @@ const Expenses = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Headerwithback title="Create Expenses" />
+      <Headerwithback title={editMode ? "Edit Expense" : "Create Expenses"} />
       <Loading visible={isLoading} />
       <ScrollView>
         {/* Expense Amount */}
@@ -195,7 +261,7 @@ const Expenses = ({ navigation }: any) => {
         <CustomDropdown
           placeholder="Select Category"
           onSelect={(option) => setCategory(option)}
-          selectedValue={category?.name || ""}
+          selectedValue={category?.id || ""}
           dropDownBoxStyle={styles.input}
           styles={{ marginBottom: 0, marginTop: 10 }}
           options={allCategoryData}
@@ -226,11 +292,11 @@ const Expenses = ({ navigation }: any) => {
             </Text>
             <View style={styles.typeRow}>
               {types.map((type) => {
-                const isSelected = selectedType === type;
+                const isSelected = selectedType === type.toLowerCase();
                 return (
                   <TouchableOpacity
                     key={type}
-                    onPress={() => setSelectedType(type)}
+                    onPress={() => setSelectedType(type.toLowerCase())}
                     style={[
                       styles.typeButton,
                       isSelected && styles.typeButtonSelected,
@@ -281,13 +347,19 @@ const Expenses = ({ navigation }: any) => {
               <Text style={{ color: "red" }}>{errors?.paymentDate}</Text>
             )}
             {/* Add Bank */}
-            {selectedType !== "Cash" && (
+            {selectedType === "in credit" && (
               <>
                 <Text style={styles.addBankText}>Select Bank</Text>
                 <CustomDropdown
-                  onSelect={setSelectedBank}
+                  onSelect={(option) => setSelectedBank(option.id.toString())}
                   placeholder="Select Bank"
-                  selectedValue={selectedBank?.name || ""}
+                  selectedValue={
+                    selectedBank
+                      ? bankList.find(
+                          (bank) => bank.id.toString() === selectedBank
+                        )?.id || ""
+                      : ""
+                  }
                   options={bankList}
                   dropDownBoxStyle={{ marginTop: 10 }}
                 />
@@ -315,7 +387,7 @@ const Expenses = ({ navigation }: any) => {
         {/* Attachments */}
         <Text style={styles.label}>Attachments</Text>
         <View style={styles.attachmentRow}>
-          {!imageFile?.uri ? (
+          {!imageUrl ? (
             <TouchableOpacity
               style={styles.attachmentBtn}
               onPress={() => {
@@ -330,10 +402,7 @@ const Expenses = ({ navigation }: any) => {
               onPress={() => setImagePickerModel(true)}
               style={styles.imageBox}
             >
-              <Image
-                source={{ uri: imageFile?.uri }}
-                style={styles.imagePreview}
-              />
+              <Image source={{ uri: imageUrl }} style={styles.imagePreview} />
             </TouchableOpacity>
           )}
           {/* <TouchableOpacity style={styles.attachmentBtn}>
@@ -366,9 +435,11 @@ const Expenses = ({ navigation }: any) => {
           onChange={(image) => console.log("Full crop picker image:", image)}
         />
 
-        {/* Create Button */}
+        {/* Create/Update Button */}
         <TouchableOpacity style={styles.createBtn} onPress={addExpensesData}>
-          <Text style={styles.createText}>Create</Text>
+          <Text style={styles.createText}>
+            {editMode ? "Update Expense" : "Create"}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
@@ -475,6 +546,7 @@ const styles = StyleSheet.create({
   },
   attachmentText: {
     fontWeight: "600",
+    color: "#000",
   },
   imageBox: {
     width: 80,

@@ -46,7 +46,7 @@ const SalePOS = () => {
   const [vendorList, setVendorList] = useState<DropDownOption[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<DropDownOption>();
   const [selectedVendor, setSelectedVendor] = useState<DropDownOption>();
-  const [showProductModal, setShowProductModal] = useState(false);
+  const [showProductModal, setShowProductModal] = useState(true);
   const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [wholesale, setWholesale] = useState<boolean>(false);
@@ -235,6 +235,7 @@ const SalePOS = () => {
         advance_bank: selectedBank?.id || "",
         advance_amount: advanceAmount || 0,
       };
+      !dueDate && delete data.credit_date;
       console.log(data, "data");
       if (wholesale) {
         navigation.navigate(HomeNavigation.WHOLESALE, data);
@@ -605,7 +606,6 @@ const SalePOS = () => {
           setDueDate(e);
         }}
       />
-      {/* <Bottomnavigation /> */}
     </SafeAreaView>
   );
 };

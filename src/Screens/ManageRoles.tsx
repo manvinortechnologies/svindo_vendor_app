@@ -203,8 +203,6 @@ const ManageRoles = () => {
       <View style={{ flex: 1 }}>
         {activeTab === "allUsers" ? renderAllUsers() : renderPermissions()}
       </View>
-
-      <Bottomnavigation />
     </SafeAreaView>
   );
 };

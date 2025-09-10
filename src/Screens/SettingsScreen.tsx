@@ -54,7 +54,6 @@ const SettingsScreen = () => {
           </TouchableOpacity>
         ))}
       </ScrollView>
-      <Bottomnavigation />
     </SafeAreaView>
   );
 };

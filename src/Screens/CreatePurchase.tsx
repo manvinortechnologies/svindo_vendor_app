@@ -133,7 +133,7 @@ const CreatePurchase = ({ navigation }: any) => {
       }must be a valid positive number`;
     }
 
-    if (selectedPayment !== "cash") {
+    if (selectedPayment === "In Credit") {
       if (!dueDate) {
         tempErrors.dueDate = "Due date is required";
       }
@@ -277,6 +277,8 @@ const CreatePurchase = ({ navigation }: any) => {
           total: Number(p.quantity) * Number(p.price),
         })),
       };
+
+      !dueDate && delete data.due_date;
 
       console.log("Sending purchase data:", data);
 

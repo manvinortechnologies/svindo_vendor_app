@@ -22,6 +22,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
+import { formatOrderDate } from "../utils/dateandTime";
+import { ScaledSheet } from "react-native-size-matters";
 
 const Orders = ({ navigation }: any) => {
   const [selectedStatus, setSelectedStatus] = useState("All");
@@ -37,7 +39,7 @@ const Orders = ({ navigation }: any) => {
     "Delivered",
     "Returned",
     "Exchage",
-    "Cancle",
+    "Cancel",
   ];
   const orderTypes = ["On Shop", "Self Pickup", "Instant", "General"];
   const filters = [
@@ -212,23 +214,30 @@ const Orders = ({ navigation }: any) => {
                 navigation.navigate("OrderProductDetails", { orderId: item.id })
               }
             >
-              <View style={styles.orderHeader}>
-                <Text style={styles.customerName}>{item.customer_name}</Text>
-                <Text style={styles.orderDate}>
-                  {new Date(item.created_at).toLocaleDateString()}
+              <View style={styles.orderHeaderContainer}>
+                <View style={styles.orderHeader}>
+                  <Text style={styles.customerName}>{item.customer_name}</Text>
+                  <Text style={styles.orderDate}>
+                    {formatOrderDate(item.created_at)}
+                  </Text>
+                </View>
+                <Text style={styles.orderDetails}>
+                  <Text style={styles.boldText}>Order #{item.order_id}</Text>
+                  {"\n"}
+                  <Text style={styles.orderDetails}>
+                    {item.items.length} Item
+                  </Text>
                 </Text>
+                <View style={styles.onshop}>
+                  <Text style={styles.orderDetails}>{item.delivery_type}</Text>
+                  <Text style={styles.orderAmount}>$ {item.total_amount}</Text>
+                </View>
               </View>
-              <Text style={styles.orderDetails}>
-                <Text style={styles.boldText}>Order #{item.order_id}</Text>{" "}
-                {item.items.length} Item
-              </Text>
-              <View style={styles.onshop}>
-                <Text style={styles.orderDetails}>{item.delivery_type}</Text>
-                <Text style={styles.orderAmount}>$ {item.total_amount}</Text>
-              </View>
-
               <View style={styles.statusRow}>
-                <Text style={styles.orderStatus}>{item.status}</Text>
+                <Text style={styles.orderStatus}>
+                  {item.status.charAt(0).toUpperCase() +
+                    item.status.slice(1).toLowerCase()}
+                </Text>
                 <Text style={styles.paymentStatus}>
                   {item.is_paid ? "Paid" : "Unpaid"} ➜
                 </Text>
@@ -240,49 +249,41 @@ const Orders = ({ navigation }: any) => {
 
       {/* 🔽 Order Types Bottom Menu */}
       <View>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.bottomtypeScroll}
-        >
-          <View style={styles.typeButtonContainer}>
-            {orderTypes.map((type) => (
-              <TouchableOpacity
-                key={type}
+        <View style={styles.typeButtonContainer}>
+          {orderTypes.map((type) => (
+            <TouchableOpacity
+              key={type}
+              style={[
+                styles.typeButton,
+                selectedType === type && styles.selectedType,
+              ]}
+              onPress={() => setSelectedType(type)}
+            >
+              <Text
                 style={[
-                  styles.typeButton,
-                  selectedType === type && styles.selectedType,
+                  styles.typeText,
+                  selectedType === type && styles.selectedTypeText,
                 ]}
-                onPress={() => setSelectedType(type)}
               >
-                <Text
-                  style={[
-                    styles.typeText,
-                    selectedType === type && styles.selectedTypeText,
-                  ]}
-                >
-                  {type}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
+                {type}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
-
-      <Bottomnavigation />
     </SafeAreaView>
   );
 };
 
 export default Orders;
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     backgroundColor: "#fff",
     flex: 1,
   },
   midcontent: {
-    padding: 10,
+    paddingVertical: 10,
   },
   header: {
     flexDirection: "row",
@@ -292,6 +293,7 @@ const styles = StyleSheet.create({
     borderColor: "#ECECEC",
     paddingBottom: 10,
     marginVertical: 10,
+    marginHorizontal: 10,
   },
   searchBar: {
     flexDirection: "row",
@@ -364,13 +366,20 @@ const styles = StyleSheet.create({
   },
   orderCard: {
     backgroundColor: "#fff",
-    padding: 12,
-    borderRadius: 10,
+    // padding: 12,
+    overflow: "hidden",
+    borderRadius: 15,
     marginBottom: 10,
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     elevation: 2,
+    marginVertical: 10,
+    marginHorizontal: 10,
+  },
+  orderHeaderContainer: {
+    paddingHorizontal: 10,
+    paddingTop: 10,
   },
   orderHeader: {
     flexDirection: "row",
@@ -379,6 +388,8 @@ const styles = StyleSheet.create({
   },
   customerName: {
     fontWeight: "bold",
+    fontSize: 16,
+    color: "#000",
   },
   orderDate: {
     color: "#888",
@@ -407,7 +418,8 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginTop: 5,
     backgroundColor: "#FFF7DD",
-    paddingVertical: 10,
+    paddingTop: 10,
+    paddingHorizontal: 10,
   },
   orderStatus: {
     color: "#163881",
@@ -423,27 +435,27 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   typeButtonContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-
-    width: "100%", // helps center inside horizontal ScrollView
-  },
-  bottomtypeScroll: {
-    marginVertical: 20,
-    marginHorizontal: 10,
+    marginBottom: "15@s",
+    marginHorizontal: "10@s",
     textAlign: "center",
-    padding: 15,
+    padding: "8@s",
+    borderRadius: "10@s",
+    backgroundColor: "#fff",
     borderColor: "#C3C3C3",
     elevation: 2,
-    alignSelf: "center",
+    // alignSelf: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    // width: "100%", // helps center inside horizontal ScrollView
   },
+  bottomtypeScroll: {},
   typeButton: {
     paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     borderRadius: 10,
     backgroundColor: "#fff",
-    marginHorizontal: 6,
+    // marginHorizontal: 3,
   },
   selectedType: {
     backgroundColor: "#ffb347",
@@ -468,7 +480,12 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: "80%",
   },
-  modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    color: "#000",
+  },
   filterOption: {
     padding: 10,
     borderBottomWidth: 1,
