@@ -10,7 +10,10 @@ import { name as appName } from "./app.json";
 if (__DEV__) {
   require("./ReactotronConfig");
 }
-
+const originalLog = console.log;
+console.log = (...args) => {
+  originalLog.apply(console, args); // Metro
+};
 // Set default props for Text components
 Text.defaultProps = Text.defaultProps || {};
 Text.defaultProps.allowFontScaling = false;

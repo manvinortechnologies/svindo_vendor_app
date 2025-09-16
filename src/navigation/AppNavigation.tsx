@@ -11,11 +11,14 @@ import BottomTabNavigator from "./BottomTabNavigator";
 import DraftScreen from "../Screens/DraftScreen";
 import Orders from "../Screens/Orders";
 import StockScreen from "../Screens/StockScreen";
+import VariantsScreen from "../Screens/VariantsScreen";
 import CreateProduct from "../Screens/CreateProduct";
 import AddProductScreen from "../Screens/AddProductScreen";
 import ProductAddedSuccess from "../Screens/ProductAddedSuccess";
+import ProductSelectionScreen from "../Screens/ProductSelectionScreen";
 import Storescreen from "../Screens/Storescreen";
 import MarketingTools from "../Screens/MarketingTools";
+import TransactionMessages from "../Screens/TransactionMessages";
 import OnlineStore from "../Screens/OnlineStore";
 import BoostSales from "../Screens/BoostSales";
 import AdWallet from "../Screens/AdWallet";
@@ -120,6 +123,7 @@ import PosScreen from "../Screens/PosScreen";
 import AddonSuccessScreen from "../Screens/AddonSuccessScreen";
 import SelectAddonsScreen from "../Screens/SelectAddonsScreen";
 import CreateAddons from "../Screens/CreateAddons";
+import ScanBarcode from "../Screens/ScanBarcode";
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
 
@@ -187,8 +191,16 @@ const AppNavigation = () => {
           component={StockScreen}
         />
         <Stack.Screen
+          name={HomeNavigation.VARIANTS_SCREEN}
+          component={VariantsScreen}
+        />
+        <Stack.Screen
           name={HomeNavigation.CREATE_PRODUCT}
           component={CreateProduct}
+        />
+        <Stack.Screen
+          name={HomeNavigation.SCAN_BARCODE}
+          component={ScanBarcode}
         />
         <Stack.Screen
           name={HomeNavigation.CREATE_ADDONS}
@@ -202,10 +214,18 @@ const AppNavigation = () => {
           name={HomeNavigation.PRODUCT_ADDED_SUCCESS}
           component={ProductAddedSuccess as any}
         />
+        <Stack.Screen
+          name={HomeNavigation.PRODUCT_SELECTION}
+          component={ProductSelectionScreen}
+        />
 
         <Stack.Screen
           name={HomeNavigation.ONLINE_STORE}
           component={OnlineStore}
+        />
+        <Stack.Screen
+          name={HomeNavigation.TRANSACTION_MESSAGES}
+          component={TransactionMessages}
         />
 
         <Stack.Screen name={HomeNavigation.AD_WALLET} component={AdWallet} />

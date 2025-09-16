@@ -71,13 +71,8 @@ const BillDetails: React.FC = () => {
   ];
 
   const totals = {
-    total: 1000,
     charges: 0,
-    discount: 500,
-    tax: 500,
-    netTotal: 1000,
-    advancePaid: 500,
-    balance: 500,
+    tax: 0,
   };
 
   const [printOptions, setPrintOptions] = useState([

@@ -3,21 +3,29 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Icons from "react-native-vector-icons/AntDesign";
-import MaterialIcons from "react-native-vector-icons/MaterialIcons";
+import Icons1 from "react-native-vector-icons/Ionicons";
 import { s, ScaledSheet } from "react-native-size-matters";
-import { useNavigation } from "@react-navigation/native";
 import { HomeNavigation } from "../constants/app-routes.constants";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const CustomTabBar = ({
   state,
   descriptors,
   navigation,
 }: BottomTabBarProps) => {
+  const insets = useSafeAreaInsets();
+
   const [showStoreOptions, setShowStoreOptions] = useState(false);
   const currentRoute = state.routes[state.index];
 
+  // Check if we're on a store-related screen (Store or Marketing Tools)
+  const isStoreScreen = currentRoute.name === HomeNavigation.STORE_SCREEN;
+  const isMarketingScreen =
+    currentRoute.name === HomeNavigation.MARKETING_TOOLS;
+  const isStoreRelatedScreen = isStoreScreen || isMarketingScreen;
+
   const handleStorePress = () => {
-    if (currentRoute.name === HomeNavigation.STORE_SCREEN) {
+    if (isStoreScreen) {
       setShowStoreOptions(!showStoreOptions);
     } else {
       navigation.navigate(HomeNavigation.STORE_SCREEN);
@@ -25,9 +33,9 @@ const CustomTabBar = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       {/* Store Options Overlay */}
-      {currentRoute.name === HomeNavigation.STORE_SCREEN && (
+      {isStoreRelatedScreen && (
         <View style={styles.bottomcontainer}>
           <TouchableOpacity
             style={styles.option}
@@ -40,22 +48,15 @@ const CustomTabBar = ({
             }}
           >
             <Icon
-              name="storefront"
+              name={isStoreScreen ? "storefront" : "storefront-outline"}
               size={20}
-              color={
-                currentRoute.name === HomeNavigation.STORE_SCREEN
-                  ? "#FCA511"
-                  : "#555"
-              }
+              color={isStoreScreen ? "#FCA511" : "#555"}
             />
             <Text
               style={[
                 styles.optionText,
                 {
-                  color:
-                    currentRoute.name === HomeNavigation.STORE_SCREEN
-                      ? "#FCA511"
-                      : "#000",
+                  color: isStoreScreen ? "#FCA511" : "#000",
                 },
               ]}
             >
@@ -75,23 +76,16 @@ const CustomTabBar = ({
               setShowStoreOptions(false);
             }}
           >
-            <Icons
-              name="setting"
+            <Icons1
+              name={isMarketingScreen ? "settings" : "settings-outline"}
               size={20}
-              color={
-                currentRoute.name !== HomeNavigation.STORE_SCREEN
-                  ? "#FCA511"
-                  : "#555"
-              }
+              color={isMarketingScreen ? "#FCA511" : "#555"}
             />
             <Text
               style={[
                 styles.optionText,
                 {
-                  color:
-                    currentRoute.name !== HomeNavigation.STORE_SCREEN
-                      ? "#FCA511"
-                      : "#000",
+                  color: isMarketingScreen ? "#FCA511" : "#000",
                 },
               ]}
             >
@@ -142,15 +136,15 @@ const CustomTabBar = ({
               case HomeNavigation.STATISTICS_SCREEN:
                 return (
                   <Icons
-                    name="appstore-o"
+                    name={isFocused ? "appstore1" : "appstore-o"}
                     size={s(20)}
                     color={isFocused ? "#FCA511" : "#000"}
                   />
                 );
               case HomeNavigation.ORDERS:
                 return (
-                  <MaterialIcons
-                    name="shopping-bag"
+                  <Icon
+                    name={isFocused ? "shopping" : "shopping-outline"}
                     size={s(20)}
                     color={isFocused ? "#FCA511" : "#000"}
                   />
@@ -158,7 +152,7 @@ const CustomTabBar = ({
               case HomeNavigation.STOCK_SCREEN:
                 return (
                   <Icon
-                    name="chart-box"
+                    name={isFocused ? "chart-box" : "chart-box-outline"}
                     size={s(20)}
                     color={isFocused ? "#FCA511" : "#000"}
                   />
@@ -166,7 +160,7 @@ const CustomTabBar = ({
               case HomeNavigation.STORE_SCREEN:
                 return (
                   <Icon
-                    name="storefront-outline"
+                    name={isFocused ? "storefront" : "storefront-outline"}
                     size={s(20)}
                     color={isFocused ? "#FCA511" : "#000"}
                   />
@@ -174,7 +168,7 @@ const CustomTabBar = ({
               case HomeNavigation.ERP:
                 return (
                   <Icon
-                    name="menu"
+                    name={"menu"}
                     size={s(20)}
                     color={isFocused ? "#FCA511" : "#000"}
                   />
@@ -189,8 +183,8 @@ const CustomTabBar = ({
               key={route.key}
               accessibilityRole="button"
               accessibilityState={isFocused ? { selected: true } : {}}
-              accessibilityLabel={options.tabBarAccessibilityLabel}
-              testID={options.tabBarTestID}
+              // accessibilityLabel={options.tabBarAccessibilityLabel}
+              // testID={options.tabBarTestID}
               onPress={onPress}
               onLongPress={onLongPress}
               style={styles.tabBarItem}

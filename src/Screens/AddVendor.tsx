@@ -293,6 +293,7 @@ const styles = StyleSheet.create({
     padding: 10,
     backgroundColor: "#FFF8EB",
     fontSize: 14,
+    color: "#000",
   },
   dispatchHeader: {
     flexDirection: "row",

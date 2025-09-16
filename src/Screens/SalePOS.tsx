@@ -18,22 +18,41 @@ import CustomDropdown, {
 } from "../CommonComponent/CustomDropdown";
 import Loading from "../CommonComponent/Loading";
 import api from "../services/api/api";
-import ProductSelectionModal from "../Modals/ProductSelectionModal";
 import CustomSwitch from "./CustomSwitch";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import CustomModal from "../Modals/CustomModal";
 import CompanySelectModal from "../Modals/CompanySelectModal";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import CalendarModal from "../Modals/CalendarModal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useIsFocused } from "@react-navigation/native";
 import formatNumber from "../utils/priceFormatter";
+import { s, ScaledSheet } from "react-native-size-matters";
+
+interface Product {
+  id: number;
+  name: string;
+  desc: string;
+  price: number;
+  wholesale_price?: number;
+  quantity: number;
+  image: string;
+}
+
+type RootStackParamList = {
+  SalePOS: {
+    selectedProducts?: Product[];
+  };
+};
+
+type SalePOSRouteProp = RouteProp<RootStackParamList, "SalePOS">;
 
 const SalePOS = () => {
   const navigation: any = useNavigation();
+  const route = useRoute<SalePOSRouteProp>();
   const isFoxcused = useIsFocused();
-  const [products, setProducts] = useState([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [companyList, setCompanyList] = useState<DropDownOption[]>();
   const [companySelected, setCompanySelected] = useState<DropDownOption>();
@@ -46,7 +65,7 @@ const SalePOS = () => {
   const [vendorList, setVendorList] = useState<DropDownOption[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<DropDownOption>();
   const [selectedVendor, setSelectedVendor] = useState<DropDownOption>();
-  const [showProductModal, setShowProductModal] = useState(true);
+  const [showProductModal, setShowProductModal] = useState(false);
   const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [wholesale, setWholesale] = useState<boolean>(false);
@@ -61,6 +80,13 @@ const SalePOS = () => {
   useEffect(() => {
     fetchAllData();
   }, [isFoxcused]);
+
+  // Handle selectedProducts from ProductSelectionScreen
+  useEffect(() => {
+    if (route.params?.selectedProducts) {
+      setProducts(route.params.selectedProducts);
+    }
+  }, [route.params?.selectedProducts]);
 
   useEffect(() => {
     handleAmountChange(discount?.amount);
@@ -161,19 +187,12 @@ const SalePOS = () => {
       tempErrors.products = "Please add at least one product before proceeding";
     }
 
-    // ✅ check discount Amount
-    if (
-      !discount.amount ||
-      Number(discount.amount) <= 0 ||
-      !discount.pr ||
-      Number(discount.pr) < 0
-    ) {
-      tempErrors.discount = `Discount amount ${
-        !discount.pr || Number(discount.pr) < 0
-          ? "and Discount percentage "
-          : ""
-      }must be a valid positive number`;
+    // ✅ check customer selection
+    if (!selectedCustomer) {
+      tempErrors.customer = "Please select a customer before proceeding";
     }
+
+    // ✅ check discount Amount
     // if (!discount.pr || Number(discount.pr) < 0) {
     //   tempErrors.pr = "Discount percentage must be a valid positive number";
     // }
@@ -264,12 +283,12 @@ const SalePOS = () => {
         contentContainerStyle={styles.scrollContent}
       >
         {/* Company Section */}
-        <View style={styles.companyRow}>
-          {/* <Text style={styles.companyText}>Company - Svindo Enterprise</Text>
+        {/* <View style={styles.companyRow}>
+          <Text style={styles.companyText}>Company - Svindo Enterprise</Text>
           <TouchableOpacity>
             <Text style={styles.changeText}>Change</Text>
-          </TouchableOpacity> */}
-        </View>
+          </TouchableOpacity>
+        </View> */}
         {/* <View style={styles.optionContainer}>
           <Text style={styles.optionLabel}>
             Company - {companySelected?.name}
@@ -297,7 +316,7 @@ const SalePOS = () => {
         </View> */}
         <View style={styles.optionContainer}>
           <Text style={styles.optionLabel}>
-            Customer - {selectedCustomer?.name}
+            Customer - {selectedCustomer?.name || "Not Selected"}
           </Text>
           <TouchableOpacity
             onPress={() => setShowCustomerModal(true)}
@@ -306,8 +325,11 @@ const SalePOS = () => {
             <Text style={styles.changeButtonText}>Add/Select</Text>
           </TouchableOpacity>
         </View>
+        {errors.customer && (
+          <Text style={{ color: "red" }}>{errors.customer}</Text>
+        )}
 
-        {selectedPartyType === "Vendor" && (
+        {/* {selectedPartyType === "Vendor" && (
           <>
             <Text style={styles.label}>Select Vendor</Text>
             <CustomDropdown
@@ -318,7 +340,7 @@ const SalePOS = () => {
               dropDownBoxStyle={styles.dropdownStyle}
             />
           </>
-        )}
+        )} */}
 
         {/* <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
           <Text style={styles.label}>Customer Details</Text>
@@ -349,7 +371,10 @@ const SalePOS = () => {
           </View>
           <TouchableOpacity
             onPress={() => {
-              setShowProductModal(true);
+              navigation.navigate(HomeNavigation.PRODUCT_SELECTION as any, {
+                selectedProducts: products,
+                navigateScreen: HomeNavigation.SALE_POS,
+              });
             }}
             style={styles.addItemButton}
           >
@@ -361,85 +386,104 @@ const SalePOS = () => {
         )}
 
         {/* Table Header */}
-        <View style={styles.tableHeader}>
-          <Text
-            style={[styles.tableText, { color: "#fff", fontWeight: "500" }]}
-          >
-            S.No.
-          </Text>
-          <Text
-            style={[
-              styles.tableText,
-              { flex: 2, color: "#fff", fontWeight: "500" },
-            ]}
-          >
-            Item
-          </Text>
-          <Text
-            style={[styles.tableText, { color: "#fff", fontWeight: "500" }]}
-          >
-            Quantity
-          </Text>
-          <Text
-            style={[styles.tableText, { color: "#fff", fontWeight: "500" }]}
-          >
-            Price
-          </Text>
-          <Text
-            style={[styles.tableText, { color: "#fff", fontWeight: "500" }]}
-          >
-            Amount
-          </Text>
-          {/* <Text style={[styles.tableText, {color: '#fff', fontWeight: '500'}]}>Action</Text> */}
-        </View>
 
         {/* Product List */}
         {products.map((item, index) => (
-          <View key={index} style={styles.tableRow}>
-            <Text style={styles.tableText}>{index + 1}</Text>
-            <Text style={[styles.tableText, { flex: 2 }]} numberOfLines={2}>
-              {item.name}
-            </Text>
-            <TextInput
-              style={[styles.tableText, styles.quantityInput]}
-              value={item.quantity.toString()}
-              onChangeText={(text) => {
-                const newQuantity = parseInt(text) || 0;
-                if (newQuantity >= 0) {
-                  const updatedProducts = [...products];
-                  if (newQuantity === 0) {
-                    // Remove item if quantity is 0
-                    updatedProducts.splice(index, 1);
-                  } else {
-                    // Update quantity
-                    updatedProducts[index] = { ...item, quantity: newQuantity };
+          <>
+            {index === 0 && (
+              <View style={[styles.tableRow, styles.tableHeader]}>
+                <Text
+                  style={[
+                    styles.tableText,
+                    { color: "#fff", fontWeight: "500" },
+                  ]}
+                >
+                  S.No.
+                </Text>
+                <Text
+                  style={[
+                    styles.tableText,
+                    { flex: 2, color: "#fff", fontWeight: "500" },
+                  ]}
+                >
+                  Item
+                </Text>
+                <Text
+                  style={[
+                    styles.tableText,
+                    { color: "#fff", fontWeight: "500" },
+                  ]}
+                >
+                  Quantity
+                </Text>
+                <Text
+                  style={[
+                    styles.tableText,
+                    { color: "#fff", fontWeight: "500" },
+                  ]}
+                >
+                  Price
+                </Text>
+                <Text
+                  style={[
+                    styles.tableText,
+                    { color: "#fff", fontWeight: "500", marginRight: s(16) },
+                  ]}
+                >
+                  Amount
+                </Text>
+                {/* <Text style={[styles.tableText, {color: '#fff', fontWeight: '500'}]}>Action</Text> */}
+              </View>
+            )}
+            <View key={index} style={styles.tableRow}>
+              <Text style={styles.tableText}>{index + 1}</Text>
+              <Text style={[styles.tableText, { flex: 2 }]} numberOfLines={2}>
+                {item.name}
+              </Text>
+              <TextInput
+                style={[styles.tableText, styles.quantityInput]}
+                value={item.quantity.toString()}
+                onChangeText={(text) => {
+                  const newQuantity = parseInt(text) || 0;
+                  if (newQuantity >= 0) {
+                    const updatedProducts = [...products];
+                    if (newQuantity === 0) {
+                      // Remove item if quantity is 0
+                      updatedProducts.splice(index, 1);
+                    } else {
+                      // Update quantity
+                      updatedProducts[index] = {
+                        ...item,
+                        quantity: newQuantity,
+                      };
+                    }
+                    setProducts(updatedProducts);
                   }
-                  setProducts(updatedProducts);
-                }
-              }}
-              keyboardType="numeric"
-              selectTextOnFocus
-            />
-            <Text style={styles.tableText}>
-              {/* {Number(wholesale ? item?.wholesale_price : item?.price).toFixed(0)} */}
-              {formatNumber(wholesale ? item?.wholesale_price : item?.price)}
-            </Text>
-            <Text style={styles.tableText}>
-              {formatNumber(
-                (wholesale ? item?.wholesale_price : item?.price) *
-                  item?.quantity
-              )}
-            </Text>
-            <TouchableOpacity
-              style={{ marginEnd: 5 }}
-              onPress={() => {
-                const updated = products.filter((_, i) => i !== index);
-                setProducts(updated);
-              }}
-            >
-              <Icon name="delete" size={16} color="red" />
-            </TouchableOpacity>
-          </View>
+                }}
+                keyboardType="numeric"
+                selectTextOnFocus
+              />
+              <Text style={styles.tableText}>
+                {/* {Number(wholesale ? item?.wholesale_price : item?.price).toFixed(0)} */}
+                {formatNumber(wholesale ? item?.wholesale_price : item?.price)}
+              </Text>
+              <Text style={styles.tableText}>
+                {formatNumber(
+                  (wholesale ? item?.wholesale_price : item?.price) *
+                    item?.quantity
+                )}
+              </Text>
+              <TouchableOpacity
+                style={{ marginEnd: 5 }}
+                onPress={() => {
+                  const updated = products.filter((_, i) => i !== index);
+                  setProducts(updated);
+                }}
+              >
+                <Icon name="delete" size={16} color="red" />
+              </TouchableOpacity>
+            </View>
+          </>
         ))}
 
         {/* Discount */}
@@ -469,7 +513,7 @@ const SalePOS = () => {
           )}
 
           {/* Payment */}
-          <View style={{ flexDirection: "row", gap: 20 }}>
+          <View style={{ flexDirection: "row", gap: s(10) }}>
             <Text style={styles.label}>Payment</Text>
             <View style={styles.paymentOptions}>
               {["UPI", "Card", "Cash", "In Credit"].map((method) => (
@@ -481,14 +525,7 @@ const SalePOS = () => {
                     paymentMode === method && { backgroundColor: "#FCA311" },
                   ]}
                 >
-                  <Text
-                    style={{
-                      fontWeight: "500",
-                      color: paymentMode === method ? "#FFF" : "#000",
-                    }}
-                  >
-                    {method}
-                  </Text>
+                  <Text style={styles.paymentButtonText}>{method}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -577,12 +614,6 @@ const SalePOS = () => {
         </TouchableOpacity>
       </View>
       <Loading visible={isLoading} />
-      <ProductSelectionModal
-        visible={showProductModal}
-        onClose={() => setShowProductModal(false)}
-        setSelectedProducts={setProducts}
-        selectedProducts={products}
-      />
       <CompanySelectModal
         visible={showCompanyModal}
         onClose={() => setShowCompanyModal(false)}
@@ -612,7 +643,7 @@ const SalePOS = () => {
 
 export default SalePOS;
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
@@ -673,7 +704,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginVertical: 10,
+    marginBottom: "6@s",
   },
   addItemButton: {
     backgroundColor: "#FCA311",
@@ -686,21 +717,17 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   tableHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
     backgroundColor: "#008BE1",
-    padding: 8,
-    marginTop: 10,
   },
   tableRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "#F5F5F5",
-    paddingVertical: 8,
+    paddingVertical: "6@s",
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
-    marginTop: 5,
+    marginTop: "5@s",
   },
   tableText: {
     flex: 1,
@@ -742,7 +769,7 @@ const styles = StyleSheet.create({
   },
   paymentOptions: {
     flexDirection: "row",
-    gap: 10,
+    gap: "6@s",
     marginVertical: 8,
   },
   paymentButton: {
@@ -751,6 +778,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 6,
+  },
+  paymentButtonText: {
+    fontSize: "12@s",
+    fontWeight: "500",
+    color: "#000",
   },
   bottomButtonRow: {
     flexDirection: "row",
@@ -812,7 +844,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginVertical: 16,
+    marginVertical: "10@s",
     marginHorizontal: 8,
   },
   optionLabel: {

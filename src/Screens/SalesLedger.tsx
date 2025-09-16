@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   FlatList,
   Alert,
+  RefreshControl,
 } from "react-native";
 import MainContainer from "../CommonComponent/MainContainer";
 import Headerwithback from "./Headerwithback";
@@ -51,8 +52,39 @@ const SalesLedger = () => {
 
   const [salesData, setSalesData] = useState<SalesEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  
+  // Fetch sales data from API
+  const fetchSalesData = async (isRefresh = false) => {
+    try {
+      if (isRefresh) {
+        setIsRefreshing(true);
+      } else {
+        setIsLoading(true);
+      }
+
+      const response = await api.get(API_ROUTES.posSales);
+      setSalesData(response.data || []);
+    } catch (error) {
+      console.error("Error fetching sales data:", error);
+      Alert.alert("Error", "Failed to load sales data. Please try again.");
+    } finally {
+      if (isRefresh) {
+        setIsRefreshing(false);
+      } else {
+        setIsLoading(false);
+      }
+    }
+  };
+
+  // Handle pull to refresh
+  const onRefresh = () => {
+    fetchSalesData(true);
+  };
+
+  useEffect(() => {
+    fetchSalesData();
+  }, []);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -116,7 +148,7 @@ const SalesLedger = () => {
         </View>
 
         <View style={styles.detailsRow}>
-          <Text style={styles.detailText}>{item.customer_detials.name}</Text>
+          <Text style={styles.detailText}>{item?.customer_detials?.name}</Text>
           <Text style={styles.detailText}>Qty: {totalItems}</Text>
           <Text style={styles.detailText}>{orderType}</Text>
           <Text
@@ -160,18 +192,36 @@ const SalesLedger = () => {
         </View>
 
         {/* Sales Entries */}
-        <FlatList
-          data={Object.keys(groupedSales)}
-          renderItem={renderDateGroup}
-          keyExtractor={(date) => date}
-          style={styles.list}
-          showsVerticalScrollIndicator={false}
-        />
+        {
+          <FlatList
+            data={Object.keys(groupedSales)}
+            renderItem={renderDateGroup}
+            keyExtractor={(date) => date}
+            style={styles.list}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={isRefreshing}
+                onRefresh={onRefresh}
+                colors={["#FCA311"]}
+                tintColor="#FCA311"
+              />
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No sales data found</Text>
+                <Text style={styles.emptySubText}>
+                  Pull down to refresh or add a new sale
+                </Text>
+              </View>
+            }
+          />
+        }
 
         {/* Add Sales Button */}
         <TouchableOpacity
           style={styles.addButton}
-          onPress={() => navigation.navigate(HomeNavigation.SALE_POS)}
+          onPress={() => (navigation as any).navigate(HomeNavigation.SALE_POS)}
         >
           <Text style={styles.addButtonText}>Add Sales</Text>
         </TouchableOpacity>
@@ -285,5 +335,24 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 50,
+    paddingHorizontal: 20,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  emptySubText: {
+    fontSize: 14,
+    color: "#999",
+    textAlign: "center",
   },
 });

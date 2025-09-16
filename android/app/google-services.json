@@ -1,13 +1,32 @@
 {
   "project_info": {
-    "project_number": "675983903457",
-    "project_id": "svindovender-71cf8",
-    "storage_bucket": "svindovender-71cf8.firebasestorage.app"
+    "project_number": "426376936208",
+    "project_id": "svindo-69fe7",
+    "storage_bucket": "svindo-69fe7.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:675983903457:android:0a2924c4e3048c056a85a0",
+        "mobilesdk_app_id": "1:426376936208:android:ba80b21668e057e9a78395",
+        "android_client_info": {
+          "package_name": "com.svindocustomerapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBoAFm8ZF90cTZVr8Ek5il4bT8IvwwzL0c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:426376936208:android:fd478a33c2aab794a78395",
         "android_client_info": {
           "package_name": "com.svindovender"
         }
@@ -15,7 +34,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyBmBUfDiipPqCwPR61lOMItOmm0pg5eI04"
+          "current_key": "AIzaSyBoAFm8ZF90cTZVr8Ek5il4bT8IvwwzL0c"
         }
       ],
       "services": {

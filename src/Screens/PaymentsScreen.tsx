@@ -49,7 +49,7 @@ const PaymentsScreen = () => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [paymentCalModel, setPaymentCalModel] = useState<boolean>(false);
 
-  const paymentMethods = ["UPI", "Card", "Cash", "In Credit"];
+  const paymentMethods = ["UPI", "Card", "Cash"];
 
   useEffect(() => {
     getAllCategory();
@@ -119,7 +119,7 @@ const PaymentsScreen = () => {
     if (!amount) tempErrors.amount = "Amount is required";
     if (!paymentDate) tempErrors.paymentDate = "Payment date is required";
     if (!selectedPartyId) tempErrors.party = "Please select a party";
-    if (selectedPaymentMethod === "In Credit" && !selectedBank) {
+    if (!selectedBank) {
       tempErrors.bank = "Please select bank";
     }
 
@@ -150,7 +150,7 @@ const PaymentsScreen = () => {
       formData.append("payment_date", paymentDate);
       formData.append(
         "payment_type",
-        selectedPaymentMethod === "In Credit"
+        selectedPaymentMethod !== "Cash"
           ? "credit"
           : selectedPaymentMethod.toLowerCase()
       );
@@ -159,7 +159,7 @@ const PaymentsScreen = () => {
       if (description) {
         formData.append("notes", description);
       }
-      if (selectedPaymentMethod === "In Credit" && selectedBank) {
+      if (selectedPaymentMethod !== "Cash" && selectedBank) {
         formData.append("account", selectedBank.name);
       }
 
@@ -355,7 +355,7 @@ const PaymentsScreen = () => {
         </View>
 
         {/* Select Account */}
-        {selectedPaymentMethod === "In Credit" && (
+        {selectedPaymentMethod !== "Cash" && (
           <>
             <Text style={styles.addBankText}>Select Bank</Text>
             {isLoadingBanks ? (

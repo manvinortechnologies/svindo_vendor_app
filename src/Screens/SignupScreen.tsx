@@ -10,6 +10,7 @@ import {
   Alert,
   Platform,
   PermissionsAndroid,
+  ScrollView,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
@@ -19,6 +20,8 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import Icon from "react-native-vector-icons/Ionicons";
+import { ScaledSheet } from "react-native-size-matters";
+import CustomTextInput from "../CommonComponent/CustomeTextInput";
 
 const SignupScreen: FC<SignUpScreenProps> = () => {
   const navigation =
@@ -43,7 +46,7 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
     try {
       const fullPhoneNumber = `+91${phoneNumber}`;
       const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
-      console.log("confirmaiton --->", confirmation);
+
       setConfirm(confirmation);
       navigation.navigate(HomeNavigation.OTP_SCREEN, {
         confirmAuth: confirmation,
@@ -52,6 +55,8 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
       });
       // Alert.alert('Verification code sent to your phone.');
     } catch (error: any) {
+      console.log("error-->", error);
+
       setError(error.message);
     } finally {
       setLoading(false);
@@ -87,7 +92,7 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
   }, []);
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       {/* Back Button */}
       <TouchableOpacity
         style={styles.backButton}
@@ -111,8 +116,17 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
       <View style={styles.contentWrapper}>
         {/* Phone Number Input */}
         <View style={styles.inputContainer}>
-          <Text style={styles.countryCode}>+91</Text>
-          <TextInput
+          {/* <Text style={styles.countryCode}>+91</Text> */}
+          <CustomTextInput
+            placeholder="Enter Phone Number"
+            keyboardType="phone-pad"
+            value={phoneNumber}
+            onChangeText={(text) => setPhoneNumber(text)}
+            maxLength={10}
+            showLeftIcon={true}
+            leftIcon={<Text style={styles.countryCode}>+91</Text>}
+          />
+          {/* <TextInput
             placeholder="Enter Phone Number"
             keyboardType="phone-pad"
             style={styles.input}
@@ -120,7 +134,7 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
             value={phoneNumber}
             onChangeText={(text) => setPhoneNumber(text)}
             maxLength={10}
-          />
+          /> */}
         </View>
 
         {/* Continue Button */}
@@ -147,24 +161,24 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
         </Text>
       </View>
       <Loading visible={loading} />
-    </View>
+    </ScrollView>
   );
 };
 
 export default SignupScreen;
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#F5F5F5",
   },
   backButton: {
     position: "absolute",
-    top: 20,
+    top: "20@s",
     left: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 25,
+    width: "35@s",
+    height: "35@s",
+    borderRadius: "25@s",
     backgroundColor: "#FF9800",
     alignItems: "center",
     justifyContent: "center",
@@ -179,49 +193,52 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   header: {
-    width: "100%",
-    height: "50%",
+    // width: "100%",
+    // height: "50%",
+    paddingTop: "60@s",
+    paddingBottom: "20@s",
     alignItems: "center",
     justifyContent: "center",
     borderBottomLeftRadius: 60,
     borderBottomRightRadius: 60,
   },
   logo: {
-    width: 120,
-    height: 140,
+    width: "140@s",
+    height: "140@s",
     resizeMode: "contain",
   },
   title: {
-    fontSize: 50,
+    fontSize: "60@s",
     fontWeight: "bold",
     color: "#fff",
+    lineHeight: "60@s",
   },
   subtitle: {
-    fontSize: 22,
+    fontSize: "22@s",
     color: "#fff",
   },
   inputContainer: {
     flexDirection: "row",
-    backgroundColor: "#FFF7DD",
+    // backgroundColor: "#FFF7DD",
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+    // paddingHorizontal: 10,
+    // paddingVertical: 10,
     width: "90%",
     marginBottom: 20,
-    borderWidth: 1,
+    // borderWidth: 1,
     borderColor: "#FCA511",
   },
   countryCode: {
-    fontSize: 16,
+    fontSize: "12@s",
     fontWeight: "bold",
     color: "#555",
-    marginRight: 10,
+    marginLeft: "10@s",
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    fontSize: "12@s",
     color: "#000",
   },
   continueButtonWrapper: {
@@ -256,13 +273,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     width: "100%",
-    marginTop: -50,
+    marginTop: "50@s",
   },
   footer: {
-    position: "absolute",
-    bottom: 30,
-    width: "100%",
+    // position: "absolute",
+    // bottom: "30@s",
+    // width: "100%",
     alignItems: "center",
+    marginBottom: "20@s",
   },
 });
 

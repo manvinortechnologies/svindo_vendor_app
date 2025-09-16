@@ -17,6 +17,8 @@ import Header from "./Header";
 import Bottomnavigation from "./Bottomnavigation";
 import NavigationButton from "./NavigationButton";
 import CustomSwitch from "./CustomSwitch";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { s, ScaledSheet } from "react-native-size-matters";
 
 const screenWidth = Dimensions.get("window").width - 20;
 
@@ -134,26 +136,28 @@ const Storescreen = ({ navigation }: any) => {
   const [selectedType, setSelectedType] = useState("On Shop");
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Header
         title="Store"
         backgroundColor="#FFF"
         textColor="#333"
         borderBottomColor="#ccc"
+        rightIcon={
+          <TouchableOpacity
+            style={{
+              // position: "absolute",
+              // top: s(0),
+              // right: 15,
+              padding: 5,
+              backgroundColor: "#006EB2",
+              borderRadius: 8,
+              marginTop: 10,
+            }}
+          >
+            <Text style={{ color: "#fff" }}>View Store</Text>
+          </TouchableOpacity>
+        }
       />
-
-      <TouchableOpacity
-        style={{
-          position: "absolute",
-          top: 25,
-          right: 15,
-          padding: 5,
-          backgroundColor: "#006EB2",
-          borderRadius: 8,
-        }}
-      >
-        <Text style={{ color: "#fff" }}>View Store</Text>
-      </TouchableOpacity>
 
       <ScrollView>
         {/* Top Header */}
@@ -190,7 +194,7 @@ const Storescreen = ({ navigation }: any) => {
             {/* Store Info */}
             <View style={styles.infoContainer}>
               <View style={styles.editbannner}>
-                <Text>
+                <Text style={{ color: "#000" }}>
                   Edit <Icon name="pencil-outline" size={20} color="#000" />
                   {"\n"}
                   banner
@@ -198,7 +202,7 @@ const Storescreen = ({ navigation }: any) => {
               </View>
               <View style={styles.ratingContainer}>
                 <MaterialIcon name="location-on" size={25} color="#006EB2" />
-                <Text>Location</Text>
+                <Text style={{ color: "#000" }}>Location</Text>
               </View>
               {/* Follow Button and Icons */}
               <View style={styles.actionsContainer}>
@@ -486,19 +490,18 @@ const Storescreen = ({ navigation }: any) => {
           </Text>
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight || 40 : 0,
   },
   banner: {
     width: "100%",
-    height: 800,
+    height: "600@s",
   },
   header: {
     flexDirection: "row",
@@ -596,6 +599,7 @@ const styles = StyleSheet.create({
   storetext: {
     fontWeight: "bold",
     fontSize: 20,
+    color: "#000",
   },
   storeContainer: {
     flexDirection: "row",
@@ -695,6 +699,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "left",
     fontWeight: 600,
+    color: "#000",
   },
   additionalText: {
     fontSize: 16,
@@ -715,6 +720,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 15,
+    color: "#000",
   },
 
   sectionTitleRight: {
@@ -937,9 +943,11 @@ const styles = StyleSheet.create({
     textAlign: "right",
     fontSize: 18,
     fontWeight: 600,
+    color: "#000",
   },
   reviewtext: {
     fontSize: 16,
+    color: "#000",
   },
 
   line: {
@@ -1004,7 +1012,12 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   productTextContainer: { flex: 1 },
-  productName: { fontSize: 10, fontWeight: "bold", textAlign: "left" },
+  productName: {
+    fontSize: 10,
+    fontWeight: "bold",
+    textAlign: "left",
+    color: "#000",
+  },
   productDescription: {
     fontSize: 8,
     textAlign: "left",
@@ -1029,6 +1042,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     fontSize: 10,
     marginTop: 5,
+    color: "#000",
   },
   drafttext: {
     fontSize: 18,

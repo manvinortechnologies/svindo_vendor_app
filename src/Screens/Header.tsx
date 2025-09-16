@@ -1,5 +1,13 @@
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet, ViewStyle, TextStyle } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  ViewStyle,
+  TextStyle,
+} from "react-native";
+import { ScaledSheet } from "react-native-size-matters";
 import Icon from "react-native-vector-icons/Ionicons";
 
 type HeaderProps = {
@@ -9,18 +17,20 @@ type HeaderProps = {
   backgroundColor?: string;
   textColor?: string;
   borderBottomColor?: string;
-  paddingTop ?: number;
+  paddingTop?: number;
+  rightIcon?: any;
 };
 
 {
-    /* we can use like this in another page 
+  /* we can use like this in another page 
     <Header
         title="Orders"
         subtitle="Track your recent purchases"
         backgroundColor="#FFF"
         textColor="#333"
         borderBottomColor="#ccc"
-      /> */}
+      /> */
+}
 
 const Header: React.FC<HeaderProps> = ({
   title,
@@ -29,27 +39,40 @@ const Header: React.FC<HeaderProps> = ({
   backgroundColor = "#fff",
   textColor = "#000",
   borderBottomColor = "#ddd",
-  paddingTop=0,
+  paddingTop = 0,
+  rightIcon = false,
 }) => {
   return (
-    <View style={[styles.container, { backgroundColor, borderBottomColor , paddingTop}]}>
-      <View>
-        <Text style={[styles.title, { color: textColor }]}>{title}</Text>
-        {subtitle && <Text style={[styles.subtitle, { color: textColor }]}>{subtitle}</Text>}
+    <View
+      style={[
+        styles.container,
+        { backgroundColor, borderBottomColor, paddingTop },
+      ]}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <View>
+          <Text style={[styles.title, { color: textColor }]}>{title}</Text>
+          {subtitle && (
+            <Text style={[styles.subtitle, { color: textColor }]}>
+              {subtitle}
+            </Text>
+          )}
+        </View>
+        <TouchableOpacity onPress={onInfoPress}>
+          <Icon name="information-circle-outline" size={22} color={textColor} />
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity onPress={onInfoPress}>
-        <Icon name="information-circle-outline" size={22} color={textColor} />
-      </TouchableOpacity>
+      {rightIcon && rightIcon}
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent:"flex-start",
-    paddingHorizontal: 15,
+    justifyContent: "space-between",
+    paddingHorizontal: "12@s",
     paddingVertical: 10,
     borderBottomWidth: 1,
   },
@@ -65,4 +88,3 @@ const styles = StyleSheet.create({
 });
 
 export default Header;
-

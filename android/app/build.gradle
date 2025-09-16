@@ -120,6 +120,10 @@ dependencies {
     implementation platform('com.google.firebase:firebase-bom:33.3.0')
     implementation("com.facebook.react:react-android")
     implementation project(':react-native-vector-icons')
+    
+    // Google ML Kit Barcode Scanning
+    implementation 'com.google.mlkit:barcode-scanning:17.2.0'
+    implementation 'com.google.mlkit:vision-common:17.3.0'
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")

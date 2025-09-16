@@ -1,21 +1,22 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   View,
   Text,
-  Modal,
   FlatList,
   TextInput,
   TouchableOpacity,
   Image,
   StyleSheet,
-  SafeAreaView,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import { HomeNavigation } from "../constants/app-routes.constants";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { ScaledSheet } from "react-native-size-matters";
 
 // Constants
 const INITIAL_QUANTITY = 1;
@@ -28,6 +29,7 @@ interface Product {
   desc: string;
   price: number;
   image: string;
+  quantity?: number;
 }
 
 interface CartItem {
@@ -35,15 +37,24 @@ interface CartItem {
   quantity: number;
 }
 
-interface ProductSelectionModalProps {
-  visible: boolean;
-  onClose: () => void;
-  setSelectedProducts: (products: Product[]) => void;
-  selectedProducts: Product[];
-}
+type RootStackParamList = {
+  ProductSelection: {
+    selectedProducts: Product[];
+    navigateScreen: string;
+  };
+};
+
+type ProductSelectionRouteProp = RouteProp<
+  RootStackParamList,
+  "ProductSelection"
+>;
+type ProductSelectionNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  "ProductSelection"
+>;
 
 /**
- * ProductSelectionModal - Modal for selecting products and managing quantities
+ * ProductSelectionScreen - Screen for selecting products and managing quantities
  * Features:
  * - Product search and filtering
  * - Quantity management with increment/decrement buttons
@@ -51,23 +62,32 @@ interface ProductSelectionModalProps {
  * - Cart state management
  * - Integration with parent component's selected products
  */
-const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
-  visible,
-  onClose,
-  setSelectedProducts,
-  selectedProducts,
-}) => {
-  const navigation = useNavigation();
+const ProductSelectionScreen: React.FC = () => {
+  const navigation = useNavigation<ProductSelectionNavigationProp>();
+  const route = useRoute<ProductSelectionRouteProp>();
+  const { selectedProducts = [], navigateScreen } = route.params || {};
+
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchText, setSearchText] = useState("");
   const [productList, setProductList] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
-    if (visible) {
-      fetchProducts();
+    fetchProducts();
+  }, []);
+
+  // Initialize cart with selectedProducts quantities
+  useEffect(() => {
+    if (selectedProducts.length > 0) {
+      const initialCart = selectedProducts
+        .filter((product) => product.quantity && product.quantity > 0)
+        .map((product) => ({
+          id: product.id,
+          quantity: product.quantity || 0,
+        }));
+      setCart(initialCart);
     }
-  }, [visible]);
+  }, [selectedProducts]);
 
   const fetchProducts = async () => {
     try {
@@ -159,14 +179,32 @@ const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
    * Filters products based on search text
    * @returns Filtered array of products
    */
+  // Merge productList with selectedProducts to show accurate quantities
+  const mergedProductList = useMemo(() => {
+    const productMap = new Map(productList.map((p) => [p.id, p]));
+
+    // Update products with quantities from selectedProducts
+    selectedProducts.forEach((selectedProduct) => {
+      const existing = productMap.get(selectedProduct.id);
+      if (existing) {
+        productMap.set(selectedProduct.id, {
+          ...existing,
+          quantity: selectedProduct.quantity || 0,
+        });
+      }
+    });
+
+    return Array.from(productMap.values());
+  }, [productList, selectedProducts]);
+
   const filteredProducts = useCallback(() => {
     if (!searchText.trim()) {
-      return productList;
+      return mergedProductList;
     }
-    return productList.filter((product) =>
+    return mergedProductList.filter((product: Product) =>
       product.name.toLowerCase().includes(searchText.toLowerCase())
     );
-  }, [productList, searchText]);
+  }, [mergedProductList, searchText]);
 
   const handleSearchChange = useCallback((text: string) => {
     setSearchText(text);
@@ -206,6 +244,7 @@ const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
             <Text style={styles.qtyBtn}>-</Text>
           </TouchableOpacity>
           <TextInput
+            key={`qty-${item.id}-${quantity}`}
             style={styles.qtyInput}
             value={quantity.toString()}
             onChangeText={(text) => handleQuantityChange(item.id, text)}
@@ -223,7 +262,10 @@ const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
 
   const renderItem = useCallback(
     ({ item }: { item: Product }) => {
-      const quantity = findCartItem(item.id)?.quantity || 0;
+      // Prioritize cart quantity over item quantity for real-time updates
+      const cartQuantity = findCartItem(item.id)?.quantity;
+      const quantity =
+        cartQuantity !== undefined ? cartQuantity : item.quantity || 0;
 
       return (
         <View style={styles.card}>
@@ -237,111 +279,118 @@ const ProductSelectionModal: React.FC<ProductSelectionModalProps> = ({
         </View>
       );
     },
-    [findCartItem, renderQuantityControls]
+    [findCartItem, renderQuantityControls, cart]
   );
 
   const convertCartToProducts = useCallback((): Product[] => {
     return cart
       .map((cartItem) => {
-        const product = productList.find((item) => item.id === cartItem.id);
+        const product = mergedProductList.find(
+          (item: Product) => item.id === cartItem.id
+        );
         return product ? { ...product, quantity: cartItem.quantity } : null;
       })
-      .filter((product): product is Product => product !== null);
-  }, [cart, productList]);
+      .filter((product) => product !== null) as Product[];
+  }, [cart, mergedProductList]);
 
   const mergeProductsWithCart = useCallback(
     (existingProducts: Product[], cartProducts: Product[]): Product[] => {
-      const cartIds = cart.map((cartItem) => cartItem.id);
-      const filteredExisting = existingProducts.filter((product) =>
-        cartIds.includes(product.id)
-      );
+      // Create a map of existing products for quick lookup
+      const existingMap = new Map(existingProducts.map((p) => [p.id, p]));
 
+      // Update existing products with cart quantities
       cartProducts.forEach((cartProduct) => {
-        const existingIndex = filteredExisting.findIndex(
-          (product) => product.id === cartProduct.id
-        );
-        if (existingIndex >= 0) {
-          filteredExisting[existingIndex] = cartProduct;
+        const existing = existingMap.get(cartProduct.id);
+        if (existing) {
+          existingMap.set(cartProduct.id, {
+            ...existing,
+            quantity: cartProduct.quantity,
+          });
         } else {
-          filteredExisting.push(cartProduct);
+          existingMap.set(cartProduct.id, cartProduct);
         }
       });
 
-      return filteredExisting;
+      return Array.from(existingMap.values());
     },
-    [cart]
+    []
   );
 
   const handleProceed = useCallback(() => {
-    setSelectedProducts((prev: Product[]) => {
-      const cartProducts = convertCartToProducts();
-      return mergeProductsWithCart(prev, cartProducts);
+    const cartProducts = convertCartToProducts();
+    const mergedProducts = mergeProductsWithCart(
+      selectedProducts,
+      cartProducts
+    );
+
+    navigation.replace(navigateScreen as any, {
+      selectedProducts: mergedProducts,
     });
-    onClose();
   }, [
     convertCartToProducts,
     mergeProductsWithCart,
-    setSelectedProducts,
-    onClose,
+    selectedProducts,
+    navigateScreen,
+    navigation,
   ]);
 
+  const handleGoBack = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
+
   return (
-    <Modal visible={visible} animationType="slide">
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={onClose}>
-            <Icon name="arrow-back" size={24} color="#000" />
-          </TouchableOpacity>
-          <TextInput
-            placeholder="Search Product/Service"
-            placeholderTextColor="#ccc"
-            style={styles.searchInput}
-            value={searchText}
-            onChangeText={handleSearchChange}
-          />
-        </View>
-
-        <FlatList
-          data={filteredProducts()}
-          numColumns={2}
-          columnWrapperStyle={{ justifyContent: "space-between" }}
-          contentContainerStyle={styles.list}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderItem}
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={handleGoBack}>
+          <Icon name="arrow-back" size={24} color="#000" />
+        </TouchableOpacity>
+        <TextInput
+          placeholder="Search Product/Service"
+          placeholderTextColor="#ccc"
+          style={styles.searchInput}
+          value={searchText}
+          onChangeText={handleSearchChange}
         />
+      </View>
 
-        <View style={styles.footer}>
-          <View style={styles.scanRow}>
-            <TouchableOpacity style={styles.scanBtn}>
-              <Icon name="qr-code-scanner" size={20} color="#fff" />
-              <Text style={styles.scanText}>Scan</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.addProductBtn}
-              onPress={() =>
-                navigation.navigate(HomeNavigation.ADD_PRODUCT_SCREEN)
-              }
-            >
-              <Text style={styles.addProductText}>Add Product</Text>
-            </TouchableOpacity>
-          </View>
+      <FlatList
+        data={filteredProducts()}
+        numColumns={2}
+        columnWrapperStyle={{ justifyContent: "space-between" }}
+        contentContainerStyle={styles.list}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={renderItem}
+      />
 
-          <TouchableOpacity style={styles.proceedBtn} onPress={handleProceed}>
-            <Text style={styles.proceedText}>Proceed</Text>
+      <View style={styles.footer}>
+        <View style={styles.scanRow}>
+          <TouchableOpacity style={styles.scanBtn}>
+            <Icon name="qr-code-scanner" size={20} color="#fff" />
+            <Text style={styles.scanText}>Scan</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.addProductBtn}
+            onPress={() =>
+              navigation.navigate(HomeNavigation.ADD_PRODUCT_SCREEN as any)
+            }
+          >
+            <Text style={styles.addProductText}>Add Product</Text>
           </TouchableOpacity>
         </View>
-        <Loading visible={isLoading} />
-      </SafeAreaView>
-    </Modal>
+
+        <TouchableOpacity style={styles.proceedBtn} onPress={handleProceed}>
+          <Text style={styles.proceedText}>Proceed</Text>
+        </TouchableOpacity>
+      </View>
+      <Loading visible={isLoading} />
+    </SafeAreaView>
   );
 };
 
-export default ProductSelectionModal;
+export default ProductSelectionScreen;
 
-// Keep your same styles from the previous code
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff", padding: 10 },
+const styles = ScaledSheet.create({
+  container: { flex: 1, backgroundColor: "#fff", paddingHorizontal: "10@s" },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -464,6 +513,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     width: "50%",
     alignSelf: "center",
+    marginBottom: "10@s",
   },
   proceedText: {
     fontWeight: "bold",

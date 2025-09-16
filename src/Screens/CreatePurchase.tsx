@@ -26,9 +26,10 @@ import CalendarModal from "../Modals/CalendarModal";
 import CustomButton from "../CommonComponent/CustomeButton";
 import MainContainer from "../CommonComponent/MainContainer";
 import { Alert } from "react-native";
-import ProductSelectionModal from "../Modals/ProductSelectionModal";
 import OptionInput from "../CommonComponent/OptionalInputs";
 import { API_ROUTES } from "../constants/api-routes.constants";
+import { HomeNavigation } from "../constants/app-routes.constants";
+import { useRoute, RouteProp } from "@react-navigation/native";
 import moment from "moment";
 import CustomDropdown, {
   DropDownOption,
@@ -42,7 +43,26 @@ interface Product {
   image: string;
 }
 
+interface Product {
+  id: number;
+  name: string;
+  desc: string;
+  price: number;
+  purchase_price?: number;
+  quantity: number;
+  image: string;
+}
+
+type RootStackParamList = {
+  CreatePurchase: {
+    selectedProducts?: Product[];
+  };
+};
+
+type CreatePurchaseRouteProp = RouteProp<RootStackParamList, "CreatePurchase">;
+
 const CreatePurchase = ({ navigation }: any) => {
+  const route = useRoute<CreatePurchaseRouteProp>();
   const [selectedPayment, setSelectedPayment] = useState("credit");
   const [selectedAdvanceType, setSelectedAdvanceType] = useState("Bank");
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -91,7 +111,7 @@ const CreatePurchase = ({ navigation }: any) => {
   const [deliveryChargesModel, setDeliveryChargesModel] =
     useState<boolean>(false);
   const [showProductModal, setShowProductModal] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState([]);
+  const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
 
   const [formData, setFormData] = useState({
     dispatchAddress: "",
@@ -118,20 +138,6 @@ const CreatePurchase = ({ navigation }: any) => {
     if (!supplierDate)
       tempErrors.supplierDate = "Supplier invoice date required";
     if (!serialNo.trim()) tempErrors.serialNo = "Serial number is required";
-
-    // ✅ check discount Amount
-    if (
-      !discount.amount ||
-      Number(discount.amount) <= 0 ||
-      !discount.pr ||
-      Number(discount.pr) < 0
-    ) {
-      tempErrors.discount = `Discount amount ${
-        !discount.pr || Number(discount.pr) < 0
-          ? "and Discount percentage "
-          : ""
-      }must be a valid positive number`;
-    }
 
     if (selectedPayment === "In Credit") {
       if (!dueDate) {
@@ -189,6 +195,13 @@ const CreatePurchase = ({ navigation }: any) => {
   useEffect(() => {
     getInitialData();
   }, []);
+
+  // Handle selectedProducts from ProductSelectionScreen
+  useEffect(() => {
+    if (route.params?.selectedProducts) {
+      setSelectedProducts(route.params.selectedProducts);
+    }
+  }, [route.params?.selectedProducts]);
 
   const getInitialData = async () => {
     try {
@@ -362,7 +375,15 @@ const CreatePurchase = ({ navigation }: any) => {
                 </Text>
                 <TouchableOpacity
                   style={styles.selector}
-                  onPress={() => setShowProductModal(true)}
+                  onPress={() => {
+                    navigation.navigate(
+                      HomeNavigation.PRODUCT_SELECTION as any,
+                      {
+                        selectedProducts: selectedProducts,
+                        navigateScreen: HomeNavigation.CREATE_PURCHASE,
+                      }
+                    );
+                  }}
                 >
                   <Text style={styles.selectorText}>
                     {selectedProducts.length ? "Add +" : "+ Select Products"}
@@ -1010,12 +1031,6 @@ const CreatePurchase = ({ navigation }: any) => {
                 initialDate={supplierDate}
                 onClose={() => setSupplierDateCallModel(false)}
                 onSelect={(e) => setSupplierDate(e)}
-              />
-              <ProductSelectionModal
-                visible={showProductModal}
-                onClose={() => setShowProductModal(false)}
-                selectedProducts={selectedProducts}
-                setSelectedProducts={setSelectedProducts}
               />
 
               {/* Purchase Plan Info Modal */}

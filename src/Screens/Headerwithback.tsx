@@ -1,7 +1,8 @@
-import React, { ReactNode } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useNavigation } from '@react-navigation/native';
+import React, { ReactNode } from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import { useSmartBackNavigationV2 } from "../hooks/useSmartBackNavigationV2";
+import { useSmartBackNavigation } from "../hooks/useSmartBackNavigation";
 
 interface HeaderProps {
   title: string;
@@ -9,11 +10,10 @@ interface HeaderProps {
 }
 
 const Headerwithback: React.FC<HeaderProps> = ({ title, rightIcons = [] }) => {
-  const navigation = useNavigation();
-
+  const { smartGoBack } = useSmartBackNavigation();
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+      <TouchableOpacity onPress={smartGoBack} style={styles.backButton}>
         <Icon name="chevron-left" size={20} color="#fff" />
       </TouchableOpacity>
 
@@ -33,33 +33,33 @@ const Headerwithback: React.FC<HeaderProps> = ({ title, rightIcons = [] }) => {
 const styles = StyleSheet.create({
   container: {
     height: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     borderBottomWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: '#fff',
-    position: 'relative',
+    borderColor: "#ddd",
+    backgroundColor: "#fff",
+    position: "relative",
   },
   backButton: {
-    position: 'absolute',
+    position: "absolute",
     left: 20,
-    top: '50%',
+    top: "50%",
     transform: [{ translateY: -16 }],
-    backgroundColor: '#FCA311',
+    backgroundColor: "#FCA311",
     borderRadius: 20,
     padding: 8,
   },
   title: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
+    fontWeight: "bold",
+    color: "#000",
   },
   rightIconsContainer: {
-    position: 'absolute',
+    position: "absolute",
     right: 20,
-    top: '50%',
-    flexDirection: 'row',
-    alignItems: 'center',
+    top: "50%",
+    flexDirection: "row",
+    alignItems: "center",
     transform: [{ translateY: -10 }],
   },
   rightIcon: {

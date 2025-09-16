@@ -1,10 +1,20 @@
-import React from "react";
+import React, { useEffect } from "react";
 import AppNavigation from "./src/navigation/AppNavigation";
 import { Provider } from "react-redux";
 import { store } from "./src/services/store/api-store";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import FirebaseMessagingService from "./src/services/firebase-messaging";
+import { StorageUtils } from "./src/utils/storage";
 
 const App = () => {
+  useEffect(() => {
+    // Initialize Firebase Cloud Messaging
+    const isAuthenticated = StorageUtils.isAuthenticated();
+    if (isAuthenticated) {
+      FirebaseMessagingService.initialize();
+    }
+  }, []);
+
   return (
     <Provider store={store}>
       <GestureHandlerRootView style={{ flex: 1 }}>

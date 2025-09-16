@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,14 +6,77 @@ import {
   TouchableOpacity,
   Platform,
   StatusBar,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import Headerwithback from "./Headerwithback";
 import { SafeAreaView } from "react-native-safe-area-context";
+import api from "../services/api/api";
+import { API_ROUTES } from "../constants/api-routes.constants";
+import { StorageUtils } from "../utils/storage";
+import { useNavigation } from "@react-navigation/native";
+import { HomeNavigation } from "../constants/app-routes.constants";
 
 const DeleteAccountScreen = () => {
+  const navigation = useNavigation();
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleDelete = () => {
-    // Add delete logic here
-    // alert('Account deletion requested.');
+    Alert.alert(
+      "Confirm Account Deletion",
+      "Are you absolutely sure you want to delete your account? This action cannot be undone and all your data will be permanently lost.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete Account",
+          style: "destructive",
+          onPress: confirmDeleteAccount,
+        },
+      ]
+    );
+  };
+
+  const confirmDeleteAccount = async () => {
+    try {
+      setIsLoading(true);
+
+      const response = await api.delete(API_ROUTES.deleteUser);
+
+      if (response.status === 200 || response.status === 204) {
+        // Clear all stored data
+        StorageUtils.clearAll();
+
+        Alert.alert(
+          "Account Deleted",
+          "Your account has been successfully deleted. You will be redirected to the welcome screen.",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                (navigation as any).reset({
+                  index: 0,
+                  routes: [{ name: HomeNavigation.WELCOME_SCREEN }],
+                });
+              },
+            },
+          ]
+        );
+      } else {
+        throw new Error("Failed to delete account");
+      }
+    } catch (error) {
+      console.error("Delete account error:", error);
+      Alert.alert(
+        "Error",
+        "Failed to delete your account. Please try again later or contact support if the problem persists.",
+        [{ text: "OK" }]
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -40,8 +103,19 @@ const DeleteAccountScreen = () => {
           </Text>
         </View>
 
-        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
-          <Text style={styles.deleteButtonText}>Delete My Account</Text>
+        <TouchableOpacity
+          style={[styles.deleteButton, isLoading && styles.disabledButton]}
+          onPress={handleDelete}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#fff" />
+              <Text style={styles.deleteButtonText}>Deleting...</Text>
+            </View>
+          ) : (
+            <Text style={styles.deleteButtonText}>Delete My Account</Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -93,5 +167,13 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 15,
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

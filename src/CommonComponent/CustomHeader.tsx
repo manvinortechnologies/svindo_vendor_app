@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { s, ScaledSheet } from "react-native-size-matters";
 import Ionicons from "react-native-vector-icons/Ionicons";
+import { useSmartBackNavigationV2 } from "../hooks/useSmartBackNavigationV2";
 
 interface CustomHeaderProps {
   title: string;
@@ -22,13 +23,12 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
   containerStyle,
 }) => {
   const navigation = useNavigation();
+  const { smartGoBack } = useSmartBackNavigationV2();
+
   return (
     <View style={[styles.header, containerStyle]}>
       {/* Left: Back Button */}
-      <TouchableOpacity
-        onPress={() => navigation.goBack()}
-        style={styles.backButton}
-      >
+      <TouchableOpacity onPress={smartGoBack} style={styles.backButton}>
         <Ionicons name="chevron-back" size={s(18)} color="#fff" />
       </TouchableOpacity>
 

@@ -45,7 +45,6 @@ const VendorLedger = ({ navigation, route }: any) => {
   const vendorId = route?.params?.vendor?.id;
 
   useEffect(() => {
-    console.log("vendorId", vendorId);
     if (vendorId) {
       fetchLedgerData();
     }

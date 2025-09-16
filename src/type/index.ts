@@ -22,6 +22,7 @@ export type THomeNavigation = {
   [HomeNavigation.ORDERPRODUCTDETAILS]: undefined;
   [HomeNavigation.PRODUCTDETAILS]: undefined;
   [HomeNavigation.STOCK_SCREEN]: undefined;
+  [HomeNavigation.VARIANTS_SCREEN]: undefined;
   [HomeNavigation.CREATE_PRODUCT]: undefined;
   [HomeNavigation.ADD_PRODUCT_SCREEN]: undefined;
   [HomeNavigation.STORE_SCREEN]: undefined;
@@ -122,6 +123,9 @@ export type THomeNavigation = {
   [HomeNavigation.SELECT_ADDONS]: undefined;
   [HomeNavigation.PRODUCT_ADDED_SUCCESS]: undefined;
   [HomeNavigation.CREATE_ADDONS]: undefined;
+  [HomeNavigation.SCAN_BARCODE]: undefined;
+  [HomeNavigation.PRODUCT_SELECTION]: undefined;
+  [HomeNavigation.TRANSACTION_MESSAGES]: undefined;
 };
 
 // export type TTabNavigation = {

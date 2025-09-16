@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
+import { s } from "react-native-size-matters";
 
 export default function GroupedBars() {
   const barData = [
@@ -63,7 +64,10 @@ export default function GroupedBars() {
     },
     { value: 30, frontColor: "#ED6665" },
   ];
-
+  const maxValue = barData.reduce(
+    (acc, curr) => (acc = acc > curr.value ? acc : curr.value),
+    0
+  );
   const renderTitle = () => {
     return (
       <View
@@ -100,29 +104,25 @@ export default function GroupedBars() {
   };
 
   return (
-    <View
-      style={{
-        backgroundColor: "#fff",
-        paddingBottom: 5,
-        borderRadius: 10,
-      }}
-    >
+    <>
       <BarChart
         data={barData}
-        barWidth={8}
-        spacing={24}
+        barWidth={s(8)}
+        // spacing={s(20)}
         roundedTop
-        roundedBottom
+        // roundedBottom
         hideRules
         xAxisThickness={0}
         yAxisThickness={0}
         yAxisTextStyle={{ color: "gray" }}
         noOfSections={5}
-        maxValue={75}
-        height={140}
-        width={380}
+        maxValue={maxValue}
+        height={s(130)}
+        // backgroundColor="red"
+        // width={s(280)}
+        // adjustToWidth
       />
       {renderTitle()}
-    </View>
+    </>
   );
 }

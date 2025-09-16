@@ -44,26 +44,28 @@ const ProductAddedSuccess: React.FC<ProductAddedSuccessProps> = ({
   const [isSpotlightEnabled, setIsSpotlightEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const handleAddVariant = () => {
+    navigation.navigate(HomeNavigation.ADD_PRODUCT_SCREEN, {
+      productId: payload.parent || payload.id,
+    });
     // Navigate to add variant screen
     console.log("Add Variant pressed");
+    console.log("payload--->", payload);
   };
 
   const handleContinue = async () => {
     // Navigate back to home or product list
     try {
       setIsLoading(true);
-      const res = await api.post("vendor/product/", payload);
       if (isSpotlightEnabled) {
         const payloads = {
-          product: parseInt(res.data.id),
+          product: parseInt(payload.id),
           discount_tag: "",
           boost: isSpotlightEnabled,
           budget: payload.sales_price,
         };
         const response = await api.post(API_ROUTES.spotlightProduct, payloads);
       }
-      // const res = await api.post("vendor/product/", payload);
-      navigation.navigate(HomeNavigation.BOTTOM_NAVIGATION);
+      navigation.navigate({ name: HomeNavigation.BOTTOM_NAVIGATION });
     } catch (error) {
       console.log("error--->", error);
     } finally {
@@ -121,12 +123,14 @@ const ProductAddedSuccess: React.FC<ProductAddedSuccessProps> = ({
 
         {/* Action Buttons */}
         <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.addVariantButton}
-            onPress={handleAddVariant}
-          >
-            <Text style={styles.buttonText}>Add Variant</Text>
-          </TouchableOpacity>
+          {payload.product_type === "product" && (
+            <TouchableOpacity
+              style={styles.addVariantButton}
+              onPress={handleAddVariant}
+            >
+              <Text style={styles.buttonText}>Add Variant</Text>
+            </TouchableOpacity>
+          )}
 
           <TouchableOpacity
             style={styles.continueButton}
@@ -231,6 +235,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 12,
+    marginTop: "auto",
   },
   addVariantButton: {
     flex: 1,

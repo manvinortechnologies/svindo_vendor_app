@@ -8,8 +8,12 @@ import {
   FlatList,
   StyleSheet,
   Dimensions,
+  Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
+import { HomeNavigation } from "../constants/app-routes.constants";
+import { useNavigation } from "@react-navigation/native";
 
 const { width } = Dimensions.get("window");
 
@@ -26,6 +30,7 @@ const ImeiModal: React.FC<ImeiModalProps> = ({
   imeiList,
   setImeiList,
 }) => {
+  const navigation = useNavigation();
   const [inputValue, setInputValue] = useState("");
 
   const handleAdd = () => {
@@ -41,13 +46,25 @@ const ImeiModal: React.FC<ImeiModalProps> = ({
     setImeiList(updatedList);
   };
 
+  const handleScanBarcode = () => {
+    // Navigate to barcode scanner with callback function
+    navigation.navigate(
+      HomeNavigation.SCAN_BARCODE as never,
+      {
+        onScanComplete: (scannedData: string, scannedType: string) => {
+          setInputValue(scannedData);
+        },
+      } as never
+    );
+  };
+
   return (
     <Modal visible={visible} transparent animationType="slide">
       <View style={styles.modalOverlay}>
         <View style={styles.modalContainer}>
           <Text style={styles.title}>Add IMEI / Serial No</Text>
 
-          {/* Input + Add Button */}
+          {/* Input + Add Button + Scan Button */}
           <View style={styles.inputRow}>
             <TextInput
               placeholder="Enter serial number"
@@ -57,6 +74,16 @@ const ImeiModal: React.FC<ImeiModalProps> = ({
               style={styles.textInput}
               autoCapitalize="characters"
             />
+            <TouchableOpacity
+              style={styles.scanButton}
+              onPress={handleScanBarcode}
+            >
+              <MaterialCommunityIcons
+                name="barcode-scan"
+                size={20}
+                color="#FCA311"
+              />
+            </TouchableOpacity>
             <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
               <Text style={styles.addButtonText}>Add +</Text>
             </TouchableOpacity>
@@ -120,9 +147,20 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    marginRight: 10,
+    marginRight: 8,
     backgroundColor: "#FFF8EB",
     color: "#000",
+  },
+  scanButton: {
+    backgroundColor: "#FFF8EB",
+    borderWidth: 1,
+    borderColor: "#FCA311",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginRight: 8,
+    alignItems: "center",
+    justifyContent: "center",
   },
   addButton: {
     backgroundColor: "#FCA311",

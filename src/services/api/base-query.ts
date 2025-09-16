@@ -3,20 +3,19 @@ import {
   FetchArgs,
   FetchBaseQueryError,
   fetchBaseQuery,
-} from '@reduxjs/toolkit/query';
-import { APP_CONSTANTS } from '../../constants/app.constants';
-import { storage } from '../../utils/storage';
+} from "@reduxjs/toolkit/query";
+import { APP_CONSTANTS } from "../../constants/app.constants";
+import { StorageUtils } from "../../utils/storage";
 
 const getTokenFromStorage = async () => {
   try {
-    const token = storage.getString('accessToken');
+    const token = StorageUtils.getAccessToken();
     return token;
   } catch (error) {
-    console.error('Failed to fetch token from storage', error);
+    console.error("Failed to fetch token from storage", error);
     return null;
   }
 };
-
 
 export const baseQuery: BaseQueryFn<
   string | FetchArgs,
@@ -28,13 +27,11 @@ export const baseQuery: BaseQueryFn<
     baseUrl: APP_CONSTANTS.API_BASE_URL,
     prepareHeaders: (headers) => {
       if (token) {
-        headers.set('Authorization', `Bearer ${token}`);
+        headers.set("Authorization", `Bearer ${token}`);
       }
       return headers;
     },
   });
-  console.log('Request:',token, args);
+  console.log("Request:", token, args);
   return query(args, api, extraOptions);
 };
-
-

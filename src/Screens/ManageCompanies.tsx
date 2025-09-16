@@ -13,6 +13,7 @@ import Loading from "../CommonComponent/Loading";
 import { Company } from "../type/Company";
 import api from "../services/api/api";
 import { ScaledSheet } from "react-native-size-matters";
+import { API_ROUTES } from "../constants/api-routes.constants";
 
 // interface Company {
 //   id: number;
@@ -35,9 +36,12 @@ const ManageCompanies = ({ navigation }: any) => {
   const getAllCompanyData = async () => {
     try {
       setIsLoading(true);
-      const res = await api.get("vendor/company-profile/");
-      setCompaniesLst(res.data);
+      const res = await api.get(API_ROUTES.companyProfle);
+      if (res.data) {
+        setCompaniesLst(res.data);
+      }
     } catch (error) {
+      console.error("Error fetching company data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -52,21 +56,21 @@ const ManageCompanies = ({ navigation }: any) => {
     navigation.navigate("CompanyProfile", { id: id });
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     console.log("delete id--->", id);
     try {
       setIsLoading(true);
-      const apiEnd = `vendor/company-profile/${id}/`;
-      const res = api.delete(apiEnd);
+      const apiEnd = `${API_ROUTES.companyProfle}/${id}/`;
+      const res = await api.delete(apiEnd);
       console.log("res-->", res);
 
-      getAllCompanyData();
+      // Refresh the list after successful deletion
+      await getAllCompanyData();
     } catch (error) {
+      console.error("Error deleting company:", error);
     } finally {
       setIsLoading(false);
     }
-
-    // Handle delete company
   };
 
   const renderCompany = ({ item }: { item: Company }) => (

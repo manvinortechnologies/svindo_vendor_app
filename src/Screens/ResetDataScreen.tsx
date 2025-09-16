@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -6,14 +6,93 @@ import {
   TouchableOpacity,
   Platform,
   StatusBar,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import Headerwithback from "./Headerwithback";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
+import { StorageUtils } from "../utils/storage";
+import { HomeNavigation } from "../constants/app-routes.constants";
+import api from "../services/api/api";
+import { API_ROUTES } from "../constants/api-routes.constants";
 
 const ResetDataScreen = () => {
+  const navigation = useNavigation();
+  const [isResetting, setIsResetting] = useState(false);
+
   const handleReset = () => {
-    // Add reset logic here
-    // alert('Data reset requested.');
+    Alert.alert(
+      "Confirm Reset",
+      "Are you absolutely sure you want to reset all data? \nThis action cannot be undone and will clear all your app data.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Reset",
+          style: "destructive",
+          onPress: confirmReset,
+        },
+      ]
+    );
+  };
+
+  const confirmReset = async () => {
+    try {
+      setIsResetting(true);
+
+      // Get company profile ID from storage
+      const businessProfile = StorageUtils.getBusinessProfile();
+      let companyId = null;
+
+      if (businessProfile) {
+        try {
+          const profileData = JSON.parse(businessProfile);
+          companyId = profileData.id || profileData.company_id;
+        } catch (parseError) {
+          console.error("Error parsing business profile:", parseError);
+        }
+      }
+
+      // Call API to delete company profile if ID exists
+      if (companyId) {
+        try {
+          await api.delete(`${API_ROUTES.companyProfle}/${companyId}/`);
+          console.log("Company profile deleted successfully");
+        } catch (apiError) {
+          console.error("Error deleting company profile:", apiError);
+          // Continue with reset even if API call fails
+        }
+      }
+
+      // Explicitly remove business profile from storage
+      StorageUtils.removeBusinessProfile();
+
+      // Show success message
+      Alert.alert(
+        "Data Reset Complete",
+        "All data has been cleared successfully. You will be redirected to the signup screen.",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              // Reset navigation to SignUpDetails
+              (navigation as any).reset({
+                index: 0,
+                routes: [{ name: HomeNavigation.SIGNUP_DETAIL_SCREEN }],
+              });
+            },
+          },
+        ]
+      );
+    } catch (error) {
+      console.error("Error resetting data:", error);
+      Alert.alert("Error", "Failed to reset data. Please try again.");
+    } finally {
+      setIsResetting(false);
+    }
   };
 
   return (
@@ -38,8 +117,19 @@ const ResetDataScreen = () => {
           </Text>
         </View>
 
-        <TouchableOpacity style={styles.resetButton} onPress={handleReset}>
-          <Text style={styles.resetButtonText}>Reset data</Text>
+        <TouchableOpacity
+          style={[styles.resetButton, isResetting && styles.disabledButton]}
+          onPress={handleReset}
+          disabled={isResetting}
+        >
+          {isResetting ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color="#fff" />
+              <Text style={styles.resetButtonText}>Resetting...</Text>
+            </View>
+          ) : (
+            <Text style={styles.resetButtonText}>Reset data</Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -90,5 +180,13 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 15,
+  },
+  disabledButton: {
+    opacity: 0.6,
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
 });

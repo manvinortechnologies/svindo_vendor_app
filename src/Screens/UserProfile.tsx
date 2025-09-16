@@ -139,13 +139,17 @@ const UserProfile = ({ navigation }: any) => {
         <View style={styles.rowButtons}>
           <TouchableOpacity
             style={styles.outlinedButton}
-            onPress={() => navigation.navigate("ResetDataScreen")}
+            onPress={() =>
+              navigation.navigate(HomeNavigation.RESET_DATA_SCREEN)
+            }
           >
             <Text style={styles.outlinedButtonText}>Reset Data</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.outlinedButton}
-            onPress={() => navigation.navigate("DeleteAccountScreen")}
+            onPress={() =>
+              navigation.navigate(HomeNavigation.DELETE_ACCOUNT_SCREEN)
+            }
           >
             <Text style={styles.outlinedButtonText}>Delete Account</Text>
           </TouchableOpacity>

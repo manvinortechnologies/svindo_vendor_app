@@ -19,25 +19,25 @@ import { HomeNavigation } from "../constants/app-routes.constants";
 
 // ✅ Define the type for the navigation stack
 type RootStackParamList = {
-  OnlineStore: undefined;
-  OnlineSaleWallet: undefined;
-  AdWallet: undefined;
-  BoostSales: undefined;
-  CustomerFeedback: undefined;
-  Chats: undefined;
-  DownloadQRCode: undefined;
-  WhatsAppMessage: undefined;
-  SmsScreen: undefined;
-  Emails: undefined;
-  ManageDelivery: undefined;
-  TransactionMessages: undefined;
-  MarketingTools: undefined;
+  [HomeNavigation.ONLINE_STORE]: undefined;
+  [HomeNavigation.ONLINE_SALE_WALLET]: undefined;
+  [HomeNavigation.AD_WALLET]: undefined;
+  [HomeNavigation.BOOST_SALES]: undefined;
+  [HomeNavigation.CUSTOMER_FEEDBACK]: undefined;
+  [HomeNavigation.CHATS]: undefined;
+  [HomeNavigation.DOWNLOAD_QR_CODE]: undefined;
+  [HomeNavigation.WHATSAPP_MESSAGE]: undefined;
+  [HomeNavigation.SMS_SCREEN]: undefined;
+  [HomeNavigation.EMAILS]: undefined;
+  [HomeNavigation.MANAGE_DELIVERY]: undefined;
+  [HomeNavigation.TRANSACTION_MESSAGES]: undefined;
+  [HomeNavigation.MARKETING_TOOLS]: undefined;
 };
 
 // ✅ Define the type for navigation prop (fixed)
 export type MarketingToolsNavigationProp = StackNavigationProp<
   RootStackParamList,
-  "MarketingTools"
+  HomeNavigation.MARKETING_TOOLS
 >;
 
 const MarketingTools = () => {
@@ -87,30 +87,54 @@ const menuItems: MenuItemType[] = [
   {
     title: "Online Store Settings",
     icon: "store-settings",
-    screen: "OnlineStore",
+    screen: HomeNavigation.ONLINE_STORE,
   },
-  { title: "Online Sale Wallet", icon: "wallet", screen: "OnlineSaleWallet" },
-  { title: "Ad Wallet", icon: "wallet-membership", screen: "AdWallet" },
-  { title: "Boost your Sales", icon: "trending-up", screen: "BoostSales" },
+  {
+    title: "Online Sale Wallet",
+    icon: "wallet",
+    screen: HomeNavigation.ONLINE_SALE_WALLET,
+  },
+  {
+    title: "Ad Wallet",
+    icon: "wallet-membership",
+    screen: HomeNavigation.AD_WALLET,
+  },
+  {
+    title: "Boost your Sales",
+    icon: "trending-up",
+    screen: HomeNavigation.BOOST_SALES,
+  },
   {
     title: "Customer Feedback",
     icon: "star-circle",
-    screen: "CustomerFeedback",
+    screen: HomeNavigation.CUSTOMER_FEEDBACK,
   },
-  { title: "Chats", icon: "chat", screen: "Chats" },
-  { title: "Download Shop QR Code", icon: "qrcode", screen: "DownloadQRCode" },
-  { title: "WhatsApp Message", icon: "whatsapp", screen: "WhatsAppMessage" },
-  { title: "SMS", icon: "message-text-outline", screen: "SmsScreen" },
-  { title: "Emails", icon: "email-outline", screen: "Emails" },
+  { title: "Chats", icon: "chat", screen: HomeNavigation.CHATS },
+  {
+    title: "Download Shop QR Code",
+    icon: "qrcode",
+    screen: HomeNavigation.DOWNLOAD_QR_CODE,
+  },
+  {
+    title: "WhatsApp Message",
+    icon: "whatsapp",
+    screen: HomeNavigation.WHATSAPP_MESSAGE,
+  },
+  {
+    title: "SMS",
+    icon: "message-text-outline",
+    screen: HomeNavigation.SMS_SCREEN,
+  },
+  { title: "Emails", icon: "email-outline", screen: HomeNavigation.EMAILS },
   {
     title: "Manage Delivery",
     icon: "truck-delivery-outline",
-    screen: "ManageDelivery",
+    screen: HomeNavigation.MANAGE_DELIVERY,
   },
   {
     title: "Transaction Messages",
     icon: "message-text-outline",
-    screen: "TransactionMessages",
+    screen: HomeNavigation.TRANSACTION_MESSAGES,
   },
 ];
 

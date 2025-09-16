@@ -22,6 +22,7 @@ export const API_ROUTES = {
   GET_ATTENDANCE_HISTORY: "/getUserAttendanceHistory",
   user: "/user",
   userProfile: "users/profile/me/",
+  deleteUser: "/users/delete-user/",
   usersList: "/user/user-list",
   usersLocation: "/user/location",
   jwtRefresh: "/refresh-token",
@@ -30,6 +31,7 @@ export const API_ROUTES = {
   product: "/products",
   productBaseData: "/products/base-data",
   vendorProduct: "/vendor/product/",
+  deleteProduct: "/vendor/product/",
   updateProductSetting: "/vendor/productsetting/update/",
 
   vendor: "/vendors",
@@ -44,6 +46,7 @@ export const API_ROUTES = {
   vendorCash: "vendor/cash-balance/",
   adjustCash: "vendor/cash-balance/adjust/",
   cashTransfer: "/vendor/cash-transfers/",
+  bankToBankTransfer: "/vendor/bank-to-bank-transfers/",
   vendorAddBank: "vendor/vendor-bank/",
 
   getProductSettings: "/vendor/productsetting/",
@@ -67,6 +70,8 @@ export const API_ROUTES = {
   purchaseNo: "/vendor/get-next-purchaseeno/",
 
   expenseCategory: "/masters/get-expense-category/",
+  productCategory: "/masters/get-product-category/",
+  productSubCategory: "/masters/get-product-subcategory/",
   expense: "vendor/expense/",
 
   paymnet: "/vendor/payments/",
@@ -74,4 +79,6 @@ export const API_ROUTES = {
   spotlightProduct: "/vendor/spotlight-product/",
   deliveryBoys: "/vendor/deliveryboys/",
   orders: "/vendor/orders/",
+  printVariantChoices: "/vendor/print-variant/choices/",
+  registerDeviceToken: "/users/register-device-token/",
 };

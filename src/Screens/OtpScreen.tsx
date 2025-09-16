@@ -8,6 +8,9 @@ import {
   Image,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { OtpScreenProps, THomeNavigation } from "../type";
@@ -17,10 +20,14 @@ import { HomeNavigation } from "../constants/app-routes.constants";
 import { OtpInput } from "react-native-otp-entry";
 import auth from "@react-native-firebase/auth";
 import { useLoginMutation } from "../services/api/state-api-slice";
-import { DEFAULT_STATUS_CODE_SUCCESS } from "../constants/api-const";
-import { storage } from "../utils/storage";
+import {
+  DEFAULT_STATUS_CODE_CREATED,
+  DEFAULT_STATUS_CODE_SUCCESS,
+} from "../constants/api-const";
+import { StorageUtils } from "../utils/storage";
 import Loading from "../CommonComponent/Loading";
 import Icon from "react-native-vector-icons/Ionicons";
+import { ScaledSheet } from "react-native-size-matters";
 
 const OtpScreen: React.FC<OtpScreenProps> = () => {
   const navigation =
@@ -116,14 +123,20 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
         user_type: "vendor",
       }).unwrap();
       console.log(response);
-      if (response.status === DEFAULT_STATUS_CODE_SUCCESS) {
-        storage.set("signUp", "SIGNUP");
-        storage.set("accessToken", response.access);
-        storage.set("refreshToken", response.refresh);
+      if (
+        response.status === DEFAULT_STATUS_CODE_SUCCESS ||
+        response.status === DEFAULT_STATUS_CODE_CREATED
+      ) {
+        StorageUtils.setSignupStatus("SIGNUP");
+        StorageUtils.setAccessToken(response.access);
+        StorageUtils.setRefreshToken(response.refresh);
+        StorageUtils.setIsLoggedIn(true);
         if (response.user.created) {
-          navigation.replace(HomeNavigation.STATISTICS_SCREEN);
-        } else {
           navigation.replace(HomeNavigation.ADMINPROFILE);
+          return;
+        } else {
+          navigation.replace(HomeNavigation.BOTTOM_NAVIGATION);
+          return;
         }
       }
       navigation.replace(HomeNavigation.SIGNUP_DETAIL_SCREEN);
@@ -153,7 +166,10 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
     }
   };
   return (
-    <View style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={{ alignItems: "center" }}
+    >
       {/* Back Button */}
       <TouchableOpacity
         style={styles.backButton}
@@ -218,24 +234,23 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
           <Text style={styles.linkText}>Privacy Policy</Text>.
         </Text>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
 export default OtpScreen;
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    alignItems: "center",
   },
   backButton: {
     position: "absolute",
-    top: 20,
-    left: 20,
-    width: 40,
-    height: 40,
+    top: "20@s",
+    left: "20@s",
+    width: "35@s",
+    height: "35@s",
     borderRadius: 25,
     backgroundColor: "#FF9800",
     alignItems: "center",
@@ -252,72 +267,75 @@ const styles = StyleSheet.create({
   },
   header: {
     width: "100%",
-    height: "50%",
+    // height: "50%",
+    paddingTop: "60@s",
+    paddingBottom: "20@s",
     alignItems: "center",
     justifyContent: "center",
     borderBottomLeftRadius: 60,
     borderBottomRightRadius: 60,
   },
   logo: {
-    width: 120,
-    height: 140,
+    width: "140@s",
+    height: "140@s",
     resizeMode: "contain",
   },
   title: {
-    fontSize: 60,
+    fontSize: "60@s",
     fontWeight: "bold",
     color: "#fff",
+    lineHeight: "60@s",
   },
   subtitle: {
-    fontSize: 22,
+    fontSize: "22@s",
     color: "#fff",
   },
   tagline: {
-    fontSize: 14,
+    fontSize: "14@s",
     color: "#fff",
     marginTop: 5,
   },
   otpText: {
-    fontSize: 18,
+    fontSize: "16@s",
     fontWeight: "bold",
     marginTop: 20,
     color: "#1E3462",
   },
   otpContainer: {
     flexDirection: "row",
-    marginTop: 15,
+    marginTop: "15@s",
   },
   otpFieldcontainer: {
-    paddingHorizontal: 40,
+    paddingHorizontal: "30@s",
   },
   pinCodeContainer: {
-    width: 45,
-    height: 45,
+    width: "45@s",
+    height: "45@s",
     borderWidth: 1,
     borderColor: "#FCA511",
     backgroundColor: "#FFF7DD",
     textAlign: "center",
-    marginHorizontal: 5,
-    borderRadius: 20,
+    marginHorizontal: "3@s",
+    borderRadius: "16@s",
   },
   pinCodeText: {
-    fontSize: 18,
+    fontSize: "18@s",
     textAlign: "center",
     color: "#000",
   },
   focusStick: {
-    height: 25,
+    height: "25@s",
     backgroundColor: "#FCA511",
   },
 
   timerText: {
-    marginTop: 15,
+    marginTop: "15@s",
     fontSize: 16,
     color: "#1E3462",
     fontWeight: "600",
   },
   resendText: {
-    marginTop: 10,
+    marginTop: "10@s",
     fontSize: 14,
     color: "#1E3462",
   },
@@ -327,7 +345,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   resendButtonGradient: {
-    paddingHorizontal: 20,
+    paddingHorizontal: "20@s",
     paddingVertical: 8,
     alignItems: "center",
     justifyContent: "center",
@@ -349,9 +367,10 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
   footer: {
-    position: "absolute",
-    bottom: 30,
-    width: "100%",
+    // position: "absolute",
+    // bottom: 30,
+    // width: "100%",
+    paddingVertical: "20@s",
     alignItems: "center",
   },
   errorText: {

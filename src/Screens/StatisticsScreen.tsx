@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,6 +9,10 @@ import {
   Platform,
   StatusBar,
   Image,
+  Alert,
+  PermissionsAndroid,
+  Modal,
+  TouchableWithoutFeedback,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Icons from "react-native-vector-icons/FontAwesome";
@@ -20,8 +24,12 @@ import RequestFromBuyers from "../CommonComponent/RequestFromBuyers";
 import GroupedBars from "./BarChart";
 import LineCharts from "./LineChart";
 import { HomeNavigation } from "../constants/app-routes.constants";
+import { API_ROUTES } from "../constants/api-routes.constants";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ScaledSheet } from "react-native-size-matters";
+import { s, ScaledSheet } from "react-native-size-matters";
+import CustomDropdown from "../CommonComponent/CustomDropdown";
+import api from "../services/api/api";
+import { useIsFocused } from "@react-navigation/native";
 NavigationButton;
 
 const screenWidth = Dimensions.get("window").width - 20;
@@ -29,6 +37,16 @@ interface Product {
   id: string;
   name: string;
   image: any;
+}
+
+interface CompanyProfile {
+  id: number;
+  company_name: string;
+  logo?: string;
+  business_id?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
 }
 
 const recentActivity = [
@@ -204,25 +222,352 @@ const getFilteredProducts = (type: string) => {
 
 const StatisticsScreen = ({ navigation }: any) => {
   const [deliveryDiscountEnabled, setDeliveryDiscountEnabled] = useState(true);
-  const [selectedFilter, setSelectedFilter] = useState("Today");
+  const [selectedFilter, setSelectedFilter] = useState({
+    name: "Today",
+    id: "Today",
+  });
+  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const filters = ["Today", "This Week", "This Month", "This Year"];
 
+  // Company profile state
+  const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(
+    null
+  );
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const isFocused = useIsFocused();
+
+  // Navigation state management
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [navigationError, setNavigationError] = useState<string | null>(null);
+
+  // Fetch company profile
+  const fetchCompanyProfile = async () => {
+    try {
+      setIsLoadingProfile(true);
+      const response = await api.get(API_ROUTES.companyProfle);
+      setCompanyProfile(response.data[0]);
+    } catch (error) {
+      console.error("Error fetching company profile:", error);
+      // Set default values if API fails
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  };
+
+  // Permission request functions
+  const requestNotificationPermission = async () => {
+    if (Platform.OS === "android") {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+          {
+            title: "Notification Permission",
+            message:
+              "This app needs notification permission to send you important updates about your business.",
+            buttonNeutral: "Ask Me Later",
+            buttonNegative: "Cancel",
+            buttonPositive: "OK",
+          }
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          console.log("Notification permission granted");
+        } else {
+          console.log("Notification permission denied");
+        }
+      } catch (err) {
+        console.warn("Error requesting notification permission:", err);
+      }
+    }
+  };
+
+  const requestLocationPermission = async () => {
+    if (Platform.OS === "android") {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+          {
+            title: "Location Permission",
+            message:
+              "This app needs location permission to provide location-based services and analytics.",
+            buttonNeutral: "Ask Me Later",
+            buttonNegative: "Cancel",
+            buttonPositive: "OK",
+          }
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          console.log("Location permission granted");
+        } else {
+          console.log("Location permission denied");
+        }
+      } catch (err) {
+        console.warn("Error requesting location permission:", err);
+      }
+    }
+  };
+
+  const requestCameraPermission = async () => {
+    if (Platform.OS === "android") {
+      try {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA,
+          {
+            title: "Camera Permission",
+            message:
+              "This app needs camera permission to scan QR codes and take product photos.",
+            buttonNeutral: "Ask Me Later",
+            buttonNegative: "Cancel",
+            buttonPositive: "OK",
+          }
+        );
+        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+          console.log("Camera permission granted");
+        } else {
+          console.log("Camera permission denied");
+        }
+      } catch (err) {
+        console.warn("Error requesting camera permission:", err);
+      }
+    }
+  };
+
+  const requestStoragePermission = async () => {
+    if (Platform.OS === "android") {
+      try {
+        const granted = await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        ]);
+
+        if (
+          granted[PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE] ===
+            PermissionsAndroid.RESULTS.GRANTED &&
+          granted[PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE] ===
+            PermissionsAndroid.RESULTS.GRANTED
+        ) {
+          console.log("Storage permissions granted");
+        } else {
+          console.log("Storage permissions denied");
+        }
+      } catch (err) {
+        console.warn("Error requesting storage permissions:", err);
+      }
+    }
+  };
+
+  const requestSmsPermission = async () => {
+    if (Platform.OS === "android") {
+      try {
+        const granted = await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
+          PermissionsAndroid.PERMISSIONS.READ_SMS,
+        ]);
+
+        if (
+          granted[PermissionsAndroid.PERMISSIONS.RECEIVE_SMS] ===
+            PermissionsAndroid.RESULTS.GRANTED &&
+          granted[PermissionsAndroid.PERMISSIONS.READ_SMS] ===
+            PermissionsAndroid.RESULTS.GRANTED
+        ) {
+          console.log("SMS permissions granted");
+        } else {
+          console.log("SMS permissions denied");
+        }
+      } catch (err) {
+        console.warn("Error requesting SMS permissions:", err);
+      }
+    }
+  };
+
+  // Navigation helper functions with condition checking
+  const navigateWithCondition = async (
+    screenName: string,
+    params: any = {},
+    conditions: { [key: string]: boolean } = {}
+  ) => {
+    try {
+      setIsNavigating(true);
+      setNavigationError(null);
+
+      // Check all conditions before navigation
+      const failedConditions = Object.entries(conditions).filter(
+        ([condition, isMet]) => !isMet
+      );
+
+      if (failedConditions.length > 0) {
+        const failedConditionNames = failedConditions.map(([name]) => name);
+        setNavigationError(
+          `Cannot navigate: ${failedConditionNames.join(
+            ", "
+          )} conditions not met`
+        );
+        Alert.alert(
+          "Navigation Blocked",
+          `Please complete the following: ${failedConditionNames.join(", ")}`
+        );
+        return;
+      }
+
+      // Navigate if all conditions are met
+      navigation.navigate(screenName, params);
+    } catch (error) {
+      console.error("Navigation error:", error);
+      setNavigationError("Navigation failed. Please try again.");
+      Alert.alert("Error", "Navigation failed. Please try again.");
+    } finally {
+      setIsNavigating(false);
+    }
+  };
+
+  // Specific navigation functions with business logic conditions
+  const navigateToExpenses = () => {
+    navigateWithCondition(
+      HomeNavigation.EXPENESES_SCREEN,
+      {},
+      {
+        // Add conditions here if needed
+        // userLoggedIn: true,
+        // hasBusinessProfile: true,
+      }
+    );
+  };
+
+  const navigateToPayments = () => {
+    navigateWithCondition(
+      HomeNavigation.PAYMENTSCREEN,
+      {},
+      {
+        // Add conditions here if needed
+        // hasBankAccounts: true,
+        // hasCustomers: true,
+      }
+    );
+  };
+
+  const navigateToPOS = () => {
+    navigation.navigate(HomeNavigation.PRODUCT_SELECTION as any, {
+      selectedProducts: [],
+      navigateScreen: HomeNavigation.SALE_POS,
+    });
+  };
+
+  const navigateToDayBook = () => {
+    navigateWithCondition(
+      HomeNavigation.DAY_BOOK_SCREEN,
+      {},
+      {
+        // Add conditions here if needed
+        // hasTransactions: true,
+      }
+    );
+  };
+
+  const navigateToStockScreen = () => {
+    navigateWithCondition(
+      HomeNavigation.STOCK_SCREEN,
+      {},
+      {
+        // Add conditions here if needed
+        // hasProducts: true,
+      }
+    );
+  };
+
+  const navigateToReports = () => {
+    navigateWithCondition(
+      HomeNavigation.REPORTS,
+      {},
+      {
+        // Add conditions here if needed
+        // hasData: true,
+      }
+    );
+  };
+
+  const navigateToStoreScreen = () => {
+    navigateWithCondition(
+      HomeNavigation.STORE_SCREEN,
+      {},
+      {
+        // Add conditions here if needed
+        // hasStoreSetup: true,
+      }
+    );
+  };
+
+  const navigateToNotifications = () => {
+    navigateWithCondition(
+      HomeNavigation.NOTIFICATION_SCREEN,
+      {},
+      {
+        // Add conditions here if needed
+        // hasNotifications: true,
+      }
+    );
+  };
+
+  // Request all permissions when component mounts
+  useEffect(() => {
+    const requestAllPermissions = async () => {
+      try {
+        await Promise.all([
+          requestNotificationPermission(),
+          requestLocationPermission(),
+          requestCameraPermission(),
+          requestStoragePermission(),
+          requestSmsPermission(),
+        ]);
+      } catch (error) {
+        console.warn("Error requesting permissions:", error);
+      }
+    };
+
+    requestAllPermissions();
+  }, []);
+
+  // Fetch company profile when component mounts or screen comes into focus
+  useEffect(() => {
+    if (isFocused) {
+      fetchCompanyProfile();
+    }
+  }, [isFocused]);
   return (
     <SafeAreaView style={styles.container}>
+      {/* Navigation Error Display */}
+      {navigationError && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{navigationError}</Text>
+          <TouchableOpacity
+            style={styles.errorCloseButton}
+            onPress={() => setNavigationError(null)}
+          >
+            <Icon name="close" size={16} color="#fff" />
+          </TouchableOpacity>
+        </View>
+      )}
+
       <View style={styles.header}>
         <View style={styles.headerleft}>
           <Image
-            source={require("../assets/Logo_Icon.png")}
-            style={{
-              width: 28,
-              height: 36,
-              marginTop: 5,
-              marginHorizontal: 10,
-            }}
+            source={
+              companyProfile?.profile_image
+                ? { uri: companyProfile.profile_image }
+                : require("../assets/Logo_Icon.png")
+            }
+            style={styles.logo}
+            resizeMode="cover"
           />
           <View style={styles.titlecontent}>
-            <Text style={styles.headerTitle}>Business Name</Text>
-            <Text style={styles.subTitle}>ID: 12345678</Text>
+            <Text style={styles.headerTitle}>
+              {isLoadingProfile
+                ? "Loading..."
+                : companyProfile?.company_name || "Business Name"}
+            </Text>
+            <Text style={styles.subTitle}>
+              ID:{" "}
+              {isLoadingProfile
+                ? "Loading..."
+                : companyProfile?.id || "12345678"}
+            </Text>
           </View>
         </View>
         <View style={styles.headerRight}>
@@ -231,7 +576,8 @@ const StatisticsScreen = ({ navigation }: any) => {
             onValueChange={setDeliveryDiscountEnabled}
           />
           <TouchableOpacity
-            onPress={() => navigation.navigate("NotificationScreen")}
+            onPress={navigateToNotifications}
+            disabled={isNavigating}
           >
             <Icon
               name="bell-outline"
@@ -246,17 +592,16 @@ const StatisticsScreen = ({ navigation }: any) => {
         <RequestFromBuyers />
         <View style={styles.titleRow}>
           <Text style={styles.title}>Statistics</Text>
-          <TouchableOpacity
-            style={styles.filterButton}
-            onPress={() =>
-              navigation.navigate(HomeNavigation.BILLDETAILS, {
-                id: 4,
-              })
-            }
-          >
-            <Text style={styles.filterText}>{selectedFilter}</Text>
-            <Icon name="chevron-down" size={18} color="#000" />
-          </TouchableOpacity>
+          <CustomDropdown
+            placeholder="Select Filter"
+            options={filters.map((filter) => ({
+              name: filter,
+              id: filter,
+            }))}
+            onSelect={setSelectedFilter}
+            selectedValue={selectedFilter.id}
+            styles={{ width: s(100), height: s(30) }}
+          />
         </View>
         <View style={styles.chartPlaceholder}>
           <GroupedBars />
@@ -313,7 +658,36 @@ const StatisticsScreen = ({ navigation }: any) => {
               changeIcon: "arrow-up",
             },
           ].map((item, index) => (
-            <View key={index} style={styles.card}>
+            <TouchableOpacity
+              key={index}
+              style={styles.card}
+              onPress={() => {
+                // Navigate to appropriate screen based on card type
+                switch (item.title) {
+                  case "Total Purchases":
+                    // navigateToReports();
+                    break;
+                  case "Total Orders":
+                    navigateWithCondition(HomeNavigation.ORDERS, {}, {});
+                    break;
+                  case "Total Expense":
+                    navigateToExpenses();
+                    break;
+                  case "Total Stock Value":
+                    navigateToStockScreen();
+                    break;
+                  case "Total Cash in Hand":
+                    navigateWithCondition(HomeNavigation.CASH_IN_HAND, {}, {});
+                    break;
+                  case "Total Bank Balance":
+                    navigateWithCondition(HomeNavigation.BANK_ACCOUNTS, {}, {});
+                    break;
+                  default:
+                    console.log("No navigation defined for:", item.title);
+                }
+              }}
+              disabled={isNavigating}
+            >
               <View style={styles.cardContent}>
                 <Icon
                   name={item.icon}
@@ -344,7 +718,7 @@ const StatisticsScreen = ({ navigation }: any) => {
                 </Text>
                 <Icon name="chevron-right" size={16} color="#333" />
               </View>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
 
@@ -360,6 +734,8 @@ const StatisticsScreen = ({ navigation }: any) => {
             borderRadius: 10,
             marginVertical: 10,
           }}
+          onPress={navigateToDayBook}
+          disabled={isNavigating}
         >
           <View style={{ flexDirection: "row", gap: 10 }}>
             <Icon name="book-open-variant" size={20} color="#000" />
@@ -481,27 +857,73 @@ const StatisticsScreen = ({ navigation }: any) => {
       </ScrollView>
       <View style={styles.floatingButtons}>
         <TouchableOpacity
-          style={styles.addButtonRed}
-          onPress={() => {
-            navigation.navigate("ExpensesScreen");
-          }}
+          style={[styles.addButtonRed, isNavigating && styles.disabledButton]}
+          onPress={navigateToExpenses}
+          disabled={isNavigating}
         >
           <Icon name="file-document-outline" size={18} color="#000" />
           <Text style={styles.buttonText}> + Expense</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.paymentButtonBlue}>
+        <TouchableOpacity
+          style={[
+            styles.paymentButtonBlue,
+            isNavigating && styles.disabledButton,
+          ]}
+          onPress={navigateToPayments}
+          disabled={isNavigating}
+        >
           <Icon name="file-document-outline" size={18} color="#000" />
           <Text style={styles.buttonBlue}> Payments</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.addButtonGreen}
-          onPress={() => navigation.navigate("PosScreen")}
+          style={[styles.addButtonGreen, isNavigating && styles.disabledButton]}
+          onPress={navigateToPOS}
+          disabled={isNavigating}
         >
           <Icon name="cart-outline" size={18} color="#000" />
-
           <Text style={styles.buttongreen}>+ New Sale</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Filter Dropdown Modal */}
+      <Modal
+        visible={showFilterDropdown}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowFilterDropdown(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowFilterDropdown(false)}>
+          <View style={styles.modalOverlay}>
+            <View style={styles.dropdownContainer}>
+              {filters.map((filter) => (
+                <TouchableOpacity
+                  key={filter}
+                  style={[
+                    styles.dropdownItem,
+                    selectedFilter === filter && styles.selectedDropdownItem,
+                  ]}
+                  onPress={() => {
+                    setSelectedFilter(filter);
+                    setShowFilterDropdown(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.dropdownText,
+                      selectedFilter === filter && styles.selectedDropdownText,
+                    ]}
+                  >
+                    {filter}
+                  </Text>
+                  {selectedFilter === filter && (
+                    <Icon name="check" size={18} color="#FCA311" />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -543,6 +965,12 @@ const styles = ScaledSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
+  },
+  logo: {
+    width: "40@s",
+    height: "40@s",
+    borderRadius: "25@s",
+    resizeMode: "cover",
   },
 
   changeContainer: { flexDirection: "row", alignItems: "center" },
@@ -590,10 +1018,11 @@ const styles = ScaledSheet.create({
   floatingButtons: {
     position: "absolute",
     alignSelf: "center",
+    width: "100%",
     // right: "16@s",
     flexDirection: "row",
-    justifyContent: "space-between",
-    gap: "20@s",
+    justifyContent: "space-around",
+    // gap: "20@s",
     bottom: "10@s",
   },
   viewall: { fontSize: 16 },
@@ -605,9 +1034,9 @@ const styles = ScaledSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#D7FFE7",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 5,
+    paddingHorizontal: "5@s",
+    paddingVertical: "2@s",
+    borderRadius: "5@s",
     borderWidth: 1,
     borderColor: "#00630F",
   },
@@ -615,9 +1044,9 @@ const styles = ScaledSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFDADA",
-    padding: 10,
-    borderRadius: 5,
-    paddingVertical: 4,
+    padding: "8@s",
+    borderRadius: "5@s",
+    paddingVertical: "2@s",
     borderWidth: 1,
     borderColor: "#AA0000",
   },
@@ -702,7 +1131,7 @@ const styles = ScaledSheet.create({
     marginLeft: 5,
     fontWeight: "bold",
   },
-  buttongreen: { color: "#00630F", marginLeft: 5, fontWeight: "bold" },
+  buttongreen: { color: "#00630F", fontWeight: "bold" },
   insightsContainer: { marginTop: 20 },
   insightsTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
   insightCard: { marginBottom: 20 },
@@ -760,6 +1189,114 @@ const styles = ScaledSheet.create({
     elevation: 3,
   },
   datentext: { fontSize: 12 },
+  errorContainer: {
+    backgroundColor: "#f44336",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 10,
+    margin: 10,
+    borderRadius: 5,
+  },
+  errorText: {
+    color: "#fff",
+    flex: 1,
+    fontSize: 14,
+  },
+  errorCloseButton: {
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 15,
+    width: 30,
+    height: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    marginLeft: 10,
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "flex-start",
+    alignItems: "flex-end",
+    paddingTop: 100,
+    paddingRight: 20,
+  },
+  dropdownContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    minWidth: 150,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  dropdownItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
+  },
+  selectedDropdownItem: {
+    backgroundColor: "#FFF8EB",
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: "#333",
+  },
+  selectedDropdownText: {
+    color: "#FCA311",
+    fontWeight: "600",
+  },
+
+  // Business Info Card Styles
+  businessInfoCard: {
+    backgroundColor: "#f8f9fa",
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 10,
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  businessInfoRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  businessInfoItem: {
+    flex: 1,
+    alignItems: "center",
+    paddingHorizontal: 8,
+  },
+  businessInfoLabel: {
+    fontSize: 12,
+    color: "#6c757d",
+    marginTop: 4,
+    marginBottom: 2,
+    fontWeight: "500",
+  },
+  businessInfoValue: {
+    fontSize: 14,
+    color: "#212529",
+    fontWeight: "600",
+    textAlign: "center",
+  },
 });
 
 export default StatisticsScreen;

@@ -1,7 +1,7 @@
 // api.js
 import axios from "axios";
 import { Alert } from "react-native";
-import { storage } from "../../utils/storage";
+import { StorageUtils } from "../../utils/storage";
 import { APP_CONSTANTS } from "../../constants/app.constants";
 
 const api = axios.create({
@@ -13,7 +13,7 @@ const api = axios.create({
 api.interceptors.request.use(
   async (config: any) => {
     try {
-      const tokenString = await storage.getString("accessToken");
+      const tokenString = StorageUtils.getAccessToken();
       if (tokenString) {
         config.headers.Authorization = `Bearer ${tokenString}`;
       }

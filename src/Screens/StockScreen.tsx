@@ -6,57 +6,26 @@ import {
   TouchableOpacity,
   FlatList,
   ScrollView,
-  StyleSheet,
-  Platform,
   Image,
   Modal,
   ActivityIndicator,
+  Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import Header from "./Header";
-import { StatusBar } from "react-native";
-import Bottomnavigation from "./Bottomnavigation";
 import NavigationButton from "./NavigationButton";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import { s, ScaledSheet } from "react-native-size-matters";
 import { HomeNavigation } from "../constants/app-routes.constants";
-
-const products = [
-  {
-    id: "1",
-    name: "White T Shirt",
-    stock: 5,
-    description: "White cotton logo print",
-    image: require("../assets/product.png"),
-    price: 10,
-  },
-  {
-    id: "2",
-    name: "White T Shirt",
-    stock: 5,
-    description: "White cotton logo print",
-    image: require("../assets/product.png"),
-    price: 10,
-  },
-  {
-    id: "3",
-    name: "White T Shirt",
-    stock: 5,
-    description: "White cotton logo print",
-    image: require("../assets/product.png"),
-    price: 10,
-  },
-  {
-    id: "4",
-    name: "White T Shirt",
-    stock: 5,
-    description: "White cotton logo print",
-    image: require("../assets/product.png"),
-    price: 10,
-  },
-];
+import CustomDropdown, {
+  DropDownOption,
+} from "../CommonComponent/CustomDropdown";
+import CustomSwitch from "./CustomSwitch";
+import SearchBar from "../CommonComponent/SearchBar";
+import ProductItem from "../CommonComponent/ProductItem";
 
 interface Product {
   id: string;
@@ -70,6 +39,9 @@ interface Product {
   color?: string;
   size?: string;
   sale_type?: string;
+  is_active?: boolean;
+  parent?: string | null;
+  variants?: Product[];
 }
 
 interface Addon {
@@ -79,10 +51,12 @@ interface Addon {
   price_per_unit: number;
   image?: string;
   product_category?: string;
+  is_active?: boolean;
 }
 
 const orderTypes = ["Product/Service", " | ", "Add Ons"];
 const StockScreen = () => {
+  const navigation = useNavigation();
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [selectedType, setSelectedType] = useState("Product/Service");
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
@@ -106,25 +80,63 @@ const StockScreen = () => {
     price: "",
   });
 
-  // Filter options data
-  const filterOptions = {
-    category: ["Electronics", "Fashion", "Home & Garden", "Sports", "Books"],
-    subcategory: [
-      "Mobile Phones",
-      "Computers",
-      "Audio",
-      "Accessories",
-      "Clothing",
+  // API data states
+  const [categoryList, setCategoryList] = useState<DropDownOption[]>([]);
+  const [subCategoryList, setSubCategoryList] = useState<DropDownOption[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+
+  // Static filter options data
+  const staticFilterOptions = {
+    color: [
+      { id: "red", name: "Red" },
+      { id: "blue", name: "Blue" },
+      { id: "green", name: "Green" },
+      { id: "black", name: "Black" },
+      { id: "white", name: "White" },
+      { id: "yellow", name: "Yellow" },
+      { id: "pink", name: "Pink" },
     ],
-    color: ["Red", "Blue", "Green", "Black", "White", "Yellow", "Pink"],
-    size: ["XS", "S", "M", "L", "XL", "XXL"],
+    size: [
+      { id: "xs", name: "XS" },
+      { id: "s", name: "S" },
+      { id: "m", name: "M" },
+      { id: "l", name: "L" },
+      { id: "xl", name: "XL" },
+      { id: "xxl", name: "XXL" },
+    ],
     price: [
-      "Under ₹500",
-      "₹500-₹1000",
-      "₹1000-₹2000",
-      "₹2000-₹5000",
-      "Above ₹5000",
+      { id: "under-500", name: "Under ₹500" },
+      { id: "500-1000", name: "₹500-₹1000" },
+      { id: "1000-2000", name: "₹1000-₹2000" },
+      { id: "2000-5000", name: "₹2000-₹5000" },
+      { id: "above-5000", name: "Above ₹5000" },
     ],
+  };
+
+  // Organize products hierarchically
+  const organizeProductsHierarchically = (products: Product[]): Product[] => {
+    const parentProducts: Product[] = [];
+    const childProducts: Product[] = [];
+
+    // Separate parent and child products
+    products.forEach((product) => {
+      if (product.parent === null || product.parent === undefined) {
+        parentProducts.push({ ...product, variants: [] });
+      } else {
+        childProducts.push(product);
+      }
+    });
+
+    // Group child products under their parents
+    childProducts.forEach((child) => {
+      const parent = parentProducts.find((p) => p.id === child.parent);
+      if (parent) {
+        parent.variants = parent.variants || [];
+        parent.variants.push(child);
+      }
+    });
+
+    return parentProducts;
   };
 
   // Fetch products from vendorProduct API
@@ -145,66 +157,17 @@ const StockScreen = () => {
         color: item.color,
         size: item.size,
         sale_type: item.sale_type || "offline", // Default to offline if not specified
+        parent: item.parent || null,
+        ...item,
       }));
 
-      setProducts(transformedProducts);
+      // Organize products hierarchically
+      const organizedProducts =
+        organizeProductsHierarchically(transformedProducts);
+      setProducts(organizedProducts);
     } catch (error) {
       console.error("Failed to fetch products:", error);
       // Fallback to dummy data
-      setProducts([
-        {
-          id: "1",
-          name: "White T Shirt",
-          stock: 5,
-          description: "White cotton logo print",
-          image: require("../assets/product.png"),
-          price: 10,
-          category: "Fashion",
-          subcategory: "Clothing",
-          color: "White",
-          size: "M",
-          sale_type: "online",
-        },
-        {
-          id: "2",
-          name: "Blue Jeans",
-          stock: 3,
-          description: "Blue denim jeans",
-          image: require("../assets/product.png"),
-          price: 25,
-          category: "Fashion",
-          subcategory: "Clothing",
-          color: "Blue",
-          size: "L",
-          sale_type: "offline",
-        },
-        {
-          id: "3",
-          name: "Smartphone",
-          stock: 2,
-          description: "Latest smartphone model",
-          image: require("../assets/product.png"),
-          price: 1500,
-          category: "Electronics",
-          subcategory: "Mobile Phones",
-          color: "Black",
-          size: "M",
-          sale_type: "online",
-        },
-        {
-          id: "4",
-          name: "Laptop",
-          stock: 1,
-          description: "High-performance laptop",
-          image: require("../assets/product.png"),
-          price: 3500,
-          category: "Electronics",
-          subcategory: "Computers",
-          color: "Silver",
-          size: "L",
-          sale_type: "offline",
-        },
-      ]);
     } finally {
       setLoading(false);
     }
@@ -223,28 +186,33 @@ const StockScreen = () => {
         price_per_unit: parseFloat(item.price_per_unit || 0),
         image: item.image,
         product_category: item.product_category,
+        ...item,
       }));
 
       setAddons(transformedAddons);
     } catch (error) {
       console.error("Failed to fetch addons:", error);
       // Fallback to dummy data
-      setAddons([
-        {
-          id: "1",
-          name: "Extra Cheese",
-          description: "Add extra cheese to your order",
-          price_per_unit: 2.5,
-        },
-        {
-          id: "2",
-          name: "Premium Packaging",
-          description: "Premium gift packaging",
-          price_per_unit: 5.0,
-        },
-      ]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch categories and subcategories from API
+  const fetchCategories = async () => {
+    try {
+      setIsLoadingCategories(true);
+      const [categoryRes, subCategoryRes] = await Promise.all([
+        api.get(API_ROUTES.productCategory),
+        api.get(API_ROUTES.productSubCategory),
+      ]);
+
+      setCategoryList(categoryRes.data || []);
+      setSubCategoryList(subCategoryRes.data || []);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    } finally {
+      setIsLoadingCategories(false);
     }
   };
 
@@ -257,9 +225,31 @@ const StockScreen = () => {
     }
   }, [selectedType]);
 
+  // Fetch categories on component mount
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
   // Search functionality
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+  };
+
+  // Handle type selection
+  const handleTypeSelection = (type: string) => {
+    setSelectedType(type);
+
+    // Clear color filter when switching to Add Ons
+    if (type === "Add Ons") {
+      setSelectedFilters((prev) => ({
+        ...prev,
+        color: "",
+      }));
+      setAppliedFilters((prev) => ({
+        ...prev,
+        color: "",
+      }));
+    }
   };
 
   const getFilteredData = (): (Product | Addon)[] => {
@@ -303,31 +293,31 @@ const StockScreen = () => {
         }
 
         // Size filter
-        if (appliedFilters.size && product.size !== appliedFilters.size) {
-          return false;
-        }
+        // if (appliedFilters.size && product.size !== appliedFilters.size) {
+        //   return false;
+        // }
 
         // Price filter
-        if (appliedFilters.price) {
-          const price = parseFloat(product.price.toString());
-          switch (appliedFilters.price) {
-            case "Under ₹500":
-              if (price >= 500) return false;
-              break;
-            case "₹500-₹1000":
-              if (price < 500 || price > 1000) return false;
-              break;
-            case "₹1000-₹2000":
-              if (price < 1000 || price > 2000) return false;
-              break;
-            case "₹2000-₹5000":
-              if (price < 2000 || price > 5000) return false;
-              break;
-            case "Above ₹5000":
-              if (price <= 5000) return false;
-              break;
-          }
-        }
+        // if (appliedFilters.price) {
+        //   const price = parseFloat(product.price.toString());
+        //   switch (appliedFilters.price) {
+        //     case "Under ₹500":
+        //       if (price >= 500) return false;
+        //       break;
+        //     case "₹500-₹1000":
+        //       if (price < 500 || price > 1000) return false;
+        //       break;
+        //     case "₹1000-₹2000":
+        //       if (price < 1000 || price > 2000) return false;
+        //       break;
+        //     case "₹2000-₹5000":
+        //       if (price < 2000 || price > 5000) return false;
+        //       break;
+        //     case "Above ₹5000":
+        //       if (price <= 5000) return false;
+        //       break;
+        //   }
+        // }
 
         return true;
       });
@@ -341,7 +331,7 @@ const StockScreen = () => {
           item.description.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-
+    console.log(data, "data");
     return data;
   };
 
@@ -389,6 +379,66 @@ const StockScreen = () => {
     setFilterModalVisible(true);
   };
 
+  const handleActiveChange = (id: string, value: boolean) => {
+    setProducts((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, is_active: value } : item
+      )
+    );
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    Alert.alert(
+      "Delete Product",
+      "Are you sure you want to delete this product? \nThis action cannot be undone.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => confirmDeleteProduct(id),
+        },
+      ]
+    );
+  };
+
+  const confirmDeleteProduct = async (id: string) => {
+    try {
+      setLoading(true);
+      const response = await api.delete(`${API_ROUTES.deleteProduct}${id}/`);
+
+      if (response.status === 200 || response.status === 204) {
+        // Remove product from local state
+        setProducts((prev) => prev.filter((item) => item.id !== id));
+        Alert.alert("Success", "Product deleted successfully");
+      } else {
+        throw new Error("Failed to delete product");
+      }
+    } catch (error) {
+      console.error("Error deleting product:", error);
+      Alert.alert("Error", "Failed to delete product. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleProductPress = (product: Product) => {
+    if (selectedType === "Product/Service") {
+      // Navigate to VariantsScreen with product data
+      (navigation as any).navigate(HomeNavigation.VARIANTS_SCREEN, {
+        product: product,
+        variants: product.variants || [],
+      });
+    }
+  };
+
+  const handleEditProduct = (id: string) => {
+    (navigation as any).navigate(HomeNavigation.ADD_PRODUCT_SCREEN, {
+      productId: id,
+      isEdit: true,
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Header
@@ -398,19 +448,11 @@ const StockScreen = () => {
         borderBottomColor="#ccc"
       />
       <ScrollView style={styles.midcontent}>
-        <View style={styles.searchBar}>
-          <Image
-            source={require("../assets/search.png")}
-            style={styles.searchIcon}
-          />
-          <TextInput
-            placeholder="Searched Product/Service"
-            placeholderTextColor="#666"
-            style={styles.searchInput}
-            value={searchQuery}
-            onChangeText={handleSearch}
-          />
-        </View>
+        <SearchBar
+          placeholder="Searched Product/Service"
+          value={searchQuery}
+          onChangeText={handleSearch}
+        />
         <View style={styles.filterContainer}>
           {selectedType === "Product/Service" && (
             <View style={styles.filterButtons}>
@@ -462,63 +504,23 @@ const StockScreen = () => {
                 </Text>
               </View>
             }
-            renderItem={({ item }) => (
-              <View style={styles.productCard}>
-                {selectedType === "Product/Service" && (
-                  <View style={styles.stockBadgeAbove}>
-                    <Text style={styles.stockText}>
-                      {(item as Product).stock} Pieces Left
-                    </Text>
-                  </View>
-                )}
-                <Image
-                  source={
-                    item.image && typeof item.image === "string"
-                      ? { uri: item.image }
-                      : item.image || require("../assets/product.png")
-                  }
-                  style={styles.productImage}
-                />
+            renderItem={({ item }) => {
+              const product = item as Product;
 
-                <View style={styles.bottomRow}>
-                  <View style={styles.productdetails}>
-                    <Text style={styles.productName} numberOfLines={1}>
-                      {item.name}
-                    </Text>
-                    <Text style={styles.productDesc} numberOfLines={1}>
-                      {item.description}
-                    </Text>
-                  </View>
-                  <Text style={styles.priceText}>
-                    Rs{" "}
-                    {selectedType === "Product/Service"
-                      ? (item as Product).price
-                      : (item as unknown as Addon).price_per_unit}
-                  </Text>
-                </View>
-                <View style={styles.quantityControl}>
-                  <TouchableOpacity
-                    onPress={() => updateQuantity(item.id, -1)}
-                    style={styles.quantityButton}
-                  >
-                    <Text style={[styles.quantityButtonText, { color: "red" }]}>
-                      ➖
-                    </Text>
-                  </TouchableOpacity>
-                  <Text style={styles.quantityText}>
-                    {quantities[item.id] || 0}
-                  </Text>
-                  <TouchableOpacity
-                    onPress={() => updateQuantity(item.id, 1)}
-                    style={styles.quantityButton}
-                  >
-                    <Text style={[styles.quantityButtonText, { color: "red" }]}>
-                      ➕
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            )}
+              return (
+                <ProductItem
+                  product={product}
+                  selectedType={selectedType}
+                  onPress={handleProductPress}
+                  onEdit={handleEditProduct}
+                  onDelete={handleDeleteProduct}
+                  onActiveChange={handleActiveChange}
+                  showStock={selectedType === "Product/Service"}
+                  showActions={true}
+                  showSwitch={true}
+                />
+              );
+            }}
           />
         )}
       </ScrollView>
@@ -546,142 +548,110 @@ const StockScreen = () => {
               {/* Category Filter */}
               <View style={styles.filterSection}>
                 <Text style={styles.filterSectionTitle}>Category</Text>
-                <View style={styles.filterOptionsContainer}>
-                  {filterOptions.category.map((option) => (
-                    <TouchableOpacity
-                      key={option}
-                      style={[
-                        styles.filterOption,
-                        selectedFilters.category === option &&
-                          styles.selectedFilterOption,
-                      ]}
-                      onPress={() => handleFilterSelect("category", option)}
-                    >
-                      <Text
-                        style={[
-                          styles.filterOptionText,
-                          selectedFilters.category === option &&
-                            styles.selectedFilterOptionText,
-                        ]}
-                      >
-                        {option}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                {isLoadingCategories ? (
+                  <View style={styles.filterLoadingContainer}>
+                    <ActivityIndicator size="small" color="#FCA311" />
+                    <Text style={styles.filterLoadingText}>
+                      Loading categories...
+                    </Text>
+                  </View>
+                ) : (
+                  <CustomDropdown
+                    placeholder="Select Category"
+                    options={categoryList}
+                    onSelect={(option) =>
+                      handleFilterSelect("category", option.name)
+                    }
+                    selectedValue={
+                      categoryList.find(
+                        (cat) => cat.name === selectedFilters.category
+                      )?.id || null
+                    }
+                    dropDownBoxStyle={styles.dropdown}
+                  />
+                )}
               </View>
 
               {/* Subcategory Filter */}
               <View style={styles.filterSection}>
                 <Text style={styles.filterSectionTitle}>Subcategory</Text>
-                <View style={styles.filterOptionsContainer}>
-                  {filterOptions.subcategory.map((option) => (
-                    <TouchableOpacity
-                      key={option}
-                      style={[
-                        styles.filterOption,
-                        selectedFilters.subcategory === option &&
-                          styles.selectedFilterOption,
-                      ]}
-                      onPress={() => handleFilterSelect("subcategory", option)}
-                    >
-                      <Text
-                        style={[
-                          styles.filterOptionText,
-                          selectedFilters.subcategory === option &&
-                            styles.selectedFilterOptionText,
-                        ]}
-                      >
-                        {option}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                {isLoadingCategories ? (
+                  <View style={styles.filterLoadingContainer}>
+                    <ActivityIndicator size="small" color="#FCA311" />
+                    <Text style={styles.filterLoadingText}>
+                      Loading subcategories...
+                    </Text>
+                  </View>
+                ) : (
+                  <CustomDropdown
+                    placeholder="Select Subcategory"
+                    options={subCategoryList}
+                    onSelect={(option) =>
+                      handleFilterSelect("subcategory", option.name)
+                    }
+                    selectedValue={
+                      subCategoryList.find(
+                        (sub) => sub.name === selectedFilters.subcategory
+                      )?.id || null
+                    }
+                    dropDownBoxStyle={styles.dropdown}
+                  />
+                )}
               </View>
 
-              {/* Color Filter */}
-              <View style={styles.filterSection}>
-                <Text style={styles.filterSectionTitle}>Color</Text>
-                <View style={styles.filterOptionsContainer}>
-                  {filterOptions.color.map((option) => (
-                    <TouchableOpacity
-                      key={option}
-                      style={[
-                        styles.filterOption,
-                        selectedFilters.color === option &&
-                          styles.selectedFilterOption,
-                      ]}
-                      onPress={() => handleFilterSelect("color", option)}
-                    >
-                      <Text
-                        style={[
-                          styles.filterOptionText,
-                          selectedFilters.color === option &&
-                            styles.selectedFilterOptionText,
-                        ]}
-                      >
-                        {option}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+              {/* Color Filter - Only show for Product/Service */}
+              {selectedType === "Product/Service" && (
+                <View style={styles.filterSection}>
+                  <Text style={styles.filterSectionTitle}>Color</Text>
+                  <CustomDropdown
+                    placeholder="Select Color"
+                    options={staticFilterOptions.color}
+                    onSelect={(option) =>
+                      handleFilterSelect("color", option.name)
+                    }
+                    selectedValue={
+                      staticFilterOptions.color.find(
+                        (color) => color.name === selectedFilters.color
+                      )?.id || null
+                    }
+                    dropDownBoxStyle={styles.dropdown}
+                  />
                 </View>
-              </View>
+              )}
 
               {/* Size Filter */}
-              <View style={styles.filterSection}>
+              {/* <View style={styles.filterSection}>
                 <Text style={styles.filterSectionTitle}>Size</Text>
-                <View style={styles.filterOptionsContainer}>
-                  {filterOptions.size.map((option) => (
-                    <TouchableOpacity
-                      key={option}
-                      style={[
-                        styles.filterOption,
-                        selectedFilters.size === option &&
-                          styles.selectedFilterOption,
-                      ]}
-                      onPress={() => handleFilterSelect("size", option)}
-                    >
-                      <Text
-                        style={[
-                          styles.filterOptionText,
-                          selectedFilters.size === option &&
-                            styles.selectedFilterOptionText,
-                        ]}
-                      >
-                        {option}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
+                <CustomDropdown
+                  placeholder="Select Size"
+                  options={staticFilterOptions.size}
+                  onSelect={(option) => handleFilterSelect("size", option.name)}
+                  selectedValue={
+                    staticFilterOptions.size.find(
+                      (size) => size.name === selectedFilters.size
+                    )?.id || null
+                  }
+                  dropDownBoxStyle={styles.dropdown}
+                />
+              </View> */}
 
               {/* Price Filter */}
-              <View style={styles.filterSection}>
+              {/* <View style={styles.filterSection}>
                 <Text style={styles.filterSectionTitle}>Price Range</Text>
-                <View style={styles.filterOptionsContainer}>
-                  {filterOptions.price.map((option) => (
-                    <TouchableOpacity
-                      key={option}
-                      style={[
-                        styles.filterOption,
-                        selectedFilters.price === option &&
-                          styles.selectedFilterOption,
-                      ]}
-                      onPress={() => handleFilterSelect("price", option)}
-                    >
-                      <Text
-                        style={[
-                          styles.filterOptionText,
-                          selectedFilters.price === option &&
-                            styles.selectedFilterOptionText,
-                        ]}
-                      >
-                        {option}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </View>
+                <CustomDropdown
+                  placeholder="Select Price Range"
+                  options={staticFilterOptions.price}
+                  onSelect={(option) =>
+                    handleFilterSelect("price", option.name)
+                  }
+                  selectedValue={
+                    staticFilterOptions.price.find(
+                      (price) => price.name === selectedFilters.price
+                    )?.id || null
+                  }
+                  dropDownBoxStyle={styles.dropdown}
+                />
+              </View> */}
             </ScrollView>
 
             {/* Action Buttons */}
@@ -717,8 +687,8 @@ const StockScreen = () => {
             color="#00630F"
             fontSize={16}
             fontWeight="bold"
-            buttonStyle={styles.addButtonGreen}
-            textStyle={styles.buttongreen}
+            buttonStyle={styles.addButtonGreen as any}
+            textStyle={styles.buttongreen as any}
           />
         </View>
         <View style={styles.typeButtonWrapper}>
@@ -729,7 +699,7 @@ const StockScreen = () => {
                 styles.typeButton,
                 selectedType === type && styles.selectedType,
               ]}
-              onPress={() => setSelectedType(type)}
+              onPress={() => handleTypeSelection(type)}
             >
               <Text
                 style={[
@@ -790,34 +760,6 @@ const styles = ScaledSheet.create({
   midcontent: {
     padding: 10,
   },
-  searchBarContainer: {
-    marginBottom: 10,
-  },
-  searchBar: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFF7DD",
-    paddingHorizontal: 15,
-    borderRadius: 25,
-    height: 45,
-    borderWidth: 1,
-    borderColor: "#FFB74D",
-  },
-
-  searchIcon: {
-    width: 20,
-    height: 20,
-    tintColor: "#000",
-    marginRight: 10,
-  },
-
-  searchInput: {
-    flex: 1,
-    color: "#000",
-    fontSize: 16,
-    fontWeight: "400",
-  },
   micIcon: {
     width: 18,
     height: 18,
@@ -829,52 +771,6 @@ const styles = ScaledSheet.create({
   },
   productList: {
     paddingBottom: 80,
-  },
-  productCard: {
-    width: "47%",
-    backgroundColor: "#fff",
-    margin: "1.5%",
-    borderRadius: 10,
-    elevation: 3,
-    padding: 10,
-    position: "relative",
-  },
-  stockBadgeAbove: {
-    alignSelf: "flex-start",
-
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    borderRadius: 5,
-    marginBottom: -20,
-    zIndex: 1,
-  },
-  stockText: {
-    fontSize: 10,
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  productImage: {
-    width: "100%",
-    height: 150,
-    borderRadius: 10,
-    resizeMode: "cover",
-  },
-  productName: {
-    fontSize: 14,
-    fontWeight: "bold",
-    marginTop: 5,
-    color: "#000",
-  },
-  productDesc: {
-    fontSize: 12,
-    color: "#777",
-    marginBottom: 5,
-  },
-  bottomRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 10,
-    alignItems: "center",
   },
   price: {
     fontSize: 14,
@@ -1118,5 +1014,47 @@ const styles = ScaledSheet.create({
     fontSize: 14,
     color: "#fff",
     fontWeight: "600",
+  },
+  // Dropdown styles
+  dropdown: {
+    marginBottom: 8,
+  },
+  // Loading container styles for filter modal
+  filterLoadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#FCA311",
+    borderRadius: 8,
+    backgroundColor: "#FFF8EB",
+  },
+  filterLoadingText: {
+    marginLeft: 8,
+    color: "#FCA311",
+    fontSize: 14,
+  },
+  // Variants badge styles
+  variantsBadge: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "#4CAF50",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    zIndex: 1,
+  },
+  variantsText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  variantsInfo: {
+    fontSize: 12,
+    color: "#FCA311",
+    fontStyle: "italic",
+    marginTop: 2,
   },
 });

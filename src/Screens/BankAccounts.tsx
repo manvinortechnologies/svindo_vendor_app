@@ -15,6 +15,7 @@ import Headerwithback from "./Headerwithback";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import AddBankDetailsModal from "../Modals/AddBankDetailsModal";
+import TransferFundsModal from "../Modals/TransferFundsModal";
 import { BankDetails } from "../type/common";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import { ScaledSheet } from "react-native-size-matters";
@@ -23,6 +24,7 @@ const BankAccounts = ({ navigation }: any) => {
   const [cash, setCash] = useState<string>("00.00");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isTransferModalVisible, setIsTransferModalVisible] = useState(false);
   const [bankList, setBankList] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   useEffect(() => {
@@ -69,6 +71,10 @@ const BankAccounts = ({ navigation }: any) => {
       setIsLoading(false);
     }
     // Submit to API or save locally
+  };
+
+  const handleTransferSuccess = () => {
+    getCash(); // Refresh the data after successful transfer
   };
   return (
     <SafeAreaView style={styles.container}>
@@ -145,7 +151,10 @@ const BankAccounts = ({ navigation }: any) => {
             </View>
 
             {/* Transfer Funds Card */}
-            <View style={styles.card}>
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() => setIsTransferModalVisible(true)}
+            >
               <View style={styles.row}>
                 <Image
                   source={require("../assets/transfer.png")}
@@ -158,7 +167,7 @@ const BankAccounts = ({ navigation }: any) => {
                   </Text>
                 </View>
               </View>
-            </View>
+            </TouchableOpacity>
           </View>
         )}
       />
@@ -176,6 +185,11 @@ const BankAccounts = ({ navigation }: any) => {
         visible={isModalVisible}
         onClose={() => setIsModalVisible(false)}
         onSubmit={handleSaveBankDetails}
+      />
+      <TransferFundsModal
+        visible={isTransferModalVisible}
+        onClose={() => setIsTransferModalVisible(false)}
+        onSuccess={handleTransferSuccess}
       />
       <Loading visible={isLoading} />
     </SafeAreaView>

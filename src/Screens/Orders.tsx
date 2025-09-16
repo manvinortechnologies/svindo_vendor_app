@@ -2,22 +2,12 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   FlatList,
   ScrollView,
-  StyleSheet,
-  Platform,
-  Image,
   Modal,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import Header from "./Header";
-import { StatusBar } from "react-native";
-import Bottomnavigation from "./Bottomnavigation";
-import NavigationButton from "./NavigationButton";
-import { useNavigation } from "@react-navigation/native";
-import OrderProductDetails from "./OrderProductDetails";
 import { SafeAreaView } from "react-native-safe-area-context";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
@@ -27,7 +17,7 @@ import { ScaledSheet } from "react-native-size-matters";
 
 const Orders = ({ navigation }: any) => {
   const [selectedStatus, setSelectedStatus] = useState("All");
-  const [selectedType, setSelectedType] = useState("On Shop");
+  const [selectedType, setSelectedType] = useState("");
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("None");
 
@@ -82,7 +72,7 @@ const Orders = ({ navigation }: any) => {
     }
 
     // Type filter
-    if (selectedType !== "On Shop") {
+    if (selectedType && selectedType !== "") {
       filtered = filtered.filter(
         (order: any) => order.delivery_type === selectedType
       );
@@ -116,12 +106,6 @@ const Orders = ({ navigation }: any) => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* <Header
-        title="Orders/Sales"
-        backgroundColor="#FFF"
-        textColor="#333"
-        borderBottomColor="#ccc"
-      /> */}
       <Loading visible={loading} />
       <ScrollView style={styles.midcontent}>
         <View style={styles.header}>
@@ -257,7 +241,14 @@ const Orders = ({ navigation }: any) => {
                 styles.typeButton,
                 selectedType === type && styles.selectedType,
               ]}
-              onPress={() => setSelectedType(type)}
+              onPress={() => {
+                // If clicking on the already selected type, unselect it
+                if (selectedType === type) {
+                  setSelectedType("");
+                } else {
+                  setSelectedType(type);
+                }
+              }}
             >
               <Text
                 style={[

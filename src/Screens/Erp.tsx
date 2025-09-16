@@ -5,6 +5,8 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Linking,
+  Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
@@ -55,7 +57,7 @@ const Erp = () => {
     {
       label: "Sale & POS",
       icon: "cart-outline",
-      screen: HomeNavigation.SALE_POS,
+      screen: HomeNavigation.PRODUCT_SELECTION,
     },
     {
       label: "Purchases",
@@ -125,7 +127,11 @@ const Erp = () => {
     //   icon: "book-open-variant",
     //   screen: HomeNavigation.DELIVERY_CHALLAN,
     // },
-    // { title: "Day Book", icon: "book-open-variant", screen: "DayBookScreen" },
+    {
+      title: "Day Book",
+      icon: "book-open-variant",
+      screen: HomeNavigation.DAY_BOOK_SCREEN,
+    },
     {
       title: "Bank Accounts",
       icon: "bank-outline",
@@ -208,14 +214,14 @@ const Erp = () => {
   ];
 
   const helpItems = [
-    { title: "WhatsApp", icon: "whatsapp", screen: "MessageSupportScreen" },
+    { title: "WhatsApp", icon: "whatsapp", action: "whatsapp" },
     { title: "Email", icon: "email-outline", screen: "MessageSupportScreen" },
     {
       title: "Message",
       icon: "message-outline",
-      screen: "MessageSupportScreen",
+      action: "message",
     },
-    { title: "Call", icon: "phone-outline", screen: "CallSupportScreen" },
+    { title: "Call", icon: "phone-outline", action: "call" },
   ];
 
   const bottomItems = [
@@ -235,6 +241,56 @@ const Erp = () => {
       screen: "PremiumScreen",
     },
   ];
+
+  const openWhatsApp = async () => {
+    const phoneNumber = "+918377935333";
+    const message = "Hello! I need support with Svindo Vendor App.";
+    const url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(
+      message
+    )}`;
+
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        // Fallback to web WhatsApp if app is not installed
+        const webUrl = `https://wa.me/${phoneNumber.replace(
+          /\D/g,
+          ""
+        )}?text=${encodeURIComponent(message)}`;
+        await Linking.openURL(webUrl);
+      }
+    } catch (error) {
+      console.error("Error opening WhatsApp:", error);
+      Alert.alert("Error", "Unable to open WhatsApp. Please try again.");
+    }
+  };
+
+  const openCall = async () => {
+    const phoneNumber = "+918377935333";
+    const url = `tel:${phoneNumber}`;
+
+    try {
+      await Linking.openURL(url);
+    } catch (error) {
+      console.error("Error opening phone dialer:", error);
+      Alert.alert("Error", "Unable to open phone dialer. Please try again.");
+    }
+  };
+
+  const openMessage = async () => {
+    const phoneNumber = "+918377935333";
+    const message = "Hello! I need support with Svindo Vendor App.";
+    const url = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`;
+
+    try {
+      await Linking.openURL(url);
+    } catch (error) {
+      console.error("Error opening SMS app:", error);
+      Alert.alert("Error", "Unable to open SMS app. Please try again.");
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -261,11 +317,20 @@ const Erp = () => {
 
         {/* Top Tabs */}
         <View style={styles.topTabContainer}>
-          {topTabs.map((tab) => (
+          {topTabs.map((tab, i) => (
             <View key={tab.label} style={styles.tabItem}>
               <TouchableOpacity
                 style={styles.topTab}
-                onPress={() => tab.screen && navigation.navigate(tab.screen)}
+                onPress={() =>
+                  tab.screen &&
+                  navigation.navigate(
+                    tab.screen as any,
+                    i === 0 && {
+                      selectedProducts: [],
+                      navigateScreen: HomeNavigation.SALE_POS,
+                    }
+                  )
+                }
               >
                 <Icon name={tab.icon} size={24} color="#000" />
               </TouchableOpacity>
@@ -276,11 +341,13 @@ const Erp = () => {
 
         {/* Menu Items */}
         <View style={styles.menuContainer}>
-          {menuItems.map((item) => (
+          {menuItems.map((item, i) => (
             <TouchableOpacity
               key={item.title}
               style={styles.menuItem}
-              onPress={() => item.screen && navigation.navigate(item.screen)}
+              onPress={() =>
+                item.screen && navigation.navigate(item.screen as any)
+              }
             >
               <Icon name={item.icon} size={22} color="#000" />
               <Text style={styles.menuText}>{item.title}</Text>
@@ -379,7 +446,17 @@ const Erp = () => {
               <TouchableOpacity
                 key={item.title}
                 style={styles.helpItem}
-                onPress={() => item.screen && navigation.navigate(item.screen)}
+                onPress={() => {
+                  if (item.action === "whatsapp") {
+                    openWhatsApp();
+                  } else if (item.action === "call") {
+                    openCall();
+                  } else if (item.action === "message") {
+                    openMessage();
+                  } else if (item.screen) {
+                    navigation.navigate(item.screen);
+                  }
+                }}
               >
                 <Icon name={item.icon} size={22} color="#FCA311" />
                 <Text style={styles.helpText}>{item.title}</Text>

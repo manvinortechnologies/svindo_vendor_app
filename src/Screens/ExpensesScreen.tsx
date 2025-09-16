@@ -7,16 +7,20 @@ import {
   TouchableOpacity,
   Dimensions,
   FlatList,
+  Modal,
+  TextInput,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import MainContainer from "../CommonComponent/MainContainer";
-import Headerwithback from "./Headerwithback";
 import { Expense } from "../type/common";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import { useIsFocused } from "@react-navigation/native";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import { ScaledSheet } from "react-native-size-matters";
+import CustomHeader from "../CommonComponent/CustomHeader";
+import { SafeAreaView } from "react-native-safe-area-context";
+import CalendarModal from "../Modals/CalendarModal";
 
 const ExpensesScreen = ({ navigation }: any) => {
   const isFocused = useIsFocused();
@@ -27,6 +31,14 @@ const ExpensesScreen = ({ navigation }: any) => {
     [key: string]: Expense[];
   }>({});
   const [total, setTotal] = useState<number>(0);
+
+  // Calendar modal states
+  const [showCalendarModal, setShowCalendarModal] = useState<boolean>(false);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>([]);
+  const [isFiltered, setIsFiltered] = useState<boolean>(false);
+  const [callenderModel, setCallenderModel] = useState<string>("");
 
   useEffect(() => {
     getAllExpenses();
@@ -76,6 +88,38 @@ const ExpensesScreen = ({ navigation }: any) => {
     return sortedGrouped;
   };
 
+  // Date filtering functions
+  const filterExpensesByDateRange = (start: string, end: string) => {
+    if (!start || !end) return expensesList;
+
+    const startDateObj = new Date(start);
+    const endDateObj = new Date(end);
+
+    return expensesList.filter((expense) => {
+      const expenseDate = new Date(expense.expense_date);
+      return expenseDate >= startDateObj && expenseDate <= endDateObj;
+    });
+  };
+
+  const handleApplyFilter = () => {
+    if (startDate && endDate) {
+      const filtered = filterExpensesByDateRange(startDate, endDate);
+      setFilteredExpenses(filtered);
+      setGroupedExpenses(groupExpensesByDate(filtered));
+      setIsFiltered(true);
+      setShowCalendarModal(false);
+    }
+  };
+
+  const handleClearFilter = () => {
+    setStartDate("");
+    setEndDate("");
+    setFilteredExpenses([]);
+    setGroupedExpenses(groupExpensesByDate(expensesList));
+    setIsFiltered(false);
+    setShowCalendarModal(false);
+  };
+
   const getAllExpenses = async () => {
     try {
       setIsLoading(true);
@@ -121,9 +165,11 @@ const ExpensesScreen = ({ navigation }: any) => {
         </View>
 
         <View style={styles.expenseRow}>
-          <Text style={styles.descText} numberOfLines={2}>
-            {item.description}
-          </Text>
+          {item.description && (
+            <Text style={styles.descText} numberOfLines={2}>
+              {item.description}
+            </Text>
+          )}
           <Text style={styles.descText} numberOfLines={2}>
             {item.amount}
           </Text>
@@ -142,49 +188,127 @@ const ExpensesScreen = ({ navigation }: any) => {
   };
 
   return (
-    <MainContainer>
-      <View style={styles.container}>
-        <Headerwithback
-          title="Expenses"
-          rightIcons={[
-            <Icon name="calendar-outline" size={22} color="#FCA311" />,
-          ]}
-        />
-        {/* Header */}
-        {/* <View style={styles.header}>
-        <TouchableOpacity style={styles.backButton}>
-          <Icon name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Expenses</Text>
-        <TouchableOpacity style={styles.calendarButton}>
-          <Icon name="calendar-outline" size={22} color="#FCA311" />
-        </TouchableOpacity>
-      </View> */}
+    <SafeAreaView style={styles.container}>
+      {/* Header */}
+      <CustomHeader
+        title="Expenses"
+        rightIcon={
+          <TouchableOpacity onPress={() => setShowCalendarModal(true)}>
+            <Icon name="calendar-outline" size={22} color="#FCA311" />
+          </TouchableOpacity>
+        }
+      />
 
-        {/* Ledger */}
-        <View style={styles.ledger}>
-          <Text style={styles.ledgerText}></Text>
-          <Text style={[styles.ledgerText]}>Ledger</Text>
-          <Text style={styles.ledgerAmount}>{total}</Text>
-        </View>
-        <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
-          {Object.entries(groupedExpenses).map(([date, expenses]) =>
-            renderDateSection(date, expenses)
-          )}
-        </ScrollView>
-
-        {/* Add Expense Button */}
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => {
-            navigation.navigate("Expenses");
-          }}
-        >
-          <Text style={styles.addText}>Add Expenses</Text>
-        </TouchableOpacity>
+      {/* Ledger */}
+      <View style={styles.ledger}>
+        <Text style={styles.ledgerText}></Text>
+        <Text style={[styles.ledgerText]}>Ledger</Text>
+        <Text style={styles.ledgerAmount}>{total}</Text>
       </View>
+      <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
+        {Object.entries(groupedExpenses).map(([date, expenses]) =>
+          renderDateSection(date, expenses)
+        )}
+      </ScrollView>
+
+      {/* Add Expense Button */}
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() => {
+          navigation.navigate("Expenses");
+        }}
+      >
+        <Text style={styles.addText}>Add Expenses</Text>
+      </TouchableOpacity>
+
+      {/* Calendar Modal */}
+      <CalendarModal
+        visible={!!callenderModel}
+        onClose={() => setCallenderModel(false)}
+        onSelect={(e) =>
+          callenderModel === "start" ? setStartDate(e) : setEndDate(e)
+        }
+      />
+      <Modal
+        visible={showCalendarModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowCalendarModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Filter by Date Range</Text>
+              <TouchableOpacity
+                onPress={() => setShowCalendarModal(false)}
+                style={styles.closeButton}
+              >
+                <Icon name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalContent}>
+              <View style={styles.dateInputContainer}>
+                <Text style={styles.dateLabel}>Start Date</Text>
+                <TouchableOpacity onPress={() => setCallenderModel("start")}>
+                  <TextInput
+                    style={styles.dateInput}
+                    value={startDate}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor="#999"
+                    editable={false}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.dateInputContainer}>
+                <Text style={styles.dateLabel}>End Date</Text>
+                <TouchableOpacity onPress={() => setCallenderModel("end")}>
+                  <TextInput
+                    style={styles.dateInput}
+                    value={endDate}
+                    editable={false}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor="#999"
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {isFiltered && (
+                <View style={styles.filterStatus}>
+                  <Text style={styles.filterStatusText}>
+                    Filtered by date range
+                  </Text>
+                  <TouchableOpacity
+                    onPress={handleClearFilter}
+                    style={styles.clearFilterButton}
+                  >
+                    <Text style={styles.clearFilterText}>Clear Filter</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={() => setShowCalendarModal(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.applyButton]}
+                  onPress={handleApplyFilter}
+                  disabled={!startDate || !endDate}
+                >
+                  <Text style={styles.applyButtonText}>Apply Filter</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
       <Loading visible={isLoading} />
-    </MainContainer>
+    </SafeAreaView>
   );
 };
 
@@ -298,5 +422,111 @@ const styles = ScaledSheet.create({
   addText: {
     color: "#fff",
     fontWeight: "bold",
+  },
+  // Calendar Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    width: width * 0.9,
+    maxHeight: height * 0.6,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalContent: {
+    padding: 20,
+  },
+  dateInputContainer: {
+    marginBottom: 20,
+  },
+  dateLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+  },
+  dateInput: {
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: "#000",
+    backgroundColor: "#fff",
+  },
+  filterStatus: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#F0F8FF",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  filterStatusText: {
+    fontSize: 14,
+    color: "#2196F3",
+    fontWeight: "500",
+  },
+  clearFilterButton: {
+    backgroundColor: "#FF5722",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  clearFilterText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginHorizontal: 5,
+  },
+  cancelButton: {
+    backgroundColor: "#F5F5F5",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  cancelButtonText: {
+    color: "#666",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  applyButton: {
+    backgroundColor: "#FCA311",
+  },
+  applyButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
