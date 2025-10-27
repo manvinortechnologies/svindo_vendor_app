@@ -130,5 +130,5 @@ export function formatOrderDate(dateString: string): string {
     .toString()
     .padStart(2, "0")} ${ampm}`;
 
-  return `${day} ${month} ${year}\n${formattedTime}`;
+  return `${day} ${month} ${year}, ${formattedTime}`;
 }

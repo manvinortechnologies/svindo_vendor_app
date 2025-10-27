@@ -17,6 +17,7 @@ import Loading from "../CommonComponent/Loading";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import { DeliveryPerson } from "../type/common";
+import DeleteModal from "./DeleteModal";
 
 const AddDeliveryBoy = () => {
   const [name, setName] = useState("");
@@ -26,7 +27,11 @@ const AddDeliveryBoy = () => {
   const [imageModel, setImageModel] = useState<boolean>(false);
   const [deliveryBoys, setDeliveryBoys] = useState<DeliveryPerson[]>();
   const [isLoading, setIsLoading] = useState(false);
-
+  const [isDeleting, setIsDeleting] = useState<number | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deliveryBoyId, setDeliveryBoyId] = useState<number | null>(null);
   useEffect(() => {
     getData();
   }, []);
@@ -57,15 +62,19 @@ const AddDeliveryBoy = () => {
       Alert.alert("Error", "Please enter a valid 10-digit mobile number");
       return false;
     }
-    if (!rating.trim()) {
-      Alert.alert("Error", "Please enter rating");
+    if (!imageFile) {
+      Alert.alert("Error", "Please upload a photo of the delivery boy");
       return false;
     }
-    const ratingValue = parseFloat(rating);
-    if (isNaN(ratingValue) || ratingValue < 0 || ratingValue > 5) {
-      Alert.alert("Error", "Please enter a valid rating between 0 and 5");
-      return false;
-    }
+    // if (!rating.trim()) {
+    //   Alert.alert("Error", "Please enter rating");
+    //   return false;
+    // }
+    // const ratingValue = parseFloat(rating);
+    // if (isNaN(ratingValue) || ratingValue < 0 || ratingValue > 5) {
+    //   Alert.alert("Error", "Please enter a valid rating between 0 and 5");
+    //   return false;
+    // }
     return true;
   };
 
@@ -77,16 +86,26 @@ const AddDeliveryBoy = () => {
     try {
       setIsLoading(true);
 
-      const payload = {
-        name: name.trim(),
-        mobile: mobile.trim(),
-        is_active: true,
-        rating: parseFloat(rating),
-      };
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append("name", name.trim());
+      formData.append("mobile", mobile.trim());
+      formData.append("is_active", "true");
 
-      console.log("Creating delivery boy with payload:", payload);
+      // Add photo if selected
+      if (imageFile) {
+        formData.append("photo", {
+          uri: imageFile.uri,
+          type: imageFile.type || "image/jpeg",
+          name: imageFile.fileName || "delivery_boy_photo.jpg",
+        });
+      }
 
-      const response = await api.post(API_ROUTES.deliveryBoys, payload);
+      const response = await api.post(API_ROUTES.deliveryBoys, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       if (response.status === 200 || response.status === 201) {
         Alert.alert("Success", "Delivery boy created successfully!");
@@ -108,9 +127,125 @@ const AddDeliveryBoy = () => {
     }
   };
 
+  const handleDeleteDeliveryBoy = (id: number) => {
+    setShowDeleteModal(true);
+    setDeliveryBoyId(id);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+  };
+
+  const handleConfirmDelete = async () => {
+    try {
+      setIsDeleting(deliveryBoyId);
+      const response = await api.delete(
+        `${API_ROUTES.deliveryBoys}${deliveryBoyId}/`
+      );
+
+      if (response.status === 200 || response.status === 204) {
+        Alert.alert("Success", "Delivery boy deleted successfully!");
+        // Refresh the list
+        getData();
+      } else {
+        Alert.alert("Error", "Failed to delete delivery boy");
+      }
+    } catch (error) {
+      console.error("Error deleting delivery boy:", error);
+      Alert.alert("Error", "Failed to delete delivery boy. Please try again.");
+    } finally {
+      setIsDeleting(null);
+    }
+  };
+
+  const handleEditDeliveryBoy = (deliveryBoy: DeliveryPerson) => {
+    setIsEditing(true);
+    setEditingId(deliveryBoy.id);
+    setName(deliveryBoy.name);
+    setMobile(deliveryBoy.mobile);
+    setRating(deliveryBoy.rating || "");
+
+    // Set the existing photo if available
+    if (deliveryBoy.photo) {
+      setImageFile({
+        uri: deliveryBoy.photo,
+        type: "image/jpeg",
+        fileName: "existing_photo.jpg",
+      });
+    } else {
+      setImageFile(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditingId(null);
+    setName("");
+    setMobile("");
+    setRating("");
+    setImageFile(null);
+  };
+
+  const handleUpdateDeliveryBoy = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    if (!editingId) {
+      Alert.alert("Error", "No delivery boy selected for editing");
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append("name", name.trim());
+      formData.append("mobile", mobile.trim());
+      formData.append("is_active", "true");
+
+      // Add photo if selected
+      if (imageFile) {
+        formData.append("photo", {
+          uri: imageFile.uri,
+          type: imageFile.type || "image/jpeg",
+          name: imageFile.fileName || "delivery_boy_photo.jpg",
+        });
+      }
+
+      const response = await api.put(
+        `${API_ROUTES.deliveryBoys}${editingId}/`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.status === 200 || response.status === 201) {
+        Alert.alert("Success", "Delivery boy updated successfully!");
+        // Reset form and exit edit mode
+        handleCancelEdit();
+        // Refresh the list
+        getData();
+      } else {
+        Alert.alert("Error", "Failed to update delivery boy");
+      }
+    } catch (error) {
+      console.error("Error updating delivery boy:", error);
+      Alert.alert("Error", "Failed to update delivery boy. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <MainContainer>
-      <Headerwithback title="Add Own Delivery Boy" />
+      <Headerwithback
+        title={isEditing ? "Edit Delivery Boy" : "Add Own Delivery Boy"}
+      />
       <View style={styles.container}>
         <ModalUpdatePhoto
           isVisible={imageModel}
@@ -123,6 +258,7 @@ const AddDeliveryBoy = () => {
         />
 
         {/* Upload Photo */}
+        <Text style={styles.label}>Photo</Text>
         <TouchableOpacity
           onPress={() => {
             setImageModel(true);
@@ -137,8 +273,8 @@ const AddDeliveryBoy = () => {
             />
           ) : (
             <>
-              <Icon name="camera-plus" size={24} color="#888" />
-              <Text style={styles.uploadText}>Upload Photo</Text>
+              <Icon name="camera-plus" size={32} color="#FCA311" />
+              <Text style={styles.uploadText}>Tap to Upload Photo</Text>
             </>
           )}
         </TouchableOpacity>
@@ -167,7 +303,7 @@ const AddDeliveryBoy = () => {
         />
 
         {/* Rating */}
-        <Text style={styles.label}>Rating</Text>
+        {/* <Text style={styles.label}>Rating</Text>
         <TextInput
           placeholder="Enter rating (0-5)"
           placeholderTextColor="#999"
@@ -175,15 +311,29 @@ const AddDeliveryBoy = () => {
           keyboardType="decimal-pad"
           value={rating}
           onChangeText={setRating}
-        />
+        /> */}
 
-        {/* Create Button */}
-        <TouchableOpacity
-          style={styles.createBtn}
-          onPress={handleCreateDeliveryBoy}
-        >
-          <Text style={styles.createBtnText}>Create</Text>
-        </TouchableOpacity>
+        {/* Create/Update Button */}
+        <View style={styles.buttonContainer}>
+          {isEditing && (
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={handleCancelEdit}
+            >
+              <Text style={styles.cancelBtnText}>Cancel</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            style={styles.createBtn}
+            onPress={
+              isEditing ? handleUpdateDeliveryBoy : handleCreateDeliveryBoy
+            }
+          >
+            <Text style={styles.createBtnText}>
+              {isEditing ? "Update" : "Create"}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
         {/* Delivery Boys List */}
         <Text style={styles.sectionTitle}>Delivery Boys</Text>
@@ -211,15 +361,35 @@ const AddDeliveryBoy = () => {
                     {item.is_active ? "Active" : "Pause"}
                   </Text>
                 </View>
-                <TouchableOpacity>
-                  <Icon name="delete" size={20} color="red" />
-                </TouchableOpacity>
+                <View style={styles.actionButtons}>
+                  <TouchableOpacity
+                    onPress={() => handleEditDeliveryBoy(item)}
+                    style={styles.editButton}
+                  >
+                    <Icon name="pencil" size={18} color="#FCA311" />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => handleDeleteDeliveryBoy(item.id)}
+                    disabled={isDeleting === item.id}
+                    style={styles.deleteButton}
+                  >
+                    {isDeleting === item.id ? (
+                      <Icon name="loading" size={18} color="#ccc" />
+                    ) : (
+                      <Icon name="delete" size={18} color="red" />
+                    )}
+                  </TouchableOpacity>
+                </View>
               </View>
 
               {/* Content */}
               <View style={styles.contentRow}>
                 <Image
-                  source={require("../assets/logo.png")}
+                  source={
+                    item.photo
+                      ? { uri: item.photo }
+                      : require("../assets/logo.png")
+                  }
                   style={styles.logo}
                 />
                 <View style={{ flex: 1, marginLeft: 10 }}>
@@ -245,6 +415,16 @@ const AddDeliveryBoy = () => {
           showsVerticalScrollIndicator={false}
         />
         <Loading visible={isLoading} />
+        <DeleteModal
+          showDeleteModal={showDeleteModal}
+          handleCancelDelete={handleCancelDelete}
+          handleConfirmDelete={handleConfirmDelete}
+          title="Delete Delivery Boy"
+          message="Are you sure you want to delete this delivery boy?"
+          subMessage="This action cannot be undone and will permanently remove all delivery boy data."
+          buttonText="Cancel"
+          buttonText2="Delete"
+        />
       </View>
     </MainContainer>
   );
@@ -259,8 +439,8 @@ const styles = StyleSheet.create({
     padding: 15,
   },
   uploadBox: {
-    borderWidth: 1,
-    borderColor: "#ccc",
+    borderWidth: 2,
+    borderColor: "#FCA311",
     borderStyle: "dashed",
     height: 120,
     borderRadius: 8,
@@ -270,11 +450,19 @@ const styles = StyleSheet.create({
     marginHorizontal: 30,
     width: "50%",
     alignSelf: "center",
+    backgroundColor: "#FFF7DD",
   },
   uploadText: {
-    color: "#888",
-    fontSize: 12,
+    color: "#FCA311",
+    fontSize: 14,
     marginTop: 4,
+    fontWeight: "500",
+  },
+  uploadSubText: {
+    color: "#888",
+    fontSize: 10,
+    marginTop: 2,
+    fontStyle: "italic",
   },
   label: {
     fontSize: 14,
@@ -289,16 +477,32 @@ const styles = StyleSheet.create({
     padding: 12,
     marginVertical: 6,
     backgroundColor: "#FFEFD5",
+    color: "#000",
+  },
+  buttonContainer: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    alignItems: "center",
+    marginVertical: 10,
+    gap: 10,
   },
   createBtn: {
-    alignSelf: "flex-end",
     backgroundColor: "#169729",
     borderRadius: 20,
     paddingVertical: 8,
     paddingHorizontal: 20,
-    marginVertical: 10,
   },
   createBtnText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  cancelBtn: {
+    backgroundColor: "#ccc",
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+  },
+  cancelBtnText: {
     color: "#fff",
     fontWeight: "bold",
   },
@@ -331,13 +535,14 @@ const styles = StyleSheet.create({
   contentRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 50,
+    gap: 10,
   },
   logo: {
     width: "20%",
     height: "80%",
-    resizeMode: "contain",
+    resizeMode: "cover",
     backgroundColor: "#fff",
+    borderRadius: 10,
   },
   nameText: {
     fontWeight: "bold",
@@ -360,5 +565,18 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     borderRadius: 10,
+  },
+  actionButtons: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  editButton: {
+    padding: 4,
+    borderRadius: 4,
+  },
+  deleteButton: {
+    padding: 4,
+    borderRadius: 4,
   },
 });

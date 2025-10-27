@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ViewStyle,
+  TextStyle,
 } from "react-native";
 import { s, ScaledSheet } from "react-native-size-matters";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -15,12 +16,16 @@ interface CustomHeaderProps {
   title: string;
   rightIcon?: React.ReactNode;
   containerStyle?: ViewStyle;
+  showBackButton?: boolean;
+  titleStyle?: TextStyle;
 }
 
 const CustomHeader: React.FC<CustomHeaderProps> = ({
   title,
   rightIcon,
   containerStyle,
+  showBackButton = true,
+  titleStyle = {},
 }) => {
   const navigation = useNavigation();
   const { smartGoBack } = useSmartBackNavigationV2();
@@ -28,12 +33,14 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
   return (
     <View style={[styles.header, containerStyle]}>
       {/* Left: Back Button */}
-      <TouchableOpacity onPress={smartGoBack} style={styles.backButton}>
-        <Ionicons name="chevron-back" size={s(18)} color="#fff" />
-      </TouchableOpacity>
+      {showBackButton && (
+        <TouchableOpacity onPress={smartGoBack} style={styles.backButton}>
+          <Ionicons name="chevron-back" size={s(18)} color="#fff" />
+        </TouchableOpacity>
+      )}
 
       {/* Center: Title */}
-      <Text style={styles.title}>{title}</Text>
+      <Text style={[styles.title, titleStyle]}>{title}</Text>
 
       {/* Right: Optional */}
       <View style={styles.rightContainer}>{rightIcon}</View>

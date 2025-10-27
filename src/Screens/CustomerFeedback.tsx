@@ -14,6 +14,8 @@ import SearchHeader from "./SearchHeader";
 import { Switch } from "react-native-gesture-handler";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import CustomSwitch from "./CustomSwitch";
+import Headerwithback from "./Headerwithback";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const reviews = [
   {
@@ -75,14 +77,9 @@ const CustomerFeedback = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <Header
-        title="Rating & Review"
-        backgroundColor="#FCA311"
-        textColor="#fff"
-        borderBottomColor="#ccc"
-        paddingTop={50}
-      />
+    <SafeAreaView style={styles.container}>
+      <Headerwithback title="Rating & Review" />
+
       <ScrollView>
         <SearchHeader title="Search Products" draftName="" paddingTop={10} />
 
@@ -181,7 +178,7 @@ const CustomerFeedback = () => {
           </View>
         ))}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

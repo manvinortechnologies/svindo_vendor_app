@@ -111,6 +111,7 @@ export type THomeNavigation = {
   [HomeNavigation.ADDVENDOR]: undefined;
   [HomeNavigation.DELIVERY_SETTING_SCREEN]: undefined;
   [HomeNavigation.PAYMENTSCREEN]: undefined;
+  [HomeNavigation.PAYMENTS_LIST]: undefined;
   [HomeNavigation.MANAGENOTIFICATION]: undefined;
   [HomeNavigation.SENDNOTIFICATION]: undefined;
   [HomeNavigation.PROMOTESTORE]: undefined;
@@ -126,6 +127,9 @@ export type THomeNavigation = {
   [HomeNavigation.SCAN_BARCODE]: undefined;
   [HomeNavigation.PRODUCT_SELECTION]: undefined;
   [HomeNavigation.TRANSACTION_MESSAGES]: undefined;
+  [HomeNavigation.SUPPORT]: undefined;
+  [HomeNavigation.CHAT_SCREEN]: undefined;
+  [HomeNavigation.REQUESTOFFERS]: { requestId?: string };
 };
 
 // export type TTabNavigation = {

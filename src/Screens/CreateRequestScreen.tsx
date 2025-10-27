@@ -8,7 +8,7 @@ import {
   Image,
   Alert,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Headerwithback from "./Headerwithback";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomDropdown from "../CommonComponent/CustomDropdown";
@@ -18,39 +18,58 @@ import {
   ImagePickerResponse,
   MediaType,
 } from "react-native-image-picker";
+import api from "../services/api/api";
+import { API_ROUTES } from "../constants/api-routes.constants";
+import Loading from "../CommonComponent/Loading";
+import { useNavigation } from "@react-navigation/native";
 
 const CreateRequestScreen = () => {
+  const navigation = useNavigation();
   const [selectedType, setSelectedType] = useState<"Business" | "Personal">(
     "Business"
   );
+  const [categoryList, setCategoryList] = useState<any>([]);
+  const [subCategoryList, setSubCategoryList] = useState<any>([]);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [selectedSubCategory, setSelectedSubCategory] = useState<any>(null);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
 
-  // Sample data for dropdowns
-  const categories = [
-    { id: 1, name: "Electronics" },
-    { id: 2, name: "Fashion" },
-    { id: 3, name: "Home & Garden" },
-    { id: 4, name: "Sports" },
-    { id: 5, name: "Books" },
-    { id: 6, name: "Automotive" },
-    { id: 7, name: "Health & Beauty" },
-    { id: 8, name: "Toys & Games" },
-  ];
+  // Form state
+  const [formData, setFormData] = useState({
+    productName: "",
+    budget: "",
+    description: "",
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState({
+    productName: "",
+    category: "",
+    subCategory: "",
+    budget: "",
+    description: "",
+    images: "",
+  });
 
-  const subCategories = [
-    { id: 1, name: "Mobile Phones" },
-    { id: 2, name: "Computers" },
-    { id: 3, name: "Audio" },
-    { id: 4, name: "Accessories" },
-    { id: 5, name: "Clothing" },
-    { id: 6, name: "Shoes" },
-    { id: 7, name: "Furniture" },
-    { id: 8, name: "Kitchen" },
-    { id: 9, name: "Fitness" },
-    { id: 10, name: "Outdoor" },
-  ];
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  const fetchAllData = async () => {
+    try {
+      setIsLoading(true);
+      const [categoryRes, subCategoryRes] = await Promise.all([
+        api.get(API_ROUTES.productCategory),
+        api.get(API_ROUTES.productSubCategory),
+      ]);
+
+      setCategoryList(categoryRes.data);
+      setSubCategoryList(subCategoryRes.data);
+    } catch (error) {
+      console.error("Error fetching data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const showImagePicker = () => {
     Alert.alert(
@@ -112,9 +131,173 @@ const CreateRequestScreen = () => {
     setSelectedImages((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const handleInputChange = (field: string, value: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+
+    // Clear error when user starts typing
+    if (errors[field as keyof typeof errors]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: "",
+      }));
+    }
+  };
+
+  const handleCategorySelect = (category: any) => {
+    setSelectedCategory(category);
+    if (errors.category) {
+      setErrors((prev) => ({
+        ...prev,
+        category: "",
+      }));
+    }
+    // Clear sub-category when category changes
+    setSelectedSubCategory(null);
+    if (errors.subCategory) {
+      setErrors((prev) => ({
+        ...prev,
+        subCategory: "",
+      }));
+    }
+  };
+
+  const handleSubCategorySelect = (subCategory: any) => {
+    setSelectedSubCategory(subCategory);
+    if (errors.subCategory) {
+      setErrors((prev) => ({
+        ...prev,
+        subCategory: "",
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {
+      productName: "",
+      category: "",
+      subCategory: "",
+      budget: "",
+      description: "",
+      images: "",
+    };
+
+    let isValid = true;
+
+    if (!formData.productName.trim()) {
+      newErrors.productName = "Please enter product name";
+      isValid = false;
+    }
+    if (!selectedCategory) {
+      newErrors.category = "Please select a category";
+      isValid = false;
+    }
+    if (!selectedSubCategory) {
+      newErrors.subCategory = "Please select a sub-category";
+      isValid = false;
+    }
+    if (!formData.budget.trim() || isNaN(Number(formData.budget))) {
+      newErrors.budget = "Please enter a valid budget amount";
+      isValid = false;
+    }
+    if (!formData.description.trim()) {
+      newErrors.description = "Please enter description";
+      isValid = false;
+    }
+    if (selectedImages.length === 0) {
+      newErrors.images = "Please upload at least one image";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const createRequest = async () => {
+    if (!validateForm()) return;
+
+    try {
+      setIsLoading(true);
+
+      // Create FormData for multipart/form-data request
+      const requestData = new FormData();
+
+      // Add the required fields
+      requestData.append(
+        "type",
+        selectedType === "Business" ? "business" : "personal"
+      );
+      requestData.append("product_name", formData.productName);
+      requestData.append("category", selectedCategory.id.toString());
+      requestData.append("sub_category", selectedSubCategory.id.toString());
+      requestData.append("budget", formData.budget);
+      requestData.append("description", formData.description);
+
+      // Add images if any
+      selectedImages.forEach((imageUri, index) => {
+        requestData.append("photo", {
+          uri: imageUri,
+          type: "image/jpeg",
+          name: `product_image_${index}.jpg`,
+        });
+      });
+
+      const response = await api.post(
+        API_ROUTES.customerRequests,
+        requestData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (response.status === 200 || response.status === 201) {
+        Alert.alert(
+          "Success",
+          "Request created successfully! You will receive offers from vendors soon.",
+          [
+            {
+              text: "OK",
+              onPress: () => {
+                // Reset form
+                setFormData({
+                  productName: "",
+                  budget: "",
+                  description: "",
+                });
+                setSelectedCategory(null);
+                setSelectedSubCategory(null);
+                setSelectedImages([]);
+                setSelectedType("Business");
+                setErrors({
+                  productName: "",
+                  category: "",
+                  subCategory: "",
+                  budget: "",
+                  description: "",
+                  images: "",
+                });
+                navigation.goBack();
+              },
+            },
+          ]
+        );
+      }
+    } catch (error) {
+      console.error("Error creating request:", error);
+      Alert.alert("Error", "Failed to create request. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Headerwithback title={"Create Request"} />
+      <Loading visible={isLoading} />
 
       <ScrollView contentContainerStyle={styles.listContainer}>
         <View style={styles.formContainer}>
@@ -180,48 +363,75 @@ const CreateRequestScreen = () => {
           <Text style={styles.label}>Product Name</Text>
           <TextInput
             placeholder="Ex: Bulk military dress for school function"
-            style={styles.input}
+            style={[styles.input, errors.productName && styles.inputError]}
             placeholderTextColor="#727272"
+            value={formData.productName}
+            onChangeText={(text) => handleInputChange("productName", text)}
           />
+          {errors.productName ? (
+            <Text style={styles.errorText}>{errors.productName}</Text>
+          ) : null}
 
           {/* Category */}
           <Text style={styles.label}>Category</Text>
           <CustomDropdown
             placeholder="Select Category"
-            options={categories}
-            onSelect={setSelectedCategory}
-            selectedValue={selectedCategory?.id || null}
-            dropDownBoxStyle={styles.dropdownStyle}
+            options={categoryList}
+            onSelect={handleCategorySelect}
+            selectedValue={selectedCategory || null}
+            dropDownBoxStyle={[
+              styles.dropdownStyle,
+              errors.category && styles.inputError,
+            ]}
           />
+          {errors.category ? (
+            <Text style={styles.errorText}>{errors.category}</Text>
+          ) : null}
 
           {/* Sub-Category */}
           <Text style={styles.label}>Sub-Category</Text>
           <CustomDropdown
             placeholder="Select Sub-Category"
-            options={subCategories}
-            onSelect={setSelectedSubCategory}
-            selectedValue={selectedSubCategory?.id || null}
-            dropDownBoxStyle={styles.dropdownStyle}
+            options={subCategoryList}
+            onSelect={handleSubCategorySelect}
+            selectedValue={selectedSubCategory || null}
+            dropDownBoxStyle={[
+              styles.dropdownStyle,
+              errors.subCategory && styles.inputError,
+            ]}
           />
+          {errors.subCategory ? (
+            <Text style={styles.errorText}>{errors.subCategory}</Text>
+          ) : null}
 
           {/* Budget */}
           <Text style={styles.label}>Budget</Text>
           <TextInput
             placeholder="Enter amount"
-            style={styles.input}
+            style={[styles.input, errors.budget && styles.inputError]}
             keyboardType="numeric"
             placeholderTextColor="#727272"
+            value={formData.budget}
+            onChangeText={(text) => handleInputChange("budget", text)}
           />
+          {errors.budget ? (
+            <Text style={styles.errorText}>{errors.budget}</Text>
+          ) : null}
 
           {/* Description */}
           <Text style={styles.label}>Description</Text>
           <TextInput
             placeholder="Enter full detail"
-            style={styles.textArea}
+            style={[styles.textArea, errors.description && styles.inputError]}
             multiline
             numberOfLines={4}
             placeholderTextColor="#727272"
+            value={formData.description}
+            onChangeText={(text) => handleInputChange("description", text)}
           />
+          {errors.description ? (
+            <Text style={styles.errorText}>{errors.description}</Text>
+          ) : null}
 
           {/* Upload Photos */}
           <TouchableOpacity
@@ -230,6 +440,9 @@ const CreateRequestScreen = () => {
           >
             <Text style={styles.uploadText}>Upload Photos</Text>
           </TouchableOpacity>
+          {errors.images ? (
+            <Text style={styles.errorText}>{errors.images}</Text>
+          ) : null}
 
           {/* Display Selected Images */}
           {selectedImages.length > 0 && (
@@ -265,8 +478,14 @@ const CreateRequestScreen = () => {
           </Text>
 
           {/* Submit Request */}
-          <TouchableOpacity style={styles.submitButton}>
-            <Text style={styles.submitText}>Submit Request</Text>
+          <TouchableOpacity
+            style={styles.submitButton}
+            onPress={createRequest}
+            disabled={isLoading}
+          >
+            <Text style={styles.submitText}>
+              {isLoading ? "Creating Request..." : "Submit Request"}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -327,6 +546,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     fontSize: 14,
     backgroundColor: "#FFF3E1",
+    color: "#000",
   },
   textArea: {
     borderWidth: 1,
@@ -338,6 +558,7 @@ const styles = StyleSheet.create({
     minHeight: 100,
     textAlignVertical: "top",
     backgroundColor: "#FFF3E1",
+    color: "#000",
   },
   uploadButton: {
     width: "30%",
@@ -425,5 +646,14 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
+  },
+  errorText: {
+    color: "#FF0000",
+    fontSize: 12,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  inputError: {
+    borderColor: "#FF0000",
   },
 });

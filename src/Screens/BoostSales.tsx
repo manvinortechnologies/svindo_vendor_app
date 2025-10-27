@@ -72,21 +72,21 @@ type MenuItemType = {
 // ✅ Ensure screen names match the navigation stack
 const menuItems: MenuItemType[] = [
   { title: "Banner Ads", icon: "image-outline", screen: "BannerAds" },
-  {
-    title: "Promote Store / Products / Posts",
-    icon: "storefront-outline",
-    screen: "PromoteStore",
-  },
+  // {
+  //   title: "Promote Store / Products / Posts",
+  //   icon: "storefront-outline",
+  //   screen: "PromoteStore",
+  // },
   {
     title: "Discount Coupons",
     icon: "ticket-percent-outline",
     screen: "CouponsScreen",
   },
-  {
-    title: "Delivery Cashback Amount",
-    icon: "cash-refund",
-    screen: "DeliveryCashback",
-  },
+  // {
+  //   title: "Delivery Cashback Amount",
+  //   icon: "cash-refund",
+  //   screen: "DeliveryCashback",
+  // },
   {
     title: "Send Notifications on svindo app",
     icon: "bell-outline",

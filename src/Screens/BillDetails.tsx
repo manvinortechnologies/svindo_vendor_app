@@ -225,12 +225,9 @@ const BillDetails: React.FC = () => {
       <Headerwithback
         title="Bill Details"
         rightIcons={[
-          <Icon
-            name="format-list-text"
-            size={25}
-            color="#FFA700"
-            key="search"
-          />,
+          <TouchableOpacity key="share">
+            <Icon name="share-variant" size={25} color="#666" key="share" />
+          </TouchableOpacity>,
         ]}
       />
 

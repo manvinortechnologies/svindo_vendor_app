@@ -12,13 +12,27 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Headerwithback from "./Headerwithback";
 import MainContainer from "../CommonComponent/MainContainer";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
+import { useRoute, RouteProp } from "@react-navigation/native";
+
+type RootStackParamList = {
+  AddVendor: {
+    isEdit?: boolean;
+    vendor?: any;
+  };
+};
+
+type AddVendorRouteProp = RouteProp<RootStackParamList, "AddVendor">;
 
 const AddVendor = ({ navigation }: any) => {
+  const route = useRoute<AddVendorRouteProp>();
+  const isEdit = route.params?.isEdit || false;
+  const vendor = route.params?.vendor || {};
+
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [basicDetails, setBasicDetails] = useState({
@@ -43,6 +57,40 @@ const AddVendor = ({ navigation }: any) => {
     state: "",
     country: "",
   });
+
+  useEffect(() => {
+    if (isEdit && vendor) {
+      console.log("vendor-->", vendor);
+      // Set basic details
+      setBasicDetails({
+        name: vendor.name || "",
+        mobile: vendor.contact || vendor.phone || "",
+        email: vendor.email || "",
+        opening_balance:
+          vendor.opening_balance?.toString() ||
+          vendor.balance?.toString() ||
+          "0",
+      });
+
+      // Set business details
+      setBusinessDetails({
+        company: vendor.company_name || "",
+        gst: vendor.gst_number || "",
+        aadhar: vendor.aadhar_number || "",
+        pan: vendor.pan_number || "",
+      });
+
+      // Set address
+      setAddress({
+        line1: vendor.billing_address_line1 || "",
+        line2: vendor.billing_address_line2 || "",
+        pincode: vendor.billing_pincode || "",
+        city: vendor.billing_city || "",
+        state: vendor.billing_state || "",
+        country: vendor.billing_country || "",
+      });
+    }
+  }, [isEdit, vendor]);
 
   const validateForm = () => {
     let tempErrors: { [key: string]: string } = {};
@@ -93,26 +141,40 @@ const AddVendor = ({ navigation }: any) => {
         billing_city: address.city,
         billing_state: address.state,
         billing_country: address.country,
-        balance: basicDetails.opening_balance,
+        opening_balance: basicDetails.opening_balance,
       };
 
-      console.log("Payload to submit:", payload);
-      const res = await api.post("vendor/vendor/", payload);
-      if (res.status == 201) {
-        Alert.alert("Success", "Customer information saved successfully.");
-        navigation.goBack();
+      let res;
+      if (isEdit && vendor.id) {
+        // Update existing vendor
+        res = await api.put(`vendor/vendor/${vendor.id}/`, payload);
+        if (res.status === 200) {
+          Alert.alert("Success", "Vendor information updated successfully.");
+          navigation.goBack();
+        }
+      } else {
+        // Create new vendor
+        res = await api.post("vendor/vendor/", payload);
+        if (res.status === 201) {
+          Alert.alert("Success", "Vendor information saved successfully.");
+          navigation.goBack();
+        }
       }
     } catch (error) {
+      console.error("Error saving vendor:", error);
+      Alert.alert(
+        "Error",
+        "Failed to save vendor information. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
-    // Submit to API here
   };
 
   return (
     <MainContainer>
       <SafeAreaView style={styles.container}>
-        <Headerwithback title={"Add Vendor"} />
+        <Headerwithback title={isEdit ? "Edit Vendor" : "Add Vendor"} />
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <KeyboardAvoidingView
             style={{ flex: 1 }}
@@ -240,7 +302,9 @@ const AddVendor = ({ navigation }: any) => {
 
               {/* Save Button */}
               <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                <Text style={styles.saveButtonText}>Save</Text>
+                <Text style={styles.saveButtonText}>
+                  {isEdit ? "Update Vendor" : "Save Vendor"}
+                </Text>
               </TouchableOpacity>
               <Loading visible={isLoading} />
             </ScrollView>

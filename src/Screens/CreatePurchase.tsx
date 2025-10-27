@@ -56,6 +56,7 @@ interface Product {
 type RootStackParamList = {
   CreatePurchase: {
     selectedProducts?: Product[];
+    formData?: any; // Add form data preservation
   };
 };
 
@@ -113,7 +114,7 @@ const CreatePurchase = ({ navigation }: any) => {
   const [showProductModal, setShowProductModal] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{ [key: string]: string }>({
     dispatchAddress: "",
     signature: "",
     references: "",
@@ -128,7 +129,7 @@ const CreatePurchase = ({ navigation }: any) => {
     parcels: "",
   });
 
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const validateForm = () => {
     let tempErrors: any = {};
@@ -196,12 +197,50 @@ const CreatePurchase = ({ navigation }: any) => {
     getInitialData();
   }, []);
 
-  // Handle selectedProducts from ProductSelectionScreen
+  // Handle selectedProducts and form data from ProductSelectionScreen
   useEffect(() => {
     if (route.params?.selectedProducts) {
       setSelectedProducts(route.params.selectedProducts);
     }
-  }, [route.params?.selectedProducts]);
+
+    // Restore form data if coming back from ProductSelectionScreen
+    if (route.params?.formData) {
+      const { formData: preservedData } = route.params;
+
+      // Restore all form states except selectedProducts
+      if (preservedData.selectedVendor)
+        setSelectedVendor(preservedData.selectedVendor);
+      if (preservedData.purchaseDate)
+        setPurchaseDate(preservedData.purchaseDate);
+      if (preservedData.selectedPayment)
+        setSelectedPayment(preservedData.selectedPayment);
+      if (preservedData.selectedAdvanceType)
+        setSelectedAdvanceType(preservedData.selectedAdvanceType);
+      if (preservedData.discount) setDiscount(preservedData.discount);
+      if (preservedData.dueDate) setDueDate(preservedData.dueDate);
+      if (preservedData.serialNo) setSerialNo(preservedData.serialNo);
+      if (preservedData.advanceAmount)
+        setAdvanceAmount(preservedData.advanceAmount);
+      if (preservedData.selectedBank)
+        setSelectedBank(preservedData.selectedBank);
+      if (preservedData.supplierDate)
+        setSupplierDate(preservedData.supplierDate);
+      if (preservedData.packingCharges)
+        setPackingCharges(preservedData.packingCharges);
+      if (preservedData.dispatchAddress)
+        setDispatchAddress(preservedData.dispatchAddress);
+      if (preservedData.bank) setBank(preservedData.bank);
+      if (preservedData.signature) setSignature(preservedData.signature);
+      if (preservedData.references) setReferences(preservedData.references);
+      if (preservedData.notes) setNotes(preservedData.notes);
+      if (preservedData.terms) setTerms(preservedData.terms);
+      if (preservedData.extraDiscount)
+        setExtraDiscount(preservedData.extraDiscount);
+      if (preservedData.deliveryCharges)
+        setDeliveryCharges(preservedData.deliveryCharges);
+      if (preservedData.formData) setFormData(preservedData.formData);
+    }
+  }, [route.params?.selectedProducts, route.params?.formData]);
 
   const getInitialData = async () => {
     try {
@@ -291,7 +330,9 @@ const CreatePurchase = ({ navigation }: any) => {
         })),
       };
 
-      !dueDate && delete data.due_date;
+      if (selectedPayment !== "In Credit" && !dueDate) {
+        delete data.due_date;
+      }
 
       console.log("Sending purchase data:", data);
 
@@ -307,8 +348,34 @@ const CreatePurchase = ({ navigation }: any) => {
     }
   };
 
-  const handleChange = (field, value) => {
+  const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // Function to collect all current form data for preservation
+  const getCurrentFormData = () => {
+    return {
+      selectedVendor,
+      purchaseDate,
+      selectedPayment,
+      selectedAdvanceType,
+      discount,
+      dueDate,
+      serialNo,
+      advanceAmount,
+      selectedBank,
+      supplierDate,
+      packingCharges,
+      dispatchAddress,
+      bank,
+      signature,
+      references,
+      notes,
+      terms,
+      extraDiscount,
+      deliveryCharges,
+      formData,
+    };
   };
 
   return (
@@ -381,6 +448,7 @@ const CreatePurchase = ({ navigation }: any) => {
                       {
                         selectedProducts: selectedProducts,
                         navigateScreen: HomeNavigation.CREATE_PURCHASE,
+                        formData: getCurrentFormData(), // Pass current form data
                       }
                     );
                   }}
@@ -481,11 +549,13 @@ const CreatePurchase = ({ navigation }: any) => {
                         onPress={() => setIsPurchasePlanModalVisible(true)}
                       >
                         <Text style={styles.tableText}>
-                          {formatNumber(Number(item?.purchase_price))}
+                          {formatNumber(Number(item?.purchase_price || 0))}
                         </Text>
                       </TouchableOpacity>
                       <Text style={styles.tableText}>
-                        {formatNumber(item?.purchase_price * item?.quantity)}
+                        {formatNumber(
+                          (item?.purchase_price || 0) * item?.quantity
+                        )}
                       </Text>
 
                       <TouchableOpacity
@@ -619,11 +689,11 @@ const CreatePurchase = ({ navigation }: any) => {
                 ].map((item, index) => (
                   <OptionInput
                     key={item.state}
-                    icon={item.icon}
+                    icon={item.icon || undefined}
                     label={item.label}
-                    value={formData[item.state]}
+                    value={formData[item.state] || ""}
                     onChangeText={(text) => handleChange(item.state, text)}
-                    keyboardType={item.keyboardType}
+                    keyboardType={item.keyboardType as any}
                     boldLabelPrefix={item.boldLabelPrefix}
                   />
                 ))}
@@ -825,7 +895,6 @@ const CreatePurchase = ({ navigation }: any) => {
                       initialDate={purchaseDate}
                       onClose={() => setOpenCalendarModel(false)}
                       onSelect={(e) => setPurchaseDate(e)}
-                      minDate={""}
                     />
                     <CustomButton
                       containerStyle={{ marginTop: 20 }}

@@ -7,12 +7,14 @@ import {
   Image,
   StyleSheet,
   SafeAreaView,
+  Alert,
 } from "react-native";
 import {
   widthPercentageToDP as wp,
   heightPercentageToDP as hp,
 } from "react-native-responsive-screen";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import { ActivityIndicator } from "react-native";
 import MainContainer from "../CommonComponent/MainContainer";
 import CustomDropdown from "../CommonComponent/CustomDropdown";
 import CustomHeader from "../CommonComponent/CustomHeader";
@@ -20,6 +22,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import Loading from "../CommonComponent/Loading";
 import { BannerCampaign } from "../type/common";
 import api from "../services/api/api";
+import DeleteModal from "./DeleteModal";
 
 const getStatusStyle = (status: string) => {
   switch (status) {
@@ -55,7 +58,10 @@ const getStatusStyle = (status: string) => {
 const BannerAds = ({ navigation }: any) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [bannerData, setBannerData] = useState<BannerCampaign[]>([]);
-
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [deleteBannerData, setDeleteBannerData] =
+    useState<BannerCampaign | null>(null);
   useFocusEffect(
     useCallback(() => {
       getBannerData();
@@ -72,6 +78,43 @@ const BannerAds = ({ navigation }: any) => {
       console.error("Error fetching banner data:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDeleteBanner = (bannerId: number, campaignName: string) => {
+    setShowDeleteModal(true);
+    setDeleteBannerData({
+      id: bannerId,
+      campaign_name: campaignName,
+    } as BannerCampaign);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setDeleteBannerData(null);
+  };
+
+  const handleConfirmDelete = () => {
+    if (deleteBannerData) {
+      deleteBanner(deleteBannerData.id);
+    }
+  };
+
+  const deleteBanner = async (bannerId: number) => {
+    try {
+      setDeletingId(bannerId);
+      await api.delete(`vendor/banner-campaigns/${bannerId}/`);
+
+      // Remove the deleted banner from the local state
+      setBannerData((prevData) =>
+        prevData.filter((banner) => banner.id !== bannerId)
+      );
+      setShowDeleteModal(false);
+      setDeleteBannerData(null);
+    } catch (error) {
+      console.error("Error deleting banner:", error);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -103,8 +146,23 @@ const BannerAds = ({ navigation }: any) => {
             </Text>
           </View>
           {(status === "Active" || status === "Pending") && (
-            <TouchableOpacity>
-              <Icon name="stop-circle" size={24} color="#D32F2F" />
+            <TouchableOpacity
+              onPress={() => handleDeleteBanner(item.id, item.campaign_name)}
+              disabled={deletingId === item.id}
+              style={{
+                opacity: deletingId === item.id ? 0.5 : 1,
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "center",
+                minWidth: 24,
+                minHeight: 24,
+              }}
+            >
+              {deletingId === item.id ? (
+                <ActivityIndicator size="small" color="#D32F2F" />
+              ) : (
+                <Icon name="delete" size={24} color="#D32F2F" />
+              )}
             </TouchableOpacity>
           )}
         </View>
@@ -147,7 +205,7 @@ const BannerAds = ({ navigation }: any) => {
     <MainContainer>
       <CustomHeader title="Banner Ads" />
       <SafeAreaView style={styles.container}>
-        <Loading visible={isLoading} />
+        <Loading visible={isLoading || deletingId !== null} />
 
         {/* Summary Box */}
         <View style={styles.summaryContainer}>
@@ -162,7 +220,7 @@ const BannerAds = ({ navigation }: any) => {
               placeholder="Select Day"
               options={[{ id: "day", name: "Till Day" }]}
               selectedValue="day"
-              dropDownBoxStyle={{ height: hp(5) }}
+              dropDownBoxStyle={{ height: hp(5), width: wp(30) }}
             />
           </View>
 
@@ -202,6 +260,17 @@ const BannerAds = ({ navigation }: any) => {
           <Text style={styles.addBannerText}>Add Banner</Text>
         </TouchableOpacity>
       </SafeAreaView>
+      <DeleteModal
+        showDeleteModal={showDeleteModal}
+        handleCancelDelete={handleCancelDelete}
+        handleConfirmDelete={handleConfirmDelete}
+        styles={styles}
+        title="Delete Banner"
+        message={`Are you sure you want to delete "${deleteBannerData?.campaign_name}"? This action cannot be undone.`}
+        subMessage="This action cannot be undone and will permanently remove all banner campaign data."
+        buttonText="Cancel"
+        buttonText2="Delete"
+      />
     </MainContainer>
   );
 };

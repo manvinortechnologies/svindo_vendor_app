@@ -7,9 +7,9 @@ import {
   Image,
   Dimensions,
   Modal,
-  SafeAreaView,
+  Alert,
 } from "react-native";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -19,6 +19,13 @@ import Carousel from "react-native-reanimated-carousel";
 import CustomDropdown from "../CommonComponent/CustomDropdown";
 import { vs } from "react-native-size-matters";
 import { HomeNavigation } from "../constants/app-routes.constants";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import api from "../services/api/api";
+import { API_ROUTES } from "../constants/api-routes.constants";
+import Loading from "../CommonComponent/Loading";
+import { APP_CONSTANTS } from "../constants/app.constants";
+import ImagePreviewModal from "../Modals/ImagePreviewModal";
 
 const { width } = Dimensions.get("window");
 
@@ -95,69 +102,22 @@ const offersForYou = [
   },
 ];
 
-const buyersRequests = [
-  {
-    id: "1",
-    productName: "Premium Smartphone",
-    category: "Electronics",
-    subCategory: "Mobile Phones",
-    userId: "svindouser_12345",
-    city: "Mumbai",
-    description:
-      "Looking for latest smartphone with good camera quality and long battery life. Must be in excellent condition.",
-    budget: "25000",
-    image: require("../assets/product/product4.png"),
-  },
-  {
-    id: "2",
-    productName: "Gaming Laptop",
-    category: "Electronics",
-    subCategory: "Computers",
-    userId: "svindouser_67890",
-    city: "Delhi",
-    description:
-      "Need a high-performance gaming laptop for professional work and gaming. Prefer RTX graphics card.",
-    budget: "80000",
-    image: require("../assets/product/product4.png"),
-  },
-  {
-    id: "3",
-    productName: "Designer Watch",
-    category: "Fashion",
-    subCategory: "Accessories",
-    userId: "svindouser_11111",
-    city: "Bangalore",
-    description:
-      "Looking for luxury watch for special occasions. Must be authentic and in perfect working condition.",
-    budget: "15000",
-    image: require("../assets/product/product4.png"),
-  },
-  {
-    id: "4",
-    productName: "Home Speaker System",
-    category: "Electronics",
-    subCategory: "Audio",
-    userId: "svindouser_22222",
-    city: "Chennai",
-    description:
-      "Want wireless speaker system for home entertainment. Should have good bass and clear sound quality.",
-    budget: "12000",
-    image: require("../assets/product/product4.png"),
-  },
-];
-
 type RootStackParamList = {
   BuyersRequest: undefined;
   CreateRequest: undefined;
-  CreateOffer: undefined;
+  CreateOffer: { requestId: string };
+  RequestOffers: { requestId?: string };
 };
 
 type BuyersRequestScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  "CreateRequest"
+  HomeNavigation.CREATEOFFER,
+  HomeNavigation.REQUESTOFFERS
 >;
 
 const BuyersRequestScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
+
   const [selectedTab, setSelectedTab] = useState("Wholesale");
   const [selectedToggle, setSelectedToggle] = useState("Your Request");
   const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -168,10 +128,263 @@ const BuyersRequestScreen: React.FC = () => {
   const [selectedImage, setSelectedImage] = useState<any>(null);
   const navigation = useNavigation<BuyersRequestScreenNavigationProp>();
 
+  // API state management
+  const [customerRequests, setCustomerRequests] = useState<any[]>([]);
+  const [wholesaleRequests, setWholesaleRequests] = useState<any[]>([]);
+  const [retailRequests, setRetailRequests] = useState<any[]>([]);
+  const [offers, setOffers] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [loadingWholesale, setLoadingWholesale] = useState(false);
+  const [loadingRetail, setLoadingRetail] = useState(false);
+  const [loadingOffers, setLoadingOffers] = useState(false);
+
   // Handle image press to show fullscreen modal
   const handleImagePress = (item: any) => {
     setSelectedImage(item);
     setIsImageModalVisible(true);
+  };
+
+  // Fetch customer requests from API
+  const fetchCustomerRequests = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get(API_ROUTES.customerRequests);
+      const requests = response.data || [];
+      setCustomerRequests(requests);
+    } catch (error) {
+      console.error("Error fetching customer requests:", error);
+      Alert.alert("Error", "Failed to load requests. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Fetch wholesale requests (business type)
+  const fetchWholesaleRequests = async () => {
+    try {
+      setLoadingWholesale(true);
+      const response = await api.get(API_ROUTES.wholesaleRetailRequests);
+      const requests = response.data || [];
+      setWholesaleRequests(
+        requests.filter((request: any) => request.type === "business")
+      );
+      setRetailRequests(
+        requests.filter((request: any) => request.type === "personal")
+      );
+    } catch (error) {
+      console.error("Error fetching wholesale requests:", error);
+      Alert.alert(
+        "Error",
+        "Failed to load wholesale requests. Please try again."
+      );
+    } finally {
+      setLoadingWholesale(false);
+    }
+  };
+
+  // Delete request function
+  const deleteRequest = async (requestId: string) => {
+    try {
+      setIsLoading(true);
+      const deleteUrl = API_ROUTES.deleteCustomerRequest.replace(
+        ":id",
+        requestId
+      );
+      await api.delete(deleteUrl);
+
+      // Remove from all relevant state arrays
+      setCustomerRequests((prev) =>
+        prev.filter((request) => request.id.toString() !== requestId)
+      );
+      setWholesaleRequests((prev) =>
+        prev.filter((request) => request.id.toString() !== requestId)
+      );
+      setRetailRequests((prev) =>
+        prev.filter((request) => request.id.toString() !== requestId)
+      );
+
+      Alert.alert("Success", "Request deleted successfully");
+    } catch (error) {
+      console.error("Error deleting request:", error);
+      Alert.alert("Error", "Failed to delete request. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Confirm delete function
+  const confirmDeleteRequest = (requestId: string, productName: string) => {
+    Alert.alert(
+      "Delete Request",
+      `Are you sure you want to delete "${productName}"?`,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => deleteRequest(requestId),
+        },
+      ]
+    );
+  };
+
+  // Fetch offers for a specific request
+  const fetchOffers = async (requestId: string) => {
+    try {
+      setLoadingOffers(true);
+      const response = await api.get(`${API_ROUTES.getOffers}`);
+      const offersData = response.data || [];
+      setOffers(offersData);
+    } catch (error) {
+      console.error("Error fetching offers:", error);
+      Alert.alert("Error", "Failed to load offers. Please try again.");
+    } finally {
+      setLoadingOffers(false);
+    }
+  };
+
+  // Fetch all data
+  const fetchAllData = async () => {
+    try {
+      setIsLoading(true);
+      await Promise.all([fetchCustomerRequests(), fetchWholesaleRequests()]);
+    } catch (error) {
+      console.error("Error fetching all data:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Refresh data
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchAllData();
+    // If we're viewing offers, refresh offers too
+    if (
+      selectedTab === "Requested" &&
+      selectedToggle === "Offers for you" &&
+      customerRequests.length > 0
+    ) {
+      await fetchOffers(customerRequests[0].id.toString());
+    }
+    setRefreshing(false);
+  };
+
+  // Load data on component mount
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  // Handle show offers button click
+  const handleShowOffers = (requestId: string) => {
+    navigation.navigate(HomeNavigation.REQUESTOFFERS, { requestId });
+  };
+
+  // Fetch data when tab changes
+  useEffect(() => {
+    if (
+      (selectedTab === "Wholesale" || selectedTab === "Retail") &&
+      (wholesaleRequests.length === 0 || retailRequests.length === 0)
+    ) {
+      fetchWholesaleRequests();
+    }
+  }, [selectedTab]);
+
+  // Fetch offers when switching to "Offers for you" toggle
+  useEffect(() => {
+    if (
+      selectedTab === "Requested" &&
+      selectedToggle === "Offers for you" &&
+      offers.length === 0
+    ) {
+      // If we have customer requests, fetch offers for the first one
+      if (customerRequests.length > 0) {
+        fetchOffers(customerRequests[0].id.toString());
+      }
+    }
+  }, [selectedToggle, selectedTab]);
+
+  // Transform API data to match component structure
+  const transformRequestData = (request: any) => {
+    return {
+      id: request.id.toString(),
+      productName: request.product_name,
+      category: request.category_details?.name || "Unknown",
+      subCategory: request.sub_category_details?.name || "Unknown",
+      userId:
+        request.user_details?.first_name +
+          " " +
+          request.user_details?.last_name || "Unknown User",
+      city: request.user_details?.pincode?.toString() || "Unknown",
+      description: request.description,
+      budget: request.budget,
+      image: request.photo
+        ? {
+            uri: request.photo.includes("http")
+              ? request.photo
+              : APP_CONSTANTS.API_BASE_URL + request.photo,
+          }
+        : require("../assets/product/product4.png"),
+      type: request.type,
+      created_at: request.created_at,
+      user_details: request.user_details,
+      category_details: request.category_details,
+      sub_category_details: request.sub_category_details,
+    };
+  };
+
+  // Transform offers data to match component structure
+  const transformOfferData = (offer: any) => {
+    return {
+      id: offer.id.toString(),
+      productName: offer.heading || "Special Offer",
+      category: offer.request_details?.category_details?.name || "Unknown",
+      subCategory:
+        offer.request_details?.sub_category_details?.name || "Unknown",
+      vendorId: offer.vendor_details?.id?.toString() || "Unknown",
+      vendorName: offer.vendor_details?.company_name || "Unknown Vendor",
+      city: offer.vendor_details?.city || "Unknown",
+      description: offer.description,
+      offerPrice: offer.selling_price?.toString() || "0",
+      originalPrice: offer.request_details?.budget?.toString() || "0",
+      discount: offer.discount || "0%",
+      image: offer.media
+        ? {
+            uri: offer.media.includes("http")
+              ? offer.media
+              : APP_CONSTANTS.API_BASE_URL + offer.media,
+          }
+        : require("../assets/product/product1.png"),
+      rating: offer.rating || 4.5,
+      reviews: offer.reviews_count || 0,
+      created_at: offer.created_at,
+      vendor_details: offer.seller_user_details,
+      store_details: offer.store,
+      request_details: offer.request_details,
+    };
+  };
+
+  // Get filtered requests based on selected tab and toggle
+  const getFilteredRequests = () => {
+    if (selectedTab === "Requested" && selectedToggle === "Your Request") {
+      return customerRequests.map(transformRequestData);
+    } else if (
+      selectedTab === "Requested" &&
+      selectedToggle === "Offers for you"
+    ) {
+      // Show offers from API
+      return offers.map(transformOfferData);
+    } else if (selectedTab === "Retail") {
+      // Show retail requests from API
+      return retailRequests.map(transformRequestData);
+    } else if (selectedTab === "Wholesale") {
+      // Show wholesale requests from API
+      return wholesaleRequests.map(transformRequestData);
+    }
   };
 
   // Sample data for dropdowns
@@ -182,6 +395,7 @@ const BuyersRequestScreen: React.FC = () => {
     { id: 4, name: "Sports" },
     { id: 5, name: "Books" },
   ];
+
   const subCategories = [
     { id: 1, name: "Mobile Phones" },
     { id: 2, name: "Computers" },
@@ -189,6 +403,7 @@ const BuyersRequestScreen: React.FC = () => {
     { id: 4, name: "Accessories" },
     { id: 5, name: "Clothing" },
   ];
+
   const nearbyOptions = [
     { id: 1, name: "Within 5km" },
     { id: 2, name: "Within 10km" },
@@ -196,14 +411,37 @@ const BuyersRequestScreen: React.FC = () => {
     { id: 4, name: "Within 50km" },
     { id: 5, name: "Any distance" },
   ];
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Reuse your Headerwithback */}
       <Headerwithback title="Buyers Request" />
+      <View>
+        <Loading visible={isLoading} />
+      </View>
+      {selectedTab === "Wholesale" && loadingWholesale && (
+        <View style={styles.tabLoadingContainer}>
+          <Text style={styles.tabLoadingText}>
+            Loading wholesale requests...
+          </Text>
+        </View>
+      )}
+      {selectedTab === "Retail" && loadingRetail && (
+        <View style={styles.tabLoadingContainer}>
+          <Text style={styles.tabLoadingText}>Loading retail requests...</Text>
+        </View>
+      )}
+      {selectedTab === "Requested" &&
+        selectedToggle === "Offers for you" &&
+        loadingOffers && (
+          <View style={styles.tabLoadingContainer}>
+            <Text style={styles.tabLoadingText}>Loading offers...</Text>
+          </View>
+        )}
 
       {/* Filter Button */}
       <TouchableOpacity
-        style={styles.filterTopButton}
+        style={[styles.filterTopButton, { top: insets.top + s(12) }]}
         onPress={() => setFilterModalVisible(true)}
       >
         <Text style={styles.filterTopText}>Filter</Text>
@@ -226,6 +464,20 @@ const BuyersRequestScreen: React.FC = () => {
             >
               {tab}
             </Text>
+            {/* Show data count for each tab */}
+            {/* {tab === "Wholesale" && wholesaleRequests.length > 0 && (
+              <Text style={styles.tabCountText}>
+                ({wholesaleRequests.length})
+              </Text>
+            )}
+            {tab === "Retail" && retailRequests.length > 0 && (
+              <Text style={styles.tabCountText}>({retailRequests.length})</Text>
+            )}
+            {tab === "Requested" && customerRequests.length > 0 && (
+              <Text style={styles.tabCountText}>
+                ({customerRequests.length})
+              </Text>
+            )} */}
           </TouchableOpacity>
         ))}
       </View>
@@ -320,18 +572,23 @@ const BuyersRequestScreen: React.FC = () => {
         loop={false}
         width={width}
         height={Dimensions.get("window").height}
-        data={
-          selectedTab === "Requested" && selectedToggle === "Offers for you"
-            ? (offersForYou as any)
-            : buyersRequests
-        }
+        data={getFilteredRequests() || []}
         onProgressChange={() => {}}
         renderItem={({ item }: { item: any }) => (
           <View style={styles.fullScreenCard}>
             {/* Product Image */}
             <View style={styles.imageContainer}>
               <TouchableOpacity
-                onPress={() => handleImagePress(item)}
+                onPress={() =>
+                  handleImagePress({
+                    ...item,
+                    budget:
+                      selectedTab === "Requested" &&
+                      selectedToggle === "Offers for you"
+                        ? item.offerPrice
+                        : item.budget,
+                  })
+                }
                 activeOpacity={0.8}
               >
                 <Image
@@ -346,7 +603,7 @@ const BuyersRequestScreen: React.FC = () => {
                     style={styles.deleteButton}
                     onPress={() => {
                       // Handle delete functionality
-                      console.log("Delete request:", item.id);
+                      confirmDeleteRequest(item.id, item.productName);
                     }}
                   >
                     <Icon name="delete" size={20} color="#fff" />
@@ -356,13 +613,30 @@ const BuyersRequestScreen: React.FC = () => {
 
             {/* Customer wants to buy */}
             <View style={styles.rowBetween}>
-              <Text style={styles.customerText}>
-                {selectedTab === "Requested"
-                  ? selectedToggle === "Your Request"
-                    ? "You want to buy"
-                    : "Shop Name"
-                  : "Customer wants to buy"}
-              </Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.customerText}>
+                  {selectedTab === "Requested"
+                    ? selectedToggle === "Your Request"
+                      ? "You want to buy"
+                      : "Store : " + item.store_details?.name
+                    : "Customer wants to buy"}
+                </Text>
+                {/* {item.type && (
+                  <View
+                    style={[
+                      styles.requestTypeBadge,
+                      {
+                        backgroundColor:
+                          item.type === "personal" ? "#4CAF50" : "#2196F3",
+                      },
+                    ]}
+                  >
+                    <Text style={styles.requestTypeText}>
+                      {item.type === "personal" ? "Personal" : "Business"}
+                    </Text>
+                  </View>
+                )} */}
+              </View>
               <TouchableOpacity
                 style={styles.sellButton}
                 onPress={() => {
@@ -371,7 +645,7 @@ const BuyersRequestScreen: React.FC = () => {
                     selectedToggle === "Your Request"
                   ) {
                     // Show offers for your request
-                    console.log("Show offers for request:", item.id);
+                    handleShowOffers(item.id);
                   } else if (
                     selectedTab === "Requested" &&
                     selectedToggle === "Offers for you"
@@ -380,11 +654,22 @@ const BuyersRequestScreen: React.FC = () => {
                     console.log("Buy now:", item.id);
                   } else if (selectedTab !== "Requested") {
                     // Sell now for other tabs
-                    navigation.navigate(HomeNavigation.CREATEOFFER);
+                    navigation.navigate(HomeNavigation.CREATEOFFER, {
+                      requestId: item.id,
+                    });
                   }
                 }}
               >
                 <Text style={styles.sellButtonText}>
+                  {selectedTab === "Requested"
+                    ? selectedToggle === "Your Request"
+                      ? "Show offers"
+                      : "Chat"
+                    : selectedTab === "Retail"
+                    ? "Offer now"
+                    : "Sell now"}
+                </Text>
+                {/* <Text style={styles.sellButtonText}>
                   {selectedTab === "Requested" &&
                   selectedToggle === "Your Request"
                     ? "Show offers"
@@ -392,63 +677,70 @@ const BuyersRequestScreen: React.FC = () => {
                       selectedToggle === "Offers for you"
                     ? "Chat"
                     : "Sell now"}
-                </Text>
+                </Text> */}
               </TouchableOpacity>
             </View>
 
             {/* Product Name */}
-            {selectedTab !== "Requested" &&
-              selectedToggle === "Your Request" && (
-                <Text style={styles.productName}>{item.productName}</Text>
-              )}
+            {<Text style={styles.productName}>{item.productName}</Text>}
 
             {/* Details */}
             <View style={styles.detailsRow}>
-              {selectedTab === "Requested" && (
-                // Your request or other tabs details
-                <>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      marginBottom: s(10),
-                    }}
-                  >
-                    <View>
-                      <Text style={styles.label}>
-                        Category {"\n"}
-                        <Text style={styles.label}> {item.subCategory}</Text>
-                      </Text>
-                    </View>
-                    <Text style={styles.budgetText}>Budget</Text>
-                  </View>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "space-between",
-                      marginBottom: s(10),
-                    }}
-                  >
-                    <View>
-                      <Text style={styles.label}>User id</Text>
-                      <Text style={styles.subLabel}>{item.city}</Text>
-                    </View>
-                    <Text style={styles.subLabel}>{item.userId}</Text>
-                    {/* Show Offer Coupon button only for non-Requested tabs */}
-                    {selectedTab !== "Requested" && (
-                      <TouchableOpacity style={styles.couponButton}>
-                        <Text style={styles.couponButtonText}>
-                          Offer Coupon
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
+              {/* {selectedTab === "Requested" && ( */}
+              {/* // Your request or other tabs details */}
+              <>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    marginBottom: s(10),
+                  }}
+                >
                   <View>
-                    <Text style={[styles.label]}>Description</Text>
-                    <Text style={styles.subLabel}>{item.description}</Text>
+                    <Text style={styles.label}>
+                      Category{"\n"}
+                      <Text style={styles.subLabel}>{item.category}</Text>
+                    </Text>
                   </View>
-                </>
-              )}
+                  <Text style={styles.budgetText}>
+                    ₹
+                    {selectedTab === "Requested" &&
+                    selectedToggle === "Offers for you"
+                      ? item.offerPrice
+                      : item.budget}
+                  </Text>
+                </View>
+                <View
+                  style={{
+                    flexDirection: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    marginBottom: s(10),
+                  }}
+                >
+                  <View>
+                    <Text style={styles.label}>Sub Category</Text>
+                    <Text style={styles.subLabel}>{item.subCategory}</Text>
+                  </View>
+                  {selectedTab === "Wholesale" && (
+                    <View style={{ alignItems: "flex-end" }}>
+                      <Text style={styles.label}>User</Text>
+                      <Text style={styles.subLabel}>{item.userId}</Text>
+                    </View>
+                  )}
+                  {/* Show Offer Coupon button only for non-Requested tabs */}
+                  {selectedTab !== "Requested" && (
+                    <TouchableOpacity style={styles.couponButton}>
+                      <Text style={styles.couponButtonText}>Offer Coupon</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+                <View>
+                  <Text style={[styles.label]}>Description</Text>
+                  <Text style={styles.descriptionText}>{item.description}</Text>
+                </View>
+              </>
+              {/* )} */}
             </View>
           </View>
         )}
@@ -506,51 +798,23 @@ const BuyersRequestScreen: React.FC = () => {
         >
           <Text style={styles.requestStockText}>Request Stock</Text>
         </TouchableOpacity>
+        {/* <TouchableOpacity
+          style={[
+            styles.requestStockButton,
+            { backgroundColor: "#4CAF50", marginLeft: 10 },
+          ]}
+          onPress={onRefresh}
+        >
+          <Text style={styles.requestStockText}>Refresh</Text>
+        </TouchableOpacity> */}
       </View>
 
       {/* Fullscreen Image Modal */}
-      <Modal
-        visible={isImageModalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setIsImageModalVisible(false)}
-      >
-        <SafeAreaView style={styles.imageModalContainer}>
-          <View style={styles.imageModalOverlay}>
-            <TouchableOpacity
-              style={styles.imageCloseButton}
-              onPress={() => setIsImageModalVisible(false)}
-            >
-              <Icon name="close" size={30} color="#fff" />
-            </TouchableOpacity>
-
-            <View style={styles.imageModalImageContainer}>
-              <Image
-                source={selectedImage?.image}
-                style={[
-                  styles.fullscreenImage,
-                  { width, height: Dimensions.get("window").height * 0.8 },
-                ]}
-                resizeMode="contain"
-              />
-            </View>
-
-            <View style={styles.imageInfo}>
-              <Text style={styles.imageProductName}>
-                {selectedImage?.productName}
-              </Text>
-              {selectedImage?.description && (
-                <Text style={styles.imageProductDesc}>
-                  {selectedImage.description}
-                </Text>
-              )}
-              <Text style={styles.imageProductBudget}>
-                Budget: ₹{selectedImage?.budget}
-              </Text>
-            </View>
-          </View>
-        </SafeAreaView>
-      </Modal>
+      <ImagePreviewModal
+        isImageModalVisible={isImageModalVisible}
+        setIsImageModalVisible={setIsImageModalVisible}
+        selectedImage={selectedImage}
+      />
     </SafeAreaView>
   );
 };
@@ -564,8 +828,7 @@ const styles = ScaledSheet.create({
   },
   filterTopButton: {
     position: "absolute",
-    right: 10,
-    top: 15,
+    right: "10@s",
     flexDirection: "row",
     alignItems: "center",
     paddingHorizontal: 12,
@@ -617,6 +880,27 @@ const styles = ScaledSheet.create({
   tabTextSelected: {
     color: "#FFF",
     fontWeight: "600",
+  },
+  tabCountText: {
+    fontSize: 10,
+    color: "#FFF",
+    fontWeight: "500",
+    marginLeft: 4,
+  },
+  tabLoadingContainer: {
+    position: "absolute",
+    top: 100,
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.7)",
+    paddingVertical: 10,
+    alignItems: "center",
+    zIndex: 10,
+  },
+  tabLoadingText: {
+    color: "#FFF",
+    fontSize: 14,
+    fontWeight: "500",
   },
   card: {
     backgroundColor: "#FFFAF2",
@@ -675,21 +959,36 @@ const styles = ScaledSheet.create({
     fontSize: 20,
     fontWeight: "600",
   },
+  requestTypeText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  requestTypeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    alignSelf: "flex-start",
+    marginTop: 4,
+  },
   sellButton: {
     backgroundColor: "#F59E0B",
     borderRadius: 4,
     paddingVertical: 4,
     paddingHorizontal: 10,
-    borderWidth: 1,
-    borderColor: "#000",
+    // borderWidth: 1,
+    // borderColor: "#000",
+    minWidth: "100@s",
+    alignItems: "center",
+    justifyContent: "center",
   },
   sellButtonText: {
-    fontSize: 12,
+    fontSize: "14@s",
     color: "#fff",
     fontWeight: "600",
   },
   productName: {
-    fontSize: 18,
+    fontSize: "18@s",
     fontWeight: "600",
     color: "#000",
     marginVertical: 8,
@@ -702,13 +1001,20 @@ const styles = ScaledSheet.create({
     gap: 5,
   },
   label: {
-    fontSize: 12,
-    color: "#000",
+    fontSize: "10@s",
+    color: "#727272",
+
     fontWeight: "600",
   },
   subLabel: {
+    fontSize: "14@s",
     fontWeight: "500",
-    color: "#727272",
+    color: "#000",
+  },
+  descriptionText: {
+    fontSize: "12@s",
+    fontWeight: "500",
+    color: "#000",
   },
   detailsRight: {
     alignItems: "flex-end",
@@ -732,6 +1038,11 @@ const styles = ScaledSheet.create({
     fontSize: 12,
     color: "#fff",
     fontWeight: "500",
+  },
+  deleteButtonText: {
+    color: "#FFF",
+    fontSize: 12,
+    fontWeight: "600",
   },
   requestStockContainer: {
     position: "absolute",
@@ -953,7 +1264,7 @@ const styles = ScaledSheet.create({
   imageModalOverlay: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "center",
+    // alignItems: "center",
     paddingHorizontal: 20,
   },
   imageCloseButton: {
@@ -970,21 +1281,24 @@ const styles = ScaledSheet.create({
   },
   imageModalImageContainer: {
     flex: 1,
-    // justifyContent: "center",
+    justifyContent: "center",
     alignItems: "center",
     width: "100%",
   },
   fullscreenImage: {
-    maxWidth: "100%",
-    maxHeight: "100%",
+    // maxWidth: "100%",
+    // maxHeight: "100%",
+    borderRadius: "10@s",
+    overflow: "hidden",
   },
   imageInfo: {
-    position: "absolute",
-    bottom: 50,
-    left: 20,
-    right: 20,
+    // position: "absolute",
+    // bottom: 50,
+    // left: 20,
+    // right: 20,
     backgroundColor: "rgba(0, 0, 0, 0.7)",
     padding: 15,
+    marginBottom: "30@s",
     borderRadius: 10,
   },
   imageProductName: {

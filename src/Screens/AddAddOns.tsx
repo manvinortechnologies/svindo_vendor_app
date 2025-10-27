@@ -17,7 +17,7 @@ import ModalUpdatePhoto from "../Modals/ModalUpdatePhoto";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute } from "@react-navigation/native";
 import { HomeNavigation } from "../constants/app-routes.constants";
 
 interface AddonFormData {
@@ -35,12 +35,18 @@ interface CategoryOption {
 
 const AddAddOns = () => {
   const navigation = useNavigation();
+  const route = useRoute();
+  const { productId, isEdit } = route.params as {
+    productId: string;
+    isEdit: boolean;
+  };
 
   const [formData, setFormData] = useState<AddonFormData>({
     description: "",
     name: "",
     price_per_unit: "",
     product_category: "",
+    image: null,
   });
   const [isImageModalVisible, setIsImageModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -49,6 +55,17 @@ const AddAddOns = () => {
   useEffect(() => {
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    if (productId) {
+      fetchProduct();
+    }
+  }, [productId]);
+
+  const fetchProduct = async () => {
+    const response = await api.get(`${API_ROUTES.addons}/${productId}/`);
+    setFormData(response.data);
+  };
 
   const fetchCategories = async () => {
     try {
@@ -106,17 +123,19 @@ const AddAddOns = () => {
       formDatas.append("name", formData.name);
       formDatas.append("price_per_unit", formData.price_per_unit);
       formDatas.append("product_category", formData.product_category);
-      if (formData?.image) {
-        console.log(formData?.image);
-
+      if (formData?.image?.uri) {
         formDatas.append("image", formData.image);
       }
 
-      const response = await api.post(API_ROUTES.addons, formDatas, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await api[isEdit ? "put" : "post"](
+        `${API_ROUTES.addons}${productId ? `/${productId}/` : ""}`,
+        formDatas,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       // Navigate to success screen with product details
       (navigation as any).navigate(HomeNavigation.ADDON_SUCCESS, {
@@ -207,7 +226,9 @@ const AddAddOns = () => {
             >
               {formData.image ? (
                 <Image
-                  source={{ uri: formData.image?.uri }}
+                  source={{
+                    uri: formData.image?.uri || formData.image,
+                  }}
                   style={styles.imagePreview}
                 />
               ) : (

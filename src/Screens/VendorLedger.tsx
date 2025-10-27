@@ -6,11 +6,16 @@ import {
   TouchableOpacity,
   FlatList,
   ScrollView,
+  Linking,
+  Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
+import { HomeNavigation } from "../constants/app-routes.constants";
+import CustomModal from "../Modals/CustomModal";
+import DeleteModal from "./DeleteModal";
 
 interface LedgerTransaction {
   type: "invoice" | "payment";
@@ -41,7 +46,7 @@ const VendorLedger = ({ navigation, route }: any) => {
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const vendorId = route?.params?.vendor?.id;
 
   useEffect(() => {
@@ -131,6 +136,84 @@ const VendorLedger = ({ navigation, route }: any) => {
     return [];
   };
 
+  const openWhatsApp = async () => {
+    const phoneNumber = vendorInfo.phone.replace(/\D/g, ""); // Remove non-digits
+    const message = "Hello! I need support with Svindo App.";
+    const url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(
+      message
+    )}`;
+
+    try {
+      const canOpen = await Linking.canOpenURL(url);
+      if (canOpen) {
+        await Linking.openURL(url);
+      } else {
+        // Fallback to web WhatsApp if app is not installed
+        const webUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(
+          message
+        )}`;
+        await Linking.openURL(webUrl);
+      }
+    } catch (error) {
+      console.error("Error opening WhatsApp:", error);
+      Alert.alert("Error", "Unable to open WhatsApp. Please try again.");
+    }
+  };
+
+  const openCall = async () => {
+    const phoneNumber = vendorInfo.phone;
+    const url = `tel:${phoneNumber}`;
+
+    try {
+      await Linking.openURL(url);
+    } catch (error) {
+      console.error("Error opening phone dialer:", error);
+      Alert.alert("Error", "Unable to open phone dialer. Please try again.");
+    }
+  };
+
+  const openMessage = async () => {
+    const phoneNumber = vendorInfo.phone;
+    const message = "Hello! I need support with Svindo App.";
+    const url = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`;
+
+    try {
+      await Linking.openURL(url);
+    } catch (error) {
+      console.error("Error opening SMS app:", error);
+      Alert.alert("Error", "Unable to open SMS app. Please try again.");
+    }
+  };
+
+  const handleEditVendor = () => {
+    navigation.navigate(HomeNavigation.ADDVENDOR as never, {
+      vendor: { ...vendorInfo, ...route?.params?.vendor },
+      isEdit: true,
+    });
+  };
+
+  const handleDeleteVendor = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleConfirmDelete = () => {
+    setShowDeleteModal(false);
+    handleDeleteVendorApi();
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+  };
+
+  const handleDeleteVendorApi = async () => {
+    try {
+      await api.delete(`${API_ROUTES.vendorList}/${vendorId}/`);
+      navigation.goBack();
+    } catch (error) {
+      console.error("Error deleting vendor:", error);
+    }
+  };
+
   if (isLoading) {
     return (
       <View style={styles.container}>
@@ -142,10 +225,13 @@ const VendorLedger = ({ navigation, route }: any) => {
             <Icon name="chevron-back" size={18} color="#fff" />
           </TouchableOpacity>
           <View style={styles.headerActions}>
-            <TouchableOpacity style={{ marginRight: 12 }}>
+            <TouchableOpacity
+              style={{ marginRight: 12 }}
+              onPress={handleEditVendor}
+            >
               <Text style={styles.editText}>View /Edit Details</Text>
             </TouchableOpacity>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={handleDeleteVendor}>
               <Icon name="trash" size={22} color="red" />
             </TouchableOpacity>
           </View>
@@ -166,10 +252,13 @@ const VendorLedger = ({ navigation, route }: any) => {
         </TouchableOpacity>
 
         <View style={styles.headerActions}>
-          <TouchableOpacity style={{ marginRight: 12 }}>
+          <TouchableOpacity
+            style={{ marginRight: 12 }}
+            onPress={handleEditVendor}
+          >
             <Text style={styles.editText}>View /Edit Details</Text>
           </TouchableOpacity>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={handleDeleteVendor}>
             <Icon name="trash" size={22} color="red" />
           </TouchableOpacity>
         </View>
@@ -180,9 +269,15 @@ const VendorLedger = ({ navigation, route }: any) => {
         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
           <Text style={styles.vendorName}>{vendorInfo.name}</Text>
           <View style={styles.infoIcons}>
-            <Icon name="call" size={20} color="black" style={styles.icon} />
-            <Icon name="mail" size={20} color="black" style={styles.icon} />
-            <Icon name="logo-whatsapp" size={20} color="green" />
+            <TouchableOpacity onPress={openCall}>
+              <Icon name="call" size={20} color="black" style={styles.icon} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={openMessage}>
+              <Icon name="mail" size={20} color="black" style={styles.icon} />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={openWhatsApp}>
+              <Icon name="logo-whatsapp" size={20} color="green" />
+            </TouchableOpacity>
           </View>
         </View>
         <Text style={styles.phone}>{vendorInfo.phone}</Text>
@@ -284,9 +379,26 @@ const VendorLedger = ({ navigation, route }: any) => {
       </ScrollView>
 
       {/* Add Transaction Button */}
-      <TouchableOpacity style={styles.addButton}>
+      <TouchableOpacity
+        style={styles.addButton}
+        onPress={() =>
+          navigation.navigate(HomeNavigation.PAYMENTSCREEN as never)
+        }
+      >
         <Text style={styles.addButtonText}>Add Transaction</Text>
       </TouchableOpacity>
+
+      {/* Delete Vendor Confirmation Modal */}
+      <DeleteModal
+        showDeleteModal={showDeleteModal}
+        handleCancelDelete={handleCancelDelete}
+        handleConfirmDelete={handleConfirmDelete}
+        title="Delete Vendor"
+        message="Are you sure you want to delete this vendor?"
+        subMessage="This action cannot be undone and will permanently remove all vendor data and transaction history."
+        buttonText="Cancel"
+        buttonText2="Delete"
+      />
     </View>
   );
 };
@@ -429,5 +541,60 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 12,
     fontWeight: "bold",
+  },
+  deleteModalStyle: {
+    backgroundColor: "#fff",
+  },
+  deleteModalContent: {
+    padding: 20,
+  },
+  deleteIconContainer: {
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  deleteModalText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 8,
+    color: "#333",
+  },
+  deleteModalSubText: {
+    fontSize: 14,
+    textAlign: "center",
+    marginBottom: 20,
+    color: "#666",
+  },
+  deleteModalButtons: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    borderRadius: 6,
+  },
+  cancelDeleteButton: {
+    backgroundColor: "#eee",
+  },
+  cancelDeleteButtonText: {
+    color: "#333",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  confirmDeleteButton: {
+    backgroundColor: "#f44336",
+  },
+  confirmDeleteButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  deleteButtonIcon: {
+    marginRight: 6,
   },
 });

@@ -84,8 +84,8 @@ const AddBannerScreen = ({ navigation }: any) => {
           "Success",
           "Banner submitted successfully. It will be reviewed and approved shortly."
         );
-        navigation.goBack();
       }
+      navigation.goBack();
     } catch (error) {
     } finally {
       setIsLoading(false);
@@ -287,6 +287,7 @@ const styles = StyleSheet.create({
     marginBottom: hp(2),
     backgroundColor: "#fff3e0",
     fontSize: wp(3.8),
+    color: "#000",
   },
   dropdown: {
     borderColor: "#ffcc80",
@@ -311,9 +312,11 @@ const styles = StyleSheet.create({
   costText: {
     fontSize: wp(3.5),
     marginBottom: hp(1),
+    color: "#000",
   },
   bold: {
     fontWeight: "600",
+    color: "#000",
   },
   caution: {
     fontSize: wp(3.2),

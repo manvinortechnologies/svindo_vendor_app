@@ -23,6 +23,7 @@ import SearchBar from "../CommonComponent/SearchBar";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import ProductItem from "../CommonComponent/ProductItem";
 import { HomeNavigation } from "../constants/app-routes.constants";
+import DeleteModal from "./DeleteModal";
 
 interface ProductVariant {
   id: string;
@@ -52,6 +53,8 @@ const VariantsScreen = () => {
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     if (passedVariants && passedVariants.length > 0) {
@@ -106,18 +109,11 @@ const VariantsScreen = () => {
   };
 
   const handleDeleteVariant = async (id: string) => {
-    Alert.alert(
-      "Delete Variant",
-      "Are you sure you want to delete this variant? \nThis action cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => confirmDeleteVariant(id),
-        },
-      ]
-    );
+    setShowDeleteModal(true);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
   };
 
   const confirmDeleteVariant = async (id: string) => {
@@ -130,13 +126,11 @@ const VariantsScreen = () => {
         setVariants((prevVariants) =>
           prevVariants.filter((variant) => variant.id !== id)
         );
-        Alert.alert("Success", "Variant deleted successfully");
       } else {
         throw new Error("Failed to delete variant");
       }
     } catch (error) {
       console.error("Error deleting variant:", error);
-      Alert.alert("Error", "Failed to delete variant. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -146,6 +140,7 @@ const VariantsScreen = () => {
     // Navigate to add product screen
     (navigation as any).navigate(HomeNavigation.ADD_PRODUCT_SCREEN, {
       productId: product.id,
+      product: product,
     });
   };
 
@@ -211,6 +206,16 @@ const VariantsScreen = () => {
       </TouchableOpacity>
 
       <Loading visible={isLoading} />
+      <DeleteModal
+        showDeleteModal={showDeleteModal}
+        handleCancelDelete={handleCancelDelete}
+        handleConfirmDelete={confirmDeleteVariant}
+        title="Delete Variant"
+        message="Are you sure you want to delete this variant? This action cannot be undone."
+        subMessage="This action cannot be undone and will permanently remove all variant data."
+        buttonText="Cancel"
+        buttonText2="Delete"
+      />
     </SafeAreaView>
   );
 };

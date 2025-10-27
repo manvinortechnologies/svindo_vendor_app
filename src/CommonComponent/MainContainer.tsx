@@ -1,13 +1,9 @@
-import React, { ReactNode } from 'react';
-import {
-  ViewStyle,
-  StyleProp,
-  View,
-} from 'react-native';
+import React, { ReactNode } from "react";
+import { ViewStyle, StyleProp, View } from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
-} from 'react-native-safe-area-context';
+} from "react-native-safe-area-context";
 
 interface MainContainerProps {
   children: ReactNode;
@@ -20,7 +16,7 @@ const MainContainer = ({
   children,
   styles,
   flex = 1,
-  backgroundColor = '#fff',
+  backgroundColor = "#fff",
 }: MainContainerProps) => {
   const insets = useSafeAreaInsets();
 
@@ -29,7 +25,7 @@ const MainContainer = ({
       style={[
         {
           flex,
-        //   paddingTop: insets.top,
+          //   paddingTop: insets.top,
           paddingBottom: -insets.bottom,
           paddingLeft: insets.left,
           paddingRight: insets.right,

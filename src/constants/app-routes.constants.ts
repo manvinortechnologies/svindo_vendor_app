@@ -109,6 +109,7 @@ export enum HomeNavigation {
   ADDVENDOR = "AddVendor",
   DELIVERY_SETTING_SCREEN = "DeliverySettingsScreen",
   PAYMENTSCREEN = "PaymentScreen",
+  PAYMENTS_LIST = "PaymentsList",
   MANAGENOTIFICATION = "ManageNotification",
   SENDNOTIFICATION = "SendNotifications",
   PROMOTESTORE = "PromoteStore",
@@ -121,4 +122,7 @@ export enum HomeNavigation {
   SELECT_ADDONS = "SelectAddons",
   SCAN_BARCODE = "ScanBarcode",
   TRANSACTION_MESSAGES = "TransactionMessages",
+  SUPPORT = "Support",
+  CHAT_SCREEN = "ChatScreen",
+  REQUESTOFFERS = "RequestOffers",
 }

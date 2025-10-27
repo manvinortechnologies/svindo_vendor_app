@@ -269,11 +269,6 @@ const StatisticsScreen = ({ navigation }: any) => {
             buttonPositive: "OK",
           }
         );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log("Notification permission granted");
-        } else {
-          console.log("Notification permission denied");
-        }
       } catch (err) {
         console.warn("Error requesting notification permission:", err);
       }
@@ -294,11 +289,6 @@ const StatisticsScreen = ({ navigation }: any) => {
             buttonPositive: "OK",
           }
         );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log("Location permission granted");
-        } else {
-          console.log("Location permission denied");
-        }
       } catch (err) {
         console.warn("Error requesting location permission:", err);
       }
@@ -319,11 +309,6 @@ const StatisticsScreen = ({ navigation }: any) => {
             buttonPositive: "OK",
           }
         );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log("Camera permission granted");
-        } else {
-          console.log("Camera permission denied");
-        }
       } catch (err) {
         console.warn("Error requesting camera permission:", err);
       }
@@ -336,12 +321,18 @@ const StatisticsScreen = ({ navigation }: any) => {
         const granted = await PermissionsAndroid.requestMultiple([
           PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
           PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+          PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
+          PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
         ]);
 
         if (
           granted[PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE] ===
             PermissionsAndroid.RESULTS.GRANTED &&
           granted[PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE] ===
+            PermissionsAndroid.RESULTS.GRANTED &&
+          granted[PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO] ===
+            PermissionsAndroid.RESULTS.GRANTED &&
+          granted[PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES] ===
             PermissionsAndroid.RESULTS.GRANTED
         ) {
           console.log("Storage permissions granted");
@@ -939,11 +930,18 @@ const styles = ScaledSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: 10,
+    backgroundColor: "#fff",
+    shadowColor: "#000",
+    shadowOffset: { width: 1, height: 1 },
+    shadowOpacity: 0.4,
+    shadowRadius: 3,
+    elevation: 5,
+    zIndex: 1000,
   },
   headerTitle: { fontSize: 20, fontWeight: "bold", color: "#292D32" },
-  headerleft: { flexDirection: "row" },
-  headerRight: { flexDirection: "row" },
-  subTitle: {},
+  headerleft: { flexDirection: "row", alignItems: "center" },
+  headerRight: { flexDirection: "row", alignItems: "center" },
+  subTitle: { color: "#555" },
   titlecontent: { paddingHorizontal: 10 },
   notificationIcon: { marginLeft: 10 },
   title: { fontSize: 22, fontWeight: "bold", marginBottom: 10 },

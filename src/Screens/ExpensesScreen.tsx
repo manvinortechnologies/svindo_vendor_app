@@ -21,6 +21,7 @@ import { ScaledSheet } from "react-native-size-matters";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CalendarModal from "../Modals/CalendarModal";
+import moment from "moment";
 
 const ExpensesScreen = ({ navigation }: any) => {
   const isFocused = useIsFocused();
@@ -223,11 +224,13 @@ const ExpensesScreen = ({ navigation }: any) => {
 
       {/* Calendar Modal */}
       <CalendarModal
-        visible={!!callenderModel}
-        onClose={() => setCallenderModel(false)}
+        initialDate={callenderModel === "start" ? startDate : endDate}
+        visible={callenderModel !== ""}
+        onClose={() => setCallenderModel("")}
         onSelect={(e) =>
           callenderModel === "start" ? setStartDate(e) : setEndDate(e)
         }
+        maxDate={moment().format("YYYY-MM-DD")}
       />
       <Modal
         visible={showCalendarModal}

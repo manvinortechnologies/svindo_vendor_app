@@ -37,7 +37,7 @@ const BankNameScreen = ({ navigation, route }: any) => {
   const [error, setError] = useState<string | null>(null);
 
   const bankId = route?.params?.bankId;
-  const bankName = route?.params?.bank?.name || "Bank Name";
+  const bankName = route?.params?.bank?.bank_name || "Bank Name";
 
   useEffect(() => {
     if (bankId) {
@@ -61,7 +61,7 @@ const BankNameScreen = ({ navigation, route }: any) => {
 
         // Update bank info from API response
         setBankInfo({
-          name: bankName,
+          name: response.data.bank_name,
           balance: response.data.balance || 0,
         });
       }
@@ -167,7 +167,14 @@ const BankNameScreen = ({ navigation, route }: any) => {
             <View style={styles.row}>
               <View style={styles.col}>
                 <Text style={styles.label}>Transaction</Text>
-                <Text style={{ color: "#000" }}>{item.type}</Text>
+                <Text style={{ color: "#000", textAlign: "center" }}>
+                  {item.type
+                    .split("_")
+                    .join(" ")
+                    .replaceAll("out", "")
+                    .replaceAll("in", "")
+                    .toLocaleUpperCase()}
+                </Text>
               </View>
 
               <View style={styles.col}>

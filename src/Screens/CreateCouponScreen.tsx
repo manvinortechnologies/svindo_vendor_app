@@ -26,7 +26,7 @@ import api from "../services/api/api";
 
 const { width } = Dimensions.get("window");
 
-const CreateCouponScreen = () => {
+const CreateCouponScreen = ({ navigation }: any) => {
   const [selectedType, setSelectedType] = useState<string>("discount");
   const [customerIdEnabled, setCustomerIdEnabled] = useState(false);
   const [onlyFollowers, setOnlyFollowers] = useState(false);
@@ -92,6 +92,7 @@ const CreateCouponScreen = () => {
           "Content-Type": "multipart/form-data",
         },
       });
+      navigation.goBack();
       if (res.status == 201) {
         Alert.alert("Success", "Coupon code added successfully!");
       }
@@ -589,7 +590,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFEFD5",
   },
   typeButtonSelected: {
-    backgroundColor: "#FFEFD5",
+    backgroundColor: "#FCA311",
   },
   typeText: {
     color: "#727272",
@@ -628,6 +629,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginTop: 6,
     width: "100%",
+    color: "#000",
   },
   sectionTitle: {
     fontSize: 13,

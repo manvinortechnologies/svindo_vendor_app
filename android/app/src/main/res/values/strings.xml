@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">Svindovender</string>
+    <string name="app_name">Svindo Bussiness</string>
     <string name="default_notification_channel_id">fcm_default_channel</string>
 </resources>

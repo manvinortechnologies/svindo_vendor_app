@@ -26,6 +26,7 @@ import CustomDropdown, {
 import CustomSwitch from "./CustomSwitch";
 import SearchBar from "../CommonComponent/SearchBar";
 import ProductItem from "../CommonComponent/ProductItem";
+import DeleteModal from "./DeleteModal";
 
 interface Product {
   id: string;
@@ -35,7 +36,7 @@ interface Product {
   image?: string;
   price: number;
   category?: string;
-  subcategory?: string;
+  sub_category?: string;
   color?: string;
   size?: string;
   sale_type?: string;
@@ -84,6 +85,8 @@ const StockScreen = () => {
   const [categoryList, setCategoryList] = useState<DropDownOption[]>([]);
   const [subCategoryList, setSubCategoryList] = useState<DropDownOption[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
 
   // Static filter options data
   const staticFilterOptions = {
@@ -121,7 +124,7 @@ const StockScreen = () => {
     // Separate parent and child products
     products.forEach((product) => {
       if (product.parent === null || product.parent === undefined) {
-        parentProducts.push({ ...product, variants: [] });
+        parentProducts.push(product);
       } else {
         childProducts.push(product);
       }
@@ -265,7 +268,7 @@ const StockScreen = () => {
         );
       });
     }
-
+    console.log(appliedFilters, "appliedFilters");
     // Apply advanced filters (only for products)
     if (selectedType === "Product/Service") {
       data = data.filter((item) => {
@@ -282,7 +285,7 @@ const StockScreen = () => {
         // Subcategory filter
         if (
           appliedFilters.subcategory &&
-          product.subcategory !== appliedFilters.subcategory
+          product.sub_category !== appliedFilters.subcategory
         ) {
           return false;
         }
@@ -388,37 +391,35 @@ const StockScreen = () => {
   };
 
   const handleDeleteProduct = async (id: string) => {
-    Alert.alert(
-      "Delete Product",
-      "Are you sure you want to delete this product? \nThis action cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => confirmDeleteProduct(id),
-        },
-      ]
-    );
+    setShowDeleteModal(true);
+    setSelectedProduct(id);
   };
 
-  const confirmDeleteProduct = async (id: string) => {
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+  };
+
+  const confirmDeleteProduct = async () => {
     try {
       setLoading(true);
-      const response = await api.delete(`${API_ROUTES.deleteProduct}${id}/`);
+      const response = await api.delete(
+        `${API_ROUTES.deleteProduct}${selectedProduct}/`
+      );
 
       if (response.status === 200 || response.status === 204) {
         // Remove product from local state
-        setProducts((prev) => prev.filter((item) => item.id !== id));
-        Alert.alert("Success", "Product deleted successfully");
+        setProducts((prev) =>
+          prev.filter((item) => item.id !== selectedProduct)
+        );
       } else {
         throw new Error("Failed to delete product");
       }
     } catch (error) {
       console.error("Error deleting product:", error);
-      Alert.alert("Error", "Failed to delete product. Please try again.");
     } finally {
       setLoading(false);
+      setSelectedProduct(null);
+      setShowDeleteModal(false);
     }
   };
 
@@ -433,10 +434,15 @@ const StockScreen = () => {
   };
 
   const handleEditProduct = (id: string) => {
-    (navigation as any).navigate(HomeNavigation.ADD_PRODUCT_SCREEN, {
-      productId: id,
-      isEdit: true,
-    });
+    (navigation as any).navigate(
+      selectedType === "Product/Service"
+        ? HomeNavigation.ADD_PRODUCT_SCREEN
+        : HomeNavigation.ADD_ADDONS,
+      {
+        productId: id,
+        isEdit: true,
+      }
+    );
   };
 
   return (
@@ -461,14 +467,20 @@ const StockScreen = () => {
                   key={filter}
                   style={[
                     styles.filterButton,
-                    selectedFilter === filter && styles.selectedFilter,
+                    (selectedFilter === "both" ? "Online" : selectedFilter) ===
+                      filter && styles.selectedFilter,
                   ]}
-                  onPress={() => setSelectedFilter(filter)}
+                  onPress={() =>
+                    setSelectedFilter(filter === "Online" ? "both" : filter)
+                  }
                 >
                   <Text
                     style={[
                       styles.filterText,
-                      selectedFilter === filter && styles.selectedFilterText,
+                      (selectedFilter === "both"
+                        ? "Online"
+                        : selectedFilter) === filter &&
+                        styles.selectedFilterText,
                     ]}
                   >
                     {filter}
@@ -517,7 +529,7 @@ const StockScreen = () => {
                   onActiveChange={handleActiveChange}
                   showStock={selectedType === "Product/Service"}
                   showActions={true}
-                  showSwitch={true}
+                  showSwitch={false}
                 />
               );
             }}
@@ -560,11 +572,11 @@ const StockScreen = () => {
                     placeholder="Select Category"
                     options={categoryList}
                     onSelect={(option) =>
-                      handleFilterSelect("category", option.name)
+                      handleFilterSelect("category", option.id)
                     }
                     selectedValue={
                       categoryList.find(
-                        (cat) => cat.name === selectedFilters.category
+                        (cat) => cat.id === selectedFilters.category
                       )?.id || null
                     }
                     dropDownBoxStyle={styles.dropdown}
@@ -587,11 +599,11 @@ const StockScreen = () => {
                     placeholder="Select Subcategory"
                     options={subCategoryList}
                     onSelect={(option) =>
-                      handleFilterSelect("subcategory", option.name)
+                      handleFilterSelect("subcategory", option.id)
                     }
                     selectedValue={
                       subCategoryList.find(
-                        (sub) => sub.name === selectedFilters.subcategory
+                        (sub) => sub.id === selectedFilters.subcategory
                       )?.id || null
                     }
                     dropDownBoxStyle={styles.dropdown}
@@ -713,6 +725,17 @@ const StockScreen = () => {
           ))}
         </View>
       </View>
+
+      <DeleteModal
+        showDeleteModal={showDeleteModal}
+        handleCancelDelete={handleCancelDelete}
+        handleConfirmDelete={confirmDeleteProduct}
+        title="Delete Product"
+        message="Are you sure you want to delete this product? This action cannot be undone."
+        subMessage="This action cannot be undone and will permanently remove all product data."
+        buttonText="Cancel"
+        buttonText2="Delete"
+      />
     </SafeAreaView>
   );
 };
@@ -818,13 +841,10 @@ const styles = ScaledSheet.create({
 
   typeButtonWrapper: {
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "space-between",
+    alignItems: "center",
     borderRadius: 10,
-    padding: 10,
-    paddingHorizontal: 40,
-    borderColor: "#C3C3C3",
-    // borderWidth: 1,
-    // overflow: "hidden",
+    padding: "8@s",
   },
 
   typeButton: {

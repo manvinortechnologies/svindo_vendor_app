@@ -14,13 +14,17 @@ import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import { formatOrderDate } from "../utils/dateandTime";
 import { ScaledSheet } from "react-native-size-matters";
+import CustomHeader from "../CommonComponent/CustomHeader";
+import { s } from "react-native-size-matters";
 
 const Orders = ({ navigation }: any) => {
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [selectedType, setSelectedType] = useState("");
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [selectedFilter, setSelectedFilter] = useState("None");
-
+  const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
   const statuses = [
     "All",
     "Pending",
@@ -31,17 +35,18 @@ const Orders = ({ navigation }: any) => {
     "Exchage",
     "Cancel",
   ];
-  const orderTypes = ["On Shop", "Self Pickup", "Instant", "General"];
+  const orderTypes = [
+    { key: "on_shop_order", label: "On Shop" },
+    { key: "self_pickup", label: "Self Pickup" },
+    { key: "instant_delivery", label: "Instant" },
+    { key: "general_delivery", label: "General" },
+  ];
   const filters = [
     "Price: Low to High",
     "Price: High to Low",
     "Newest First",
     "Oldest First",
   ];
-
-  const [orders, setOrders] = useState([]);
-  const [filteredOrders, setFilteredOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -67,7 +72,10 @@ const Orders = ({ navigation }: any) => {
     if (selectedStatus !== "All") {
       filtered = filtered.filter(
         (order: any) =>
-          order.status.toLowerCase() === selectedStatus.toLowerCase()
+          order.status.toLowerCase() ===
+          (selectedStatus === "Pending"
+            ? "not_accepted"
+            : selectedStatus.toLowerCase())
       );
     }
 
@@ -104,24 +112,38 @@ const Orders = ({ navigation }: any) => {
     setFilteredOrders(filtered);
   }, [selectedStatus, selectedType, selectedFilter, orders]);
 
+  const getDiliveryType = (type: string) => {
+    if (type === "on_shop_order") {
+      return "On Shop Orders";
+    } else if (type === "self_pickup") {
+      return "Self Pickup";
+    } else if (type === "instant_delivery") {
+      return "Instant Delivery";
+    } else if (type === "general_delivery") {
+      return "General Delivery";
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <Loading visible={loading} />
       <ScrollView style={styles.midcontent}>
-        <View style={styles.header}>
-          <Text style={{ fontSize: 18, fontWeight: "700", color: "#000" }}>
-            Orders/Sales
-          </Text>
-          <TouchableOpacity
-            style={styles.filterButton}
-            onPress={() => setFilterModalVisible(true)}
-          >
-            <Text style={styles.filterText}>
-              {selectedFilter === "None" ? "Filters" : selectedFilter}
-            </Text>
-            <Icon name="chevron-down-outline" size={16} color="#333" />
-          </TouchableOpacity>
-        </View>
+        <CustomHeader
+          title="Orders"
+          titleStyle={{ textAlign: "left" }}
+          showBackButton={false}
+          rightIcon={
+            <TouchableOpacity
+              style={styles.filterButton}
+              onPress={() => setFilterModalVisible(true)}
+            >
+              <Text style={styles.filterText}>
+                {selectedFilter === "None" ? "Filters" : selectedFilter}
+              </Text>
+              <Icon name="chevron-down-outline" size={16} color="#333" />
+            </TouchableOpacity>
+          }
+        />
 
         {/* Filter Modal */}
         <Modal visible={filterModalVisible} animationType="slide" transparent>
@@ -150,12 +172,23 @@ const Orders = ({ navigation }: any) => {
                   </Text>
                 </TouchableOpacity>
               ))}
-              <TouchableOpacity
-                onPress={() => setFilterModalVisible(false)}
-                style={styles.closeButton}
-              >
-                <Text style={styles.closeButtonText}>Close</Text>
-              </TouchableOpacity>
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setSelectedFilter("None");
+                    setFilterModalVisible(false);
+                  }}
+                  style={styles.clearButton}
+                >
+                  <Text style={styles.clearButtonText}>Clear Filter</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setFilterModalVisible(false)}
+                  style={styles.closeButton}
+                >
+                  <Text style={styles.closeButtonText}>Close</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
         </Modal>
@@ -190,6 +223,7 @@ const Orders = ({ navigation }: any) => {
         {/* 📦 Order List */}
         <FlatList
           data={filteredOrders}
+          contentContainerStyle={{ paddingBottom: s(80) }}
           keyExtractor={(item: any) => item.id.toString()}
           renderItem={({ item }: { item: any }) => (
             <TouchableOpacity
@@ -200,7 +234,9 @@ const Orders = ({ navigation }: any) => {
             >
               <View style={styles.orderHeaderContainer}>
                 <View style={styles.orderHeader}>
-                  <Text style={styles.customerName}>{item.customer_name}</Text>
+                  <Text style={styles.customerName}>
+                    {item?.user_details?.first_name || item.customer_name}
+                  </Text>
                   <Text style={styles.orderDate}>
                     {formatOrderDate(item.created_at)}
                   </Text>
@@ -213,14 +249,20 @@ const Orders = ({ navigation }: any) => {
                   </Text>
                 </Text>
                 <View style={styles.onshop}>
-                  <Text style={styles.orderDetails}>{item.delivery_type}</Text>
+                  <Text style={styles.orderDetails}>
+                    {getDiliveryType(item.delivery_type)}
+                  </Text>
                   <Text style={styles.orderAmount}>$ {item.total_amount}</Text>
                 </View>
               </View>
               <View style={styles.statusRow}>
                 <Text style={styles.orderStatus}>
-                  {item.status.charAt(0).toUpperCase() +
-                    item.status.slice(1).toLowerCase()}
+                  {(
+                    item.status.charAt(0).toUpperCase() +
+                    item.status.slice(1).toLowerCase()
+                  )
+                    .split("_")
+                    .join(" ")}
                 </Text>
                 <Text style={styles.paymentStatus}>
                   {item.is_paid ? "Paid" : "Unpaid"} ➜
@@ -232,35 +274,33 @@ const Orders = ({ navigation }: any) => {
       </ScrollView>
 
       {/* 🔽 Order Types Bottom Menu */}
-      <View>
-        <View style={styles.typeButtonContainer}>
-          {orderTypes.map((type) => (
-            <TouchableOpacity
-              key={type}
+      <View style={styles.typeButtonContainer}>
+        {orderTypes.map(({ key, label }) => (
+          <TouchableOpacity
+            key={key}
+            style={[
+              styles.typeButton,
+              selectedType === key && styles.selectedType,
+            ]}
+            onPress={() => {
+              // If clicking on the already selected type, unselect it
+              if (selectedType === key) {
+                setSelectedType("");
+              } else {
+                setSelectedType(key);
+              }
+            }}
+          >
+            <Text
               style={[
-                styles.typeButton,
-                selectedType === type && styles.selectedType,
+                styles.typeText,
+                selectedType === key && styles.selectedTypeText,
               ]}
-              onPress={() => {
-                // If clicking on the already selected type, unselect it
-                if (selectedType === type) {
-                  setSelectedType("");
-                } else {
-                  setSelectedType(type);
-                }
-              }}
             >
-              <Text
-                style={[
-                  styles.typeText,
-                  selectedType === type && styles.selectedTypeText,
-                ]}
-              >
-                {type}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+              {label}
+            </Text>
+          </TouchableOpacity>
+        ))}
       </View>
     </SafeAreaView>
   );
@@ -333,7 +373,8 @@ const styles = ScaledSheet.create({
     color: "#000",
   },
   statusScroll: {
-    marginBottom: 10,
+    marginVertical: 10,
+    paddingHorizontal: 10,
   },
   statusButton: {
     paddingVertical: 8,
@@ -426,12 +467,17 @@ const styles = ScaledSheet.create({
     marginTop: 10,
   },
   typeButtonContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     marginBottom: "15@s",
     marginHorizontal: "10@s",
     textAlign: "center",
     padding: "8@s",
     borderRadius: "10@s",
     backgroundColor: "#fff",
+    borderWidth: 1,
     borderColor: "#C3C3C3",
     elevation: 2,
     // alignSelf: "center",
@@ -485,8 +531,24 @@ const styles = ScaledSheet.create({
   selectedFilter: { backgroundColor: "#ffb347" },
   filterOptionText: { fontSize: 16, color: "#333" },
   selectedFilterText: { fontWeight: "bold", color: "#fff" },
+  modalButtons: {
+    flexDirection: "row",
+    // justifyContent: "space-between",
+    marginTop: "10@s",
+    gap: "10@s",
+  },
+  clearButton: {
+    flex: 1,
+    padding: "10@s",
+    backgroundColor: "#ffb347",
+    marginTop: 10,
+    borderRadius: 5,
+    alignItems: "center",
+  },
+  clearButtonText: { color: "#fff", fontWeight: "bold" },
   closeButton: {
-    padding: 10,
+    flex: 1,
+    padding: "10@s",
     backgroundColor: "red",
     marginTop: 10,
     borderRadius: 5,

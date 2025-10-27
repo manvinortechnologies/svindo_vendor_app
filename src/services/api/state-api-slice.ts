@@ -1,5 +1,6 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
-import { baseQuery } from './base-query';
+import { createApi } from "@reduxjs/toolkit/query/react";
+import { baseQuery } from "./base-query";
+import { VendorStore } from "../../type/Vendor";
 
 // interface registerUser {
 //   mobile: string;
@@ -15,9 +16,6 @@ import { baseQuery } from './base-query';
 //     verified: boolean;
 //   }
 // }
-
-
-
 
 // interface verifyOtp {
 //   mobile: string;
@@ -62,31 +60,32 @@ interface SignUpRes {
     name: string;
     user_type: string;
     created: boolean;
-  },
+  };
   status: number;
 }
 
-
-
 export const api = createApi({
-  reducerPath: 'api',
+  reducerPath: "api",
   baseQuery: baseQuery,
+  tagTypes: ["VendorStore"],
   endpoints: (builder) => ({
-
     login: builder.mutation<SignUpRes, signUp>({
-      query: login => ({
-        url: 'users/login/',
-        method: 'POST',
+      query: (login) => ({
+        url: "users/login/",
+        method: "POST",
         body: login,
       }),
-      transformResponse: (response: SignUpRes, meta: { response: Response }) => {
+      transformResponse: (
+        response: SignUpRes,
+        meta: { response: Response }
+      ) => {
         return { ...response, status: meta.response.status };
       },
     }),
     addCompany: builder.mutation<any, any>({
-      query: companyDetails => ({
+      query: (companyDetails) => ({
         url: `vendor/company-profile/`,
-        method: 'POST',
+        method: "POST",
         body: companyDetails,
       }),
       transformResponse: (response: any, meta: { response: Response }) => {
@@ -94,9 +93,9 @@ export const api = createApi({
       },
     }),
     updateProfile: builder.mutation<any, any>({
-      query: updateprofile => ({
+      query: (updateprofile) => ({
         url: `auth/profile`,
-        method: 'PUT',
+        method: "PUT",
         body: updateprofile,
       }),
       transformResponse: (response: any, meta: { response: Response }) => {
@@ -105,28 +104,43 @@ export const api = createApi({
     }),
     getUserDocument: builder.query<any, void>({
       query: () => ({
-        url: 'documents/user',
-        method: 'GET',
+        url: "documents/user",
+        method: "GET",
       }),
     }),
     referralGenerate: builder.mutation<any, any>({
       query: () => ({
         url: `referral/user/generate`,
-        method: 'POST',
+        method: "POST",
       }),
       transformResponse: (response: any, meta: { response: Response }) => {
         return { ...response, status: meta.response.status };
       },
     }),
     ratingUser: builder.mutation<any, any>({
-      query: rating => ({
-        url: 'ratings/user',
-        method: 'POST',
+      query: (rating) => ({
+        url: "ratings/user",
+        method: "POST",
         body: rating,
       }),
       transformResponse: (response: any, meta: { response: Response }) => {
         return { ...response, status: meta.response.status };
       },
+    }),
+    getVendorStores: builder.query<VendorStore, void>({
+      query: () => ({
+        url: "vendor/vendor-stores/",
+        method: "GET",
+      }),
+      providesTags: ["VendorStore"],
+    }),
+    updateVendorStore: builder.mutation<VendorStore, FormData>({
+      query: (formData) => ({
+        url: "vendor/vendor-stores/",
+        method: "PUT",
+        body: formData,
+      }),
+      invalidatesTags: ["VendorStore"],
     }),
   }),
 });
@@ -138,5 +152,6 @@ export const {
   useGetUserDocumentQuery,
   useReferralGenerateMutation,
   useRatingUserMutation,
-
+  useGetVendorStoresQuery,
+  useUpdateVendorStoreMutation,
 } = api;

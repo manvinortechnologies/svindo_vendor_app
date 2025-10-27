@@ -98,6 +98,7 @@ import AddCustomer from "../Screens/AddCustomer";
 import AddVendor from "../Screens/AddVendor";
 import DeliverySettingsScreen from "../Screens/DeliverySettingsScreen";
 import PaymentsScreen from "../Screens/PaymentsScreen";
+import PaymentsList from "../Screens/PaymentsList";
 import SendNotifications from "../Screens/SendNotifications";
 import PromoteStore from "../Screens/PromoteStore";
 import AutoAssignDelivery from "../Screens/AutoAssignDelivery";
@@ -124,6 +125,9 @@ import AddonSuccessScreen from "../Screens/AddonSuccessScreen";
 import SelectAddonsScreen from "../Screens/SelectAddonsScreen";
 import CreateAddons from "../Screens/CreateAddons";
 import ScanBarcode from "../Screens/ScanBarcode";
+import Support from "../Screens/Support";
+import ChatScreen from "../Screens/ChatScreen";
+import RequestOffers from "../Screens/RequestOffers";
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
 
@@ -156,6 +160,10 @@ const AppNavigation = () => {
           component={SelectLocationScreen}
         />
         <Stack.Screen name={HomeNavigation.STATISTICS} component={Statistics} />
+        <Stack.Screen
+          name={HomeNavigation.REQUESTOFFERS}
+          component={RequestOffers}
+        />
         <Stack.Screen
           name={HomeNavigation.NOTIFICATION_SCREEN}
           component={NotificationScreen}
@@ -517,6 +525,10 @@ const AppNavigation = () => {
           component={PaymentsScreen}
         />
         <Stack.Screen
+          name={HomeNavigation.PAYMENTS_LIST}
+          component={PaymentsList}
+        />
+        <Stack.Screen
           name={HomeNavigation.MANAGENOTIFICATION}
           component={ManageNotification}
         />
@@ -552,6 +564,11 @@ const AppNavigation = () => {
         <Stack.Screen
           name={HomeNavigation.SELECT_ADDONS}
           component={SelectAddonsScreen}
+        />
+        <Stack.Screen name={HomeNavigation.SUPPORT} component={Support} />
+        <Stack.Screen
+          name={HomeNavigation.CHAT_SCREEN}
+          component={ChatScreen}
         />
       </Stack.Navigator>
     </NavigationContainer>

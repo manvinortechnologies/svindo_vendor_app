@@ -16,3 +16,17 @@ export interface Vendor {
   country: string | null;
   user: number;
 }
+
+export interface VendorStore {
+  id: number;
+  user: number;
+  working_hours: any[];
+  spotlight_products: any[];
+  name: string;
+  about: string | null;
+  profile_image: string | null;
+  banner_image: string | null;
+  posts: any[];
+  reels: any[];
+  banners: any[];
+}

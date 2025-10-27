@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { useRoute } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Icons from "react-native-vector-icons/AntDesign";
 import Icons1 from "react-native-vector-icons/Ionicons";
@@ -14,23 +15,42 @@ const CustomTabBar = ({
   navigation,
 }: BottomTabBarProps) => {
   const insets = useSafeAreaInsets();
+  const route = useRoute();
 
-  const [showStoreOptions, setShowStoreOptions] = useState(false);
   const currentRoute = state.routes[state.index];
 
-  // Check if we're on a store-related screen (Store or Marketing Tools)
-  const isStoreScreen = currentRoute.name === HomeNavigation.STORE_SCREEN;
-  const isMarketingScreen =
-    currentRoute.name === HomeNavigation.MARKETING_TOOLS;
-  const isStoreRelatedScreen = isStoreScreen || isMarketingScreen;
-
-  const handleStorePress = () => {
-    if (isStoreScreen) {
-      setShowStoreOptions(!showStoreOptions);
-    } else {
-      navigation.navigate(HomeNavigation.STORE_SCREEN);
+  // Helper function to get the current screen name
+  const getCurrentScreenName = () => {
+    // First check if we're on a tab that has nested navigation
+    if (
+      currentRoute.name === HomeNavigation.STORE_SCREEN &&
+      currentRoute.state
+    ) {
+      // Get the nested route name
+      const nestedRoute =
+        currentRoute.state.routes[currentRoute.state.index || 0];
+      return nestedRoute.name;
     }
+    // Otherwise return the current route name
+    return route.name;
   };
+
+  const currentScreenName = getCurrentScreenName();
+
+  // Check if we're on a store-related screen (Store or Marketing Tools)
+  // By default, Online Store should be active when on Store tab
+  const isStoreScreen =
+    currentScreenName === HomeNavigation.STORE_SCREEN ||
+    (currentRoute.name === HomeNavigation.STORE_SCREEN &&
+      (!currentRoute.state || currentRoute.state.index === 0));
+  const isMarketingScreen =
+    currentScreenName === HomeNavigation.MARKETING_TOOLS ||
+    (currentRoute.name === HomeNavigation.STORE_SCREEN &&
+      currentRoute.state?.index === 1);
+  const isStoreRelatedScreen =
+    isStoreScreen ||
+    isMarketingScreen ||
+    currentRoute.name === HomeNavigation.STORE_SCREEN;
 
   return (
     <View style={[styles.container, { paddingBottom: insets.bottom }]}>
@@ -44,7 +64,6 @@ const CustomTabBar = ({
                 name: HomeNavigation.STORE_SCREEN,
                 params: { screen: HomeNavigation.STORE_SCREEN },
               });
-              setShowStoreOptions(false);
             }}
           >
             <Icon
@@ -73,7 +92,6 @@ const CustomTabBar = ({
                 name: HomeNavigation.STORE_SCREEN,
                 params: { screen: HomeNavigation.MARKETING_TOOLS },
               });
-              setShowStoreOptions(false);
             }}
           >
             <Icons1
@@ -116,11 +134,7 @@ const CustomTabBar = ({
             });
 
             if (!isFocused && !event.defaultPrevented) {
-              if (route.name === HomeNavigation.STORE_SCREEN) {
-                handleStorePress();
-              } else {
-                navigation.navigate(route.name);
-              }
+              navigation.navigate(route.name);
             }
           };
 

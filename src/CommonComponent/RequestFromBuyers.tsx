@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -6,43 +6,42 @@ import {
   FlatList,
   TouchableOpacity,
   Dimensions,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp, useNavigation } from '@react-navigation/native';
-import { HomeNavigation } from '../constants/app-routes.constants';
+} from "react-native";
+import Icon from "react-native-vector-icons/MaterialIcons";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RouteProp, useNavigation } from "@react-navigation/native";
+import { HomeNavigation } from "../constants/app-routes.constants";
 
 type RootStackParamList = {
   BuyersRequest: undefined;
-  
 };
 
 type BuyersRequestNavProp = NativeStackNavigationProp<
   RootStackParamList,
-  'BuyersRequest'
+  "BuyersRequest"
 >;
 
 type BuyersRequestProps = {
   navigation: BuyersRequestNavProp;
-  route: RouteProp<RootStackParamList, 'BuyersRequest'>;
+  route: RouteProp<RootStackParamList, "BuyersRequest">;
 };
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 const requests = [
   {
-    id: '1',
-    name: 'Product Name',
-    description: 'Description',
-    category: 'Retail',
-    budget: '1000',
+    id: "1",
+    name: "Product Name",
+    description: "Description",
+    category: "Retail",
+    budget: "1000",
   },
   {
-    id: '2',
-    name: 'Product Name',
-    description: 'Description',
-    category: 'Retail',
-    budget: '1000',
+    id: "2",
+    name: "Product Name",
+    description: "Description",
+    category: "Retail",
+    budget: "1000",
   },
 ];
 
@@ -93,69 +92,67 @@ const RequestFromBuyers: React.FC = () => {
 
 export default RequestFromBuyers;
 
-
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     padding: 12,
     borderRadius: 8,
-    borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: '#DEDEDE', 
-    marginBottom: 10
+    borderColor: "#DEDEDE",
+    marginBottom: 10,
   },
   headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   headerText: {
     fontSize: 16,
-    fontWeight: '600',
-    color: '#000',
+    fontWeight: "600",
+    color: "#000",
   },
   countText: {
-    color: '#F59E0B',
+    color: "#F59E0B",
   },
   viewAll: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end'
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "flex-end",
   },
   viewAllText: {
     fontSize: 13,
-    color: '#000',
+    color: "#000",
   },
   card: {
-    backgroundColor: '#FFFBEB',
-    borderColor: '#FCD34D',
+    backgroundColor: "#FFFBEB",
+    borderColor: "#FCD34D",
     borderWidth: 1,
     borderRadius: 6,
     padding: 10,
     marginBottom: 8,
   },
   cardRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   productName: {
-    fontWeight: '600',
+    fontWeight: "600",
     fontSize: 13,
-    color: '#000',
+    color: "#000",
   },
   category: {
     fontSize: 13,
-    color: '#000',
+    color: "#000",
   },
   description: {
     fontSize: 12,
-    color: '#000',
+    color: "#000",
     marginBottom: 2,
   },
   budget: {
     fontSize: 12,
-    color: '#000',
-    textAlign: 'right',
+    color: "#000",
+    textAlign: "right",
   },
 });

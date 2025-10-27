@@ -10,6 +10,10 @@ import {
   Platform,
   FlatList,
   Dimensions,
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  TextInput,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import MaterialIcon from "react-native-vector-icons/MaterialIcons";
@@ -19,8 +23,19 @@ import NavigationButton from "./NavigationButton";
 import CustomSwitch from "./CustomSwitch";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { s, ScaledSheet } from "react-native-size-matters";
-
+import {
+  useGetVendorStoresQuery,
+  useUpdateVendorStoreMutation,
+} from "../services/api/state-api-slice";
+import EditStoreModal from "../Modals/EditStoreModal";
+import { APP_CONSTANTS } from "../constants/app.constants";
+import { HomeNavigation } from "../constants/app-routes.constants";
+import Carousel from "react-native-reanimated-carousel";
+import Video from "react-native-video";
+import Modal from "react-native-modal";
+import CustomHeader from "../CommonComponent/CustomHeader";
 const screenWidth = Dimensions.get("window").width - 20;
+const { width, height } = Dimensions.get("window");
 
 interface Product {
   id: string;
@@ -132,22 +147,123 @@ const spotlightProducts = [
 ];
 const Storescreen = ({ navigation }: any) => {
   const [disabletab, setdisable] = useState(true);
-  const [selectedTab, setSelectedTab] = useState("Products");
-  const [selectedType, setSelectedType] = useState("On Shop");
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Video Modal state
+  const [videoModalVisible, setVideoModalVisible] = useState(false);
+  const [selectedVideo, setSelectedVideo] = useState<any>(null);
+  const [isVideoPaused, setIsVideoPaused] = useState(false);
+  const [isVideoLoading, setIsVideoLoading] = useState(false);
+
+  // Modal state
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editType, setEditType] = useState<
+    "name" | "banner" | "logo" | "about" | null
+  >(null);
+
+  const closeVideoModal = () => {
+    setVideoModalVisible(false);
+    setSelectedVideo(null);
+    setIsVideoPaused(false);
+    setIsVideoLoading(false);
+  };
+
+  const toggleVideoPlayPause = () => {
+    setIsVideoPaused(!isVideoPaused);
+  };
+
+  const handleVideoPress = (video: any) => {
+    setSelectedVideo(video);
+    setVideoModalVisible(true);
+    setIsVideoLoading(true);
+  };
+
+  // Fetch store data from API
+  const {
+    data: storeData,
+    error,
+    isLoading,
+    refetch,
+  } = useGetVendorStoresQuery();
+  const [updateVendorStore, { isLoading: isUpdating }] =
+    useUpdateVendorStoreMutation();
+
+  // Handle edit actions
+  const handleEditPress = (type: "name" | "banner" | "logo" | "about") => {
+    setEditType(type);
+    setModalVisible(true);
+  };
+
+  const handleModalClose = () => {
+    setModalVisible(false);
+    setEditType(null);
+  };
+
+  const handleFormSubmit = async (formData: FormData) => {
+    try {
+      await updateVendorStore(formData).unwrap();
+      Alert.alert("Success", "Store details updated successfully");
+      handleModalClose();
+    } catch (error: any) {
+      Alert.alert(
+        "Error",
+        error?.data?.error || "Failed to update store details"
+      );
+    }
+  };
+
+  const toggleDisable = async () => {
+    try {
+      await updateVendorStore({ is_active: !disabletab }).unwrap();
+      Alert.alert("Success", "Store disabled successfully");
+      setdisable(!disabletab);
+    } catch (error) {
+      console.error("Error updating disable status:", error);
+    }
+  };
+
+  // Handle pull to refresh
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color="#006EB2" />
+        <Text style={styles.loadingText}>Loading store details...</Text>
+      </SafeAreaView>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centerContent]}>
+        <Icon name="alert-circle-outline" size={64} color="#FF6B6B" />
+        <Text style={styles.errorText}>Failed to load store details</Text>
+        <Text style={styles.errorSubtext}>Please try again later</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <Header
+      <CustomHeader
         title="Store"
-        backgroundColor="#FFF"
-        textColor="#333"
-        borderBottomColor="#ccc"
+        titleStyle={{ textAlign: "left" }}
+        showBackButton={false}
         rightIcon={
           <TouchableOpacity
             style={{
-              // position: "absolute",
-              // top: s(0),
-              // right: 15,
               padding: 5,
               backgroundColor: "#006EB2",
               borderRadius: 8,
@@ -159,12 +275,27 @@ const Storescreen = ({ navigation }: any) => {
         }
       />
 
-      <ScrollView>
+      <ScrollView
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#006EB2"]} // Android
+            tintColor="#006EB2" // iOS
+            title="Pull to refresh" // iOS
+            titleColor="#666" // iOS
+          />
+        }
+      >
         {/* Top Header */}
 
         {/* Store Banner */}
         <Image
-          source={require("../assets/product/product2.png")}
+          source={
+            storeData?.banner_image
+              ? { uri: APP_CONSTANTS.API_BASE_URL + storeData.banner_image }
+              : require("../assets/product/product2.png")
+          }
           style={styles.banner}
         />
 
@@ -174,13 +305,24 @@ const Storescreen = ({ navigation }: any) => {
             {/* Store Logo */}
             <View style={styles.logoContainer}>
               <Image
-                source={require("../assets/product/storelogo.png")}
+                source={
+                  storeData?.profile_image
+                    ? {
+                        uri:
+                          APP_CONSTANTS.API_BASE_URL + storeData.profile_image,
+                      }
+                    : require("../assets/product/storelogo.png")
+                }
                 style={styles.logo}
               />
-              <Text style={styles.openLabel}>Edit Logo</Text>
+              <TouchableOpacity onPress={() => handleEditPress("logo")}>
+                <Text style={styles.openLabel}>Edit Logo</Text>
+              </TouchableOpacity>
               <View style={styles.storeContainer}>
-                <Text style={styles.storetext}>Business Name</Text>
-                <TouchableOpacity>
+                <Text style={styles.storetext}>
+                  {storeData?.name || "Business Name"}
+                </Text>
+                <TouchableOpacity onPress={() => handleEditPress("name")}>
                   <Icon
                     name="pencil-outline"
                     size={28}
@@ -194,11 +336,13 @@ const Storescreen = ({ navigation }: any) => {
             {/* Store Info */}
             <View style={styles.infoContainer}>
               <View style={styles.editbannner}>
-                <Text style={{ color: "#000" }}>
-                  Edit <Icon name="pencil-outline" size={20} color="#000" />
-                  {"\n"}
-                  banner
-                </Text>
+                <TouchableOpacity onPress={() => handleEditPress("banner")}>
+                  <Text style={{ color: "#000" }}>
+                    Edit <Icon name="pencil-outline" size={20} color="#000" />
+                    {"\n"}
+                    banner
+                  </Text>
+                </TouchableOpacity>
               </View>
               <View style={styles.ratingContainer}>
                 <MaterialIcon name="location-on" size={25} color="#006EB2" />
@@ -209,7 +353,7 @@ const Storescreen = ({ navigation }: any) => {
                 {/* <Icon name="bell-outline" size={24} color="#000" style={styles.actionIcon} /> */}
                 <CustomSwitch
                   value={disabletab}
-                  onValueChange={setdisable}
+                  onValueChange={toggleDisable}
                   activeColor="#830002"
                   inactiveColor="#999"
                   borderColor="#4CAF50"
@@ -222,22 +366,22 @@ const Storescreen = ({ navigation }: any) => {
             </View>
           </View>
           <View style={styles.textContainer}>
-            <Text style={styles.textheader}>About</Text>
-            <Text style={styles.additionalText}>
-              Lorem ipsum dolor sit amet consectetur. Nulla eget consequat et
-              volutpat dolor sodales sem. Egestas pulvinar nibh amet a nunc
-              velit amet in. Tristique ipsum enim turpis porttitor amet at
-              volutpat. Rhoncus orci consequat sed aenean.
-            </Text>
-            <TouchableOpacity style={{ alignSelf: "flex-end" }}>
-              <Icon name="pencil-outline" size={28} color="#000" />
-            </TouchableOpacity>
+            <View style={styles.textheaderContainer}>
+              <Text style={styles.textheader}>About</Text>
+              <TouchableOpacity
+                style={{ alignSelf: "flex-end" }}
+                onPress={() => handleEditPress("about")}
+              >
+                <Icon name="pencil-outline" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.additionalText}>{storeData?.about}</Text>
           </View>
         </View>
         {/* Additional Text at the Bottom */}
 
-        <View style={styles.Containertitle}>
-          <View
+        <View style={[styles.Containertitle, { marginHorizontal: s(10) }]}>
+          <TouchableOpacity
             style={{
               backgroundColor: "#FCA311",
               padding: 6,
@@ -246,28 +390,28 @@ const Storescreen = ({ navigation }: any) => {
               justifyContent: "center",
               marginBottom: 8,
             }}
+            onPress={() => {
+              navigation.navigate(HomeNavigation.ADD_BANNER_SCREEN);
+            }}
           >
             <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
               Add Banners
             </Text>
-          </View>
+          </TouchableOpacity>
           <Text style={styles.sectionTitleRight}>Max - 3</Text>
         </View>
         {/* Scrollable Banner */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.bannerScroll}
-        >
-          <Image
-            source={require("../assets/product/banner.png")}
-            style={styles.scrollBanner}
-          />
-          <Image
-            source={require("../assets/product/banner.png")}
-            style={styles.scrollBanner}
-          />
-        </ScrollView>
+        <Carousel
+          data={storeData?.banners || []}
+          renderItem={({ item }) => (
+            <Image
+              source={{ uri: APP_CONSTANTS.API_BASE_URL + item.banner_image }}
+              style={styles.scrollBanner}
+            />
+          )}
+          width={width}
+          height={s(150)}
+        />
 
         <View style={styles.spotlightSection}>
           <View style={styles.Containerspotlight}>
@@ -292,42 +436,39 @@ const Storescreen = ({ navigation }: any) => {
             <Text style={styles.sectionTitleRight}>Max - 4 Max - 8</Text>
           </View>
 
-          <View style={styles.productcontainer}>
-            {["Top Liked", "Top Rated", "Most Bought"].map((category) => (
-              <View key={category} style={styles.categoryContainer}>
-                <View style={styles.productRow}>
-                  {getFilteredProducts(category).map((product) => (
-                    <View key={product.id} style={styles.productCard}>
-                      <View style={styles.stockBadgeAbove}>
-                        <Text style={styles.stockText}>
-                          {product.discount} % OFF
-                        </Text>
-                      </View>
-                      <Image
-                        source={product.image}
-                        style={styles.productImage}
-                      />
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.productcontainer}
+          >
+            {storeData?.spotlight_products &&
+              storeData.spotlight_products.length > 0 &&
+              storeData.spotlight_products.map((product) => (
+                <View key={product.id} style={styles.productCard}>
+                  <View style={styles.stockBadgeAbove}>
+                    <Text style={styles.stockText}>
+                      {product.discount} % OFF
+                    </Text>
+                  </View>
+                  <Image source={product.image} style={styles.productImage} />
 
-                      <View style={styles.productDetails}>
-                        <View style={styles.productTextContainer}>
-                          <Text style={styles.productName}>{product.name}</Text>
-                          <Text style={styles.productDescription}>
-                            {product.description.slice(0, 15)}...
-                          </Text>
-                        </View>
-                        <View>
-                          <Text style={styles.productPrice}>
-                            Rs {product.price}
-                          </Text>
-                          <Text style={styles.addbtn}>Remove</Text>
-                        </View>
-                      </View>
+                  <View style={styles.productDetails}>
+                    <View style={styles.productTextContainer}>
+                      <Text style={styles.productName}>{product.name}</Text>
+                      <Text style={styles.productDescription}>
+                        {product?.description?.slice(0, 15)}...
+                      </Text>
                     </View>
-                  ))}
+                    <View>
+                      <Text style={styles.productPrice}>
+                        Rs {product.price}
+                      </Text>
+                      <Text style={styles.addbtn}>Remove</Text>
+                    </View>
+                  </View>
                 </View>
-              </View>
-            ))}
-          </View>
+              ))}
+          </ScrollView>
           <View></View>
         </View>
 
@@ -353,28 +494,75 @@ const Storescreen = ({ navigation }: any) => {
 
             <Text style={styles.sectionTitleRight}>Max - 4</Text>
           </View>
+          <Carousel
+            data={storeData?.posts || []}
+            renderItem={({ item: post }) => (
+              <View style={styles.highlightCard}>
+                <Image
+                  source={
+                    post.media
+                      ? { uri: APP_CONSTANTS.API_BASE_URL + post.media }
+                      : require("../assets/product/product2.png")
+                  }
+                  style={styles.highlightImage}
+                />
+                <View style={styles.postcontainer}>
+                  <Text style={styles.highlightDescription}>
+                    Lorem ipsum dolor sit amet consectetur Lorem ipsum dolor sit
+                    amet consectetur Lorem ipsum dolor sit amet consectetur.
+                  </Text>
 
-          <View style={styles.highlightCard}>
-            <Image
-              source={require("../assets/product/product2.png")}
-              style={styles.highlightImage}
-            />
-          </View>
-          <View style={styles.postcontainer}>
-            <Text style={styles.highlightDescription}>
-              Lorem ipsum dolor sit amet consectetur Lorem ipsum dolor sit amet
-              consectetur Lorem ipsum dolor sit amet consectetur.
-            </Text>
+                  <View style={styles.highlightControls}>
+                    <TouchableOpacity style={styles.openButton}>
+                      <Text style={styles.openText}>Boost</Text>
+                    </TouchableOpacity>
+                    <Icon name="tray-arrow-up" size={24} color="#000" />
+                    <Icon name="dots-vertical" size={24} color="#000" />
+                  </View>
+                </View>
+              </View>
+            )}
+            width={width}
+            height={s(250)}
+          />
+          {/* <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            pagingEnabled
+            style={{ marginBottom: 20 }}
+          >
+            {storeData?.posts &&
+              storeData.posts.length > 0 &&
+              storeData.posts.map((post) => (
+                <View style={styles.highlightCard}>
+                  <Image
+                    source={
+                      post.media
+                        ? { uri: APP_CONSTANTS.API_BASE_URL + post.media }
+                        : require("../assets/product/product2.png")
+                    }
+                    style={styles.highlightImage}
+                  />
+                  <View style={styles.postcontainer}>
+                    <Text style={styles.highlightDescription}>
+                      Lorem ipsum dolor sit amet consectetur Lorem ipsum dolor
+                      sit amet consectetur Lorem ipsum dolor sit amet
+                      consectetur.
+                    </Text>
 
-            <View style={styles.highlightControls}>
-              <TouchableOpacity style={styles.openButton}>
-                <Text style={styles.openText}>Boost</Text>
-              </TouchableOpacity>
-              <Icon name="tray-arrow-up" size={24} color="#000" />
-              <Icon name="dots-vertical" size={24} color="#000" />
-            </View>
-          </View>
+                    <View style={styles.highlightControls}>
+                      <TouchableOpacity style={styles.openButton}>
+                        <Text style={styles.openText}>Boost</Text>
+                      </TouchableOpacity>
+                      <Icon name="tray-arrow-up" size={24} color="#000" />
+                      <Icon name="dots-vertical" size={24} color="#000" />
+                    </View>
+                  </View>
+                </View>
+              ))}
+          </ScrollView> */}
         </View>
+
         <View style={styles.Containerspotlight}>
           <TouchableOpacity
             style={{
@@ -384,52 +572,71 @@ const Storescreen = ({ navigation }: any) => {
               alignItems: "center",
               justifyContent: "center",
               marginBottom: 8,
+              marginLeft: 10,
             }}
             onPress={() => {
-              navigation.navigate("AddPostScreen");
+              navigation.navigate(HomeNavigation.ADD_POST_SCREEN);
             }}
           >
-            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
+            <Text
+              style={{
+                color: "#fff",
+                fontWeight: "700",
+                fontSize: 16,
+              }}
+            >
               Add Reel
             </Text>
           </TouchableOpacity>
-          <Text style={styles.sectionTitleRight}>Max - 4</Text>
+          <Text style={[styles.sectionTitleRight, { marginRight: 10 }]}>
+            Max - 4
+          </Text>
         </View>
+
         <View style={styles.videoSection}>
           {Array.from(
-            { length: Math.ceil(videoData.length / 2) },
-            (_, rowIndex) => (
+            { length: Math.ceil(storeData?.reels?.length || 0 / 2) },
+            (_, rowIndex: number) => (
               <View key={rowIndex} style={styles.videoRow}>
-                {videoData
+                {storeData?.reels
                   .slice(rowIndex * 2, rowIndex * 2 + 2)
-                  .map((video) => (
-                    <View key={video.id} style={styles.videoCard}>
-                      <Image source={video.source} style={styles.videoImage} />
+                  .map((video: any) => (
+                    <TouchableOpacity
+                      key={video.id}
+                      style={styles.videoCard}
+                      onPress={() => handleVideoPress(video)}
+                      activeOpacity={0.8}
+                    >
+                      <Image
+                        source={require("../assets/product/product2.png")}
+                        style={styles.videoImage}
+                      />
                       <Icon
                         name="play-circle-outline"
-                        size={40}
+                        size={s(40)}
                         color="#fff"
                         style={styles.playIcon}
                       />
                       <Icon
                         name="cards-heart"
-                        size={24}
+                        size={s(24)}
                         color="red"
                         style={styles.videoIcon}
                       />
                       <Icon
                         name="briefcase-upload-outline"
-                        size={24}
+                        size={s(24)}
                         color="#000"
                         style={styles.videoIcon1}
                       />
-                    </View>
+                    </TouchableOpacity>
                   ))}
               </View>
             )
           )}
         </View>
-        <View style={[styles.highlightsSection]}>
+
+        {/* <View style={[styles.highlightsSection]}>
           <View style={styles.Containerspotlight}>
             <Text style={styles.sectionTitle}>Live Review</Text>
 
@@ -441,7 +648,6 @@ const Storescreen = ({ navigation }: any) => {
                 marginBottom: 10,
               }}
             >
-              {/* <Icon name="bell-outline" size={24} color="#000" style={styles.actionIcon} /> */}
               <CustomSwitch
                 value={disabletab}
                 onValueChange={setdisable}
@@ -470,7 +676,8 @@ const Storescreen = ({ navigation }: any) => {
               <Text style={styles.reviewuser}>Nikita</Text>
             </View>
           </View>
-        </View>
+        </View> */}
+
         <View style={styles.fottercontainer}>
           <View style={styles.textRow}>
             <View style={styles.line} />
@@ -490,6 +697,82 @@ const Storescreen = ({ navigation }: any) => {
           </Text>
         </View>
       </ScrollView>
+
+      <EditStoreModal
+        visible={modalVisible}
+        onClose={handleModalClose}
+        onSubmit={handleFormSubmit}
+        editType={editType as "name" | "banner" | "logo" | "about" | null}
+        currentData={{
+          name: storeData?.name,
+          banner_image: storeData?.banner_image,
+          profile_image: storeData?.profile_image,
+          about_text: storeData?.about,
+        }}
+        isLoading={isUpdating}
+      />
+
+      {/* Video Modal */}
+      <View>
+        <Modal
+          isVisible={videoModalVisible}
+          onBackdropPress={closeVideoModal}
+          onBackButtonPress={closeVideoModal}
+        >
+          <View style={styles.videoModalContent}>
+            {/* Close Button */}
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={closeVideoModal}
+            >
+              <Icon name="close" size={s(25)} color="#000" />
+            </TouchableOpacity>
+
+            {/* Video Player */}
+            {selectedVideo && (
+              <Video
+                source={{
+                  uri: APP_CONSTANTS.API_BASE_URL + selectedVideo.media,
+                }}
+                style={styles.videoPlayer}
+                paused={isVideoPaused}
+                resizeMode="contain"
+                repeat={true}
+                controls={!isVideoLoading}
+                onBuffer={(e) => {
+                  setIsVideoLoading(e.isBuffering);
+                }}
+                onError={(error) => {
+                  console.log("Video Error:", error);
+                }}
+                onLoad={() => {
+                  console.log("Video Loaded");
+                }}
+              />
+            )}
+
+            {/* Play/Pause Button */}
+            {isVideoLoading && (
+              <View style={styles.playPauseButton}>
+                <ActivityIndicator size="large" color="#fff" />
+              </View>
+            )}
+
+            {/* Video Controls */}
+            {/* <View style={styles.videoControls}>
+              <TouchableOpacity style={styles.controlButton}>
+                <Icon name="cards-heart" size={s(30)} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.controlButton}>
+                <Icon name="share-variant" size={s(30)} color="#fff" />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.controlButton}>
+                <Icon name="comment-outline" size={s(30)} color="#fff" />
+              </TouchableOpacity>
+            </View> */}
+          </View>
+        </Modal>
+      </View>
     </SafeAreaView>
   );
 };
@@ -499,9 +782,32 @@ const styles = ScaledSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
+  centerContent: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: "#006EB2",
+    fontWeight: "500",
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 18,
+    color: "#FF6B6B",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  errorSubtext: {
+    marginTop: 8,
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
+  },
   banner: {
     width: "100%",
-    height: "600@s",
+    height: "500@s",
   },
   header: {
     flexDirection: "row",
@@ -558,7 +864,7 @@ const styles = ScaledSheet.create({
 
   detailsCardContainer: {
     top: -80,
-    alignItems: "center",
+    // alignItems: "center",
     backgroundColor: "#fff",
     shadowColor: "#000",
     shadowOpacity: 0.2,
@@ -656,7 +962,7 @@ const styles = ScaledSheet.create({
   Containertitle: {
     marginTop: -50,
     flexDirection: "row",
-    paddingHorizontal: 10,
+    // paddingHorizontal: 10,
     justifyContent: "space-between",
   },
   stockBadgeAbove: {
@@ -695,6 +1001,11 @@ const styles = ScaledSheet.create({
     marginTop: -50,
     padding: 20,
   },
+  textheaderContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
   textheader: {
     fontSize: 16,
     textAlign: "left",
@@ -709,7 +1020,7 @@ const styles = ScaledSheet.create({
 
   Containerspotlight: {
     flexDirection: "row",
-    paddingHorizontal: 10,
+    // paddingHorizontal: 10,
     justifyContent: "space-between",
     marginTop: 20,
   },
@@ -761,9 +1072,9 @@ const styles = ScaledSheet.create({
   },
   bannerScroll: {},
   scrollBanner: {
-    width: 380, // Adjust width based on content
-    height: 150,
-    marginHorizontal: 10, // Provides spacing between banners
+    width: width - s(20), // Adjust width based on content
+    height: "150@s",
+    alignSelf: "center",
     borderRadius: 10,
   },
   spotlightSection: {
@@ -846,6 +1157,7 @@ const styles = ScaledSheet.create({
   },
 
   highlightCard: {
+    width: width - 20,
     backgroundColor: "#fff",
     borderRadius: 10,
     shadowColor: "#000",
@@ -856,7 +1168,7 @@ const styles = ScaledSheet.create({
   },
   highlightImage: {
     width: "100%",
-    height: 250,
+    height: 200,
     borderRadius: 10,
   },
   highlightControls: {
@@ -898,18 +1210,20 @@ const styles = ScaledSheet.create({
   },
   videoCard: {
     width: "48%",
+    height: "335@s",
     backgroundColor: "#fff",
     borderRadius: 10,
-    padding: 10,
+    // padding: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 4,
+    overflow: "hidden",
   },
   videoImage: {
     width: "100%",
-    height: 350,
+    height: "100%",
   },
   playIcon: {
     position: "absolute",
@@ -979,7 +1293,9 @@ const styles = ScaledSheet.create({
     marginTop: 30,
   },
 
-  productcontainer: {},
+  productcontainer: {
+    marginBottom: 20,
+  },
   categoryContainer: {
     backgroundColor: "#fff",
     borderRadius: 10,
@@ -988,6 +1304,7 @@ const styles = ScaledSheet.create({
 
   productCard: {
     width: screenWidth / 3 - 10,
+    marginRight: 20,
     backgroundColor: "#fff",
     borderRadius: 10,
     padding: 10,
@@ -1082,6 +1399,118 @@ const styles = ScaledSheet.create({
 
   selectedTypeText: {
     color: "#ffb347",
+  },
+  // About Edit Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  aboutModalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    width: "90%",
+    maxHeight: "70%",
+  },
+  aboutModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  aboutModalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  aboutModalContent: {
+    padding: 20,
+  },
+  aboutModalLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+  },
+  aboutTextInput: {
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: "#000",
+    backgroundColor: "#fff",
+    minHeight: 120,
+    textAlignVertical: "top",
+  },
+  aboutModalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+  },
+  aboutModalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginHorizontal: 5,
+  },
+  cancelButton: {
+    backgroundColor: "#F5F5F5",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  cancelButtonText: {
+    color: "#666",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  saveButton: {
+    backgroundColor: "#FCA311",
+  },
+  saveButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  videoModalContainer: {
+    flex: 1,
+    // backgroundColor: 'rgba(0, 0, 0, 0.9)',
+    // justifyContent: 'center',
+    // alignItems: 'center',
+  },
+  videoModalContent: {
+    flex: 1,
+    // width: '100%',
+    // height: height - s(100),
+    // justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  closeButton: {
+    position: "absolute",
+    top: s(5),
+    right: 0,
+    zIndex: 1000,
+    backgroundColor: "#fff",
+    borderRadius: s(50),
+    padding: s(5),
+  },
+  videoPlayer: {
+    width: width - s(50),
+    height: height - s(150),
+    // aspectRatio: 16 / 9,
+  },
+  playPauseButton: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: [{ translateX: -s(20) }, { translateY: -s(0) }],
+    zIndex: 1000,
   },
 });
 

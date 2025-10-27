@@ -258,11 +258,11 @@ const menuItems: MenuItemType[] = [
     screen: "VerificationPayment",
   },
   // { title: 'Enable svindo Payment Gateway', icon: 'credit-card-check', screen: 'EnableSvindoGateway' },
-  {
-    title: "Add your Payment Gateway",
-    icon: "credit-card-plus",
-    screen: "AddPaymentGateway",
-  },
+  // {
+  //   title: "Add your Payment Gateway",
+  //   icon: "credit-card-plus",
+  //   screen: "AddPaymentGateway",
+  // },
 ];
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },

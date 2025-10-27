@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   View,
   Text,
+  ViewStyle,
 } from "react-native";
 import { ScaledSheet } from "react-native-size-matters";
 import Icon from "react-native-vector-icons/Ionicons";
@@ -27,12 +28,14 @@ interface CustomTextInputProps {
   showPasswordToggle?: boolean;
   showLeftIcon?: boolean;
   leftIcon?: React.ReactNode;
+  containerStyle?: StyleProp<ViewStyle>;
 }
 
 const CustomTextInput: React.FC<CustomTextInputProps> = ({
   placeholder = "Description",
   placeholderTextColor = "#999",
   styles: customStyles,
+  containerStyle: customContainerStyles,
   onChangeText,
   value,
   editable = true,
@@ -50,7 +53,7 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, customContainerStyles]}>
       {showLeftIcon && leftIcon}
       <TextInput
         style={[styles.input, customStyles]}

@@ -18,6 +18,7 @@ import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useNavigation } from "@react-navigation/native";
 
 const { width } = Dimensions.get("window");
 
@@ -40,6 +41,7 @@ interface FormErrors {
 }
 
 const AddSpotlightScreen = () => {
+  const navigation = useNavigation();
   const [formData, setFormData] = useState<SpotlightFormData>({
     product: "",
     discount_tag: "",
@@ -113,7 +115,7 @@ const AddSpotlightScreen = () => {
       };
 
       const response = await api.post(API_ROUTES.spotlightProduct, payload);
-
+      navigation.goBack();
       if (response.status === 200 || response.status === 201) {
         Alert.alert("Success", "Spotlight product submitted successfully");
         // Reset form

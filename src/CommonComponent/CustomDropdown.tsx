@@ -12,9 +12,10 @@ interface CustomDropdownProps {
   placeholder: string;
   options?: DropDownOption[];
   onSelect: (value: any) => void;
-  selectedValue: string | number | null;
+  selectedValue: any | null;
   styles?: StyleProp<ViewStyle>;
   dropDownBoxStyle?: StyleProp<ViewStyle>;
+  disabled?: boolean;
 }
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -24,6 +25,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   selectedValue,
   styles: customStyles,
   dropDownBoxStyle,
+  disabled = false,
 }) => {
   return (
     <Dropdown
@@ -41,9 +43,10 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
       placeholder={placeholder}
       searchPlaceholder="Search..."
       value={selectedValue}
-      onChange={(item) => onSelect(item)}
+      onChange={onSelect}
       renderLeftIcon={() => null}
       renderRightIcon={() => null}
+      disable={disabled}
     />
   );
 };

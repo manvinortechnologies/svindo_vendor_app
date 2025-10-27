@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import React from "react";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import IconIonic from "react-native-vector-icons/Ionicons";
 import MaterialIcon from "react-native-vector-icons/MaterialIcons";
 import Headerwithback from "./Headerwithback";
 import CustomSwitch from "./CustomSwitch";
@@ -24,12 +25,12 @@ const VerificationPaymentsScreen = () => {
           style={{ flexDirection: "row", justifyContent: "center", gap: 40 }}
         >
           <View style={{ alignItems: "center" }}>
-            <Icon name="checkmark-circle-outline" size={24} color="#000" />
+            <MaterialIcon name="verified" size={24} color="#000" />
 
             <Text style={styles.notVerified}>Not Verified</Text>
           </View>
           <View style={{ alignItems: "center" }}>
-            <Icon name="logo-usd" size={24} />
+            <Icon name="currency-usd-off" size={24} />
             <Text style={styles.notVerified}>Payment inactive</Text>
           </View>
         </View>

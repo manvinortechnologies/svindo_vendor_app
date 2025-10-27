@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -8,73 +8,211 @@ import {
   FlatList,
   Dimensions,
   SafeAreaView,
+  RefreshControl,
+  Alert,
 } from "react-native";
 import CustomHeader from "../CommonComponent/CustomHeader";
+import Loading from "../CommonComponent/Loading";
+import api from "../services/api/api";
+import { API_ROUTES } from "../constants/api-routes.constants";
+import { useNotificationContext } from "../contexts/NotificationContext";
+import { useNotifications } from "../hooks/useNotifications";
+import { NotificationType } from "../services/notification-service";
 
 const { width } = Dimensions.get("window");
 
-const notifications = [
-  {
-    id: "1",
-    status: "Active",
-    statusColor: "#C8FACC",
-    boxColor: "#E8FDEB",
-    campaignName: "12345",
-    views: 100,
-    clicks: 10,
-    start: "4/27/2025, 11:00 AM",
-    end: null,
-    reason: null,
-    budget: null,
-  },
-  {
-    id: "2",
-    status: "Ended",
-    statusColor: "#E1D4F9",
-    boxColor: "#F2EAFE",
-    campaignName: "12345",
-    views: 100,
-    clicks: 10,
-    start: "4/27/2025, 11:00 AM",
-    end: "4/27/2025, 11:00 AM",
-    reason: null,
-    budget: null,
-  },
-  {
-    id: "3",
-    status: "Pending",
-    statusColor: "#FFE9C6",
-    boxColor: "#FFF3E0",
-    campaignName: "12345",
-    views: null,
-    clicks: null,
-    start: null,
-    end: null,
-    reason: null,
-    budget: null,
-  },
-  {
-    id: "4",
-    status: "Rejected",
-    statusColor: "#FF9F9F",
-    boxColor: "#FF9494",
-    campaignName: "12345",
-    views: null,
-    clicks: null,
-    start: null,
-    end: null,
-    reason: "Content opposes our platform policy read",
-    budget: "₹1000.00",
-  },
-];
+interface NotificationCampaign {
+  id: string;
+  title: string;
+  message: string;
+  status: "Active" | "Ended" | "Pending" | "Rejected";
+  statusColor: string;
+  boxColor: string;
+  campaignName: string;
+  views?: number | null;
+  clicks?: number | null;
+  start?: string | null;
+  end?: string | null;
+  reason?: string | null;
+  budget?: string | null;
+  image_url?: string;
+  created_at?: string;
+  updated_at?: string;
+}
 
 const ManageNotification = ({ navigation }: any) => {
-  const renderCard = ({ item }: any) => (
+  const [notifications, setNotifications] = useState<NotificationCampaign[]>(
+    []
+  );
+  const [isLoading, setIsLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { showError } = useNotificationContext();
+  const { sendNotification } = useNotifications();
+  useEffect(() => {
+    fetchNotifications();
+    sendNotification({
+      title: "Manage Notification",
+      body: "Manage Notification",
+      type: NotificationType.GENERAL,
+      data: {
+        notification: "Manage Notification",
+      },
+    });
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await api.get(API_ROUTES.notificationCampaign);
+
+      if (response.data && Array.isArray(response.data)) {
+        // Transform API data to match our interface
+        const transformedNotifications = response.data.map((item: any) => ({
+          id: item.id?.toString() || Math.random().toString(),
+          title: item.title || item.subject || "Notification Campaign",
+          message:
+            item.message || item.body || item.description || "No message",
+          status: getStatusFromApi(item.status || item.state || "pending"),
+          statusColor: getStatusColor(item.status || item.state || "pending"),
+          boxColor: getBoxColor(item.status || item.state || "pending"),
+          campaignName:
+            item.campaign_name ||
+            item.title ||
+            item.id?.toString() ||
+            "Campaign",
+          views: item.views || item.view_count || null,
+          clicks: item.clicks || item.click_count || null,
+          start:
+            item.start_date || item.created_at
+              ? new Date(
+                  item.start_date || item.created_at
+                ).toLocaleDateString() +
+                ", " +
+                new Date(item.start_date || item.created_at).toLocaleTimeString(
+                  [],
+                  {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }
+                )
+              : null,
+          end: item.end_date
+            ? new Date(item.end_date).toLocaleDateString() +
+              ", " +
+              new Date(item.end_date).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : null,
+          reason: item.reason || item.rejection_reason || null,
+          budget: item.budget ? `₹${item.budget}` : null,
+          image_url: item.image_url,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+        }));
+
+        setNotifications(transformedNotifications);
+      } else {
+        setNotifications([]);
+      }
+    } catch (error) {
+      console.error("Error fetching notification campaigns:", error);
+      setError("Failed to load notification campaigns");
+      showError(
+        "Error",
+        "Failed to load notification campaigns. Please try again."
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchNotifications();
+    setRefreshing(false);
+  };
+
+  const getStatusFromApi = (
+    apiStatus: string
+  ): "Active" | "Ended" | "Pending" | "Rejected" => {
+    switch (apiStatus.toLowerCase()) {
+      case "active":
+      case "running":
+      case "live":
+        return "Active";
+      case "ended":
+      case "completed":
+      case "finished":
+        return "Ended";
+      case "rejected":
+      case "denied":
+      case "declined":
+        return "Rejected";
+      case "pending":
+      case "waiting":
+      case "draft":
+      default:
+        return "Pending";
+    }
+  };
+
+  const getStatusColor = (status: string): string => {
+    switch (status.toLowerCase()) {
+      case "active":
+      case "running":
+      case "live":
+        return "#C8FACC";
+      case "ended":
+      case "completed":
+      case "finished":
+        return "#E1D4F9";
+      case "rejected":
+      case "denied":
+      case "declined":
+        return "#FF9F9F";
+      case "pending":
+      case "waiting":
+      case "draft":
+      default:
+        return "#FFE9C6";
+    }
+  };
+
+  const getBoxColor = (status: string): string => {
+    switch (status.toLowerCase()) {
+      case "active":
+      case "running":
+      case "live":
+        return "#E8FDEB";
+      case "ended":
+      case "completed":
+      case "finished":
+        return "#F2EAFE";
+      case "rejected":
+      case "denied":
+      case "declined":
+        return "#FF9494";
+      case "pending":
+      case "waiting":
+      case "draft":
+      default:
+        return "#FFF3E0";
+    }
+  };
+
+  const renderCard = ({ item }: { item: NotificationCampaign }) => (
     <View style={[styles.card, { backgroundColor: item.boxColor }]}>
       {/* Image with floating status */}
       <View style={styles.imageWrapper}>
         <Image
-          source={require("../assets/notification_img.png")}
+          source={
+            item.image_url
+              ? { uri: item.image_url }
+              : require("../assets/notification_img.png")
+          }
           style={styles.image}
           resizeMode="cover"
         />
@@ -118,10 +256,34 @@ const ManageNotification = ({ navigation }: any) => {
     </View>
   );
 
+  // Calculate summary statistics
+  const activeNotifications = notifications.filter(
+    (n) => n.status === "Active"
+  ).length;
+  const totalNotifications = notifications.length;
+  const availableNotifications = Math.max(0, 3 - totalNotifications); // Assuming 3 notifications per month limit
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <CustomHeader title="Manage Notifications" />
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={fetchNotifications}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <CustomHeader title="Notifications" />
+      <CustomHeader title="Manage Notifications" />
 
       {/* Top Summary */}
       <View style={styles.headerRow}>
@@ -130,14 +292,17 @@ const ManageNotification = ({ navigation }: any) => {
             <Text style={styles.headerTitle}>Sent</Text>
             <Text style={styles.headerSubtitle}>this month</Text>
           </View>
-          <Text style={styles.headerValue}>1 notification</Text>
+          <Text style={styles.headerValue}>
+            {totalNotifications} notification
+            {totalNotifications !== 1 ? "s" : ""}
+          </Text>
         </View>
         <View style={styles.headerBox}>
           <View style={{ flexDirection: "row", gap: 5 }}>
             <Text style={styles.headerTitle}>Available</Text>
             <Text style={styles.headerSubtitle}>per month</Text>
           </View>
-          <Text style={styles.headerValue}>3 more</Text>
+          <Text style={styles.headerValue}>{availableNotifications} more</Text>
         </View>
       </View>
 
@@ -147,6 +312,26 @@ const ManageNotification = ({ navigation }: any) => {
         keyExtractor={(item) => item.id}
         renderItem={renderCard}
         contentContainerStyle={{ paddingBottom: 100 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#FCA311"]}
+            tintColor="#FCA311"
+          />
+        }
+        ListEmptyComponent={
+          !isLoading ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>
+                No notification campaigns yet
+              </Text>
+              <Text style={styles.emptySubText}>
+                Create your first notification campaign to get started
+              </Text>
+            </View>
+          ) : null
+        }
       />
 
       {/* Bottom Button */}
@@ -156,6 +341,8 @@ const ManageNotification = ({ navigation }: any) => {
       >
         <Text style={styles.sendText}>Send Notification</Text>
       </TouchableOpacity>
+
+      <Loading visible={isLoading} />
     </SafeAreaView>
   );
 };
@@ -278,5 +465,47 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "500",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#F44336",
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: "#FCA311",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "500",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 40,
+  },
+  emptyText: {
+    fontSize: 18,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 10,
+    fontWeight: "500",
+  },
+  emptySubText: {
+    fontSize: 14,
+    color: "#999",
+    textAlign: "center",
+    lineHeight: 20,
   },
 });

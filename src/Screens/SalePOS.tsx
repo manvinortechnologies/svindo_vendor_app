@@ -29,6 +29,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useIsFocused } from "@react-navigation/native";
 import formatNumber from "../utils/priceFormatter";
 import { s, ScaledSheet } from "react-native-size-matters";
+import moment from "moment";
 
 interface Product {
   id: number;
@@ -40,9 +41,21 @@ interface Product {
   image: string;
 }
 
+interface FormErrors {
+  products?: string;
+  customer?: string;
+  dueDate?: string;
+  advanceAmount?: string;
+  advanceBank?: string;
+  pr?: string;
+  discount?: string;
+}
+
 type RootStackParamList = {
   SalePOS: {
     selectedProducts?: Product[];
+    editMode?: boolean;
+    saleData?: any;
   };
 };
 
@@ -65,7 +78,6 @@ const SalePOS = () => {
   const [vendorList, setVendorList] = useState<DropDownOption[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<DropDownOption>();
   const [selectedVendor, setSelectedVendor] = useState<DropDownOption>();
-  const [showProductModal, setShowProductModal] = useState(false);
   const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [wholesale, setWholesale] = useState<boolean>(false);
@@ -75,7 +87,9 @@ const SalePOS = () => {
   const [advanceAmount, setAdvanceAmount] = useState("");
   const [callenderModel, setCallenderModel] = useState<boolean>(false);
   const [dueDate, setDueDate] = useState("");
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<FormErrors>({});
+
+  const paymentMethods = ["UPI", "Card", "Cash", "In Credit"];
 
   useEffect(() => {
     fetchAllData();
@@ -91,7 +105,80 @@ const SalePOS = () => {
   useEffect(() => {
     handleAmountChange(discount?.amount);
     handlePercentChange(discount?.pr);
-  }, [wholesale]);
+  }, [wholesale, products]);
+
+  const getSaleData = async () => {
+    const res = await api.get(
+      `${API_ROUTES.posSales}/${route.params?.saleData?.id}/`
+    );
+    return res.data;
+  };
+
+  useEffect(() => {
+    (async () => {
+      if (route.params?.editMode && route.params?.saleData) {
+        const res = await getSaleData();
+        populateFormWithSaleData(res);
+      }
+    })();
+  }, [route.params?.editMode, route.params?.saleData]);
+
+  const populateFormWithSaleData = async (saleData: any) => {
+    try {
+      // Map items to products format
+      const mappedProducts = saleData.items.map((item: any) => ({
+        id: item.product_details.id,
+        name: item.product_details.name,
+        desc: item.product_details.description || "",
+        price: item.product_details.sales_price,
+        wholesale_price: item.product_details.wholesale_price,
+        quantity: item.quantity,
+        image: item.product_details.image || "",
+      }));
+
+      !route.params?.selectedProducts && setProducts(mappedProducts);
+
+      // Set customer if exists
+      if (saleData.customer_detials) {
+        setSelectedCustomer({
+          id: saleData.customer_detials.id,
+          name: saleData.customer_detials.name,
+        });
+      }
+
+      // Set company profile
+      if (saleData.company_profile_detials) {
+        setCompanySelected({
+          id: saleData.company_profile_detials.id,
+          name: saleData.company_profile_detials.company_name,
+        });
+      }
+
+      // Set advance bank if exists
+      if (saleData.advance_bank_details) {
+        setSelectedBank({
+          id: saleData.advance_bank_details.id,
+          name: saleData.advance_bank_details.bank_name,
+        });
+      }
+
+      // Set other form values
+      setAdvanceAmount(saleData.advance_amount || "");
+      setWholesale(saleData.is_wholesale_rate || false);
+      setPaymentMode(
+        saleData.payment_method !== "cash"
+          ? "In Credit"
+          : paymentMethods.find(
+              (method) =>
+                method.toLowerCase() === saleData.payment_method.toLowerCase()
+            ) || "Cash"
+      );
+      handlePercentChange(saleData.discount_percentage || "");
+      setDueDate(saleData.credit_date || "");
+    } catch (error) {
+      console.error("Error populating form with sale data:", error);
+    }
+  };
 
   const fetchAllData = async () => {
     try {
@@ -151,7 +238,9 @@ const SalePOS = () => {
   const handlePercentChange = (value: string) => {
     const totalAmount = products.reduce(
       (sum, item) =>
-        sum + (wholesale ? item.wholesale_price : item.price) * item.quantity,
+        sum +
+        (wholesale ? item.wholesale_price || item.price : item.price) *
+          item.quantity,
       0
     );
     setDiscount((p) => ({ ...p, pr: value }));
@@ -167,7 +256,9 @@ const SalePOS = () => {
   const handleAmountChange = (value: string) => {
     const totalAmount = products.reduce(
       (sum, item) =>
-        sum + (wholesale ? item.wholesale_price : item.price) * item.quantity,
+        sum +
+        (wholesale ? item.wholesale_price || item.price : item.price) *
+          item.quantity,
       0
     );
     setDiscount((p) => ({ ...p, amount: value }));
@@ -181,7 +272,7 @@ const SalePOS = () => {
   };
 
   const validateForm = () => {
-    let tempErrors = {};
+    let tempErrors: FormErrors = {};
     // ✅ check products
     if (!products || products.length === 0) {
       tempErrors.products = "Please add at least one product before proceeding";
@@ -219,7 +310,9 @@ const SalePOS = () => {
     try {
       const totalAmount = products.reduce(
         (sum, item) =>
-          sum + (wholesale ? item.wholesale_price : item.price) * item.quantity,
+          sum +
+          (wholesale ? item.wholesale_price || item.price : item.price) *
+            item.quantity,
         0
       );
       const totalDiscountedAmount = totalAmount - Number(discount.amount);
@@ -239,10 +332,11 @@ const SalePOS = () => {
         items: products.map((p) => ({
           product: p.id,
           quantity: p.quantity,
-          price: wholesale ? p.wholesale_price : p.price,
-          amount: (wholesale ? p.wholesale_price : p.price) * p.quantity,
+          price: wholesale ? p.wholesale_price || p.price : p.price,
+          amount:
+            (wholesale ? p.wholesale_price || p.price : p.price) * p.quantity,
         })),
-        total_items: products.length,
+        total_items: products.reduce((sum, p) => sum + p.quantity, 0),
         total_amount_before_discount: totalAmount,
         discount_amount: discount.amount,
         total_amount: totalDiscountedAmount,
@@ -254,14 +348,23 @@ const SalePOS = () => {
         advance_bank: selectedBank?.id || "",
         advance_amount: advanceAmount || 0,
       };
-      !dueDate && delete data.credit_date;
+      if (paymentMode !== "In Credit") {
+        delete data.credit_date;
+        data.advance_bank = "";
+        data.advance_amount = 0;
+      }
       console.log(data, "data");
       if (wholesale) {
         navigation.navigate(HomeNavigation.WHOLESALE, data);
       } else {
         setIsLoading(true);
 
-        const res = await api.post(API_ROUTES.posSales, data);
+        const res = await api[route.params?.editMode ? "put" : "post"](
+          `${API_ROUTES.posSales}${
+            route.params?.editMode ? `${route.params?.saleData?.id}/` : ""
+          }`,
+          data
+        );
         console.log(res);
         navigation.navigate(HomeNavigation.BILLDETAILS, {
           id: res.data?.id,
@@ -276,7 +379,9 @@ const SalePOS = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Headerwithback title="Sales & POS" />
+      <Headerwithback
+        title={route.params?.editMode ? "Edit Sale" : "Sales & POS"}
+      />
 
       <ScrollView
         keyboardShouldPersistTaps="always"
@@ -374,6 +479,8 @@ const SalePOS = () => {
               navigation.navigate(HomeNavigation.PRODUCT_SELECTION as any, {
                 selectedProducts: products,
                 navigateScreen: HomeNavigation.SALE_POS,
+                editMode: route.params?.editMode,
+                saleData: route.params?.saleData,
               });
             }}
             style={styles.addItemButton}
@@ -442,7 +549,7 @@ const SalePOS = () => {
               </Text>
               <TextInput
                 style={[styles.tableText, styles.quantityInput]}
-                value={item.quantity.toString()}
+                value={item.quantity?.toString() || "0"}
                 onChangeText={(text) => {
                   const newQuantity = parseInt(text) || 0;
                   if (newQuantity >= 0) {
@@ -516,7 +623,7 @@ const SalePOS = () => {
           <View style={{ flexDirection: "row", gap: s(10) }}>
             <Text style={styles.label}>Payment</Text>
             <View style={styles.paymentOptions}>
-              {["UPI", "Card", "Cash", "In Credit"].map((method) => (
+              {paymentMethods.map((method) => (
                 <TouchableOpacity
                   key={method}
                   onPress={() => setPaymentMode(method)}
@@ -577,7 +684,7 @@ const SalePOS = () => {
                   <CustomDropdown
                     onSelect={setSelectedBank}
                     placeholder="Select Bank"
-                    selectedValue={selectedBank?.name || ""}
+                    selectedValue={selectedBank || null}
                     options={bankList}
                     dropDownBoxStyle={{ marginTop: 10 }}
                   />
@@ -593,7 +700,9 @@ const SalePOS = () => {
                   style={[styles.discountInput]}
                   onPress={() => setCallenderModel(true)}
                 >
-                  <Text>{dueDate ? dueDate : "YYYY/MM/DD"}</Text>
+                  <Text style={{ color: "#000" }}>
+                    {dueDate ? dueDate : "YYYY/MM/DD"}
+                  </Text>
                 </TouchableOpacity>
               </View>
               {errors?.dueDate && (
@@ -610,7 +719,9 @@ const SalePOS = () => {
           <Text style={{ color: "#000", fontWeight: "bold" }}>Discard</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.proceedButton} onPress={handleSubmit}>
-          <Text style={{ color: "#000", fontWeight: "bold" }}>Proceed</Text>
+          <Text style={{ color: "#000", fontWeight: "bold" }}>
+            {route.params?.editMode ? "Update Sale" : "Proceed"}
+          </Text>
         </TouchableOpacity>
       </View>
       <Loading visible={isLoading} />
@@ -636,6 +747,8 @@ const SalePOS = () => {
         onSelect={(e) => {
           setDueDate(e);
         }}
+        minDate={moment().format("YYYY-MM-DD")}
+        initialDate={dueDate}
       />
     </SafeAreaView>
   );

@@ -44,10 +44,12 @@ export const API_ROUTES = {
   vendorBank: "/vendor/get-bank/",
   bankLedger: "/vendor/bank/:id/ledger/",
   vendorCash: "vendor/cash-balance/",
+  vendorCashLedger: "/vendor/cash/ledger/",
   adjustCash: "vendor/cash-balance/adjust/",
   cashTransfer: "/vendor/cash-transfers/",
   bankToBankTransfer: "/vendor/bank-to-bank-transfers/",
   vendorAddBank: "vendor/vendor-bank/",
+  vendorStores: "/vendor/vendor-stores/",
 
   getProductSettings: "/vendor/productsetting/",
   productSettings: "/vendor/productsetting/update/",
@@ -57,6 +59,12 @@ export const API_ROUTES = {
 
   customer: "/customers",
   customerBaseData: "/customers/base-data",
+  customerRequests: "/customer/requests/",
+  deleteCustomerRequest: "/customer/requests/:id/",
+  wholesaleRetailRequests: "vendor/request-list",
+  createOffer: "/vendor/offer/",
+  getOffers: "/customer/all-request-offer",
+  getOffersById: "/customer/request-offer/",
 
   storeOnlineSetting: "/vendor/onlineStoreSetting/",
   storeWorkingHour: "/vendor/store-working-hour/",
@@ -79,6 +87,10 @@ export const API_ROUTES = {
   spotlightProduct: "/vendor/spotlight-product/",
   deliveryBoys: "/vendor/deliveryboys/",
   orders: "/vendor/orders/",
+  supportTickets: "/customer/support/tickets/",
+  supportTicketMessages: "/customer/support/tickets/:ticket_id/messages/",
   printVariantChoices: "/vendor/print-variant/choices/",
+  productSizes: "masters/get-size/",
   registerDeviceToken: "/users/register-device-token/",
+  notificationCampaign: "/vendor/notifcation-campaign/",
 };

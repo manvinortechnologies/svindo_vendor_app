@@ -84,7 +84,6 @@ const SelectLocationScreen: React.FC<SelectLocationScreenProps> = ({
     if (Platform.OS === "ios") {
       const status = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
       if (status === RESULTS.GRANTED) {
-        console.log("Location permission granted.");
       } else {
         console.log("Location permission denied.");
         handleDeniedPermissionModal();
@@ -96,7 +95,6 @@ const SelectLocationScreen: React.FC<SelectLocationScreenProps> = ({
       console.log(granted, PermissionsAndroid.RESULTS.GRANTED, "granted");
 
       if (granted === PermissionsAndroid.RESULTS.GRANTED) {
-        console.log("Location permission granted.");
         navigation.navigate("StatisticsScreen");
       } else {
         console.log("Location permission denied.");

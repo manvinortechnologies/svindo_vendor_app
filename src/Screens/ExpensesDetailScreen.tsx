@@ -7,7 +7,6 @@ import {
   ScrollView,
   Switch,
   Image,
-  Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { ScaledSheet } from "react-native-size-matters";
@@ -44,22 +43,10 @@ const ExpensesDetailScreen = () => {
   const handleConfirmDelete = async () => {
     try {
       setIsDeleting(true);
-      const response = await api.delete(
-        `${API_ROUTES.expense}${expenseData?.id}/`
-      );
-      console.log("Delete response:", response.data);
+      await api.delete(`${API_ROUTES.expense}${expenseData?.id}/`);
       setShowDeleteModal(false);
-      Alert.alert("Success", "Expense deleted successfully", [
-        {
-          text: "OK",
-          onPress: () => {
-            navigation.navigate(HomeNavigation.EXPENESES_SCREEN as never);
-          },
-        },
-      ]);
     } catch (err) {
       console.error("Error deleting expense:", err);
-      Alert.alert("Error", "Failed to delete expense. Please try again.");
     } finally {
       setIsDeleting(false);
     }

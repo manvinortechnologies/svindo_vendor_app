@@ -1,24 +1,41 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import AppNavigation from "./src/navigation/AppNavigation";
 import { Provider } from "react-redux";
 import { store } from "./src/services/store/api-store";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import FirebaseMessagingService from "./src/services/firebase-messaging";
+import NotificationService from "./src/services/notification-service";
+import { NotificationProvider } from "./src/contexts/NotificationContext";
 import { StorageUtils } from "./src/utils/storage";
+import { NavigationContainerRef } from "@react-navigation/native";
 
 const App = () => {
+  const navigationRef = useRef<NavigationContainerRef<any>>(null);
+
   useEffect(() => {
-    // Initialize Firebase Cloud Messaging
-    const isAuthenticated = StorageUtils.isAuthenticated();
-    if (isAuthenticated) {
-      FirebaseMessagingService.initialize();
-    }
+    // Initialize push notifications
+    const initializeNotifications = async () => {
+      try {
+        // Set navigation reference
+        NotificationService.setNavigationRef(navigationRef.current);
+
+        // Initialize notification service
+        await NotificationService.initialize();
+
+        console.log("Push notifications initialized successfully");
+      } catch (error) {
+        console.error("Error initializing push notifications:", error);
+      }
+    };
+
+    initializeNotifications();
   }, []);
 
   return (
     <Provider store={store}>
       <GestureHandlerRootView style={{ flex: 1 }}>
-        <AppNavigation />
+        <NotificationProvider>
+          <AppNavigation ref={navigationRef} />
+        </NotificationProvider>
       </GestureHandlerRootView>
     </Provider>
   );

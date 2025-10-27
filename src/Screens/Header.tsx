@@ -58,9 +58,9 @@ const Header: React.FC<HeaderProps> = ({
             </Text>
           )}
         </View>
-        <TouchableOpacity onPress={onInfoPress}>
+        {/* <TouchableOpacity onPress={onInfoPress}>
           <Icon name="information-circle-outline" size={22} color={textColor} />
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
       {rightIcon && rightIcon}
     </View>

@@ -40,7 +40,10 @@ interface CartItem {
 type RootStackParamList = {
   ProductSelection: {
     selectedProducts: Product[];
+    editMode: boolean;
+    saleData: any;
     navigateScreen: string;
+    formData?: any; // Add form data preservation
   };
 };
 
@@ -65,7 +68,13 @@ type ProductSelectionNavigationProp = StackNavigationProp<
 const ProductSelectionScreen: React.FC = () => {
   const navigation = useNavigation<ProductSelectionNavigationProp>();
   const route = useRoute<ProductSelectionRouteProp>();
-  const { selectedProducts = [], navigateScreen } = route.params || {};
+  const {
+    selectedProducts = [],
+    navigateScreen,
+    editMode,
+    saleData,
+    formData,
+  } = route.params || {};
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchText, setSearchText] = useState("");
@@ -325,6 +334,9 @@ const ProductSelectionScreen: React.FC = () => {
 
     navigation.replace(navigateScreen as any, {
       selectedProducts: mergedProducts,
+      editMode: editMode,
+      saleData: saleData,
+      formData: formData, // Return the form data back
     });
   }, [
     convertCartToProducts,
@@ -332,6 +344,7 @@ const ProductSelectionScreen: React.FC = () => {
     selectedProducts,
     navigateScreen,
     navigation,
+    formData, // Add formData to dependencies
   ]);
 
   const handleGoBack = useCallback(() => {

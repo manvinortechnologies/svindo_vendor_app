@@ -94,11 +94,11 @@ const menuItems: MenuItemType[] = [
     icon: "wallet",
     screen: HomeNavigation.ONLINE_SALE_WALLET,
   },
-  {
-    title: "Ad Wallet",
-    icon: "wallet-membership",
-    screen: HomeNavigation.AD_WALLET,
-  },
+  // {
+  //   title: "Ad Wallet",
+  //   icon: "wallet-membership",
+  //   screen: HomeNavigation.AD_WALLET,
+  // },
   {
     title: "Boost your Sales",
     icon: "trending-up",
@@ -109,33 +109,33 @@ const menuItems: MenuItemType[] = [
     icon: "star-circle",
     screen: HomeNavigation.CUSTOMER_FEEDBACK,
   },
-  { title: "Chats", icon: "chat", screen: HomeNavigation.CHATS },
+  // { title: "Chats", icon: "chat", screen: HomeNavigation.CHATS },
   {
     title: "Download Shop QR Code",
     icon: "qrcode",
     screen: HomeNavigation.DOWNLOAD_QR_CODE,
   },
-  {
-    title: "WhatsApp Message",
-    icon: "whatsapp",
-    screen: HomeNavigation.WHATSAPP_MESSAGE,
-  },
-  {
-    title: "SMS",
-    icon: "message-text-outline",
-    screen: HomeNavigation.SMS_SCREEN,
-  },
-  { title: "Emails", icon: "email-outline", screen: HomeNavigation.EMAILS },
+  // {
+  //   title: "WhatsApp Message",
+  //   icon: "whatsapp",
+  //   screen: HomeNavigation.WHATSAPP_MESSAGE,
+  // },
+  // {
+  //   title: "SMS",
+  //   icon: "message-text-outline",
+  //   screen: HomeNavigation.SMS_SCREEN,
+  // },
+  // { title: "Emails", icon: "email-outline", screen: HomeNavigation.EMAILS },
   {
     title: "Manage Delivery",
     icon: "truck-delivery-outline",
     screen: HomeNavigation.MANAGE_DELIVERY,
   },
-  {
-    title: "Transaction Messages",
-    icon: "message-text-outline",
-    screen: HomeNavigation.TRANSACTION_MESSAGES,
-  },
+  // {
+  //   title: "Transaction Messages",
+  //   icon: "message-text-outline",
+  //   screen: HomeNavigation.TRANSACTION_MESSAGES,
+  // },
 ];
 
 const styles = StyleSheet.create({

@@ -17,15 +17,25 @@ import CustomDropdown, {
 } from "../CommonComponent/CustomDropdown";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import api from "../services/api/api";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import CalendarModal from "../Modals/CalendarModal";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Loading from "../CommonComponent/Loading";
+import moment from "moment";
 
-const screenWidth = Dimensions.get("window").width;
+// Define the route params interface
+type RootStackParamList = {
+  PaymentsScreen: {
+    editMode?: boolean;
+    paymentData?: any;
+  };
+};
+
+type PaymentsScreenRouteProp = RouteProp<RootStackParamList, "PaymentsScreen">;
 
 const PaymentsScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute<PaymentsScreenRouteProp>();
 
   const [selectedType, setSelectedType] = useState(true);
   const [selectedParty, setSelectedParty] = useState<"Customer" | "Vendor">(
@@ -48,6 +58,8 @@ const PaymentsScreen = () => {
   const [bankList, setBankList] = useState<DropDownOption[]>([]);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [paymentCalModel, setPaymentCalModel] = useState<boolean>(false);
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [paymentId, setPaymentId] = useState<number | null>(null);
 
   const paymentMethods = ["UPI", "Card", "Cash"];
 
@@ -55,6 +67,53 @@ const PaymentsScreen = () => {
     getAllCategory();
     fetchPartyData();
   }, [selectedParty]);
+
+  // Handle edit mode - populate form with existing data
+  useEffect(() => {
+    if (route.params?.editMode && route.params?.paymentData) {
+      const paymentData = route.params.paymentData;
+      setIsEditMode(true);
+      setPaymentId(paymentData.id);
+
+      // Set type (gave/received)
+      setSelectedType(paymentData.type === "gave");
+
+      // Set party type and details
+      const isCustomer = paymentData.customer_details !== null;
+      setSelectedParty(isCustomer ? "Customer" : "Vendor");
+
+      // Set party ID and name
+      if (isCustomer && paymentData.customer_details) {
+        setSelectedPartyId(paymentData.customer_details.id);
+        setPartyName(paymentData.customer_details.name);
+      } else if (!isCustomer && paymentData.vendor_details) {
+        setSelectedPartyId(paymentData.vendor_details.id);
+        setPartyName(paymentData.vendor_details.name);
+      }
+
+      // Set amount
+      setAmount(paymentData.amount);
+
+      // Set payment date
+      setPaymentDate(paymentData.payment_date);
+
+      // Set payment method
+      setSelectedPaymentMethod(
+        paymentMethods.find(
+          (method) =>
+            method.toLowerCase() === paymentData.payment_type.toLowerCase()
+        ) || "Cash"
+      );
+
+      // Set notes
+      setDescription(paymentData.notes || "");
+
+      // Set attachment if exists
+      if (paymentData.attachment) {
+        setImageFile({ uri: paymentData.attachment });
+      }
+    }
+  }, [route.params]);
   const getAllCategory = async () => {
     try {
       setIsLoadingBanks(true);
@@ -119,12 +178,11 @@ const PaymentsScreen = () => {
     if (!amount) tempErrors.amount = "Amount is required";
     if (!paymentDate) tempErrors.paymentDate = "Payment date is required";
     if (!selectedPartyId) tempErrors.party = "Please select a party";
-    if (!selectedBank) {
+    if (selectedPaymentMethod !== "Cash" && !selectedBank) {
       tempErrors.bank = "Please select bank";
     }
 
     setErrors(tempErrors);
-    console.log(tempErrors, "errors");
 
     return Object.keys(tempErrors).length === 0;
   };
@@ -170,12 +228,20 @@ const PaymentsScreen = () => {
           type: imageFile.type || "image/jpeg",
         });
       }
-      console.log("formdata--->", formData);
-      const res = await api.post(API_ROUTES.paymnet, formData, {
+
+      // Use PUT for edit mode, POST for create mode
+      const apiUrl = isEditMode
+        ? `${API_ROUTES.paymnet}${paymentId}/`
+        : API_ROUTES.paymnet;
+
+      const apiMethod = isEditMode ? "put" : "post";
+
+      const res = await api[apiMethod](apiUrl, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
         },
       });
+
       navigation.goBack();
     } catch (error) {
       console.log("error-->", error);
@@ -186,7 +252,7 @@ const PaymentsScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Headerwithback title="Payments" />
+      <Headerwithback title={isEditMode ? "Edit Payment" : "Payments"} />
 
       {isLoading && <Loading visible={isLoading} />}
 
@@ -412,9 +478,11 @@ const PaymentsScreen = () => {
           </View>
         )}
 
-        {/* Create Button */}
+        {/* Create/Update Button */}
         <TouchableOpacity style={styles.createButton} onPress={addPaymentData}>
-          <Text style={styles.createButtonText}>Create</Text>
+          <Text style={styles.createButtonText}>
+            {isEditMode ? "Update" : "Create"}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
       <ModalUpdatePhoto
@@ -430,6 +498,7 @@ const PaymentsScreen = () => {
         initialDate={paymentDate}
         onClose={() => setPaymentCalModel(false)}
         onSelect={setPaymentDate}
+        maxDate={moment().format("YYYY-MM-DD")}
       />
     </SafeAreaView>
   );

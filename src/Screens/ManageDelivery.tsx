@@ -78,10 +78,10 @@ type MenuItemType = {
 
 // ✅ Ensure screen names match the navigation stack
 const menuItems: MenuItemType[] = [
-  {
-    title: "Auto Assign Instant delivery  partners",
-    screen: "AutoAssignDelivery",
-  },
+  // {
+  //   title: "Auto Assign Instant delivery  partners",
+  //   screen: "AutoAssignDelivery",
+  // },
   { title: "Manage Own Delivery Boy", screen: "AssignOwnDeliveryBoy" },
   { title: "Add Own Delivery Boy", screen: "AddDeliveryBoy" },
   // { title: 'Average Order Packing Time', screen: 'OrderPackingTime' },

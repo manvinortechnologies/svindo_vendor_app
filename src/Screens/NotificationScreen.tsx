@@ -6,76 +6,210 @@ import {
   FlatList,
   ScrollView,
   Image,
+  RefreshControl,
+  Alert,
 } from "react-native";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Icon from "react-native-vector-icons/Ionicons";
 import CustomHeader from "../CommonComponent/CustomHeader";
+import Loading from "../CommonComponent/Loading";
+import api from "../services/api/api";
+import { API_ROUTES } from "../constants/api-routes.constants";
+import { useNotificationContext } from "../contexts/NotificationContext";
+
+interface NotificationItem {
+  id: string;
+  title: string;
+  message: string;
+  type: "chat" | "order" | "like" | "rating" | "visit" | "reminder" | "general";
+  date?: string;
+  time?: string;
+  amount?: string;
+  image?: any;
+  color?: string;
+  isRead?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
 
 const NotificationScreen = ({ navigation }: any) => {
-  const chats = [
-    {
-      id: "1",
-      title: "Customer name",
-      message: "Hi, You have a coupon....",
-      date: "1/15/2025",
-      time: "1:23 PM",
-    },
-  ];
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const { showError } = useNotificationContext();
 
-  const orders = [
-    {
-      id: "1",
-      title: "Order Id",
-      message: "Order received",
-      amount: "$200.00",
-      date: "1/15/2025",
-      time: "1:23 PM",
-    },
-  ];
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
-  const moreNotifications = [
-    {
-      id: "1",
-      type: "like",
-      title: "user Id",
-      message: "Liked your post",
-      time: "1:23 PM",
-      image: require("../assets/product/storelogo.png"),
-      color: "#A74040",
-    },
-    {
-      id: "2",
-      type: "rating",
-      title: "user id",
-      message: "Rated your product / Order",
-      time: "1:23 PM",
-      image: require("../assets/product/storelogo.png"),
-      color: "#40A75B",
-    },
-    {
-      id: "3",
-      type: "visit",
-      title: "user id",
-      message: "Visited your store",
-      time: "1:23 PM",
-      image: require("../assets/product/storelogo.png"),
-      color: "#4081A7",
-    },
-    {
-      id: "4",
-      type: "reminder",
-      title: "Reminder",
-      message: "Low stock",
-      time: "1:23 PM",
-    },
-    {
-      id: "5",
-      type: "reminder",
-      title: "Reminder",
-      message: "expiry coming soon",
-      time: "1:23 PM",
-    },
-  ];
+  const fetchNotifications = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await api.get(API_ROUTES.notificationCampaign);
+
+      if (response.data && Array.isArray(response.data)) {
+        // Transform API data to match our interface
+        const transformedNotifications = response.data.map((item: any) => ({
+          id: item.id?.toString() || Math.random().toString(),
+          title: item.title || item.subject || "Notification",
+          message:
+            item.message || item.body || item.description || "No message",
+          type: item.type || "general",
+          date: item.created_at
+            ? new Date(item.created_at).toLocaleDateString()
+            : new Date().toLocaleDateString(),
+          time: item.created_at
+            ? new Date(item.created_at).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : new Date().toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              }),
+          amount: item.amount || item.price,
+          image: item.image_url
+            ? { uri: item.image_url }
+            : require("../assets/product/storelogo.png"),
+          color: item.color || getDefaultColor(item.type),
+          isRead: item.is_read || false,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+        }));
+
+        setNotifications(transformedNotifications);
+      } else {
+        setNotifications([]);
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      setError("Failed to load notifications");
+      showError("Error", "Failed to load notifications. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchNotifications();
+    setRefreshing(false);
+  };
+
+  const getDefaultColor = (type: string) => {
+    switch (type) {
+      case "like":
+        return "#A74040";
+      case "rating":
+        return "#40A75B";
+      case "visit":
+        return "#4081A7";
+      case "reminder":
+        return "#E97171";
+      case "order":
+        return "#FF9800";
+      // case "chat":
+      //   return "#2196F3";
+      default:
+        return "#757575";
+    }
+  };
+
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "like":
+        return "heart";
+      case "rating":
+        return "star";
+      case "visit":
+        return "eye";
+      case "reminder":
+        return "notifications";
+      case "order":
+        return "receipt";
+      // case "chat":
+      //   return "chatbubble";
+      default:
+        return "information-circle";
+    }
+  };
+
+  const markAsRead = async (notificationId: string) => {
+    try {
+      // Update local state
+      setNotifications((prev) =>
+        prev.map((notif) =>
+          notif.id === notificationId ? { ...notif, isRead: true } : notif
+        )
+      );
+
+      // You can add API call here to mark notification as read on server
+      // await api.put(`${API_ROUTES.notificationCampaign}${notificationId}/mark-read/`);
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+    }
+  };
+
+  const handleNotificationPress = (notification: NotificationItem) => {
+    // Mark as read if not already read
+    if (!notification.isRead) {
+      markAsRead(notification.id);
+    }
+
+    // Handle different notification types
+    switch (notification.type) {
+      case "reminder":
+        navigation.navigate("ModelReminderScreen", {
+          reminder: notification,
+        });
+        break;
+      case "order":
+        navigation.navigate("Orders", { orderId: notification.id });
+        break;
+      // case "chat":
+      //   // Navigate to chat screen
+      //   break;
+      default:
+        // Handle general notifications
+        break;
+    }
+  };
+
+  // Group notifications by type
+  // const chats = notifications.filter((n) => n.type === "chat");
+  const orders = notifications.filter((n) => n.type === "order");
+  const moreNotifications = notifications.filter(
+    (n) => !["chat", "order"].includes(n.type)
+  );
+
+  if (isLoading && notifications.length === 0) {
+    return (
+      <View style={styles.container}>
+        <CustomHeader title="Notifications" />
+        <Loading visible={true} />
+      </View>
+    );
+  }
+
+  if (error && notifications.length === 0) {
+    return (
+      <View style={styles.container}>
+        <CustomHeader title="Notifications" />
+        <View style={styles.errorContainer}>
+          <Icon name="alert-circle" size={48} color="#F44336" />
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={fetchNotifications}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -85,116 +219,162 @@ const NotificationScreen = ({ navigation }: any) => {
       <ScrollView
         contentContainerStyle={{ paddingBottom: 30 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
       >
         {/* Chats Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Chats</Text>
-            <TouchableOpacity style={{ flexDirection: "row", gap: 5 }}>
-              <Text style={styles.viewAll}>View All</Text>
-              <Icon name="chevron-forward" size={16} />
-            </TouchableOpacity>
-          </View>
-          {chats.map((item) => (
-            <View key={item.id} style={styles.card}>
-              <View style={styles.cardLeft}>
-                <Image
-                  source={require("../assets/product/storelogo.png")}
-                  style={{ width: 40, height: 40 }}
-                />
-              </View>
-              <View style={styles.cardMiddle}>
-                <Text style={styles.cardTitle}>{item.title}</Text>
-                <Text style={styles.cardMsg}>{item.message}</Text>
-              </View>
-              <View style={styles.cardRight}>
-                <Text style={styles.cardDate}>{item.date}</Text>
-                <Text style={styles.cardDate}>{item.time}</Text>
-              </View>
+        {/* {chats.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Chats ({chats.length})</Text>
+              <TouchableOpacity style={{ flexDirection: "row", gap: 5 }}>
+                <Text style={styles.viewAll}>View All</Text>
+                <Icon name="chevron-forward" size={16} />
+              </TouchableOpacity>
             </View>
-          ))}
-        </View>
-
-        {/* Order Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Orders</Text>
-            <TouchableOpacity style={{ flexDirection: "row", gap: 5 }}>
-              <Text style={styles.viewAll}>View All</Text>
-              <Icon name="chevron-forward" size={16} />
-            </TouchableOpacity>
-          </View>
-          {orders.map((item) => (
-            <View key={item.id} style={styles.card}>
-              <View style={styles.cardLeft}>
-                <Image
-                  source={require("../assets/product/storelogo.png")}
-                  style={{ width: 40, height: 40 }}
-                />
-              </View>
-              <View style={styles.cardMiddle}>
-                <Text style={styles.cardTitle}>{item.title}</Text>
-                <Text style={styles.cardMsg}>{item.message}</Text>
-              </View>
-              <View style={styles.cardRight}>
-                <Text style={styles.cardDate}>{item.date}</Text>
-                <Text style={styles.cardTime}>{item.time}</Text>
-                <Text style={styles.amount}>{item.amount}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-
-        {/* More Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>More</Text>
-          <FlatList
-            data={moreNotifications}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
+            {chats.map((item) => (
               <TouchableOpacity
-                onPress={() => {
-                  if (item.type === "reminder") {
-                    navigation.navigate("ModelReminderScreen", {
-                      reminder: item,
-                    });
-                  }
-                }}
+                key={item.id}
+                style={[styles.card, !item.isRead && styles.unreadCard]}
+                onPress={() => handleNotificationPress(item)}
               >
-                <View style={styles.moreItem}>
-                  {/* Left Side */}
-                  {item.type === "reminder" ? (
-                    <View style={styles.reminderCircle}>
-                      <Icon name="notifications" size={18} color="#fff" />
-                    </View>
-                  ) : (
-                    <Image source={item.image} style={styles.userImage} />
-                  )}
-
-                  {/* Middle */}
-                  <View style={styles.moreMiddle}>
-                    <Text style={styles.moreTitle}>{item.title}</Text>
-                    <Text style={styles.moreMsg}>{item.message}</Text>
-                  </View>
-
-                  <Text style={styles.moreTime}>{item.time}</Text>
-
-                  {/* Right Side */}
-                  <View style={styles.rightSide}>
-                    {item.type !== "reminder" && (
-                      <View
-                        style={[
-                          styles.colorSquare,
-                          { backgroundColor: item.color },
-                        ]}
-                      />
-                    )}
-                  </View>
+                <View style={styles.cardLeft}>
+                  <Image
+                    source={
+                      item.image || require("../assets/product/storelogo.png")
+                    }
+                    style={{ width: 40, height: 40, borderRadius: 20 }}
+                  />
+                </View>
+                <View style={styles.cardMiddle}>
+                  <Text style={styles.cardTitle}>{item.title}</Text>
+                  <Text style={styles.cardMsg}>{item.message}</Text>
+                </View>
+                <View style={styles.cardRight}>
+                  <Text style={styles.cardDate}>{item.date}</Text>
+                  <Text style={styles.cardDate}>{item.time}</Text>
+                  {!item.isRead && <View style={styles.unreadDot} />}
                 </View>
               </TouchableOpacity>
-            )}
-          />
-        </View>
+            ))}
+          </View>
+        )} */}
+
+        {/* Order Section */}
+        {orders.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Orders ({orders.length})</Text>
+              <TouchableOpacity style={{ flexDirection: "row", gap: 5 }}>
+                <Text style={styles.viewAll}>View All</Text>
+                <Icon name="chevron-forward" size={16} />
+              </TouchableOpacity>
+            </View>
+            {orders.map((item) => (
+              <TouchableOpacity
+                key={item.id}
+                style={[styles.card, !item.isRead && styles.unreadCard]}
+                onPress={() => handleNotificationPress(item)}
+              >
+                <View style={styles.cardLeft}>
+                  <Image
+                    source={
+                      item.image || require("../assets/product/storelogo.png")
+                    }
+                    style={{ width: 40, height: 40, borderRadius: 20 }}
+                  />
+                </View>
+                <View style={styles.cardMiddle}>
+                  <Text style={styles.cardTitle}>{item.title}</Text>
+                  <Text style={styles.cardMsg}>{item.message}</Text>
+                </View>
+                <View style={styles.cardRight}>
+                  <Text style={styles.cardDate}>{item.date}</Text>
+                  <Text style={styles.cardTime}>{item.time}</Text>
+                  {item.amount && (
+                    <Text style={styles.amount}>{item.amount}</Text>
+                  )}
+                  {!item.isRead && <View style={styles.unreadDot} />}
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* More Section */}
+        {moreNotifications.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>
+              More ({moreNotifications.length})
+            </Text>
+            <FlatList
+              data={moreNotifications}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <TouchableOpacity onPress={() => handleNotificationPress(item)}>
+                  <View
+                    style={[
+                      styles.moreItem,
+                      !item.isRead && styles.unreadMoreItem,
+                    ]}
+                  >
+                    {/* Left Side */}
+                    {item.type === "reminder" ? (
+                      <View style={styles.reminderCircle}>
+                        <Icon
+                          name={getNotificationIcon(item.type)}
+                          size={18}
+                          color="#fff"
+                        />
+                      </View>
+                    ) : (
+                      <View style={styles.iconContainer}>
+                        <Icon
+                          name={getNotificationIcon(item.type)}
+                          size={20}
+                          color={item.color || "#757575"}
+                        />
+                      </View>
+                    )}
+
+                    {/* Middle */}
+                    <View style={styles.moreMiddle}>
+                      <Text style={styles.moreTitle}>{item.title}</Text>
+                      <Text style={styles.moreMsg}>{item.message}</Text>
+                    </View>
+
+                    <Text style={styles.moreTime}>{item.time}</Text>
+
+                    {/* Right Side */}
+                    <View style={styles.rightSide}>
+                      {!item.isRead && <View style={styles.unreadDot} />}
+                      {item.type !== "reminder" && item.color && (
+                        <View
+                          style={[
+                            styles.colorSquare,
+                            { backgroundColor: item.color },
+                          ]}
+                        />
+                      )}
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              )}
+            />
+          </View>
+        )}
+
+        {/* Empty State */}
+        {notifications.length === 0 && !isLoading && (
+          <View style={styles.emptyContainer}>
+            <Icon name="notifications-outline" size={64} color="#ccc" />
+            <Text style={styles.emptyText}>No notifications yet</Text>
+            <Text style={styles.emptySubText}>
+              You'll see notifications here when you receive them
+            </Text>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -292,5 +472,70 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 3,
+  },
+  // New styles for dynamic content
+  unreadCard: {
+    backgroundColor: "#E3F2FD",
+    borderColor: "#2196F3",
+  },
+  unreadMoreItem: {
+    backgroundColor: "#F5F5F5",
+  },
+  unreadDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#FCA311",
+    marginTop: 4,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#F0F0F0",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 12,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#F44336",
+    textAlign: "center",
+    marginVertical: 16,
+  },
+  retryButton: {
+    backgroundColor: "#FCA311",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 40,
+    marginTop: 50,
+  },
+  emptyText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#666",
+    marginTop: 16,
+  },
+  emptySubText: {
+    fontSize: 14,
+    color: "#999",
+    textAlign: "center",
+    marginTop: 8,
   },
 });

@@ -91,8 +91,6 @@ const AdminProfile = ({ navigation }: any) => {
       confirmPassword: data.confirmPassword,
     };
 
-    console.log("✅ SUBMITTING:", data);
-    console.log("data-->", bodyData);
     try {
       setIsLoading(true);
       const res = await api.put("users/profile/me/", bodyData);
@@ -100,7 +98,6 @@ const AdminProfile = ({ navigation }: any) => {
         navigation.navigate(HomeNavigation.SIGNUP_DETAIL_SCREEN);
         StorageUtils.setAdminProfile("ADMIN_PROFILE");
       }
-      console.log("status-->", res.status);
     } catch (error) {
       console.log("error--->", error);
     } finally {

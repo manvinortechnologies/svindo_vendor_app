@@ -1,12 +1,6 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  SafeAreaView,
-} from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import CustomSwitch from "../CommonComponent/CustomSwitch";
 import { API_ROUTES } from "../constants/api-routes.constants";
@@ -43,6 +37,7 @@ const ProductAddedSuccess: React.FC<ProductAddedSuccessProps> = ({
 
   const [isSpotlightEnabled, setIsSpotlightEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
   const handleAddVariant = () => {
     navigation.navigate(HomeNavigation.ADD_PRODUCT_SCREEN, {
       productId: payload.parent || payload.id,

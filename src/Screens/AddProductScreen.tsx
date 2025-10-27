@@ -60,13 +60,14 @@ const COLOR_OPTIONS = [
 ];
 
 // Validation Schema
-const getValidationSchema = (selectedType: string, selectedFor: string) =>
+const getValidationSchema = (selectedType: string) =>
   Yup.object().shape({
     name: Yup.string().required("Product name is required"),
     sales_price: Yup.string().required("Sales price is required"),
+    mrp: Yup.string().required("MRP is required"),
     unit: Yup.string().required("Unit is required"),
-    category: Yup.number().nullable().notRequired(),
-    sub_category: Yup.number().nullable().notRequired(),
+    category: Yup.string().required("Please select a category"),
+    sub_category: Yup.string().required("Please select a sub category"),
     opening_stock:
       selectedType === "product"
         ? Yup.number().when("is_stock_enabled", {
@@ -97,7 +98,7 @@ const getValidationSchema = (selectedType: string, selectedFor: string) =>
       otherwise: (schema) => schema.notRequired(),
     }),
     description: Yup.string().notRequired(),
-    image1: Yup.mixed().notRequired(),
+    image1: Yup.mixed().required("At least one image is required"),
     food_type: Yup.string().when("product_type", {
       is: "food",
       then: (schema) => schema.required("Food type is required"),
@@ -140,8 +141,8 @@ const getInitialValues = {
   expiry_date: "",
   description: "",
   color: "",
-  category: null,
-  sub_category: null,
+  category: "",
+  sub_category: "",
   image1: null,
   image2: null,
   image3: null,
@@ -225,8 +226,10 @@ const ForSelector = ({
             disabled[option] && styles.disabledButton,
           ]}
           onPress={() => onSelect(option)}
-          disabled={option === "offline" && selectedType === "print"}
-          disabled={disabled[option]}
+          disabled={
+            (option === "offline" && selectedType === "print") ||
+            disabled[option]
+          }
         >
           <Text
             style={[
@@ -282,12 +285,15 @@ const ToggleRow = ({ label, value, onValueChange }) => (
   </View>
 );
 
-const ImageUploader = ({ images, onImagePress, selectedFor }) => (
+const ImageUploader = ({ images, onImagePress, selectedFor, error = null }) => (
   <View style={styles.section}>
-    <Text style={styles.sectionTitle}>Images (Optional)</Text>
+    <View style={styles.headerRow}>
+      <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Images</Text>
+      {error && <Text style={styles.errorText}>{error}</Text>}
+    </View>
     <TouchableOpacity
       onPress={() => onImagePress("image1")}
-      style={styles.imageBox}
+      style={[styles.imageBox, error && { borderColor: "red" }]}
     >
       {images.image1?.uri ? (
         <Image
@@ -299,6 +305,7 @@ const ImageUploader = ({ images, onImagePress, selectedFor }) => (
       )}
     </TouchableOpacity>
 
+    <Text style={styles.sectionTitle}> (Optional)</Text>
     {selectedFor === "both" && (
       <View style={styles.imageRow}>
         {["image2", "image3", "image4"].map((imageKey, i) => (
@@ -443,7 +450,7 @@ const AddProductScreen = ({
   const [subCategoryList, setSubCategoryList] = useState<DropDownOption[]>();
   const [addonData, setAddonData] = useState([]);
   const [variantData, setVariantData] = useState([]);
-
+  const [sizeList, setSizeList] = useState([]);
   // Selection States
   const [selectedCategory, setSelectedCategory] =
     useState<DropDownOption | null>(null);
@@ -459,19 +466,22 @@ const AddProductScreen = ({
   const [batchSwitch, setBatchSwitch] = useState(false);
   const [expirySwitch, setExpirySwitch] = useState(false);
   const [foodSwitch, setFoodSwitch] = useState(false);
+  const [useDefaultSettings, setUseDefaultSettings] = useState(false);
 
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
   const [existingProduct, setExistingProduct] = useState<any>(null);
 
+  const [settings, setSettings] = useState<{ [key: string]: boolean }>({});
   useEffect(() => {
     fetchAllData();
+    loadProductSettings();
   }, []);
 
   // Handle edit mode
   useEffect(() => {
-    if (route.params?.isEdit && route.params?.productId) {
-      setIsEditMode(true);
+    if (route.params?.productId) {
+      setIsEditMode(route.params?.isEdit);
       fetchExistingProduct(route.params.productId);
     }
   }, [route.params?.isEdit, route.params?.productId]);
@@ -485,68 +495,74 @@ const AddProductScreen = ({
       );
       const product = response.data;
       setExistingProduct(product);
-
       // Populate form with existing data
       if (formikRef.current) {
-        formikRef.current.setValues({
-          name: product.name || "",
-          description: product.description || "",
-          sales_price: product.sales_price?.toString() || "",
-          purchase_price: product.purchase_price?.toString() || "",
-          wholesale_price: product.wholesale_price?.toString() || "",
-          opening_stock: product.opening_stock?.toString() || "",
-          // min_stock: product.min_stock?.toString() || "",
-          hsn: product.hsn || "",
-          tax_inclusive: product.tax_inclusive || "",
-          unit: product.unit || "",
-          expiry_date: product.expiry_date || "",
-          batch_no: product.batch_number || "",
-          image1: product.image ? { uri: product.image } : null,
-          image2: product.image2 ? { uri: product.image2 } : null,
-          image3: product.image3 ? { uri: product.image3 } : null,
-          image4: product.image4 ? { uri: product.image4 } : null,
-          brand_warranty: product.brand_warranty,
-          shop_warranty: product.shop_warranty,
-          shop_exchange: product.shop_exchange,
-          replacement: product.replacement,
-          cod: product.cod,
-          return_policy: product.return_policy,
-          is_on_shop: product.is_on_shop,
-          general_delivery: product.general_delivery,
-          self_pickup: product.self_pickup,
-          instant_delivery: product.instant_delivery,
-          is_customize: product.is_customize,
-          is_popular: product.is_popular,
-          is_featured: product.is_featured,
-          food_type: product.food_type,
-          selectedAddons: product.addons || [],
-          print_variants: product.print_variants || [],
-          customize_print_variants: product.customize_print_variants || [],
-          low_stock_alert: product.low_stock_alert,
-        });
-
+        if (!route.params?.isEdit) {
+          formikRef.current.setValues({
+            category: product.category || "",
+            sub_category: product.sub_category || "",
+          });
+        } else {
+          formikRef.current.setValues({
+            name: product.name || "",
+            description: product.description || "",
+            sales_price: product.sales_price?.toString() || "",
+            purchase_price: product.purchase_price?.toString() || "",
+            wholesale_price: product.wholesale_price?.toString() || "",
+            mrp: product.mrp?.toString() || "",
+            opening_stock: product.opening_stock?.toString() || "",
+            low_stock_quantity: product.low_stock_quantity?.toString() || "",
+            is_stock_enabled:
+              product.is_stock_enabled !== undefined
+                ? product.is_stock_enabled
+                : true,
+            low_stock_alert: product.low_stock_alert || false,
+            hsn: product.hsn || "",
+            gst: product.gst?.toString() || "",
+            tax_inclusive:
+              product.tax_inclusive !== undefined
+                ? product.tax_inclusive
+                : true,
+            unit: product.unit || "",
+            brand_name: product.brand_name || "",
+            batch_number: product.batch_number || "",
+            size: product.size || "",
+            expiry_date: product.expiry_date || "",
+            color: product.color || "",
+            image1: product.image ? { uri: product.image } : null,
+            image2: product.image2 ? { uri: product.image2 } : null,
+            image3: product.image3 ? { uri: product.image3 } : null,
+            image4: product.image4 ? { uri: product.image4 } : null,
+            instant_delivery: product.instant_delivery || false,
+            self_pickup: product.self_pickup || false,
+            general_delivery: product.general_delivery || false,
+            is_on_shop: product.is_on_shop || false,
+            return_policy: product.return_policy || false,
+            cod: product.cod || false,
+            replacement: product.replacement || false,
+            shop_exchange: product.shop_exchange || false,
+            shop_warranty: product.shop_warranty || false,
+            brand_warranty: product.brand_warranty || false,
+            is_customize: product.is_customize || false,
+            is_popular: product.is_popular || false,
+            is_featured: product.is_featured || false,
+            food_type: product.food_type || "veg",
+            selectedAddons: product.addons || [],
+            print_variants: product.print_variants || [],
+            customize_print_variants: product.customize_print_variants || [],
+            category: product.category || "",
+            sub_category: product.sub_category || "",
+          });
+        }
         // Set other states
         setSelectedType(product.product_type || "product");
         setSelectedFor(product.sale_type || "offline");
-        setIsWholesaleEnabled(!!product.wholesale_price || false);
-        setBatchSwitch(!!product.batch_number || false);
-        setExpirySwitch(!!product.expiry_date || false);
-        setFoodSwitch(product.food_type === "veg" || false);
-
-        // Set category and subcategory (will be set when lists are loaded)
-        if (product.category && categoryList) {
-          const category = categoryList.find(
-            (cat) => cat.id === product.category
-          );
-          if (category) setSelectedCategory(category);
-        }
-
-        if (product.sub_category && subCategoryList) {
-          const subCategory = subCategoryList.find(
-            (sub) => sub.id === product.sub_category
-          );
-          if (subCategory) setSelectedSubCategory(subCategory);
-        }
+        route.params?.isEdit &&
+          setIsWholesaleEnabled(!!product.wholesale_price || false);
+        route.params?.isEdit && setBatchSwitch(!!product.batch_number || false);
+        route.params?.isEdit && setExpirySwitch(!!product.expiry_date || false);
+        route.params?.isEdit &&
+          setFoodSwitch(product.food_type === "veg" || false);
 
         // Set addons
         if (
@@ -571,6 +587,28 @@ const AddProductScreen = ({
           );
           setSelectedVariants(variants);
         }
+
+        // Handle print variants data structure
+        if (product.product_type === "print") {
+          // Ensure print variants are properly set
+          if (product.print_variants && Array.isArray(product.print_variants)) {
+            formikRef.current?.setFieldValue(
+              "print_variants",
+              product.print_variants
+            );
+          }
+
+          // Handle customize print variants
+          if (
+            product.customize_print_variants &&
+            Array.isArray(product.customize_print_variants)
+          ) {
+            formikRef.current?.setFieldValue(
+              "customize_print_variants",
+              product.customize_print_variants
+            );
+          }
+        }
       }
     } catch (error) {
       console.error("Error fetching existing product:", error);
@@ -583,18 +621,20 @@ const AddProductScreen = ({
   const fetchAllData = async () => {
     try {
       setIsLoading(true);
-      const [categoryRes, subCategoryRes, addonRes, variantRes] =
+      const [categoryRes, subCategoryRes, addonRes, variantRes, sizeRes] =
         await Promise.all([
           api.get(API_ROUTES.productCategory),
           api.get(API_ROUTES.productSubCategory),
           api.get(API_ROUTES.addons),
           api.get(API_ROUTES.printVariantChoices),
+          api.get(API_ROUTES.productSizes),
         ]);
 
       setCategoryList(categoryRes.data);
       setSubCategoryList(subCategoryRes.data);
       setAddonData(addonRes.data);
       setVariantData(variantRes.data);
+      setSizeList(sizeRes.data);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -605,7 +645,6 @@ const AddProductScreen = ({
   const handleSaveProduct = async (values) => {
     try {
       setIsLoading(true);
-
       // Create FormData
       const formData = new FormData();
 
@@ -656,12 +695,15 @@ const AddProductScreen = ({
         formData.append("stock", values.opening_stock?.toString());
       }
 
-      formData.append("low_stock_alert", values.low_stock_alert?.toString());
+      formData.append(
+        "low_stock_alert",
+        values.low_stock_alert?.toString() || "false"
+      );
 
       if (values.low_stock_quantity) {
         formData.append(
           "low_stock_quantity",
-          values.low_stock_quantity?.toString()
+          values.low_stock_quantity?.toString() || "0"
         );
       }
 
@@ -681,8 +723,9 @@ const AddProductScreen = ({
         formData.append("expiry_date", values.expiry_date);
       }
 
-      formData.append("description", values.description);
-      formData.append("is_customize", values.is_customize?.toString());
+      formData.append("description", values.description || "");
+      selectedType === "print" &&
+        formData.append("is_customize", values.is_customize?.toString());
       formData.append("instant_delivery", values.instant_delivery?.toString());
       formData.append("self_pickup", values.self_pickup?.toString());
       formData.append("general_delivery", values.general_delivery?.toString());
@@ -694,7 +737,10 @@ const AddProductScreen = ({
       formData.append("shop_warranty", values.shop_warranty?.toString());
       formData.append("brand_warranty", values.brand_warranty?.toString());
       formData.append("is_food", (selectedType === "food")?.toString());
-      formData.append("tax_inclusive", values.tax_inclusive?.toString());
+      formData.append(
+        "tax_inclusive",
+        values.tax_inclusive?.toString() || "false"
+      );
       formData.append("is_popular", (values.is_popular || false)?.toString());
       formData.append("is_featured", (values.is_featured || false)?.toString());
       formData.append("is_active", "true");
@@ -732,19 +778,23 @@ const AddProductScreen = ({
       // Add addons
       if (values.selectedAddons && values.selectedAddons.length > 0) {
         values.selectedAddons.forEach((addon, index) => {
-          formData.append(`addons[${index}][addon]`, addon.id.toString());
+          Object.keys(addon).forEach((key) => {
+            formData.append(`addons[${index}][${key}]`, addon[key]);
+          });
         });
       }
 
       // Add print variants
       if (
         selectedType === "print" &&
+        !values.is_customize &&
         values.print_variants &&
         values.print_variants.length > 0
       ) {
-        values.print_variants.forEach((variant, index) => {
-          formData.append(`print_variants[${index}]`, variant);
-        });
+        const printVariants = existingProduct
+          ? values.print_variants.map(({ product, ...rest }) => rest)
+          : values.print_variants;
+        formData.append(`print_variants`, JSON.stringify(printVariants));
       }
 
       // Add customize print variants
@@ -754,9 +804,13 @@ const AddProductScreen = ({
         values.customize_print_variants &&
         values.customize_print_variants.length > 0
       ) {
-        values.customize_print_variants.forEach((variant, index) => {
-          formData.append(`customize_print_variants[${index}]`, variant);
-        });
+        const customizePrintVariants = existingProduct
+          ? values.customize_print_variants.map(({ product, ...rest }) => rest)
+          : values.customize_print_variants;
+        formData.append(
+          `customize_print_variants`,
+          JSON.stringify(customizePrintVariants)
+        );
       }
 
       let res;
@@ -851,9 +905,58 @@ const AddProductScreen = ({
     if (type === "print") setSelectedFor("both");
   };
 
+  const loadProductSettings = async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.get(API_ROUTES.getProductSettings);
+      const data = res?.data || {};
+      setSettings(data);
+    } catch (error) {
+      console.error("Failed to load product settings:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    formikRef.current?.resetForm();
-  }, [selectedType]);
+    if (!isEditMode) {
+      formikRef.current?.resetForm();
+      loadProductSettings();
+    }
+  }, [selectedType, isEditMode]);
+
+  // Update form values when settings change
+  useEffect(() => {
+    if (formikRef.current && Object.keys(settings).length > 0) {
+      // Set default values for delivery details and policies based on settings
+      const updates: Partial<FormValues> = {};
+
+      // Set delivery details based on settings
+      updates.instant_delivery = settings.instant_delivery || false;
+      updates.self_pickup = settings.self_pickup || false;
+      updates.general_delivery = settings.general_delivery || false;
+      updates.is_on_shop = settings.shop_orders || false;
+
+      // Set policies based on settings
+      updates.return_policy = settings.return_policy || false;
+      updates.cod = settings.cod || false;
+      updates.replacement = settings.replacement || false;
+      updates.shop_exchange = settings.shop_exchange || false;
+      updates.shop_warranty = settings.shop_warranty || false;
+      updates.brand_warranty = settings.brand_warranty || false;
+
+      // Only update if there are changes and we're not in edit mode
+      if (!isEditMode && Object.keys(updates).length > 0) {
+        formikRef.current.setValues((prev) => ({ ...prev, ...updates }));
+      }
+    }
+  }, [settings, isEditMode]);
+
+  useEffect(() => {
+    if (useDefaultSettings) {
+      formikRef.current?.setValues((prev) => ({ ...prev, ...settings }));
+    }
+  }, [useDefaultSettings]);
 
   useEffect(() => {
     formikRef.current?.setFieldValue(
@@ -869,17 +972,91 @@ const AddProductScreen = ({
         const category = categoryList.find(
           (cat) => cat.id === existingProduct.category
         );
-        if (category) setSelectedCategory(category);
+        if (category) formikRef.current?.setFieldValue("category", category.id);
       }
 
       if (existingProduct.subcategory) {
         const subCategory = subCategoryList.find(
           (sub) => sub.id === existingProduct.subcategory
         );
-        if (subCategory) setSelectedSubCategory(subCategory);
+        if (subCategory)
+          formikRef.current?.setFieldValue("sub_category", subCategory.id);
       }
     }
   }, [isEditMode, existingProduct, categoryList, subCategoryList]);
+
+  // Reinitialize form when existing product data changes
+  useEffect(() => {
+    if (isEditMode && existingProduct && formikRef.current) {
+      // Force form reinitialization
+      formikRef.current.resetForm();
+      // Set values again to ensure they're properly loaded
+      setTimeout(() => {
+        if (formikRef.current) {
+          formikRef.current.setValues({
+            name: existingProduct.name || "",
+            description: existingProduct.description || "",
+            sales_price: existingProduct.sales_price?.toString() || "",
+            purchase_price: existingProduct.purchase_price?.toString() || "",
+            wholesale_price: existingProduct.wholesale_price?.toString() || "",
+            mrp: existingProduct.mrp?.toString() || "",
+            opening_stock: existingProduct.opening_stock?.toString() || "",
+            low_stock_quantity:
+              existingProduct.low_stock_quantity?.toString() || "",
+            is_stock_enabled:
+              existingProduct.is_stock_enabled !== undefined
+                ? existingProduct.is_stock_enabled
+                : true,
+            low_stock_alert: existingProduct.low_stock_alert || false,
+            hsn: existingProduct.hsn || "",
+            gst: existingProduct.gst?.toString() || "",
+            tax_inclusive:
+              existingProduct.tax_inclusive !== undefined
+                ? existingProduct.tax_inclusive
+                : true,
+            unit: existingProduct.unit || "",
+            brand_name: existingProduct.brand_name || "",
+            batch_number: existingProduct.batch_number || "",
+            size: existingProduct.size || "",
+            expiry_date: existingProduct.expiry_date || "",
+            color: existingProduct.color || "",
+            image1: existingProduct.image
+              ? { uri: existingProduct.image }
+              : null,
+            image2: existingProduct.image2
+              ? { uri: existingProduct.image2 }
+              : null,
+            image3: existingProduct.image3
+              ? { uri: existingProduct.image3 }
+              : null,
+            image4: existingProduct.image4
+              ? { uri: existingProduct.image4 }
+              : null,
+            instant_delivery: existingProduct.instant_delivery || false,
+            self_pickup: existingProduct.self_pickup || false,
+            general_delivery: existingProduct.general_delivery || false,
+            is_on_shop: existingProduct.is_on_shop || false,
+            return_policy: existingProduct.return_policy || false,
+            cod: existingProduct.cod || false,
+            replacement: existingProduct.replacement || false,
+            shop_exchange: existingProduct.shop_exchange || false,
+            shop_warranty: existingProduct.shop_warranty || false,
+            brand_warranty: existingProduct.brand_warranty || false,
+            is_customize: existingProduct.is_customize || false,
+            is_popular: existingProduct.is_popular || false,
+            is_featured: existingProduct.is_featured || false,
+            food_type: existingProduct.food_type || "veg",
+            selectedAddons: existingProduct.addons || [],
+            print_variants: existingProduct.print_variants || [],
+            customize_print_variants:
+              existingProduct.customize_print_variants || [],
+            category: existingProduct.category || "",
+            sub_category: existingProduct.sub_category || "",
+          });
+        }
+      }, 100);
+    }
+  }, [isEditMode, existingProduct]);
 
   return (
     <MainContainer>
@@ -931,16 +1108,30 @@ const AddProductScreen = ({
                       : {}
                   }
                 />
+                <TouchableOpacity
+                  style={[
+                    styles.optionButton,
+                    { alignSelf: "flex-end" },
+                    useDefaultSettings && styles.selectedButton,
+                  ]}
+                  onPress={() => setUseDefaultSettings(!useDefaultSettings)}
+                >
+                  <Text
+                    style={[
+                      styles.optionText,
+                      useDefaultSettings && styles.selectedText,
+                    ]}
+                  >
+                    Use Default Settings
+                  </Text>
+                </TouchableOpacity>
               </View>
 
               <Formik<FormValues>
                 innerRef={formikRef}
                 enableReinitialize
                 initialValues={getInitialValues}
-                validationSchema={getValidationSchema(
-                  selectedType,
-                  selectedFor
-                )}
+                validationSchema={getValidationSchema(selectedType)}
                 onSubmit={handleSaveProduct}
               >
                 {({
@@ -954,6 +1145,7 @@ const AddProductScreen = ({
                   <>
                     {/* Modals */}
                     <CalendarModal
+                      initialDate={values.expiry_date}
                       visible={callenderModel}
                       onClose={() => setCallenderModel(false)}
                       onSelect={(e) => setFieldValue("expiry_date", e)}
@@ -1083,7 +1275,10 @@ const AddProductScreen = ({
                         {/* MRP - Left Column */}
                         {selectedType !== "print" && (
                           <View style={styles.gridItemHalf}>
-                            <FormField label="MRP">
+                            <FormField
+                              label="MRP"
+                              error={touched.mrp && errors.mrp}
+                            >
                               <InputBox
                                 placeholder="Enter here"
                                 background="#FFF8EB"
@@ -1182,6 +1377,9 @@ const AddProductScreen = ({
                                 onPress={() => {
                                   setImeiModalVisible(true);
                                 }}
+                                disabled={
+                                  useDefaultSettings && settings.imei_serial_no
+                                }
                               >
                                 <Text style={styles.addButtonTextSmall}>
                                   Add +
@@ -1258,26 +1456,36 @@ const AddProductScreen = ({
                       <FormField
                         label="Category"
                         error={touched.category && errors.category}
+                        required={true}
                       >
                         <CustomDropdown
                           placeholder="Select Category"
-                          onSelect={(opt) => setFieldValue("category", opt.id)}
+                          onSelect={(opt) => {
+                            setFieldValue("category", opt.id);
+                            // Clear subcategory when category changes
+                            setFieldValue("sub_category", "");
+                          }}
                           selectedValue={values.category}
                           options={categoryList}
+                          disabled={!isEditMode && !!route.params?.productId}
                         />
                       </FormField>
 
                       <FormField
                         label="Sub Category"
                         error={touched.sub_category && errors.sub_category}
+                        required={true}
                       >
                         <CustomDropdown
-                          onSelect={(opt) =>
-                            setFieldValue("sub_category", opt.id)
-                          }
+                          onSelect={(opt) => {
+                            setFieldValue("sub_category", opt.id);
+                          }}
                           selectedValue={values.sub_category}
                           placeholder="Select Sub Category"
-                          options={subCategoryList}
+                          options={subCategoryList?.filter(
+                            (sub: any) => sub.category === values.category
+                          )}
+                          disabled={!isEditMode && !!route.params?.productId}
                         />
                       </FormField>
                     </View>
@@ -1337,7 +1545,7 @@ const AddProductScreen = ({
                                   onSelect={(val) =>
                                     setFieldValue("color", val.id)
                                   }
-                                  selectedValue={values.color}
+                                  selectedValue={values.color || ""}
                                 />
                               </View>
                               <View
@@ -1345,7 +1553,9 @@ const AddProductScreen = ({
                                   styles.colorIndicator,
                                   {
                                     backgroundColor:
-                                      values.color?.toLowerCase() || "#E5E5E5",
+                                      (
+                                        values?.color || "#E5E5E5"
+                                      )?.toLowerCase() || "#E5E5E5",
                                   },
                                 ]}
                               />
@@ -1355,11 +1565,11 @@ const AddProductScreen = ({
 
                         {selectedType !== "service" && (
                           <FormField label="Select Size">
-                            <InputBox
-                              placeholder="Enter here"
-                              background="#FFF8EB"
-                              value={values.size}
-                              onChangeText={handleChange("size")}
+                            <CustomDropdown
+                              options={sizeList}
+                              placeholder="Select Size"
+                              onSelect={(val) => setFieldValue("size", val.id)}
+                              selectedValue={values.size || ""}
                             />
                           </FormField>
                         )}
@@ -1380,7 +1590,7 @@ const AddProductScreen = ({
                                 <InputBox
                                   placeholder="Enter here"
                                   background="#FFF8EB"
-                                  value={values.batch_number}
+                                  value={values.batch_number || ""}
                                   onChangeText={handleChange("batch_number")}
                                 />
                               </FormField>
@@ -1644,6 +1854,7 @@ const AddProductScreen = ({
                       images={values}
                       onImagePress={setActiveImageModal}
                       selectedFor={selectedFor}
+                      error={touched.image1 && errors.image1}
                     />
 
                     {/* Delivery Details Section */}
@@ -1657,40 +1868,88 @@ const AddProductScreen = ({
                             {
                               key: "instant_delivery",
                               label: "Instant Delivery",
+                              settingKey: "instant_delivery",
                             },
-                            { key: "self_pickup", label: "Self Pickup" },
+                            {
+                              key: "self_pickup",
+                              label: "Self Pickup",
+                              settingKey: "self_pickup",
+                            },
                             {
                               key: "general_delivery",
                               label: "General Delivery",
+                              settingKey: "general_delivery",
                             },
-                            { key: "is_on_shop", label: "On Shop Orders" },
-                          ].map(({ key, label }) => (
-                            <ToggleRow
-                              key={key}
-                              label={label}
-                              value={values[key]}
-                              onValueChange={(val) => setFieldValue(key, val)}
-                            />
-                          ))}
+                            {
+                              key: "is_on_shop",
+                              label: "On Shop Orders",
+                              settingKey: "shop_orders",
+                            },
+                          ].map(({ key, label, settingKey }) => {
+                            // Check if this setting is enabled in product settings
+                            const isSettingEnabled =
+                              settings[settingKey] !== false;
+
+                            // if (!isSettingEnabled) return null;
+
+                            return (
+                              <ToggleRow
+                                key={key}
+                                label={label}
+                                value={values[key]}
+                                onValueChange={(val) => setFieldValue(key, val)}
+                              />
+                            );
+                          })}
                         </View>
 
                         <View style={styles.section}>
                           <Text style={styles.sectionTitle}>Policies</Text>
                           {[
-                            { key: "return_policy", label: "Return Policy" },
-                            { key: "cod", label: "COD" },
-                            { key: "replacement", label: "Replacement" },
-                            { key: "shop_exchange", label: "Shop Exchange" },
-                            { key: "shop_warranty", label: "Shop Warranty" },
-                            { key: "brand_warranty", label: "Brand Warranty" },
-                          ].map(({ key, label }) => (
-                            <ToggleRow
-                              key={key}
-                              label={label}
-                              value={values[key]}
-                              onValueChange={(val) => setFieldValue(key, val)}
-                            />
-                          ))}
+                            {
+                              key: "return_policy",
+                              label: "Return Policy",
+                              settingKey: "return_policy",
+                            },
+                            {
+                              key: "cod",
+                              label: "COD",
+                              settingKey: "cod",
+                            },
+                            {
+                              key: "replacement",
+                              label: "Replacement",
+                              settingKey: "replacement",
+                            },
+                            {
+                              key: "shop_exchange",
+                              label: "Shop Exchange",
+                              settingKey: "shop_exchange",
+                            },
+                            {
+                              key: "shop_warranty",
+                              label: "Shop Warranty",
+                              settingKey: "shop_warranty",
+                            },
+                            {
+                              key: "brand_warranty",
+                              label: "Brand Warranty",
+                              settingKey: "brand_warranty",
+                            },
+                          ].map(({ key, label, settingKey }) => {
+                            // Check if this setting is enabled in product settings
+                            const isSettingEnabled =
+                              settings[settingKey] !== false;
+
+                            return (
+                              <ToggleRow
+                                key={key}
+                                label={label}
+                                value={values[key]}
+                                onValueChange={(val) => setFieldValue(key, val)}
+                              />
+                            );
+                          })}
                         </View>
 
                         {/* <View style={styles.section}>
@@ -1893,6 +2152,8 @@ const styles = ScaledSheet.create({
     alignItems: "center",
     backgroundColor: "#fffbe6",
     marginBottom: 12,
+    overflow: "hidden",
+    padding: "4@s",
   },
   imageRow: {
     flexDirection: "row",

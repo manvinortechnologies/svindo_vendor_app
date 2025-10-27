@@ -7,16 +7,21 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
+  Linking,
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import CustomDropdown from "../CommonComponent/CustomDropdown";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { Swipeable } from "react-native-gesture-handler";
 import Icon from "react-native-vector-icons/Ionicons";
 import { s } from "react-native-size-matters";
+import { formatOrderDate } from "../utils/dateandTime";
 
 type OrderProductDetailsRouteParams = {
   orderId: string;
@@ -24,17 +29,23 @@ type OrderProductDetailsRouteParams = {
 
 interface OrderItem {
   id: number;
-  product: {
+  product_details: {
     name: string;
     description: string;
-    images?: Array<{ image: string }>;
+    image: string;
     mrp: number;
+    sales_price: number;
   };
   quantity: number;
-  price: number;
+  sales_price: number;
+  mrp: number;
 }
 
 interface Order {
+  user_details: {
+    first_name: string;
+    mobile: string;
+  };
   id: number;
   order_id: string;
   status: string;
@@ -56,13 +67,14 @@ interface Order {
 }
 
 const OrderProductDetails = ({ navigation }: any) => {
+  const swipeableRef = useRef<Swipeable | null>(null);
   const route = useRoute();
   const { orderId } = route.params as OrderProductDetailsRouteParams;
+  const insets = useSafeAreaInsets();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [deliveryBoys, setDeliveryBoys] = useState<any[]>([]);
   const [selectedDeliveryBoy, setSelectedDeliveryBoy] = useState<any>(null);
-  const swipeableRef = useRef<Swipeable | null>(null);
 
   useEffect(() => {
     const fetchOrderDetails = async () => {
@@ -103,6 +115,20 @@ const OrderProductDetails = ({ navigation }: any) => {
     }
   }, [orderId]);
 
+  const handleCancelOrder = async () => {
+    try {
+      setLoading(true);
+      const response = await api.put(`${API_ROUTES.orders}${orderId}/`, {
+        status: "not_accepted",
+      });
+      setOrder(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Failed to cancel order:", error);
+      setLoading(false);
+    }
+  };
+
   const handleAcceptOrder = async () => {
     try {
       setLoading(true);
@@ -142,23 +168,35 @@ const OrderProductDetails = ({ navigation }: any) => {
     );
   }
 
+  const getDiliveryType = (type: string) => {
+    if (type === "instant_delivery") {
+      return "Instant Delivery";
+    } else if (type === "general_delivery") {
+      return "General Delivery";
+    } else if (type === "on_shop_order") {
+      return "On Shop Orders";
+    } else if (type === "self_pickup") {
+      return "Self Pickup";
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Header */}
         <CustomHeader
-          title={order.customer_name}
-          rightIcon={
-            <TouchableOpacity
-              onPress={() => {
-                // Handle chat functionality
-                console.log("Chat button pressed");
-              }}
-              style={styles.chatButton}
-            >
-              <Icon name="chatbox-ellipses" size={s(22)} color="#FCA511" />
-            </TouchableOpacity>
-          }
+          title={order?.user_details?.first_name || order?.customer_name}
+          // rightIcon={
+          //   <TouchableOpacity
+          //     onPress={() => {
+          //       // Handle chat functionality
+          //       console.log("Chat button pressed");
+          //     }}
+          //     style={styles.chatButton}
+          //   >
+          //     <Icon name="chatbox-ellipses" size={s(22)} color="#FCA511" />
+          //   </TouchableOpacity>
+          // }
         />
 
         {/* Order status */}
@@ -171,11 +209,21 @@ const OrderProductDetails = ({ navigation }: any) => {
                 : styles.notAccepted,
             ]}
           >
-            {order.status.toUpperCase()}
+            {(
+              order.status.charAt(0).toUpperCase() +
+              order.status.slice(1).toLowerCase()
+            )
+              .split("_")
+              .join(" ")}
           </Text>
-          <TouchableOpacity style={styles.cancelBtn}>
-            <Text style={styles.cancelText}>Cancel</Text>
-          </TouchableOpacity>
+          {order.status !== "not_accepted" && (
+            <TouchableOpacity
+              style={styles.cancelBtn}
+              onPress={handleCancelOrder}
+            >
+              <Text style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Order details */}
@@ -183,10 +231,12 @@ const OrderProductDetails = ({ navigation }: any) => {
           <View style={styles.orderInfo}>
             <Text style={styles.orderId}>Id - #{order.order_id}</Text>
             <Text style={styles.orderDate}>
-              {new Date(order.created_at).toLocaleDateString()}
+              {formatOrderDate(order.created_at)}
             </Text>
           </View>
-          <Text style={styles.pickup}>{order.delivery_type}</Text>
+          <Text style={styles.pickup}>
+            {getDiliveryType(order.delivery_type)}
+          </Text>
           <View style={styles.paymentRow}>
             <Text
               style={[
@@ -205,7 +255,7 @@ const OrderProductDetails = ({ navigation }: any) => {
         {/* Items */}
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>
-            {order.items.length} Items in this Order
+            {order.items.length} Item(s) in this Order
           </Text>
           {order.items.length === 0 ? (
             <Text style={styles.noItemsText}>No items in this order</Text>
@@ -214,24 +264,28 @@ const OrderProductDetails = ({ navigation }: any) => {
               <View style={styles.itemRow} key={item.id}>
                 <Image
                   source={{
-                    uri:
-                      item.product.images && item.product.images.length > 0
-                        ? item.product.images[0].image
-                        : undefined,
+                    uri: item?.product_details?.image
+                      ? item?.product_details?.image
+                      : undefined,
                   }}
                   style={styles.itemImg}
                 />
                 <View style={{ flex: 1 }}>
                   <Text style={styles.itemName}>
-                    {item.product.name} | {item.quantity} Qty
+                    {item?.product_details?.name} | {item.quantity} Qty
                   </Text>
                   <Text style={styles.itemDesc}>
-                    {item.product.description}
+                    {item?.product_details?.description}
                   </Text>
                   <View style={styles.priceRow}>
-                    <Text style={styles.price}>Rs {item.price}</Text>
-                    {item.product.mrp > item.price && (
-                      <Text style={styles.oldPrice}>Rs {item.product.mrp}</Text>
+                    <Text style={styles.price}>
+                      Rs {item?.product_details.sales_price}
+                    </Text>
+                    {item?.product_details?.mrp >
+                      item?.product_details.sales_price && (
+                      <Text style={styles.oldPrice}>
+                        Rs {item?.product_details?.mrp}
+                      </Text>
                     )}
                   </View>
                 </View>
@@ -307,10 +361,12 @@ const OrderProductDetails = ({ navigation }: any) => {
 
           <View style={styles.deliverySection}>
             <Text style={styles.deliveryLabel}>Address :</Text>
-            <Text style={styles.addressText}>{order.customer_name}</Text>
+            <Text style={styles.addressText}>
+              {order?.user_details?.first_name || order.customer_name}
+            </Text>
             <Text style={styles.addressText}>{order.customer_address}</Text>
             <Text style={styles.addressText}>
-              Mobile - {order.customer_mobile}
+              Mobile - {order.user_details?.mobile}
             </Text>
           </View>
 
@@ -328,7 +384,12 @@ const OrderProductDetails = ({ navigation }: any) => {
               Payment Mode :{" "}
               <Text style={styles.paymentModeValue}>{order.payment_mode}</Text>
             </Text>
-            <TouchableOpacity style={styles.callButton}>
+            <TouchableOpacity
+              style={styles.callButton}
+              onPress={() => {
+                Linking.openURL(`tel:${order.user_details?.mobile}`);
+              }}
+            >
               <Icon name="call" size={16} color="#fff" />
               <Text style={styles.callButtonText}>Call</Text>
             </TouchableOpacity>
@@ -337,32 +398,34 @@ const OrderProductDetails = ({ navigation }: any) => {
       </ScrollView>
 
       {/* Accept Order - Swipeable */}
-      <Swipeable
-        ref={swipeableRef}
-        containerStyle={styles.swipeContainer}
-        friction={2}
-        enableTrackpadTwoFingerGesture
-        rightThreshold={60}
-        leftThreshold={60}
-        renderLeftActions={RightAction}
-        onSwipeableOpen={() => {
-          handleAcceptOrder();
-          swipeableRef.current?.close();
-        }}
-      >
-        <TouchableOpacity
-          style={styles.acceptBtn}
-          onPress={() => navigation.navigate("ProductDetails")}
+      {order.status === "not_accepted" && (
+        <Swipeable
+          ref={swipeableRef}
+          containerStyle={[styles.swipeContainer, { bottom: insets.bottom }]}
+          friction={2}
+          enableTrackpadTwoFingerGesture
+          rightThreshold={60}
+          leftThreshold={60}
+          renderLeftActions={RightAction}
+          onSwipeableOpen={() => {
+            handleAcceptOrder();
+            swipeableRef.current?.close();
+          }}
         >
-          <View style={styles.swipeIndicator}>
-            <Icon name="arrow-forward-outline" size={20} color="#FF9800" />
-          </View>
-          <View style={styles.acceptTextContainer}>
-            <Text style={styles.acceptText}>Accept Order</Text>
-            <Text style={styles.acceptSub}>Swipe to change status</Text>
-          </View>
-        </TouchableOpacity>
-      </Swipeable>
+          <TouchableOpacity
+            style={styles.acceptBtn}
+            onPress={() => navigation.navigate("ProductDetails")}
+          >
+            <View style={styles.swipeIndicator}>
+              <Icon name="arrow-forward-outline" size={20} color="#FF9800" />
+            </View>
+            <View style={styles.acceptTextContainer}>
+              <Text style={styles.acceptText}>Accept Order</Text>
+              <Text style={styles.acceptSub}>Swipe to change status</Text>
+            </View>
+          </TouchableOpacity>
+        </Swipeable>
+      )}
     </SafeAreaView>
   );
 };
@@ -433,8 +496,9 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   orderId: {
-    fontWeight: "bold",
+    fontWeight: "500",
     fontSize: 16,
+    color: "#000",
   },
   orderDate: {
     color: "gray",
@@ -512,6 +576,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
   },
   itemName: {
+    color: "#000",
     fontWeight: "bold",
     fontSize: 14,
     marginBottom: 4,
@@ -543,6 +608,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   paymentValue: {
+    color: "#000",
     fontWeight: "bold",
     fontSize: 14,
   },

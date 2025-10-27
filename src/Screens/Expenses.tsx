@@ -47,7 +47,7 @@ const Expenses = ({ navigation }: any) => {
   const [imageUrl, setImageUrl] = useState("");
   const [imagePickerModel, setImagePickerModel] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const types = ["UPI", "Card", "Cash", "In Credit"];
+  const types = ["UPI", "Card", "Cash"];
 
   useEffect(() => {
     getAllCategory();
@@ -136,7 +136,7 @@ const Expenses = ({ navigation }: any) => {
     if (!category) tempErrors.category = "Category is required";
 
     if (isPaid) {
-      if (selectedType === "in credit" && !selectedBank) {
+      if (selectedType !== "cash" && !selectedBank) {
         tempErrors.bank = "Please select bank";
       }
     }
@@ -157,10 +157,7 @@ const Expenses = ({ navigation }: any) => {
       formData.append("expense_date", expenseDate);
       formData.append("category", category?.id);
       formData.append("is_paid", isPaid);
-      formData.append(
-        "payment_method",
-        selectedType === "in credit" ? "credit" : selectedType.toLowerCase()
-      );
+      formData.append("payment_method", selectedType.toLowerCase());
 
       // Optional fields
       if (paymentData) {
@@ -347,7 +344,7 @@ const Expenses = ({ navigation }: any) => {
               <Text style={{ color: "red" }}>{errors?.paymentDate}</Text>
             )}
             {/* Add Bank */}
-            {selectedType === "in credit" && (
+            {selectedType !== "cash" && (
               <>
                 <Text style={styles.addBankText}>Select Bank</Text>
                 <CustomDropdown
@@ -448,7 +445,7 @@ const Expenses = ({ navigation }: any) => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 10,
+    paddingHorizontal: 10,
     flex: 1,
     backgroundColor: "#fff",
   },

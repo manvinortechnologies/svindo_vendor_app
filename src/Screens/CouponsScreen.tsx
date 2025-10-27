@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -9,40 +9,37 @@ import {
   FlatList,
   Image,
   ActivityIndicator,
-  Dimensions
-} from 'react-native';
-import MainContainer from '../CommonComponent/MainContainer';
-import Headerwithback from './Headerwithback';
-import CustomSwitch from '../CommonComponent/CustomSwitch';
-import api from '../services/api/api'; // Your API service
-import { Coupon } from '../type/Coupan';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RouteProp } from '@react-navigation/native';
+  Dimensions,
+} from "react-native";
+import MainContainer from "../CommonComponent/MainContainer";
+import Headerwithback from "./Headerwithback";
+import CustomSwitch from "../CommonComponent/CustomSwitch";
+import api from "../services/api/api"; // Your API service
+import { Coupon } from "../type/Coupan";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { RouteProp } from "@react-navigation/native";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 type RootStackParamList = {
   CouponsScreen: undefined;
   CreateCoupon: undefined;
-  
 };
 
 type CouponsScreenNavigationProp = NativeStackNavigationProp<
   RootStackParamList,
-  'CouponsScreen'
+  "CouponsScreen"
 >;
 
 type CouponsScreenProps = {
   navigation: CouponsScreenNavigationProp;
-  route: RouteProp<RootStackParamList, 'CouponsScreen'>;
+  route: RouteProp<RootStackParamList, "CouponsScreen">;
 };
-
-
 
 const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
   const [deliveryDiscountEnabled, setDeliveryDiscountEnabled] = useState(true);
-  const [percentage, setPercentage] = useState('');
-  const [minOrderValue, setMinOrderValue] = useState('');
+  const [percentage, setPercentage] = useState("");
+  const [minOrderValue, setMinOrderValue] = useState("");
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -53,12 +50,12 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
   const getAllCoupons = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get('vendor/coupon/'); // Replace with your actual endpoint
+      const response = await api.get("vendor/coupon/"); // Replace with your actual endpoint
       if (Array.isArray(response.data)) {
         setCoupons(response.data);
       }
     } catch (error) {
-      console.log('Error fetching coupons:', error);
+      console.log("Error fetching coupons:", error);
     } finally {
       setIsLoading(false);
     }
@@ -71,46 +68,62 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
 
   const renderCoupon = ({ item }: { item: Coupon }) => {
     const discountText = item.discount_percentage
-      ? `Discount: ${item.discount_percentage}%`
-      : `Discount: ₹${item.discount_amount}`;
+      ? `Discount Amount - Rs ${item.discount_percentage}`
+      : `Discount Amount - Rs ${item.discount_amount}`;
+
+    const formatDateTime = (dateStr: string) => {
+      const date = new Date(dateStr);
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      const year = date.getFullYear();
+      const hours = date.getHours();
+      const minutes = date.getMinutes();
+      const ampm = hours >= 12 ? "PM" : "AM";
+      const displayHours = hours % 12 || 12;
+      const displayMinutes = minutes < 10 ? "0" + minutes : minutes;
+
+      return `${month}/${day}/${year}, ${displayHours}:${displayMinutes}${ampm}`;
+    };
 
     return (
       <View style={styles.couponCard}>
         <View style={styles.couponRow}>
-          {/* Left: Image */}
-          <View style={styles.imageContainer}>
-            {item.is_active && <Text style={styles.activeBadge}>Active</Text>}
+          {/* Left: Brand Logo Section */}
+          <View style={styles.brandSection}>
+            {item.is_active && (
+              <View style={styles.statusTag}>
+                <Text style={styles.statusText}>Active</Text>
+              </View>
+            )}
             <Image
               source={
-                item.image
-                  ? { uri: item.image }
-                  : require('../assets/logo.png')
+                item.image ? { uri: item.image } : require("../assets/logo.png")
               }
               style={styles.couponImage}
-              resizeMode="contain"
+              resizeMode="cover"
             />
           </View>
 
-          {/* Right: Details */}
-          <View style={styles.detailsContainer}>
-            <Text style={styles.couponText}>Title: {item.title}</Text>
-            {item.description && (
-              <Text style={styles.couponText}>Note: {item.description}</Text>
-            )}
-            <Text style={styles.couponText}>{discountText}</Text>
+          {/* Right: Details Section */}
+          <View style={styles.detailsSection}>
+            <Text style={styles.detailText}>Name: {item.title}</Text>
+            <Text style={styles.detailText}>
+              Type : {item.coupon_type.split("_").join(" ").toUpperCase()}
+            </Text>
+            <View style={styles.discountContainer}>
+              <Text style={styles.discountText}>{discountText}</Text>
+            </View>
+            <Text style={styles.detailText}>
+              Start: {formatDateTime(item.start_date)}
+            </Text>
+            <Text style={styles.detailText}>
+              End: {formatDateTime(item.end_date)}
+            </Text>
 
-            {item.min_purchase && (
-              <Text style={styles.couponText}>
-                Min Order: ₹{item.min_purchase} Max Discount: ₹
-                {item.max_discount}
-              </Text>
-            )}
-            <Text style={styles.couponText}>
-              Start: {formatDate(item.start_date)}
-            </Text>
-            <Text style={styles.couponText}>
-              End: {formatDate(item.end_date)}
-            </Text>
+            {/* Action Button */}
+            <TouchableOpacity style={styles.actionButton}>
+              <View style={styles.actionIcon} />
+            </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -122,7 +135,7 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
       <Headerwithback title="Coupons / Discounts" />
       <ScrollView contentContainerStyle={styles.container}>
         {/* Delivery Discount Section */}
-        <View style={styles.discountBox}>
+        {/* <View style={styles.discountBox}>
           <View style={styles.discountHeader}>
             <Text style={styles.discountTitle}>Delivery Discounts</Text>
             <CustomSwitch
@@ -131,37 +144,36 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
             />
           </View>
           <Text style={styles.discountText}>
-            This option helps you to boost your sales on svindo app by
-            providing delivery discount to customers. Enter the percentage of
-            total bill amount you want to provide as a delivery discount to your
-            customer.
+            This option helps you to boost your sales on svindo app by providing
+            delivery discount to customers. Enter the percentage of total bill
+            amount you want to provide as a delivery discount to your customer.
           </Text>
 
           <View style={styles.inputRow}>
             <View>
-              <Text style={{color: '#727272'}}>Pecentage</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Ex: 5"
-              value={percentage}
-              onChangeText={setPercentage}
-              keyboardType="numeric"
-              placeholderTextColor="#aaa"
-            />
+              <Text style={{ color: "#727272" }}>Pecentage</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Ex: 5"
+                value={percentage}
+                onChangeText={setPercentage}
+                keyboardType="numeric"
+                placeholderTextColor="#aaa"
+              />
             </View>
             <View>
-              <Text style={{color: '#727272'}}>Minimum Order Value</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Ex: 100"
-              value={minOrderValue}
-              onChangeText={setMinOrderValue}
-              keyboardType="numeric"
-              placeholderTextColor="#aaa"
-            />
+              <Text style={{ color: "#727272" }}>Minimum Order Value</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Ex: 100"
+                value={minOrderValue}
+                onChangeText={setMinOrderValue}
+                keyboardType="numeric"
+                placeholderTextColor="#aaa"
+              />
             </View>
           </View>
-        </View>
+        </View> */}
 
         {/* Coupons */}
         <Text style={styles.sectionTitle}>Active Coupons</Text>
@@ -170,7 +182,7 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
         ) : (
           <FlatList
             data={coupons}
-            keyExtractor={item => item.id.toString()}
+            keyExtractor={(item) => item.id.toString()}
             renderItem={renderCoupon}
             contentContainerStyle={{ paddingBottom: 100 }}
           />
@@ -178,7 +190,10 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
       </ScrollView>
 
       {/* Floating Button */}
-      <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate('CreateCoupon')}  >
+      <TouchableOpacity
+        style={styles.addBtn}
+        onPress={() => navigation.navigate("CreateCoupon")}
+      >
         <Text style={styles.addBtnText}>Add Coupon</Text>
       </TouchableOpacity>
     </MainContainer>
@@ -190,95 +205,173 @@ export default CouponsScreen;
 const styles = StyleSheet.create({
   container: {
     padding: 10,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   discountBox: {
     borderWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
     borderRadius: 10,
     padding: 12,
     marginBottom: 16,
   },
   discountHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   discountTitle: {
+    color: "#000",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
-  discountText: {
+  discountDescriptionText: {
     fontSize: 13,
-    color: '#555',
+    color: "#555",
     marginTop: 10,
   },
   inputRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginTop: 10,
   },
   input: {
-    backgroundColor: '#FFEFD5',
+    backgroundColor: "#FFEFD5",
     borderRadius: 8,
     padding: 10,
     marginTop: 6,
     width: width / 2 - 30,
-    borderColor: '#FCA311',
-    borderWidth: 1
+    borderColor: "#FCA311",
+    borderWidth: 1,
   },
   sectionTitle: {
     fontSize: 15,
-    fontWeight: '600',
+    fontWeight: "600",
     marginVertical: 10,
   },
   couponCard: {
-    backgroundColor: '#C2FFCB',
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 12,
-    elevation: 2,
+    backgroundColor: "#C2FFCB", // Light green background
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
   couponRow: {
-    flexDirection: 'row',
-    marginTop: 10,
+    flexDirection: "row",
+    height: 120,
   },
-  imageContainer: {
-    width: '30%',
-    justifyContent: 'flex-start',
-    alignItems: 'center',
+  brandSection: {
+    width: "40%",
+    backgroundColor: "#fff",
+    borderRadius: 8,
+    padding: 12,
+    justifyContent: "center",
+    alignItems: "center",
+    marginRight: 12,
+    overflow: "hidden",
   },
-  detailsContainer: {
-    width: '70%',
-    paddingLeft: 8,
+  statusTag: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    backgroundColor: "#C2FFCB",
+    borderWidth: 1,
+    borderColor: "#4CAF50",
+    borderRadius: 15,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    marginBottom: 8,
+    alignSelf: "flex-start",
+    zIndex: 10,
   },
   couponImage: {
-    width: 60,
-    height: 60,
+    width: "100%",
+    height: "100%",
     borderRadius: 10,
+    resizeMode: "cover",
   },
-  activeBadge: {
-    backgroundColor: '#D8FFDE',
-    color: '#000',
-    fontWeight: '600',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 6,
+  statusText: {
+    color: "#000",
     fontSize: 12,
-    alignSelf: 'flex-start',
+    fontWeight: "600",
+  },
+  brandLogo: {
+    alignItems: "center",
+  },
+  brandNameContainer: {
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 4,
   },
-  couponText: {
-    fontSize: 13,
-    color: '#000',
-    fontWeight: '500',
-    marginBottom: 2,
+  brandName: {
+    color: "#FF0000",
+    fontSize: 16,
+    fontWeight: "bold",
+    borderWidth: 1,
+    borderColor: "#000",
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  brandCollection: {
+    color: "#000",
+    fontSize: 16,
+    fontWeight: "bold",
+    marginLeft: 4,
+  },
+  brandSubtitle: {
+    color: "#666",
+    fontSize: 10,
+    textAlign: "center",
+  },
+  detailsSection: {
+    flex: 1,
+    backgroundColor: "#C2FFCB",
+    padding: 12,
+    borderRadius: 8,
+    justifyContent: "space-between",
+  },
+  detailText: {
+    fontSize: 12,
+    color: "#000",
+    marginBottom: 4,
+  },
+  discountContainer: {
+    backgroundColor: "#FFEB3B", // Yellow background for discount
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    marginVertical: 4,
+  },
+  discountText: {
+    fontSize: 12,
+    color: "#000",
+    fontWeight: "600",
+  },
+  actionButton: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    width: 25,
+    height: 25,
+    backgroundColor: "#FF0000",
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  actionIcon: {
+    width: 8,
+    height: 8,
+    backgroundColor: "#fff",
+    borderRadius: 1,
   },
   addBtn: {
-    position: 'absolute',
+    position: "absolute",
     bottom: 40,
     right: 20,
-    backgroundColor: '#1A9443',
+    backgroundColor: "#1A9443",
     paddingVertical: 12,
     paddingHorizontal: 40,
     borderRadius: 25,
@@ -286,7 +379,7 @@ const styles = StyleSheet.create({
     zIndex: 999,
   },
   addBtnText: {
-    color: '#fff',
-    fontWeight: 'bold',
+    color: "#fff",
+    fontWeight: "bold",
   },
 });

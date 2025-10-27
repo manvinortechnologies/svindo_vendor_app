@@ -25,7 +25,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
       return response.data && response.data.length > 0;
     } catch (error) {
       console.error("Error checking company profile:", error);
-      return false;
+      throw error;
     }
   };
 
@@ -36,7 +36,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
       return response.data;
     } catch (error) {
       console.error("Error checking admin profile:", error);
-      return false;
+      throw false;
     }
   };
 
@@ -57,14 +57,6 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
           hasCompletedAdminProfile = await checkAdminProfile();
           hasCompanyProfile = await checkCompanyProfile();
         }
-
-        console.log("Auth Status:", {
-          isAuthenticated,
-          hasCompletedSignup,
-          hasCompletedAdminProfile,
-          hasLocationData,
-          hasCompanyProfile,
-        });
 
         // Determine navigation based on user state
         let targetScreen = HomeNavigation.WELCOME_SCREEN;

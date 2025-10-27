@@ -75,14 +75,6 @@ const ProductItem: React.FC<ProductItemProps> = ({
         </>
       )}
 
-      {hasVariants && (
-        <View style={styles.variantsBadge}>
-          <Text style={styles.variantsText}>
-            {product.variants?.length} Variants
-          </Text>
-        </View>
-      )}
-
       <Image
         source={
           product.image && typeof product.image === "string"
@@ -96,6 +88,9 @@ const ProductItem: React.FC<ProductItemProps> = ({
         <View style={styles.productdetails}>
           <Text style={styles.productName} numberOfLines={1}>
             {product.name}
+          </Text>
+          <Text style={styles.variantsText}>
+            {product.variants?.length} Variants
           </Text>
           <Text style={styles.productDesc} numberOfLines={1}>
             {product.description || "-------"}
@@ -125,6 +120,7 @@ const styles = ScaledSheet.create({
     position: "relative",
   },
   stockBadgeAbove: {
+    backgroundColor: "#ffffff80",
     alignSelf: "flex-start",
     paddingHorizontal: 5,
     paddingVertical: 2,
@@ -139,8 +135,8 @@ const styles = ScaledSheet.create({
   },
   deleteButton: {
     position: "absolute",
-    top: "110@s",
-    right: "9@s",
+    top: "116@s",
+    right: "11@s",
     backgroundColor: "#FF3B30",
     width: "24@s",
     height: "24@s",
@@ -151,9 +147,9 @@ const styles = ScaledSheet.create({
   },
   editButton: {
     position: "absolute",
-    top: "8@s",
-    right: "9@s",
-    backgroundColor: "#006EB2",
+    top: "10@s",
+    right: "11@s",
+    backgroundColor: "#006EB2b3",
     width: "24@s",
     height: "24@s",
     borderRadius: "4@s",
@@ -173,12 +169,12 @@ const styles = ScaledSheet.create({
   },
   variantsText: {
     fontSize: 8,
-    color: "#fff",
+    color: "#000",
     fontWeight: "bold",
   },
   productImage: {
     width: "100%",
-    height: "130@s",
+    height: "135@s",
     borderRadius: 10,
     resizeMode: "cover",
   },

@@ -48,6 +48,8 @@ type RootStackParamList = {
   RateUsScreen: undefined;
   PrivacyPolicyScreen: undefined;
   PremiumScreen: undefined;
+  Support: undefined;
+  ChatScreen: undefined;
 };
 
 const Erp = () => {
@@ -72,7 +74,7 @@ const Erp = () => {
     {
       label: "Payments",
       icon: "cash-multiple",
-      screen: HomeNavigation.PAYMENTSCREEN,
+      screen: HomeNavigation.PAYMENTS_LIST,
     },
   ];
 
@@ -87,11 +89,11 @@ const Erp = () => {
       icon: "account-outline",
       screen: HomeNavigation.USER_PROFILE,
     },
-    {
-      title: "Manage Companies",
-      icon: "account-group-outline",
-      screen: HomeNavigation.MANAGE_COMPANIES,
-    },
+    // {
+    //   title: "Manage Companies",
+    //   icon: "account-group-outline",
+    //   screen: HomeNavigation.MANAGE_COMPANIES,
+    // },
     {
       title: "Sales Ledger",
       icon: "book-open-variant",
@@ -143,12 +145,12 @@ const Erp = () => {
       icon: "cash-multiple",
       screen: HomeNavigation.CASH_IN_HAND,
     },
-    { title: "Cheques", icon: "credit-card-outline", screen: "Cheques" },
-    {
-      title: "Loan Accounts",
-      icon: "badge-account-horizontal-outline",
-      screen: "LoanAccounts",
-    },
+    // { title: "Cheques", icon: "credit-card-outline", screen: "Cheques" },
+    // {
+    //   title: "Loan Accounts",
+    //   icon: "badge-account-horizontal-outline",
+    //   screen: "LoanAccounts",
+    // },
     {
       title: "Manage Customers",
       icon: "account-group",
@@ -215,7 +217,7 @@ const Erp = () => {
 
   const helpItems = [
     { title: "WhatsApp", icon: "whatsapp", action: "whatsapp" },
-    { title: "Email", icon: "email-outline", screen: "MessageSupportScreen" },
+    { title: "Email", icon: "email-outline", action: "email" },
     {
       title: "Message",
       icon: "message-outline",
@@ -235,11 +237,11 @@ const Erp = () => {
       icon: "shield-lock-outline",
       screen: HomeNavigation.PRIVACY_POLICY_SCREEN,
     },
-    {
-      title: "Svindo Business Premium",
-      icon: "crown-outline",
-      screen: "PremiumScreen",
-    },
+    // {
+    //   title: "Svindo Business Premium",
+    //   icon: "crown-outline",
+    //   screen: "PremiumScreen",
+    // },
   ];
 
   const openWhatsApp = async () => {
@@ -276,6 +278,17 @@ const Erp = () => {
     } catch (error) {
       console.error("Error opening phone dialer:", error);
       Alert.alert("Error", "Unable to open phone dialer. Please try again.");
+    }
+  };
+  const openEmail = async () => {
+    const email = "info@svindo.com";
+    const url = `mailto:${email}`;
+
+    try {
+      await Linking.openURL(url);
+    } catch (error) {
+      console.error("Error opening email:", error);
+      Alert.alert("Error", "Unable to open email. Please try again.");
     }
   };
 
@@ -432,6 +445,7 @@ const Erp = () => {
               borderBottomWidth: 1,
               borderColor: "#ECECEC",
             }}
+            onPress={() => navigation.navigate(HomeNavigation.SUPPORT)}
           >
             <Text style={styles.sectionTitle}>Help & Support</Text>
             <Icon
@@ -453,8 +467,10 @@ const Erp = () => {
                     openCall();
                   } else if (item.action === "message") {
                     openMessage();
+                  } else if (item.action === "email") {
+                    openEmail();
                   } else if (item.screen) {
-                    navigation.navigate(item.screen);
+                    navigation.navigate(item.screen as any);
                   }
                 }}
               >
@@ -471,7 +487,9 @@ const Erp = () => {
             <TouchableOpacity
               key={item.title}
               style={styles.menuItem}
-              onPress={() => item.screen && navigation.navigate(item.screen)}
+              onPress={() =>
+                item.screen && navigation.navigate(item.screen as any)
+              }
             >
               <Icon name={item.icon} size={22} color="#000" />
               <Text style={styles.menuText}>{item.title}</Text>

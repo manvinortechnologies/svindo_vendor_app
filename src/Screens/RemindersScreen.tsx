@@ -97,7 +97,7 @@ const ReminderScreen = () => {
         <View style={{ flex: 1 }}>
           <ScrollView contentContainerStyle={styles.content}>
             {/* Credits */}
-            <View style={styles.creditsContainer}>
+            {/* <View style={styles.creditsContainer}>
               <View style={styles.creditBox}>
                 <Text style={styles.creditValue}>20.0</Text>
                 <Text style={styles.creditLabel}>Total Credits Available</Text>
@@ -106,7 +106,7 @@ const ReminderScreen = () => {
                 <Text style={styles.creditValue}>100</Text>
                 <Text style={styles.creditLabel}>SMS/E_mails can be sent</Text>
               </View>
-            </View>
+            </View> */}
 
             {/* Reminder Toggles */}
             <View style={styles.mainconntainer}>
@@ -191,11 +191,11 @@ const ReminderScreen = () => {
                 value={monthly}
                 onValueChange={setMonthly}
               />
-              <ReminderItem
+              {/* <ReminderItem
                 label="Monthly GSTR 1 Report"
                 value={monthlyGSTR1}
                 onValueChange={setMonthlyGSTR1}
-              />
+              /> */}
               <ReminderItem
                 label="Daily Summary"
                 value={daily}

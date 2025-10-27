@@ -7,26 +7,26 @@ import {
   TouchableOpacity,
   Dimensions,
 } from "react-native";
+import { Calendar } from "react-native-calendars";
 import Icon from "react-native-vector-icons/Ionicons";
 
 interface CalendarModalProps {
   visible: boolean;
   onClose: () => void;
   onSelect: (date: string) => void;
+  initialDate: string;
+  minDate?: string;
+  maxDate?: string;
 }
 
 const CalendarModal: React.FC<CalendarModalProps> = ({
   visible,
   onClose,
   onSelect,
+  initialDate,
+  minDate,
+  maxDate,
 }) => {
-  const { width, height } = Dimensions.get("window");
-
-  const handleDateSelect = (date: string) => {
-    onSelect(date);
-    onClose();
-  };
-
   return (
     <Modal
       visible={visible}
@@ -44,12 +44,20 @@ const CalendarModal: React.FC<CalendarModalProps> = ({
           </View>
 
           <View style={styles.modalContent}>
-            <Text style={styles.placeholderText}>
-              Date picker functionality would be implemented here
-            </Text>
-            <Text style={styles.placeholderSubtext}>
-              For now, this is a placeholder modal
-            </Text>
+            <Calendar
+              current={initialDate}
+              minDate={minDate} // disables all dates before today
+              maxDate={maxDate} // disables all dates after today
+              onDayPress={(day) => {
+                onSelect(day.dateString); // ← already “YYYY‑MM‑DD”
+                onClose();
+              }}
+              markedDates={
+                initialDate
+                  ? { [initialDate]: { selected: true, selectedColor: "#d00" } }
+                  : undefined
+              }
+            />
           </View>
         </View>
       </View>

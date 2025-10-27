@@ -12,14 +12,28 @@ import {
   Platform,
   Alert,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Headerwithback from "./Headerwithback";
 import CustomSwitch from "./CustomSwitch";
 import MainContainer from "../CommonComponent/MainContainer";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
+import { useRoute, RouteProp } from "@react-navigation/native";
+
+type RootStackParamList = {
+  AddCustomer: {
+    isEdit?: boolean;
+    customer?: any;
+  };
+};
+
+type AddCustomerRouteProp = RouteProp<RootStackParamList, "AddCustomer">;
 
 const AddCustomer = ({ navigation }: any) => {
+  const route = useRoute<AddCustomerRouteProp>();
+  const isEdit = route.params?.isEdit || false;
+  const customer = route.params?.customer || {};
+
   const [sameAsBilling, setSameAsBilling] = useState(false);
 
   const [basicDetails, setBasicDetails] = useState({
@@ -57,6 +71,58 @@ const AddCustomer = ({ navigation }: any) => {
   const [transportName, setTransportName] = useState("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    if (isEdit && customer) {
+      // Set basic details
+      setBasicDetails({
+        name: customer.name || "",
+        mobile: customer.contact || customer.phone || "",
+        email: customer.email || "",
+        opening_balance:
+          customer.opening_balance?.toString() ||
+          customer.balance?.toString() ||
+          "0",
+      });
+
+      // Set business details
+      setBusinessDetails({
+        name: customer.company_name || "",
+        gst: customer.gst_number || "",
+        aadhar: customer.aadhar_number || "",
+        pan: customer.pan_number || "",
+      });
+
+      // Set billing address
+      setBillingAddress({
+        line1: customer.billing_address_line1 || "",
+        line2: customer.billing_address_line2 || "",
+        pincode: customer.billing_pincode || "",
+        city: customer.billing_city || "",
+        state: customer.billing_state || "",
+        country: customer.billing_country || "",
+      });
+
+      // Set dispatch address
+      setDispatchAddress({
+        line1: customer.dispatch_address_line1 || "",
+        line2: customer.dispatch_address_line2 || "",
+        pincode: customer.dispatch_pincode || "",
+        city: customer.dispatch_city || "",
+        state: customer.dispatch_state || "",
+        country: customer.dispatch_country || "",
+      });
+
+      // Set transport name
+      setTransportName(customer.transport_name || "");
+
+      // Set same as billing toggle
+      setSameAsBilling(
+        customer.dispatch_address_line1 === customer.billing_address_line1 &&
+          customer.dispatch_address_line1 !== ""
+      );
+    }
+  }, [isEdit, customer]);
 
   const validateForm = () => {
     let tempErrors: { [key: string]: string } = {};
@@ -117,13 +183,29 @@ const AddCustomer = ({ navigation }: any) => {
         dispatch_country: dispatchAddress.country,
         transport_name: transportName,
       };
-      console.log("payloads-->", payload);
-      const res = await api.post("vendor/customer/", payload);
-      if (res.status == 201) {
-        Alert.alert("Success", "Customer information saved successfully.");
-        navigation.goBack();
+
+      let res;
+      if (isEdit && customer.id) {
+        // Update existing customer
+        res = await api.put(`vendor/customer/${customer.id}/`, payload);
+        if (res.status === 200) {
+          Alert.alert("Success", "Customer information updated successfully.");
+          navigation.goBack();
+        }
+      } else {
+        // Create new customer
+        res = await api.post("vendor/customer/", payload);
+        if (res.status === 201) {
+          Alert.alert("Success", "Customer information saved successfully.");
+          navigation.goBack();
+        }
       }
     } catch (error) {
+      console.error("Error saving customer:", error);
+      Alert.alert(
+        "Error",
+        "Failed to save customer information. Please try again."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -149,7 +231,7 @@ const AddCustomer = ({ navigation }: any) => {
   return (
     <MainContainer>
       <SafeAreaView style={styles.container}>
-        <Headerwithback title={"Add Customer"} />
+        <Headerwithback title={isEdit ? "Edit Customer" : "Add Customer"} />
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <KeyboardAvoidingView
             style={{ flex: 1 }}
@@ -206,7 +288,9 @@ const AddCustomer = ({ navigation }: any) => {
                     style={[styles.saveButton, { width: "100%" }]}
                     onPress={handelSubmit}
                   >
-                    <Text style={styles.saveButtonText}>Save for Retail</Text>
+                    <Text style={styles.saveButtonText}>
+                      {isEdit ? "Update for Retail" : "Save for Retail"}
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -345,7 +429,9 @@ const AddCustomer = ({ navigation }: any) => {
                 style={styles.saveButton}
                 onPress={handelSubmit}
               >
-                <Text style={styles.saveButtonText}>Save</Text>
+                <Text style={styles.saveButtonText}>
+                  {isEdit ? "Update Customer" : "Save Customer"}
+                </Text>
               </TouchableOpacity>
             </ScrollView>
           </KeyboardAvoidingView>
