@@ -16,6 +16,7 @@ import { API_ROUTES } from "../constants/api-routes.constants";
 import { StorageUtils } from "../utils/storage";
 import { useNavigation } from "@react-navigation/native";
 import { HomeNavigation } from "../constants/app-routes.constants";
+import Toast from "react-native-toast-message";
 
 const DeleteAccountScreen = () => {
   const navigation = useNavigation();
@@ -49,31 +50,27 @@ const DeleteAccountScreen = () => {
         // Clear all stored data
         StorageUtils.clearAll();
 
-        Alert.alert(
-          "Account Deleted",
-          "Your account has been successfully deleted. You will be redirected to the welcome screen.",
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                (navigation as any).reset({
-                  index: 0,
-                  routes: [{ name: HomeNavigation.WELCOME_SCREEN }],
-                });
-              },
-            },
-          ]
-        );
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2:
+            "Your account has been successfully deleted. You will be redirected to the welcome screen.",
+        });
+        (navigation as any).reset({
+          index: 0,
+          routes: [{ name: HomeNavigation.WELCOME_SCREEN }],
+        });
       } else {
         throw new Error("Failed to delete account");
       }
     } catch (error) {
       console.error("Delete account error:", error);
-      Alert.alert(
-        "Error",
-        "Failed to delete your account. Please try again later or contact support if the problem persists.",
-        [{ text: "OK" }]
-      );
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2:
+          "Failed to delete your account. Please try again later or contact support if the problem persists.",
+      });
     } finally {
       setIsLoading(false);
     }

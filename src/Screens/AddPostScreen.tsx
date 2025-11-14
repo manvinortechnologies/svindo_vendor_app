@@ -14,33 +14,62 @@ import {
   Platform,
   Alert,
   Linking,
+  Modal,
+  FlatList,
+  Dimensions,
 } from "react-native";
 import { check, request, PERMISSIONS, RESULTS } from "react-native-permissions";
 import Icon from "react-native-vector-icons/Ionicons";
 import CustomSwitch from "../CommonComponent/CustomSwitch";
-import CustomDropdown, {
-  DropDownOption,
-} from "../CommonComponent/CustomDropdown";
 import MainContainer from "../CommonComponent/MainContainer";
 import Headerwithback from "./Headerwithback";
-import { launchImageLibrary } from "react-native-image-picker";
 import Video from "react-native-video";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import { API_ROUTES } from "../constants/api-routes.constants";
+import { RouteProp, useRoute } from "@react-navigation/native";
+import { APP_CONSTANTS } from "../constants/app.constants";
+import ImageCropPicker from "react-native-image-crop-picker";
+import Toast from "react-native-toast-message";
 
+type RootStackParamList = {
+  AddPost: {
+    item?: any;
+    type?: string;
+  };
+};
+
+type AddPostRouteProp = RouteProp<RootStackParamList, "AddPost">;
+const { width } = Dimensions.get("window");
 const AddPostScreen = ({ navigation }: any) => {
-  const [boostEnabled, setBoostEnabled] = useState(false);
-  const [description, setDescription] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState<DropDownOption | null>(
-    null
+  const route = useRoute<AddPostRouteProp>();
+  const item = route.params?.item;
+  const type = route.params?.type;
+  const [boostEnabled, setBoostEnabled] = useState(true);
+  const [description, setDescription] = useState(item?.description || "");
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(
+    item?.product ? { id: item.product, name: item?.product?.name || "" } : null
   );
-  const [productOptions, setProductOptions] = useState<DropDownOption[]>([]);
-  const [amount, setAmount] = useState("");
-  const [media, setMedia] = useState<any>(null);
-  const [mediaType, setMediaType] = useState<"video" | "image" | null>(null);
+  const [productOptions, setProductOptions] = useState<any[]>([]);
+  const [amount, setAmount] = useState(item?.budget || "");
+  const [media, setMedia] = useState<any>(
+    item?.media
+      ? {
+          uri: APP_CONSTANTS.API_BASE_URL + item.media,
+          type: item.media.includes(".mp4") ? "video/mp4" : "image/jpeg",
+        }
+      : null
+  );
+  const [mediaType, setMediaType] = useState<"video" | "image" | null>(
+    item?.media?.includes(".mp4")
+      ? "video"
+      : item?.media?.includes(".jp")
+      ? "image"
+      : null
+  );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState<boolean>(false);
+  const [showProductModal, setShowProductModal] = useState<boolean>(false);
 
   // Error state management
   const [errors, setErrors] = useState({
@@ -63,17 +92,25 @@ const AddPostScreen = ({ navigation }: any) => {
     }
   };
 
-  const handleProductSelect = (product: DropDownOption | null) => {
+  const handleProductSelect = (product: any | null) => {
     setSelectedProduct(product);
     if (errors.selectedProduct) {
       setErrors((prev) => ({ ...prev, selectedProduct: "" }));
     }
+    setShowProductModal(false);
   };
 
   const handleAmountChange = (text: string) => {
     setAmount(text);
     if (errors.budget) {
       setErrors((prev) => ({ ...prev, budget: "" }));
+    }
+  };
+
+  const openProductModal = async () => {
+    setShowProductModal(true);
+    if (!productOptions.length) {
+      await fetchVendorProducts();
     }
   };
 
@@ -84,100 +121,102 @@ const AddPostScreen = ({ navigation }: any) => {
     }
 
     try {
-      // Check permissions before launching image library
-      // const hasPermissions = await checkPermissions();
-      // if (!hasPermissions) {
-      //   return;
+      // Determine media type based on existing item or default to 'any'
+      // let mediaTypeOption: "photo" | "video" | "any" = "any";
+      // if (item?.media) {
+      //   if (item.media.includes(".mp4")) {
+      //     mediaTypeOption = "video";
+      //   } else if (item.media.includes(".jp")) {
+      //     mediaTypeOption = "photo";
+      //   }
       // }
 
-      launchImageLibrary(
-        {
-          mediaType: "mixed",
-          selectionLimit: 1,
-          quality: 0.8, // Reduce quality to avoid large file sizes
-          maxWidth: 1920,
-          maxHeight: 1080,
-          includeBase64: false, // Don't include base64 to avoid memory issues
-        },
-        (response) => {
-          console.log("response--->", response);
+      const result = await ImageCropPicker.openPicker({
+        mediaType: type === "reel" ? "video" : "photo",
+        compressImageQuality: 0.8,
+        cropping: type === "reel" ? false : true, // Only enable cropping for images
+        includeBase64: false,
+      });
 
-          // Check for errors in response
-          if (response.errorMessage) {
-            console.error("Image picker error:", response.errorMessage);
-            setErrors((prev) => ({
-              ...prev,
-              image: `Failed to select media: ${response.errorMessage}. Please try selecting a different file.`,
-            }));
-            return;
-          }
+      // console.log("ImageCropPicker response--->", result);
 
-          if (response.didCancel) return;
+      // Validate file size (max 100MB)
+      const maxSize = 10 * 1024 * 1024; // 2MB in bytes
+      if (result.size && result.size > maxSize) {
+        setErrors((prev) => ({
+          ...prev,
+          image:
+            "The selected file is too large. Please choose a file smaller than 10MB.",
+        }));
+        return;
+      }
 
-          if (response.assets && response.assets.length > 0) {
-            try {
-              const selectedMedia = response.assets[0];
-
-              // Validate file size (max 100MB)
-              const maxSize = 10 * 1024 * 1024; // 100MB in bytes
-              if (selectedMedia.fileSize && selectedMedia.fileSize > maxSize) {
-                setErrors((prev) => ({
-                  ...prev,
-                  image:
-                    "The selected file is too large. Please choose a file smaller than 100MB.",
-                }));
-                return;
-              }
-
-              // Validate video duration (max 5 minutes)
-              if (
-                selectedMedia.type?.startsWith("video") &&
-                selectedMedia.duration
-              ) {
-                const maxDuration = 5 * 60; // 5 minutes in seconds
-                if (selectedMedia.duration > maxDuration) {
-                  setErrors((prev) => ({
-                    ...prev,
-                    image:
-                      "The selected video is too long. Please choose a video shorter than 5 minutes.",
-                  }));
-                  return;
-                }
-              }
-
-              // Validate that we have a valid URI
-              if (!selectedMedia.uri) {
-                setErrors((prev) => ({
-                  ...prev,
-                  image:
-                    "The selected file could not be processed. Please try selecting a different file.",
-                }));
-                return;
-              }
-
-              setMedia(selectedMedia);
-              // Set media type based on the selected file
-              if (selectedMedia.type?.startsWith("video")) {
-                setMediaType("video");
-              } else {
-                setMediaType("image");
-              }
-            } catch (mediaError) {
-              console.error("Error processing selected media:", mediaError);
-              setErrors((prev) => ({
-                ...prev,
-                image:
-                  "There was an error processing the selected file. Please try selecting a different file.",
-              }));
-            }
-          }
+      // Validate video duration (max 5 minutes)
+      if (
+        result.mime &&
+        result.mime.startsWith("video/") &&
+        "duration" in result &&
+        result.duration
+      ) {
+        const maxDuration = 60000; // 1 minutes in seconds
+        console.log("result.duration--->", result.duration, maxDuration);
+        if (result.duration > maxDuration) {
+          setErrors((prev) => ({
+            ...prev,
+            image:
+              "The selected video is too long. Please choose a video shorter than 5 minutes.",
+          }));
+          return;
         }
-      );
-    } catch (error) {
-      console.log("error--->", error);
+      }
+
+      // Validate that we have a valid path/uri
+      if (!result.path) {
+        setErrors((prev) => ({
+          ...prev,
+          image:
+            "The selected file could not be processed. Please try selecting a different file.",
+        }));
+        return;
+      }
+
+      // Convert ImageCropPicker response to format expected by the rest of the app
+      const isVideo =
+        result.mime?.startsWith("video/") ||
+        result.path?.includes(".mp4") ||
+        result.path?.includes(".mov");
+
+      const selectedMedia = {
+        uri: result.path,
+        type: result.mime || (isVideo ? "video/mp4" : "image/jpeg"),
+        name:
+          result.filename ||
+          result.path?.split("/").pop() ||
+          (isVideo ? "video.mp4" : "image.jpg"),
+        fileSize: result.size,
+        duration: "duration" in result ? result.duration : undefined,
+      };
+
+      setMedia(selectedMedia);
+
+      // Set media type based on the selected file
+      if (result.mime && result.mime.startsWith("video/")) {
+        setMediaType("video");
+      } else {
+        setMediaType("image");
+      }
+    } catch (error: any) {
+      console.log("ImageCropPicker error--->", error);
+
+      // Check if user cancelled
+      if (error.code === "E_PICKER_CANCELLED") {
+        return; // User cancelled, don't show error
+      }
+
       setErrors((prev) => ({
         ...prev,
-        image: "Failed to access media library. Please try again.",
+        image:
+          error.message || "Failed to access media library. Please try again.",
       }));
     }
   };
@@ -236,7 +275,6 @@ const AddPostScreen = ({ navigation }: any) => {
       return false;
     } catch (error) {
       console.error("Permission error:", error);
-      Alert.alert("Error", "Failed to check permissions. Please try again.");
       return false;
     }
   };
@@ -246,15 +284,25 @@ const AddPostScreen = ({ navigation }: any) => {
       setIsLoadingProducts(true);
       const response = await api.get(API_ROUTES.vendorProduct);
       if (response.data && Array.isArray(response.data)) {
-        const products = response.data.map((product: any) => ({
-          id: product.id,
-          name: product.name || product.product_name || "Unnamed Product",
-        }));
+        const products = response.data
+          .filter((product: any) => product?.is_active)
+          .map((product: any) => ({
+            id: product.id,
+            name: product.name || product.product_name || "Unnamed Product",
+            image: product.image || product.feature_image || null,
+          }));
         setProductOptions(products);
+        if (item?.product) {
+          const foundProduct = products.find(
+            (product: any) => product.id === item.product
+          );
+          if (foundProduct) {
+            setSelectedProduct(foundProduct);
+          }
+        }
       }
     } catch (error) {
       console.error("Error fetching vendor products:", error);
-      Alert.alert("Error", "Failed to load products. Please try again.");
     } finally {
       setIsLoadingProducts(false);
     }
@@ -281,13 +329,13 @@ const AddPostScreen = ({ navigation }: any) => {
       isValid = false;
     }
 
-    if (!amount.trim()) {
-      newErrors.budget = "Please enter a budget amount";
-      isValid = false;
-    } else if (isNaN(Number(amount)) || Number(amount) < 10) {
-      newErrors.budget = "Budget must be at least 10 rupees";
-      isValid = false;
-    }
+    // if (!amount.trim()) {
+    //   newErrors.budget = "Please enter a budget amount";
+    //   isValid = false;
+    // } else if (isNaN(Number(amount)) || Number(amount) < 10) {
+    //   newErrors.budget = "Budget must be at least 10 rupees";
+    //   isValid = false;
+    // }
 
     if (!media) {
       newErrors.image = "Please upload an image or video";
@@ -310,34 +358,46 @@ const AddPostScreen = ({ navigation }: any) => {
       formdata.append("product", selectedProduct!.id.toString());
       formdata.append("boost_post", boostEnabled);
       formdata.append("budget", amount);
-      formdata.append("media", {
-        uri: media.uri,
-        type: media.type, // e.g., "video/mp4"
-        name: media.fileName || "upload.mp4",
-      });
+      if (media.name) {
+        formdata.append("media", {
+          uri: media.uri,
+          type: media.type, // e.g., "video/mp4"
+          name: media.name || "upload.mp4",
+        });
+      }
       const apiEndPoing = media?.type?.startsWith("video")
-        ? "vendor/reel/"
-        : "vendor/post/";
-      const res = await api.post(apiEndPoing, formdata, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+        ? API_ROUTES.reel
+        : API_ROUTES.post;
+      const res = await api[item ? "patch" : "post"](
+        apiEndPoing + (item?.id ? `/${item?.id}/` : ""),
+        formdata,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       navigation.goBack();
       if (res.status == 201) {
-        Alert.alert(
-          "Success",
-          "Upload successful! Your content is now ready for review."
-        );
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Upload successful! Your content is now ready for review.",
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log("error--->", error);
-      Alert.alert("Error", "Failed to upload post. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to upload post. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }
   };
+
   return (
     <MainContainer>
       <Headerwithback title="Add Post / Reel" />
@@ -408,18 +468,21 @@ const AddPostScreen = ({ navigation }: any) => {
 
             {/* Product Selection */}
             <Text style={styles.label}>Select product to connect</Text>
-            <CustomDropdown
-              placeholder={
-                isLoadingProducts ? "Loading products..." : "Select product"
-              }
-              options={productOptions}
-              onSelect={handleProductSelect}
-              selectedValue={selectedProduct}
-              dropDownBoxStyle={[
-                styles.dropdownStyle,
+            <TouchableOpacity
+              style={[
+                styles.productSelectButton,
                 errors.selectedProduct && styles.inputError,
               ]}
-            />
+              onPress={openProductModal}
+            >
+              <Text style={styles.productSelectButtonText}>
+                {isLoadingProducts
+                  ? "Loading..."
+                  : selectedProduct?.name
+                  ? `Selected: ${selectedProduct.name}`
+                  : "Select Product"}
+              </Text>
+            </TouchableOpacity>
             {errors.selectedProduct ? (
               <Text style={styles.errorText}>{errors.selectedProduct}</Text>
             ) : null}
@@ -438,18 +501,20 @@ const AddPostScreen = ({ navigation }: any) => {
                 value={boostEnabled}
                 onValueChange={setBoostEnabled}
                 activeColor="#FCA311"
+                disabled={true}
               />
             </View>
 
             {/* Budget */}
-            <Text style={styles.label}>Budget (Minimum - 10 Rupees)</Text>
+            <Text style={styles.label}>Budget (Minimum - 0 Rupees)</Text>
             <TextInput
               style={[styles.input, errors.budget && styles.inputError]}
-              placeholder="Enter Amount"
+              placeholder="Boosted by default"
               value={amount}
               onChangeText={handleAmountChange}
               keyboardType="numeric"
               placeholderTextColor={"#727272"}
+              editable={false}
             />
             {errors.budget ? (
               <Text style={styles.errorText}>{errors.budget}</Text>
@@ -457,14 +522,17 @@ const AddPostScreen = ({ navigation }: any) => {
 
             {/* Approximate Costing Box */}
             <View style={styles.infoBox}>
-              <Text style={styles.infoText}>
+              <Text style={{ fontWeight: "bold", color: "#FCA311" }}>
+                We are offering free boost post for limited time!
+              </Text>
+              {/* <Text style={styles.infoText}>
                 <Text style={{ fontWeight: "bold", color: "#FCA311" }}>
                   Approximate Costing{"\n \n"}
                 </Text>
                 per view cost:{" "}
                 <Text style={{ fontWeight: "bold" }}>10 paisa</Text>{" "}
                 {"        "}
-                per view cost:{" "}
+                per click cost:{" "}
                 <Text style={{ fontWeight: "bold" }}>10 paisa</Text>
               </Text>
               <Text style={styles.cautionText}>Caution</Text>
@@ -472,7 +540,7 @@ const AddPostScreen = ({ navigation }: any) => {
                 Please follow platforms{" "}
                 <Text style={styles.termsHighlight}>terms & conditions</Text>{" "}
                 for speedy approval of campaigns
-              </Text>
+              </Text> */}
             </View>
             <Loading visible={isLoading} />
 
@@ -486,6 +554,54 @@ const AddPostScreen = ({ navigation }: any) => {
           </ScrollView>
         </KeyboardAvoidingView>
       </TouchableWithoutFeedback>
+      <Modal visible={showProductModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Product</Text>
+              <TouchableOpacity onPress={() => setShowProductModal(false)}>
+                <Text style={styles.modalCloseText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+            {isLoadingProducts ? (
+              <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>Loading...</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={productOptions}
+                keyExtractor={(item: any) =>
+                  item?.id?.toString() || Math.random().toString()
+                }
+                numColumns={2}
+                columnWrapperStyle={styles.columnWrapper}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.productCard}
+                    onPress={() => handleProductSelect(item)}
+                  >
+                    <Image
+                      source={
+                        item?.image
+                          ? { uri: item.image }
+                          : require("../assets/product.png")
+                      }
+                      style={styles.productImage}
+                      resizeMode="cover"
+                    />
+                    <Text style={styles.productName} numberOfLines={1}>
+                      {item?.name || "Unnamed"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+                ListEmptyComponent={() => (
+                  <Text style={styles.loadingText}>No products found</Text>
+                )}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </MainContainer>
   );
 };
@@ -593,11 +709,6 @@ const styles = StyleSheet.create({
     height: "100%",
     borderRadius: 10,
   },
-  dropdownStyle: {
-    borderColor: "#FCA311",
-    backgroundColor: "#FFF7DD",
-    marginBottom: 16,
-  },
   errorText: {
     color: "#FF0000",
     fontSize: 12,
@@ -606,5 +717,74 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: "#FF0000",
+  },
+  productSelectButton: {
+    borderWidth: 1,
+    borderColor: "#FCA311",
+    backgroundColor: "#FFF7DD",
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  productSelectButtonText: {
+    color: "#FCA311",
+    fontWeight: "600",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    width: "92%",
+    borderRadius: 12,
+    padding: 16,
+    maxHeight: "80%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#000",
+  },
+  modalCloseText: {
+    color: "#FCA311",
+    fontWeight: "700",
+  },
+  loadingContainer: {
+    paddingVertical: 20,
+    alignItems: "center",
+  },
+  loadingText: {
+    color: "#666",
+  },
+  columnWrapper: {
+    justifyContent: "space-between",
+    marginBottom: 12,
+  },
+  productCard: {
+    width: "48%",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#eee",
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  productImage: {
+    width: "100%",
+    height: width * 0.3,
+  },
+  productName: {
+    padding: 8,
+    color: "#000",
   },
 });

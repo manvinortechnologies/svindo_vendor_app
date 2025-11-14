@@ -8,7 +8,7 @@ import {
   ScrollView,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
-import { launchImageLibrary } from "react-native-image-picker";
+import ImageCropPicker from "react-native-image-crop-picker";
 import { SignUpDetailScreenProps } from "../type";
 import { useAddCompanyMutation } from "../services/api/state-api-slice";
 import { HomeNavigation } from "../constants/app-routes.constants";
@@ -49,19 +49,50 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({
   const [addCompany, { error: signupError }] = useAddCompanyMutation();
   const [isLoading, setIsLoading] = useState(false);
 
-  const selectProfilePicture = () => {
-    launchImageLibrary({ mediaType: "photo" }, (response) => {
-      if (response.assets && response.assets.length > 0) {
-        const asset = response.assets[0];
-        if (asset.uri && asset.type && asset.fileName) {
-          setProfileImage({
-            uri: asset.uri,
-            type: asset.type,
-            name: asset.fileName,
-          });
-        }
+  const selectProfilePicture = async () => {
+    try {
+      const result = await ImageCropPicker.openPicker({
+        mediaType: "photo",
+        compressImageQuality: 0.8,
+        cropping: true,
+        cropperCircleOverlay: true, // Circular crop for profile picture
+        includeBase64: false,
+      });
+
+      console.log("ImageCropPicker response--->", result);
+
+      // Validate that we have a valid path
+      if (!result.path) {
+        console.error("No path in ImageCropPicker result");
+        return;
       }
-    });
+
+      // Validate file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+      if (result.size && result.size > maxSize) {
+        console.error("File size too large");
+        return;
+      }
+
+      // Convert ImageCropPicker response to format expected by the rest of the app
+      setProfileImage({
+        uri: result.path,
+        type: result.mime || "image/jpeg",
+        name:
+          result.filename ||
+          result.path?.split("/").pop() ||
+          "profile_image.jpg",
+      });
+    } catch (error: any) {
+      console.log("ImageCropPicker error--->", error);
+
+      // Check if user cancelled
+      if (error.code === "E_PICKER_CANCELLED") {
+        return; // User cancelled, don't show error
+      }
+
+      console.error("Failed to access media library:", error.message);
+    }
   };
 
   const onSubmit = async (data: FormData) => {

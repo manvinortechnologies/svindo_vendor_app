@@ -58,7 +58,6 @@ export const useNotifications = (): UseNotificationsReturn => {
       return permission;
     } catch (error) {
       console.error("Error requesting permission:", error);
-      Alert.alert("Error", "Failed to request notification permission");
       return false;
     } finally {
       setIsLoading(false);

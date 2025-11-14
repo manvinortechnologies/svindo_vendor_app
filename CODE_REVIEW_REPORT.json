@@ -1,0 +1,233 @@
+{
+  "risk_rating": "high",
+  "top_must_fix": [
+    "Remove hardcoded Google Places API key from src/utils/apiKeys.ts and android/app/src/main/res/values/strings.xml",
+    "Remove hardcoded keystore passwords from android/app/build.gradle",
+    "Implement token refresh logic in src/services/api/api.ts on 401 responses",
+    "Remove access token from console.log in src/services/api/base-query.ts:35",
+    "Add error boundaries to prevent app crashes on unhandled React errors"
+  ],
+  "outdated_dependencies": [
+    {
+      "ecosystem": "node",
+      "name": "moment",
+      "current": "2.30.1",
+      "latest": "2.30.1",
+      "severity": "major",
+      "note": "Deprecated, migrate to dayjs or date-fns"
+    },
+    {
+      "ecosystem": "node",
+      "name": "react-native",
+      "current": "0.78.2",
+      "latest": "0.76.x",
+      "severity": "major",
+      "note": "Significantly behind latest stable"
+    },
+    {
+      "ecosystem": "node",
+      "name": "typescript",
+      "current": "5.0.4",
+      "latest": "5.6.4",
+      "severity": "minor"
+    },
+    {
+      "ecosystem": "node",
+      "name": "prettier",
+      "current": "2.8.8",
+      "latest": "3.3.3",
+      "severity": "minor"
+    },
+    {
+      "ecosystem": "node",
+      "name": "eslint",
+      "current": "8.19.0",
+      "latest": "9.x",
+      "severity": "minor"
+    }
+  ],
+  "security_findings": [
+    {
+      "path": "src/utils/apiKeys.ts",
+      "line": 2,
+      "severity": "critical",
+      "issue": "Hardcoded Google Places API key exposed in source code",
+      "fix": "Move to environment variable using react-native-config, revoke current key in Google Cloud Console"
+    },
+    {
+      "path": "android/app/build.gradle",
+      "line": 111,
+      "severity": "critical",
+      "issue": "Hardcoded keystore passwords (svindo123) in build file",
+      "fix": "Move to keystore.properties file (gitignored), rotate keystore if repo was ever public"
+    },
+    {
+      "path": "src/services/api/base-query.ts",
+      "line": 35,
+      "severity": "critical",
+      "issue": "Access token logged in console.log - security leak",
+      "fix": "Remove token from log statement or use __DEV__ guard"
+    },
+    {
+      "path": "src/services/api/api.ts",
+      "line": 43,
+      "severity": "major",
+      "issue": "No token refresh mechanism on 401 - users logged out unnecessarily",
+      "fix": "Implement refresh token flow with automatic retry of failed request"
+    },
+    {
+      "path": "src/utils/storage.ts",
+      "line": 46,
+      "severity": "major",
+      "issue": "JSON.parse without try-catch can crash app on malformed data",
+      "fix": "Wrap JSON.parse in try-catch, return null on error"
+    }
+  ],
+  "inline_findings": [
+    {
+      "path": "src/utils/apiKeys.ts",
+      "line": 2,
+      "severity": "critical",
+      "issue": "Hardcoded Google Places API key",
+      "fix": "Move to environment variable"
+    },
+    {
+      "path": "android/app/build.gradle",
+      "line": 111,
+      "severity": "critical",
+      "issue": "Hardcoded keystore password",
+      "fix": "Move to keystore.properties"
+    },
+    {
+      "path": "src/services/api/base-query.ts",
+      "line": 35,
+      "severity": "critical",
+      "issue": "Logs access token",
+      "fix": "Remove token from log"
+    },
+    {
+      "path": "src/services/api/api.ts",
+      "line": 43,
+      "severity": "major",
+      "issue": "No token refresh on 401",
+      "fix": "Implement refresh token flow"
+    },
+    {
+      "path": "src/utils/storage.ts",
+      "line": 46,
+      "severity": "major",
+      "issue": "JSON.parse without error handling",
+      "fix": "Add try-catch"
+    },
+    {
+      "path": "App.tsx",
+      "line": 47,
+      "severity": "minor",
+      "issue": "Large commented-out code block",
+      "fix": "Delete dead code"
+    },
+    {
+      "path": "src/CommonComponent/CustomeButton.tsx",
+      "line": 1,
+      "severity": "minor",
+      "issue": "Typo in filename: Custome should be Custom",
+      "fix": "Rename file"
+    },
+    {
+      "path": "src/services/api/api.ts",
+      "line": 14,
+      "severity": "major",
+      "issue": "Using any type",
+      "fix": "Define proper AxiosRequestConfig type"
+    },
+    {
+      "path": "src/Screens/AddProductScreen.tsx",
+      "line": 1,
+      "severity": "major",
+      "issue": "File is 2452 lines, should be split",
+      "fix": "Extract to service layer and sub-components"
+    },
+    {
+      "path": "src/Screens/CreatePurchase.tsx",
+      "line": 1,
+      "severity": "major",
+      "issue": "File is 1412 lines, should be split",
+      "fix": "Extract business logic to PurchaseService"
+    },
+    {
+      "path": "src/utils/storage.ts",
+      "line": 30,
+      "severity": "major",
+      "issue": "Using any type for data",
+      "fix": "Define UserData interface"
+    },
+    {
+      "path": "src/services/api/api.ts",
+      "line": 35,
+      "severity": "major",
+      "issue": "Console.log in production",
+      "fix": "Use __DEV__ guard or logger utility"
+    },
+    {
+      "path": "src/Screens/Expenses.tsx",
+      "line": 144,
+      "severity": "minor",
+      "issue": "Console.log in validation",
+      "fix": "Remove or use logger"
+    },
+    {
+      "path": "src/Screens/SalePOS.tsx",
+      "line": 336,
+      "severity": "minor",
+      "issue": "Console.log in validation",
+      "fix": "Remove or use logger"
+    },
+    {
+      "path": "package.json",
+      "line": 29,
+      "severity": "major",
+      "issue": "Using deprecated moment library",
+      "fix": "Migrate to dayjs or date-fns"
+    }
+  ],
+  "commands": [
+    {
+      "purpose": "Check for outdated npm packages",
+      "command": "npm outdated"
+    },
+    {
+      "purpose": "Audit npm packages for vulnerabilities",
+      "command": "npm audit --production --audit-level=moderate"
+    },
+    {
+      "purpose": "Type check TypeScript code",
+      "command": "npx tsc --noEmit"
+    },
+    {
+      "purpose": "Run ESLint",
+      "command": "npm run lint"
+    },
+    {
+      "purpose": "Run tests with coverage",
+      "command": "npm test -- --coverage"
+    },
+    {
+      "purpose": "Scan for secrets using trufflehog",
+      "command": "trufflehog filesystem --no-update --entropy False ."
+    },
+    {
+      "purpose": "Check for circular dependencies",
+      "command": "npx madge --circular --extensions ts,tsx src/"
+    },
+    {
+      "purpose": "Count console statements",
+      "command": "grep -r \"console\\.\" src/ --include=\"*.ts\" --include=\"*.tsx\" | wc -l"
+    },
+    {
+      "purpose": "Count any types",
+      "command": "grep -r \": any\" src/ --include=\"*.ts\" --include=\"*.tsx\" | wc -l"
+    }
+  ]
+}
+
+

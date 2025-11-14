@@ -1,5 +1,12 @@
 import React from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  Image,
+  StyleSheet,
+  ActivityIndicator,
+} from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { s, ScaledSheet } from "react-native-size-matters";
 import CustomSwitch from "./CustomSwitch";
@@ -31,6 +38,7 @@ interface ProductItemProps {
   showStock?: boolean;
   showActions?: boolean;
   showSwitch?: boolean;
+  isActiveLoading?: boolean;
 }
 
 const ProductItem: React.FC<ProductItemProps> = ({
@@ -43,6 +51,7 @@ const ProductItem: React.FC<ProductItemProps> = ({
   showStock = true,
   showActions = true,
   showSwitch = true,
+  isActiveLoading = false,
 }) => {
   const hasVariants = product.variants && product.variants.length > 0;
 
@@ -96,12 +105,16 @@ const ProductItem: React.FC<ProductItemProps> = ({
             {product.description || "-------"}
           </Text>
         </View>
-        {showSwitch && (
-          <CustomSwitch
-            value={product?.is_active || false}
-            onValueChange={(value) => onActiveChange(product.id, value)}
-          />
-        )}
+        {showSwitch &&
+          (isActiveLoading ? (
+            <ActivityIndicator size="small" color="#FCA311" />
+          ) : (
+            <CustomSwitch
+              value={product?.is_active || false}
+              onValueChange={(value) => onActiveChange(product.id, value)}
+              disabled={isActiveLoading}
+            />
+          ))}
       </View>
     </TouchableOpacity>
   );

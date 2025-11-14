@@ -15,6 +15,7 @@ import { useRoute } from "@react-navigation/native";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Loading from "../CommonComponent/Loading";
+import { ScaledSheet } from "react-native-size-matters";
 
 interface BillItem {
   id: string;
@@ -54,21 +55,6 @@ const BillDetails: React.FC = () => {
   }, []);
 
   const saleType = billData?.is_wholesale_rate; // or "Wholesale" — you can make this dynamic
-
-  const billItems: BillItem[] = [
-    {
-      id: "1",
-      name: "White Shirt XL Size, Blue Color, Denim Brand",
-      quantity: 2,
-      price: 500,
-    },
-    {
-      id: "2",
-      name: "White Shirt XL Size, Blue Color, Denim Brand",
-      quantity: 2,
-      price: 500,
-    },
-  ];
 
   const totals = {
     charges: 0,
@@ -120,7 +106,9 @@ const BillDetails: React.FC = () => {
       icon: "credit-card",
       label: "Payment",
       value: billData?.wholesale_invoice_details?.payment_date, // you can add this in billData
-      mode: "Credit",
+      mode:
+        billData?.payment_method.charAt(0).toUpperCase() +
+        billData?.payment_method.slice(1),
       modeColor: "orange",
     },
     {
@@ -224,14 +212,14 @@ const BillDetails: React.FC = () => {
       <Loading visible={isLoading} />
       <Headerwithback
         title="Bill Details"
-        rightIcons={[
-          <TouchableOpacity key="share">
-            <Icon name="share-variant" size={25} color="#666" key="share" />
-          </TouchableOpacity>,
-        ]}
+        // rightIcons={[
+        //   <TouchableOpacity key="share">
+        //     <Icon name="share-variant" size={25} color="#666" key="share" />
+        //   </TouchableOpacity>,
+        // ]}
       />
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: 20, flex: 1 }}>
         {/* Company Info */}
         <View style={styles.companyRow}>
           <Text style={styles.company}>
@@ -240,15 +228,10 @@ const BillDetails: React.FC = () => {
           <View
             style={[
               styles.tag,
-              saleType === "Retail" && { backgroundColor: "transparent" },
+              !saleType && { backgroundColor: "transparent" },
             ]}
           >
-            <Text
-              style={[
-                styles.tagText,
-                saleType === "Retail" && { color: "orange" },
-              ]}
-            >
+            <Text style={[styles.tagText, !saleType && { color: "orange" }]}>
               {saleType}
             </Text>
           </View>
@@ -272,24 +255,44 @@ const BillDetails: React.FC = () => {
         </View>
 
         {/* Table Body */}
-        <FlatList
-          data={billData?.items}
-          renderItem={renderBillItem}
-          keyExtractor={(item) => item.id}
-          ListFooterComponent={<View style={{ height: 10 }} />}
-        />
+        <View>
+          <FlatList
+            data={billData?.items}
+            renderItem={renderBillItem}
+            keyExtractor={(item) => item.id}
+            ListFooterComponent={<View style={{ height: 10 }} />}
+          />
+        </View>
 
         {/* Invoice Header */}
         <View style={styles.invoiceBox}>
-          <Text style={styles.invoiceTitle}>Invoice</Text>
+          <Text style={[styles.invoiceTitle, { flex: 1 }]}>Invoice</Text>
           <View>
             <Text style={styles.invoiceNumber}>PINV-1</Text>
             <Text style={styles.invoiceDate}>14-02-2025</Text>
           </View>
         </View>
+        {!saleType && (
+          <View style={[styles.invoiceBox, { marginTop: "auto" }]}>
+            <Icon name="bank" size={24} color="#666" />
+            <View style={{ flex: 1, marginLeft: 10 }}>
+              <Text style={styles.invoicePaymentTitle}>Payment</Text>
+              <Text style={styles.invoiceMethod}>
+                {billData?.payment_method.toUpperCase()}
+              </Text>
+            </View>
+            <View>
+              <Text style={styles.invoiceDate}>
+                {billData?.credit_date
+                  ? new Date(billData?.credit_date).toLocaleDateString()
+                  : "N/A"}
+              </Text>
+            </View>
+          </View>
+        )}
 
         {/* Info List - only for Wholesale */}
-        {saleType !== "Retail" && (
+        {saleType && (
           <FlatList
             data={infoData}
             renderItem={renderItem}
@@ -330,29 +333,33 @@ const BillDetails: React.FC = () => {
               Rs {Number(billData?.total_amount).toFixed(2)}
             </Text>
           </View>
-          <View style={styles.totalRow}>
-            <Text style={styles.totalLabel}>Advance Paid</Text>
-            <Text style={styles.totalValue}>
-              Rs {Number(billData?.advance_amount).toFixed(2)}
-            </Text>
-          </View>
-          <View style={styles.totalRow}>
-            <Text style={[styles.totalLabel, { fontWeight: "bold" }]}>
-              Balance
-            </Text>
-            <Text
-              style={[
-                styles.totalValue,
-                { color: "orange", fontWeight: "bold" },
-              ]}
-            >
-              Rs {Number(billData?.balance_amount).toFixed(2)}
-            </Text>
-          </View>
+          {billData?.payment_method === "credit" && (
+            <>
+              <View style={styles.totalRow}>
+                <Text style={styles.totalLabel}>Advance Paid</Text>
+                <Text style={styles.totalValue}>
+                  Rs {Number(billData?.advance_amount).toFixed(2)}
+                </Text>
+              </View>
+              <View style={styles.totalRow}>
+                <Text style={[styles.totalLabel, { fontWeight: "bold" }]}>
+                  Balance
+                </Text>
+                <Text
+                  style={[
+                    styles.totalValue,
+                    { color: "orange", fontWeight: "bold" },
+                  ]}
+                >
+                  Rs {Number(billData?.balance_amount).toFixed(2)}
+                </Text>
+              </View>
+            </>
+          )}
         </View>
 
         {/* Checkbox Section - only for Wholesale */}
-        {saleType !== "Retail" && (
+        {saleType && (
           <>
             <Text style={styles.checkTitle}>Bill copies to print</Text>
             <View style={styles.checkboxRow}>
@@ -393,7 +400,7 @@ const BillDetails: React.FC = () => {
 
 export default BillDetails;
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
   header: {
     flexDirection: "row",
@@ -466,7 +473,8 @@ const styles = StyleSheet.create({
   headerText: { color: "#fff", fontWeight: "bold" },
   invoiceBox: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    // justifyContent: "space-between",
+    alignItems: "center",
     backgroundColor: "#fff",
     padding: 8,
     paddingHorizontal: 15,
@@ -480,6 +488,15 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 18,
     color: "#000",
+  },
+  invoicePaymentTitle: {
+    fontSize: "12@s",
+    color: "#000",
+  },
+  invoiceMethod: {
+    // fontWeight: "bold",
+    fontSize: "12@s",
+    color: "#ff9800",
   },
   invoiceNumber: {
     fontWeight: "bold",

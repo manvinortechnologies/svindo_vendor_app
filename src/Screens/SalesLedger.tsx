@@ -26,6 +26,7 @@ import CustomHeader from "../CommonComponent/CustomHeader";
 import moment from "moment";
 import { ScaledSheet } from "react-native-size-matters";
 import DeleteModal from "./DeleteModal";
+import Toast from "react-native-toast-message";
 interface ProductDetails {
   id: number;
   print_variants: any[];
@@ -135,10 +136,19 @@ const SalesLedger = () => {
       }
 
       const response = await api.get(API_ROUTES.posSales);
-      setSalesData(response.data || []);
+      setSalesData(
+        response.data.sort(
+          (a: any, b: any) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        ) || []
+      );
     } catch (error) {
       console.error("Error fetching sales data:", error);
-      Alert.alert("Error", "Failed to load sales data. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to load sales data. Please try again.",
+      });
     } finally {
       if (isRefresh) {
         setIsRefreshing(false);
@@ -195,10 +205,18 @@ const SalesLedger = () => {
       // Close modal
       closeModal();
 
-      Alert.alert("Success", "Sale deleted successfully");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Sale deleted successfully",
+      });
     } catch (error) {
       console.error("Error deleting sale:", error);
-      Alert.alert("Error", "Failed to delete sale. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to delete sale. Please try again.",
+      });
     } finally {
       setIsDeleting(false);
     }
@@ -212,7 +230,7 @@ const SalesLedger = () => {
     const endDateObj = new Date(end);
 
     return salesData.filter((sale) => {
-      const saleDate = new Date(sale.credit_date || sale.created_at || "");
+      const saleDate = new Date(sale.created_at || "");
       return saleDate >= startDateObj && saleDate <= endDateObj;
     });
   };
@@ -251,7 +269,7 @@ const SalesLedger = () => {
   const currentSalesData = isFiltered ? filteredSalesData : salesData;
 
   const groupedSales = currentSalesData.reduce((groups, sale) => {
-    const date = formatDate(sale.credit_date || sale.created_at || "");
+    const date = formatDate(sale.created_at || "");
     if (!groups[date]) {
       groups[date] = [];
     }
@@ -260,31 +278,30 @@ const SalesLedger = () => {
   }, {} as Record<string, SalesEntry[]>);
 
   const totalBalance = currentSalesData.reduce(
-    (sum, sale) => sum + (sale?.balance_amount || 0),
+    (sum, sale) => sum + Number(sale?.total_amount || 0),
     0
   );
 
   const renderSalesEntry = ({ item }: { item: SalesEntry }) => {
     const totalItems = item.items.reduce((sum, item) => sum + item.quantity, 0);
     const orderType =
-      item.payment_method === "cash" ? "Cash Sale" : "Credit Sale";
+      item.payment_method.charAt(0).toUpperCase() +
+      item.payment_method.slice(1) +
+      " Sale";
     const status = (item.balance_amount || 0) > 0 ? "Pending" : "Paid";
 
     return (
       <View style={styles.entryContainer}>
         <View style={styles.tableRow}>
           <View style={styles.tableCell}>
-            <Text style={styles.tableHeader}>Invoice</Text>
             <Text style={styles.tableValue}>INV-{item.id}</Text>
           </View>
           <View style={styles.tableCell}>
-            <Text style={styles.tableHeader}>Amount</Text>
             <Text style={styles.tableValue}>
               ₹{Number(item.total_amount)?.toFixed(2)}
             </Text>
           </View>
           <View style={styles.tableCell}>
-            <Text style={styles.tableHeader}>Paid</Text>
             <Text style={styles.tableValue}>
               ₹
               {Number(item.total_amount - (item.balance_amount || 0)).toFixed(
@@ -293,7 +310,6 @@ const SalesLedger = () => {
             </Text>
           </View>
           <View style={styles.tableCell}>
-            <Text style={styles.tableHeader}>Balance Amount</Text>
             <Text style={styles.tableValue}>
               ₹{Number(item?.balance_amount || 0).toFixed(2)}
             </Text>
@@ -306,14 +322,14 @@ const SalesLedger = () => {
           </Text>
           <Text style={styles.detailText}>Qty: {totalItems}</Text>
           <Text style={styles.detailText}>{orderType}</Text>
-          <Text
+          {/* <Text
             style={[
               styles.statusText,
               { color: status === "Paid" ? "#4CAF50" : "#F44336" },
             ]}
           >
             {status}
-          </Text>
+          </Text> */}
         </View>
       </View>
     );
@@ -326,7 +342,7 @@ const SalesLedger = () => {
         <Text style={styles.tableHeader}>Invoice</Text>
         <Text style={styles.tableHeader}>Amount</Text>
         <Text style={styles.tableHeader}>Paid</Text>
-        <Text style={styles.tableHeader}>Balance Amount</Text>
+        <Text style={styles.tableHeader}>Balance</Text>
       </View>
       {groupedSales[date].map((sale) => (
         <TouchableOpacity
@@ -355,7 +371,7 @@ const SalesLedger = () => {
           }
         />
         <View style={styles.ledgerBanner}>
-          <Text style={styles.ledgerText}>Ledger</Text>
+          <Text style={styles.ledgerText}>Total Sales</Text>
           <Text style={styles.balanceText}>
             ₹{Number(totalBalance)?.toFixed(2)}
           </Text>
@@ -388,10 +404,15 @@ const SalesLedger = () => {
 
         {/* Add Sales Button */}
         <TouchableOpacity
-          style={styles.addButton}
-          onPress={() => (navigation as any).navigate(HomeNavigation.SALE_POS)}
+          style={styles.fab}
+          onPress={() =>
+            (navigation as any).navigate(HomeNavigation.PRODUCT_SELECTION, {
+              navigateScreen: HomeNavigation.SALE_POS,
+            })
+          }
+          activeOpacity={0.9}
         >
-          <Text style={styles.addButtonText}>Add Sales</Text>
+          <Icon name="add" size={28} color="#fff" />
         </TouchableOpacity>
 
         {/* Sale Details Modal */}
@@ -413,9 +434,9 @@ const SalesLedger = () => {
                     Invoice #{selectedSale.id}
                   </Text>
                   <Text style={styles.paymentMethod}>
-                    {selectedSale.payment_method === "cash"
-                      ? "Cash Sale"
-                      : "Credit Sale"}
+                    {selectedSale.payment_method.charAt(0).toUpperCase() +
+                      selectedSale.payment_method.slice(1) +
+                      " Sale"}
                   </Text>
                 </View>
                 {/* Action Buttons */}
@@ -605,14 +626,14 @@ const SalesLedger = () => {
                     {selectedSale.is_wholesale_rate ? "Yes" : "No"}
                   </Text>
                 </View>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Credit Date:</Text>
-                  <Text style={styles.detailValue}>
-                    {selectedSale.credit_date
-                      ? formatDate(selectedSale.credit_date)
-                      : "N/A"}
-                  </Text>
-                </View>
+                {selectedSale.payment_method === "credit" && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Credit Date:</Text>
+                    <Text style={styles.detailValue}>
+                      {formatDate(selectedSale.credit_date || "")}
+                    </Text>
+                  </View>
+                )}
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Created At:</Text>
                   <Text style={styles.detailValue}>
@@ -792,10 +813,12 @@ const styles = ScaledSheet.create({
     textAlign: "center",
   },
   entryContainer: {
-    backgroundColor: "#FAFAFA",
-    borderRadius: 8,
+    // backgroundColor: "#FAFAFA",
+    // borderRadius: 8,
     padding: 12,
-    marginBottom: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ff9800",
+    // marginBottom: 8,
   },
   tableRow: {
     flexDirection: "row",
@@ -827,19 +850,6 @@ const styles = ScaledSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
-  addButton: {
-    backgroundColor: "#FCA311",
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    margin: 16,
-    alignItems: "center",
-  },
-  addButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
   emptyContainer: {
     flex: 1,
     justifyContent: "center",
@@ -862,6 +872,7 @@ const styles = ScaledSheet.create({
   // Modal styles
   modalStyle: {
     flex: 1,
+    margin: 0,
     // maxHeight: "90%",
     // width: "95%",
   },
@@ -1120,5 +1131,29 @@ const styles = ScaledSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 10,
+  },
+  fab: {
+    position: "absolute",
+    bottom: 30,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#FCA311",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    zIndex: 20,
+  },
+  fabLabel: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 14,
+    marginLeft: 4,
   },
 });

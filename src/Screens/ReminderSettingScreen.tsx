@@ -13,6 +13,7 @@ import CustomSwitch from "../CommonComponent/CustomSwitch";
 import Loading from "../CommonComponent/Loading";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
+import Toast from "react-native-toast-message";
 
 const ReminderRow = ({
   title,
@@ -95,10 +96,18 @@ const ReminderScreen = () => {
       };
       const res = await api.post(API_ROUTES.reminderSettings, payload);
       if (res.status === 200 || res.status === 201) {
-        Alert.alert("Success", "Reminder settings updated");
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Reminder settings updated",
+        });
       }
     } catch (e) {
-      Alert.alert("Error", "Failed to update reminder settings");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to update reminder settings",
+      });
       console.error(e);
     } finally {
       setIsLoading(false);

@@ -9,6 +9,7 @@ import {
   Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Ionicons from "react-native-vector-icons/Ionicons";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import Headerwithback from "./Headerwithback";
 import Bottomnavigation from "./Bottomnavigation";
@@ -34,7 +35,7 @@ const ManageVendors = ({ navigation }: any) => {
   const [vendorList, setVendorList] = useState<Vendor[]>();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filteredVendors, setFilteredVendors] = useState<Vendor[]>([]);
-
+  const [totalPendingAmount, setTotalPendingAmount] = useState<number>(0);
   useFocusEffect(
     useCallback(() => {
       // Your API call function
@@ -52,6 +53,12 @@ const ManageVendors = ({ navigation }: any) => {
       const res = await api.get(API_ROUTES.vendorList);
       setVendorList(res.data);
       setFilteredVendors(res.data); // initialize filtered data
+      setTotalPendingAmount(
+        res.data.reduce(
+          (acc: number, vendor: Vendor) => acc + vendor.balance,
+          0
+        )
+      );
     } catch (error) {
       console.error(error);
     } finally {
@@ -86,15 +93,17 @@ const ManageVendors = ({ navigation }: any) => {
               onChangeText={setSearchTerm}
             />
           </View>
-          <TouchableOpacity onPress={() => navigation.navigate("AddVendor")}>
+          {/* <TouchableOpacity onPress={() => navigation.navigate("AddVendor")}>
             <Text style={styles.addText}>+ Add New Vendors</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {/* You Collect & Pay */}
         <View style={styles.summaryContainer}>
           <TouchableOpacity style={styles.summaryBox}>
-            <Text style={styles.summaryText}>You Collect: ₹0</Text>
+            <Text style={styles.summaryText}>
+              You Give: ₹{totalPendingAmount}
+            </Text>
           </TouchableOpacity>
           {/* <TouchableOpacity style={styles.summaryBox}>
             <Text style={styles.summaryText}>You Pay: ₹0</Text>
@@ -146,6 +155,14 @@ const ManageVendors = ({ navigation }: any) => {
             ) : null
           }
         />
+        {/* FAB: Add New Vendor */}
+        <TouchableOpacity
+          style={styles.fab}
+          activeOpacity={0.9}
+          onPress={() => navigation.navigate("AddVendor")}
+        >
+          <Ionicons name="add" size={26} color="#fff" />
+        </TouchableOpacity>
         <Loading visible={isLoading} />
       </SafeAreaView>
     </View>
@@ -155,6 +172,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
+  },
+  fab: {
+    position: "absolute",
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#FCA311",
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   searchContainer: {
     flexDirection: "row",
@@ -168,7 +201,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
     alignItems: "center",
-    width: "80%",
+    // width: "80%",
   },
   searchInput: {
     flex: 1,
@@ -246,6 +279,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: "#000",
+    width: "80%",
   },
   contactColumn: {
     flex: 1,

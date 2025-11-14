@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  Alert,
   SafeAreaView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -14,6 +13,7 @@ import CustomHeader from "../CommonComponent/CustomHeader";
 import Loading from "../CommonComponent/Loading";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
+import Toast from "react-native-toast-message";
 
 const TransactionMessages = () => {
   const navigation = useNavigation();
@@ -23,7 +23,11 @@ const TransactionMessages = () => {
 
   const handleSave = async () => {
     if (!message.trim()) {
-      Alert.alert("Error", "Please enter a message");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please enter a message",
+      });
       return;
     }
 
@@ -39,19 +43,19 @@ const TransactionMessages = () => {
       // You can replace this with the actual API endpoint for transaction messages
       const response = await api.post(API_ROUTES.storeOnlineSetting, payload);
 
-      Alert.alert(
-        "Success",
-        "Transaction message settings saved successfully",
-        [
-          {
-            text: "OK",
-            onPress: () => navigation.goBack(),
-          },
-        ]
-      );
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Transaction message settings saved successfully",
+      });
+      navigation.goBack();
     } catch (error) {
       console.error("Error saving transaction message:", error);
-      Alert.alert("Error", "Failed to save settings. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to save settings. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -86,7 +90,7 @@ const TransactionMessages = () => {
         </View>
 
         {/* Checkbox Option */}
-        <View style={styles.checkboxContainer}>
+        {/* <View style={styles.checkboxContainer}>
           <TouchableOpacity
             style={styles.checkbox}
             onPress={() => setSendPaymentLink(!sendPaymentLink)}
@@ -104,7 +108,7 @@ const TransactionMessages = () => {
               a prepaid order.
             </Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
 
         {/* Save Button */}
         <TouchableOpacity

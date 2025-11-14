@@ -130,6 +130,14 @@ export type THomeNavigation = {
   [HomeNavigation.SUPPORT]: undefined;
   [HomeNavigation.CHAT_SCREEN]: undefined;
   [HomeNavigation.REQUESTOFFERS]: { requestId?: string };
+  [HomeNavigation.ALL_CHAT_USER_SCREEN]: undefined;
+  [HomeNavigation.CHAT_SCREEN_STREAM]: {
+    userId: string;
+    token?: string;
+    channelId?: string; // Optional - will be determined after checking for existing channel
+    otherUserId: string;
+  };
+  [HomeNavigation.DELIVERY_AREA]: undefined;
 };
 
 // export type TTabNavigation = {

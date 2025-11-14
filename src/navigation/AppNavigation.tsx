@@ -128,6 +128,9 @@ import ScanBarcode from "../Screens/ScanBarcode";
 import Support from "../Screens/Support";
 import ChatScreen from "../Screens/ChatScreen";
 import RequestOffers from "../Screens/RequestOffers";
+import AllChatUserScreen from "../Screens/AllChatUserScreen";
+import ChatScreenStream from "../Screens/ChatScreenStream";
+import DeliveryArea from "../Screens/DeliveryArea";
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
 
@@ -569,6 +572,18 @@ const AppNavigation = () => {
         <Stack.Screen
           name={HomeNavigation.CHAT_SCREEN}
           component={ChatScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.ALL_CHAT_USER_SCREEN}
+          component={AllChatUserScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.CHAT_SCREEN_STREAM}
+          component={ChatScreenStream}
+        />
+        <Stack.Screen
+          name={HomeNavigation.DELIVERY_AREA}
+          component={DeliveryArea}
         />
       </Stack.Navigator>
     </NavigationContainer>

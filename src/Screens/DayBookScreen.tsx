@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -13,96 +13,155 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from "moment";
+import api from "../services/api/api";
+import Loading from "../CommonComponent/Loading";
 
 import ReportHeader from "./ReportHeader";
 import Bottomnavigation from "./Bottomnavigation";
 
 const { width } = Dimensions.get("window");
 
-const summaryData = [
-  { label: "Sales", value: "123455", color: "#DEF7EC", borderColor: "#004A0B" },
-  {
-    label: "Purchase",
-    value: "123455",
-    color: "#E0F2FE",
-    borderColor: "#163881",
-  },
-  { label: "Stock", value: "123455", color: "#E0F2FE", borderColor: "#163881" },
-  {
-    label: "Receipts",
-    value: "123455",
-    color: "#FEF3C7",
-    borderColor: "#FCA311",
-  },
-  {
-    label: "Payments",
-    value: "123455",
-    color: "#FEE2E2",
-    borderColor: "#FF0000",
-  },
-  {
-    label: "Expenses",
-    value: "123455",
-    color: "#FEE2E2",
-    borderColor: "#FF0000",
-  },
-];
-
-const balances = [
-  { label: "Cash in hand", opening: "123455", closing: "123456" },
-  { label: "Bank Balance", opening: "123455", closing: "123456" },
-];
-
-const transactions = [
-  {
-    type: "Sales",
-    detail: "INV-1234",
-    medium: "Cash",
-    debit: "10000.00",
-    credit: "10000.00",
-  },
-  {
-    type: "Receipts",
-    detail: "Customer name",
-    medium: "Cash",
-    debit: "10000.00",
-    credit: "9500.00",
-  },
-  {
-    type: "Expense",
-    detail: "Category",
-    medium: "UPI",
-    debit: "10000.00",
-    credit: "9500.00",
-  },
-  {
-    type: "Payment",
-    detail: "Vendor name",
-    medium: "UPI",
-    debit: "10000.00",
-    credit: "9500.00",
-  },
-];
+interface DayBookData {
+  date: string;
+  tiles: {
+    sales: { total: number };
+    purchases: { total: number };
+    stock: { count: number };
+    receipts: { total: number };
+    payments: { total: number };
+    expenses: { total: number };
+  };
+  accounts: {
+    cash_in_hand: { opening: number; closing: number };
+    bank_balance: { opening: number; closing: number };
+  };
+  entries: any[];
+}
 
 const DayBookScreen = () => {
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
-  const [startDate, setStartDate] = useState(new Date("2025-02-01"));
-  const [endDate, setEndDate] = useState(new Date("2025-02-28"));
-  const [selectingStart, setSelectingStart] = useState(true);
-  const [monthModalVisible, setMonthModalVisible] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [daybookData, setDaybookData] = useState<DayBookData | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const showDatePicker = (start: boolean) => {
-    setSelectingStart(start);
+  useEffect(() => {
+    fetchDaybookData();
+  }, [selectedDate]);
+
+  const fetchDaybookData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const dateString = moment(selectedDate).format("YYYY-MM-DD");
+      const response = await api.get(`/vendor/daybook/?date=${dateString}`);
+
+      if (response.data) {
+        setDaybookData(response.data);
+      }
+    } catch (err: any) {
+      console.error("Error fetching daybook data:", err);
+      setError("Failed to load daybook data");
+      setDaybookData(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const showDatePicker = () => {
     setDatePickerVisible(true);
   };
 
   const handleConfirm = (date: Date) => {
-    if (selectingStart) {
-      setStartDate(date);
-    } else {
-      setEndDate(date);
-    }
+    setSelectedDate(date);
     setDatePickerVisible(false);
+  };
+
+  // Format number for display
+  const formatValue = (value: number) => {
+    return (
+      value?.toLocaleString("en-IN", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }) || "0.00"
+    );
+  };
+
+  // Transform API data to summary cards
+  const getSummaryData = () => {
+    if (!daybookData) return [];
+    const { tiles } = daybookData;
+    return [
+      {
+        label: "Sales",
+        value: formatValue(tiles.sales?.total || 0),
+        color: "#DEF7EC",
+        borderColor: "#004A0B",
+      },
+      {
+        label: "Purchase",
+        value: formatValue(tiles.purchases?.total || 0),
+        color: "#E0F2FE",
+        borderColor: "#163881",
+      },
+      {
+        label: "Stock",
+        value: (tiles.stock?.count || 0).toString(),
+        color: "#E0F2FE",
+        borderColor: "#163881",
+      },
+      {
+        label: "Receipts",
+        value: formatValue(tiles.receipts?.total || 0),
+        color: "#FEF3C7",
+        borderColor: "#FCA311",
+      },
+      {
+        label: "Payments",
+        value: formatValue(tiles.payments?.total || 0),
+        color: "#FEE2E2",
+        borderColor: "#FF0000",
+      },
+      {
+        label: "Expenses",
+        value: formatValue(tiles.expenses?.total || 0),
+        color: "#FEE2E2",
+        borderColor: "#FF0000",
+      },
+    ];
+  };
+
+  // Transform API data to balances
+  const getBalances = () => {
+    if (!daybookData) return [];
+    const { accounts } = daybookData;
+    return [
+      {
+        label: "Cash in hand",
+        opening: formatValue(accounts.cash_in_hand?.opening || 0),
+        closing: formatValue(accounts.cash_in_hand?.closing || 0),
+      },
+      {
+        label: "Bank Balance",
+        opening: formatValue(accounts.bank_balance?.opening || 0),
+        closing: formatValue(accounts.bank_balance?.closing || 0),
+      },
+    ];
+  };
+
+  // Transform entries to transactions
+  const getTransactions = () => {
+    if (!daybookData?.entries || !Array.isArray(daybookData.entries)) {
+      return [];
+    }
+    return daybookData.entries.map((entry: any) => ({
+      type: entry.type || entry.entry_type || "Transaction",
+      detail: entry.detail || entry.description || entry.reference || "-",
+      medium: entry.medium || entry.payment_mode || "Cash",
+      debit: formatValue(entry.debit || 0),
+      credit: formatValue(entry.credit || 0),
+      time: entry.time || entry.created_at || "",
+    }));
   };
 
   return (
@@ -117,12 +176,9 @@ const DayBookScreen = () => {
 
         {/* Date Selector */}
         <View style={styles.dateContainer}>
-          <TouchableOpacity
-            style={styles.dateButton}
-            onPress={() => showDatePicker(true)}
-          >
+          <TouchableOpacity style={styles.dateButton} onPress={showDatePicker}>
             <Text style={styles.dateText}>
-              {moment(startDate).format("DD/MM/YYYY")}
+              {moment(selectedDate).format("DD/MM/YYYY")}
             </Text>
             <Icon
               name="calendar"
@@ -134,77 +190,105 @@ const DayBookScreen = () => {
         </View>
 
         {/* All Content */}
-        <FlatList
-          data={transactions}
-          keyExtractor={(item, index) => index.toString()}
-          ListHeaderComponent={
-            <>
-              {/* Summary Cards */}
-              <View style={styles.summaryContainer}>
-                {summaryData.map((item) => (
-                  <View
-                    key={item.label}
-                    style={[
-                      styles.summaryCard,
-                      {
-                        backgroundColor: item.color,
-                        borderWidth: 1,
-                        borderColor: item.borderColor,
-                      },
-                    ]}
-                  >
-                    <Text
-                      style={[styles.summaryLabel, { color: item.borderColor }]}
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <Loading visible={isLoading} />
+          </View>
+        ) : error ? (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={fetchDaybookData}
+            >
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <FlatList
+            data={getTransactions()}
+            keyExtractor={(item, index) => index.toString()}
+            ListHeaderComponent={
+              <>
+                {/* Summary Cards */}
+                <View style={styles.summaryContainer}>
+                  {getSummaryData().map((item) => (
+                    <View
+                      key={item.label}
+                      style={[
+                        styles.summaryCard,
+                        {
+                          backgroundColor: item.color,
+                          borderWidth: 1,
+                          borderColor: item.borderColor,
+                        },
+                      ]}
                     >
-                      {item.label}
-                    </Text>
-                    <Text style={styles.summaryValue}>{item.value}</Text>
-                  </View>
-                ))}
-              </View>
+                      <Text
+                        style={[
+                          styles.summaryLabel,
+                          { color: item.borderColor },
+                        ]}
+                      >
+                        {item.label}
+                      </Text>
+                      <Text style={styles.summaryValue}>{item.value}</Text>
+                    </View>
+                  ))}
+                </View>
 
-              {/* Balances */}
-              <View style={styles.balanceContainer}>
-                <View style={styles.balanceRow}>
-                  <Text style={styles.balanceHeader}>Account</Text>
-                  <Text style={styles.balanceHeader}>Opening</Text>
-                  <Text style={styles.balanceHeader}>Closing</Text>
-                </View>
-                {balances.map((bal) => (
-                  <View style={styles.balanceRow} key={bal.label}>
-                    <Text style={styles.balanceLabel}>{bal.label}</Text>
-                    <Text style={styles.balanceValue}>{bal.opening}</Text>
-                    <Text style={styles.balanceValue}>{bal.closing}</Text>
+                {/* Balances */}
+                <View style={styles.balanceContainer}>
+                  <View style={styles.balanceRow}>
+                    <Text style={styles.balanceHeader}>Account</Text>
+                    <Text style={styles.balanceHeader}>Opening</Text>
+                    <Text style={styles.balanceHeader}>Closing</Text>
                   </View>
-                ))}
-              </View>
-              {/* Transaction Header */}
-              <View style={styles.transHeader}>
-                <Text style={styles.transHeaderText}>Type</Text>
-                <Text style={styles.transHeaderText}>Medium</Text>
-                <Text style={styles.transHeaderText}>Debit</Text>
-                <Text style={styles.transHeaderText}>Credit</Text>
-              </View>
-            </>
-          }
-          renderItem={({ item }) => (
-            <View style={styles.transItem}>
-              <Text style={styles.transTime}>Time HH:MM:SS</Text>
-              <View style={{ padding: 6, backgroundColor: "#FFF8ED" }}>
-                <View style={styles.transTopRow}>
-                  <Text style={styles.transType}>{item.type}</Text>
+                  {getBalances().map((bal) => (
+                    <View style={styles.balanceRow} key={bal.label}>
+                      <Text style={styles.balanceLabel}>{bal.label}</Text>
+                      <Text style={styles.balanceValue}>₹{bal.opening}</Text>
+                      <Text style={styles.balanceValue}>₹{bal.closing}</Text>
+                    </View>
+                  ))}
                 </View>
-                <View style={styles.transBottomRow}>
-                  <Text style={styles.transDetail}>{item.detail}</Text>
-                  <Text style={styles.transMedium}>{item.medium}</Text>
-                  <Text style={styles.transAmount}>₹{item.debit}</Text>
-                  <Text style={styles.transAmount}>₹{item.credit}</Text>
+                {/* Transaction Header */}
+                <View style={styles.transHeader}>
+                  <Text style={styles.transHeaderText}>Type</Text>
+                  <Text style={styles.transHeaderText}>Medium</Text>
+                  <Text style={styles.transHeaderText}>Debit</Text>
+                  <Text style={styles.transHeaderText}>Credit</Text>
+                </View>
+              </>
+            }
+            renderItem={({ item }) => (
+              <View style={styles.transItem}>
+                {item.time && (
+                  <Text style={styles.transTime}>
+                    {moment(item.time).format("HH:mm:ss")}
+                  </Text>
+                )}
+                <View style={{ padding: 6, backgroundColor: "#FFF8ED" }}>
+                  <View style={styles.transTopRow}>
+                    <Text style={styles.transType}>{item.type}</Text>
+                  </View>
+                  <View style={styles.transBottomRow}>
+                    <Text style={styles.transDetail}>{item.detail}</Text>
+                    <Text style={styles.transMedium}>{item.medium}</Text>
+                    <Text style={styles.transAmount}>₹{item.debit}</Text>
+                    <Text style={styles.transAmount}>₹{item.credit}</Text>
+                  </View>
                 </View>
               </View>
-            </View>
-          )}
-          contentContainerStyle={{ paddingBottom: 100 }}
-        />
+            )}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No transactions found</Text>
+              </View>
+            }
+            contentContainerStyle={{ paddingBottom: 100 }}
+          />
+        )}
       </SafeAreaView>
 
       <DateTimePickerModal
@@ -212,7 +296,7 @@ const DayBookScreen = () => {
         mode="date"
         onConfirm={handleConfirm}
         onCancel={() => setDatePickerVisible(false)}
-        date={selectingStart ? startDate : endDate}
+        date={selectedDate}
         maximumDate={new Date()}
       />
     </View>
@@ -264,8 +348,9 @@ const styles = StyleSheet.create({
   },
   summaryValue: {
     fontSize: 14,
-    fontWeight: "bold",
+    fontWeight: "500",
     marginTop: 4,
+    color: "#000",
   },
   balanceContainer: {
     marginTop: 12,
@@ -379,5 +464,40 @@ const styles = StyleSheet.create({
   modalClose: {
     marginTop: 10,
     color: "red",
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#FF0000",
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  retryButton: {
+    backgroundColor: "#FCA311",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "#fff",
+    fontWeight: "600",
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 14,
+    color: "#999",
   },
 });

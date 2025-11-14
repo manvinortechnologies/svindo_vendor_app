@@ -5,7 +5,6 @@ import {
   Text,
   TouchableOpacity,
   TextInput,
-  Alert,
   ActivityIndicator,
 } from "react-native";
 import { ScaledSheet } from "react-native-size-matters";
@@ -15,6 +14,7 @@ import api from "../services/api/api";
 import CustomDropdown, {
   DropDownOption,
 } from "../CommonComponent/CustomDropdown";
+import Toast from "react-native-toast-message";
 
 interface TransferFundsModalProps {
   visible: boolean;
@@ -34,6 +34,11 @@ const TransferFundsModal: React.FC<TransferFundsModalProps> = ({
   const [bankList, setBankList] = useState<DropDownOption[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLoadingBanks, setIsLoadingBanks] = useState<boolean>(false);
+  const [errors, setErrors] = useState<{
+    fromBank?: string;
+    toBank?: string;
+    amount?: string;
+  }>({});
 
   useEffect(() => {
     if (visible) {
@@ -57,44 +62,46 @@ const TransferFundsModal: React.FC<TransferFundsModalProps> = ({
       }
     } catch (error: any) {
       console.error("Error fetching bank list:", error);
-      Alert.alert("Error", "Failed to load bank list");
+      Toast.show({
+        text1: "Error",
+        type: "error",
+        text2: "Failed to load bank list",
+      });
     } finally {
       setIsLoadingBanks(false);
     }
   };
 
   const handleConfirm = async () => {
-    if (bankList.length < 2) {
-      Alert.alert(
-        "Insufficient Bank Accounts",
-        "You need at least 2 bank accounts to transfer funds internally. Please add more bank accounts first.",
-        [
-          {
-            text: "OK",
-            onPress: () => onClose(),
-          },
-        ]
-      );
-      return;
-    }
+    // Reset errors
+    setErrors({});
+
+    // Validate fields
+    const newErrors: {
+      fromBank?: string;
+      toBank?: string;
+      amount?: string;
+    } = {};
 
     if (!fromBank) {
-      Alert.alert("Error", "Please select a source bank account");
-      return;
+      newErrors.fromBank = "Please select a source bank account";
     }
 
     if (!toBank) {
-      Alert.alert("Error", "Please select a destination bank account");
-      return;
+      newErrors.toBank = "Please select a destination bank account";
     }
 
-    if (fromBank.id === toBank.id) {
-      Alert.alert("Error", "Source and destination banks cannot be the same");
-      return;
+    if (fromBank && toBank && fromBank.id === toBank.id) {
+      newErrors.toBank = "Source and destination banks cannot be the same";
     }
 
-    if (!amount || parseFloat(amount) <= 0) {
-      Alert.alert("Error", "Please enter a valid amount");
+    if (!amount || parseFloat(amount) <= 0 || isNaN(parseFloat(amount))) {
+      newErrors.amount = "Please enter a valid amount";
+    }
+
+    // If there are errors, set them and return
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -102,8 +109,8 @@ const TransferFundsModal: React.FC<TransferFundsModalProps> = ({
       setIsLoading(true);
 
       const payload = {
-        from_bank_id: fromBank.id,
-        to_bank_id: toBank.id,
+        from_bank_id: fromBank!.id,
+        to_bank_id: toBank!.id,
         amount: parseFloat(amount).toFixed(2),
         notes: notes || "",
       };
@@ -114,16 +121,23 @@ const TransferFundsModal: React.FC<TransferFundsModalProps> = ({
       setNotes("");
       setFromBank(null);
       setToBank(null);
+      setErrors({});
       onClose();
       onSuccess();
 
-      Alert.alert("Success", "Bank transfer completed successfully");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Bank transfer completed successfully",
+      });
     } catch (error: any) {
       console.error("Error initiating bank transfer:", error);
-      Alert.alert(
-        "Error",
-        error.response?.data?.message || "Failed to complete bank transfer"
-      );
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2:
+          error.response?.data?.message || "Failed to complete bank transfer",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -134,6 +148,7 @@ const TransferFundsModal: React.FC<TransferFundsModalProps> = ({
     setNotes("");
     setFromBank(null);
     setToBank(null);
+    setErrors({});
     onClose();
   };
 
@@ -188,10 +203,21 @@ const TransferFundsModal: React.FC<TransferFundsModalProps> = ({
                   <CustomDropdown
                     placeholder="Select source bank"
                     options={bankList}
-                    onSelect={(option) => setFromBank(option)}
+                    onSelect={(option) => {
+                      setFromBank(option);
+                      if (errors.fromBank) {
+                        setErrors((prev) => ({ ...prev, fromBank: undefined }));
+                      }
+                    }}
                     selectedValue={fromBank?.id || null}
-                    dropDownBoxStyle={styles.dropdown}
+                    dropDownBoxStyle={[
+                      styles.dropdown,
+                      errors.fromBank && styles.dropdownError,
+                    ]}
                   />
+                )}
+                {errors.fromBank && (
+                  <Text style={styles.errorText}>{errors.fromBank}</Text>
                 )}
 
                 {/* To Bank Selection */}
@@ -205,23 +231,42 @@ const TransferFundsModal: React.FC<TransferFundsModalProps> = ({
                   <CustomDropdown
                     placeholder="Select destination bank"
                     options={bankList}
-                    onSelect={(option) => setToBank(option)}
+                    onSelect={(option) => {
+                      setToBank(option);
+                      if (errors.toBank) {
+                        setErrors((prev) => ({ ...prev, toBank: undefined }));
+                      }
+                    }}
                     selectedValue={toBank?.id || null}
-                    dropDownBoxStyle={styles.dropdown}
+                    dropDownBoxStyle={[
+                      styles.dropdown,
+                      errors.toBank && styles.dropdownError,
+                    ]}
                   />
+                )}
+                {errors.toBank && (
+                  <Text style={styles.errorText}>{errors.toBank}</Text>
                 )}
 
                 {/* Amount Input */}
                 <Text style={styles.label}>Amount</Text>
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, errors.amount && styles.inputError]}
                   placeholder="Enter amount"
                   placeholderTextColor="#999"
                   value={amount}
-                  onChangeText={setAmount}
+                  onChangeText={(text) => {
+                    setAmount(text);
+                    if (errors.amount) {
+                      setErrors((prev) => ({ ...prev, amount: undefined }));
+                    }
+                  }}
                   keyboardType="numeric"
                   returnKeyType="done"
                 />
+                {errors.amount && (
+                  <Text style={styles.errorText}>{errors.amount}</Text>
+                )}
 
                 {/* Notes Input */}
                 <Text style={styles.label}>Notes (Optional)</Text>
@@ -321,6 +366,18 @@ const styles = ScaledSheet.create({
   notesInput: {
     height: 80,
     textAlignVertical: "top",
+  },
+  inputError: {
+    borderColor: "#FF0000",
+  },
+  dropdownError: {
+    borderColor: "#FF0000",
+  },
+  errorText: {
+    color: "#FF0000",
+    fontSize: 12,
+    marginTop: 4,
+    marginBottom: 8,
   },
   loadingContainer: {
     flexDirection: "row",

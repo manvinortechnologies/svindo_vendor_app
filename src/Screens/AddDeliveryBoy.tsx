@@ -7,8 +7,8 @@ import {
   TextInput,
   FlatList,
   Image,
-  Alert,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Headerwithback from "./Headerwithback";
 import MainContainer from "../CommonComponent/MainContainer";
@@ -32,6 +32,11 @@ const AddDeliveryBoy = () => {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deliveryBoyId, setDeliveryBoyId] = useState<number | null>(null);
+  const [errors, setErrors] = useState<{
+    name?: string;
+    mobile?: string;
+    imageFile?: string;
+  }>({});
   useEffect(() => {
     getData();
   }, []);
@@ -50,32 +55,26 @@ const AddDeliveryBoy = () => {
   };
 
   const validateForm = () => {
+    const newErrors: {
+      name?: string;
+      mobile?: string;
+      imageFile?: string;
+    } = {};
+
     if (!name.trim()) {
-      Alert.alert("Error", "Please enter delivery boy name");
-      return false;
+      newErrors.name = "Please enter delivery boy name";
     }
     if (!mobile.trim()) {
-      Alert.alert("Error", "Please enter mobile number");
-      return false;
-    }
-    if (mobile.length !== 10) {
-      Alert.alert("Error", "Please enter a valid 10-digit mobile number");
-      return false;
+      newErrors.mobile = "Please enter mobile number";
+    } else if (mobile.length !== 10) {
+      newErrors.mobile = "Please enter a valid 10-digit mobile number";
     }
     if (!imageFile) {
-      Alert.alert("Error", "Please upload a photo of the delivery boy");
-      return false;
+      newErrors.imageFile = "Please upload a photo of the delivery boy";
     }
-    // if (!rating.trim()) {
-    //   Alert.alert("Error", "Please enter rating");
-    //   return false;
-    // }
-    // const ratingValue = parseFloat(rating);
-    // if (isNaN(ratingValue) || ratingValue < 0 || ratingValue > 5) {
-    //   Alert.alert("Error", "Please enter a valid rating between 0 and 5");
-    //   return false;
-    // }
-    return true;
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleCreateDeliveryBoy = async () => {
@@ -97,7 +96,7 @@ const AddDeliveryBoy = () => {
         formData.append("photo", {
           uri: imageFile.uri,
           type: imageFile.type || "image/jpeg",
-          name: imageFile.fileName || "delivery_boy_photo.jpg",
+          name: imageFile.name || "delivery_boy_photo.jpg",
         });
       }
 
@@ -108,20 +107,35 @@ const AddDeliveryBoy = () => {
       });
 
       if (response.status === 200 || response.status === 201) {
-        Alert.alert("Success", "Delivery boy created successfully!");
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Delivery boy created successfully!",
+        });
         // Reset form
         setName("");
         setMobile("");
         setRating("");
         setImageFile(null);
+        setErrors({});
         // Refresh the list
         getData();
       } else {
-        Alert.alert("Error", "Failed to create delivery boy");
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Failed to create delivery boy",
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating delivery boy:", error);
-      Alert.alert("Error", "Failed to create delivery boy. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2:
+          error.response?.data?.message ||
+          "Failed to create delivery boy. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -144,15 +158,29 @@ const AddDeliveryBoy = () => {
       );
 
       if (response.status === 200 || response.status === 204) {
-        Alert.alert("Success", "Delivery boy deleted successfully!");
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Delivery boy deleted successfully!",
+        });
         // Refresh the list
         getData();
       } else {
-        Alert.alert("Error", "Failed to delete delivery boy");
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Failed to delete delivery boy",
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error deleting delivery boy:", error);
-      Alert.alert("Error", "Failed to delete delivery boy. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2:
+          error.response?.data?.message ||
+          "Failed to delete delivery boy. Please try again.",
+      });
     } finally {
       setIsDeleting(null);
     }
@@ -170,7 +198,7 @@ const AddDeliveryBoy = () => {
       setImageFile({
         uri: deliveryBoy.photo,
         type: "image/jpeg",
-        fileName: "existing_photo.jpg",
+        name: "existing_photo.jpg",
       });
     } else {
       setImageFile(null);
@@ -184,6 +212,7 @@ const AddDeliveryBoy = () => {
     setMobile("");
     setRating("");
     setImageFile(null);
+    setErrors({});
   };
 
   const handleUpdateDeliveryBoy = async () => {
@@ -192,7 +221,11 @@ const AddDeliveryBoy = () => {
     }
 
     if (!editingId) {
-      Alert.alert("Error", "No delivery boy selected for editing");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "No delivery boy selected for editing",
+      });
       return;
     }
 
@@ -210,7 +243,7 @@ const AddDeliveryBoy = () => {
         formData.append("photo", {
           uri: imageFile.uri,
           type: imageFile.type || "image/jpeg",
-          name: imageFile.fileName || "delivery_boy_photo.jpg",
+          name: imageFile.name || "delivery_boy_photo.jpg",
         });
       }
 
@@ -225,17 +258,31 @@ const AddDeliveryBoy = () => {
       );
 
       if (response.status === 200 || response.status === 201) {
-        Alert.alert("Success", "Delivery boy updated successfully!");
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Delivery boy updated successfully!",
+        });
         // Reset form and exit edit mode
         handleCancelEdit();
         // Refresh the list
         getData();
       } else {
-        Alert.alert("Error", "Failed to update delivery boy");
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Failed to update delivery boy",
+        });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error updating delivery boy:", error);
-      Alert.alert("Error", "Failed to update delivery boy. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2:
+          error.response?.data?.message ||
+          "Failed to update delivery boy. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -254,6 +301,9 @@ const AddDeliveryBoy = () => {
           }}
           onSelectedFile={(e) => {
             setImageFile(e);
+            if (errors.imageFile) {
+              setErrors((prev) => ({ ...prev, imageFile: undefined }));
+            }
           }}
         />
 
@@ -263,7 +313,7 @@ const AddDeliveryBoy = () => {
           onPress={() => {
             setImageModel(true);
           }}
-          style={styles.uploadBox}
+          style={[styles.uploadBox, errors.imageFile && styles.uploadBoxError]}
         >
           {imageFile?.uri ? (
             <Image
@@ -278,29 +328,44 @@ const AddDeliveryBoy = () => {
             </>
           )}
         </TouchableOpacity>
+        {errors.imageFile && (
+          <Text style={styles.errorText}>{errors.imageFile}</Text>
+        )}
 
         {/* Name */}
         <Text style={styles.label}> Name</Text>
         <TextInput
           placeholder="Enter here"
           placeholderTextColor="#999"
-          style={styles.input}
+          style={[styles.input, errors.name && styles.inputError]}
           value={name}
-          onChangeText={setName}
+          onChangeText={(text) => {
+            setName(text);
+            if (errors.name) {
+              setErrors((prev) => ({ ...prev, name: undefined }));
+            }
+          }}
           autoCapitalize="words"
         />
+        {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
 
         {/* Mobile */}
         <Text style={styles.label}>Mobile Number</Text>
         <TextInput
           placeholder="Enter here"
           placeholderTextColor="#999"
-          style={styles.input}
+          style={[styles.input, errors.mobile && styles.inputError]}
           keyboardType="phone-pad"
           value={mobile}
-          onChangeText={setMobile}
+          onChangeText={(text) => {
+            setMobile(text);
+            if (errors.mobile) {
+              setErrors((prev) => ({ ...prev, mobile: undefined }));
+            }
+          }}
           maxLength={10}
         />
+        {errors.mobile && <Text style={styles.errorText}>{errors.mobile}</Text>}
 
         {/* Rating */}
         {/* <Text style={styles.label}>Rating</Text>
@@ -399,14 +464,14 @@ const AddDeliveryBoy = () => {
                     Total Deliveries - {item.total_deliveries}
                   </Text>
                   {/* <Text style={styles.subText}>Earnings - {item.earnings}</Text> */}
-                  <Text style={styles.subText}>Rating</Text>
+                  {/* <Text style={styles.subText}>Rating</Text>
                   <View style={styles.ratingRow}>
                     {Array.from({ length: parseInt(item.rating) }).map(
                       (_, idx) => (
                         <Icon key={idx} name="star" size={20} color="#FCA311" />
                       )
                     )}
-                  </View>
+                  </View> */}
                 </View>
               </View>
             </View>
@@ -578,5 +643,17 @@ const styles = StyleSheet.create({
   deleteButton: {
     padding: 4,
     borderRadius: 4,
+  },
+  inputError: {
+    borderColor: "#FF0000",
+  },
+  uploadBoxError: {
+    borderColor: "#FF0000",
+  },
+  errorText: {
+    color: "#FF0000",
+    fontSize: 12,
+    marginTop: 4,
+    marginBottom: 8,
   },
 });

@@ -65,7 +65,6 @@ const Expenses = ({ navigation }: any) => {
   }, [editMode, expenseData, allCategoryData, bankList]);
 
   const populateFormWithData = () => {
-    console.log("expenseData--->", expenseData);
     if (expenseData) {
       setExpense(expenseData.amount?.toString() || "");
       setExpenseDate(expenseData.expense_date ? expenseData.expense_date : "");

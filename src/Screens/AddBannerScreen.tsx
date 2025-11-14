@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  Modal,
+  FlatList,
 } from "react-native";
 
 import Icon from "react-native-vector-icons/MaterialIcons";
@@ -28,29 +30,84 @@ import ModalUpdatePhoto from "../Modals/ModalUpdatePhoto";
 import { ScrollView } from "react-native";
 import Loading from "../CommonComponent/Loading";
 import api from "../services/api/api";
+import { API_ROUTES } from "../constants/api-routes.constants";
+import { useRoute, RouteProp } from "@react-navigation/native";
+import { APP_CONSTANTS } from "../constants/app.constants";
+import Toast from "react-native-toast-message";
 
+type RootStackParamList = {
+  AddBanner: {
+    item?: any;
+    store?: any;
+  };
+};
+
+type AddBannerRouteProp = RouteProp<RootStackParamList, "AddBanner">;
 const AddBannerScreen = ({ navigation }: any) => {
-  const [campaignName, setCampaignName] = useState("");
-  const [amount, setAmount] = useState("");
+  const route = useRoute<AddBannerRouteProp>();
+  const item = route.params?.item;
+  const store = route.params?.store;
+  const [campaignName, setCampaignName] = useState(item?.campaign_name || "");
+  const [amount, setAmount] = useState(item?.budget || "");
   const [boost, setBoost] = useState(true);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [redirectTo, setRedirectTo] = useState("");
+  const [redirectTo, setRedirectTo] = useState(item?.redirect_to || "");
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(
+    item?.product ? { id: item.product, name: item?.product?.name || "" } : null
+  );
   const [items, setItems] = useState([
     { name: "Store", id: "store" },
     { name: "Product", id: "product" },
-    { name: "Category", id: "category" },
   ]);
-  const [imageFile, setImageFile] = useState<any>();
+  const [imageFile, setImageFile] = useState<any>(
+    item?.banner_image
+      ? { uri: APP_CONSTANTS.API_BASE_URL + item.banner_image }
+      : null
+  );
   const [imageModel, setImageModel] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const openProductPicker = async () => {
+    try {
+      setLoadingProducts(true);
+      if (products.length === 0) {
+        const res = await api.get(API_ROUTES.vendorProduct);
+        setProducts(res.data.filter((product: any) => product.is_active));
+        if (item?.product) {
+          const foundProduct = res.data
+            .filter((product: any) => product.is_active)
+            .find((product: any) => product.id === item.product);
+          setSelectedProduct(foundProduct || null);
+        }
+      }
+      setShowProductModal(true);
+    } catch (e) {
+      setProducts([]);
+      setShowProductModal(true);
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
 
   const handelSaveBtn = async () => {
     try {
       if (!campaignName || !redirectTo || !imageFile) {
-        Alert.alert(
-          "Error",
-          "Please fill in all required fields and upload an image."
-        );
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Please fill in all required fields and upload an image.",
+        });
+        return;
+      }
+
+      if (redirectTo === "product" && !selectedProduct?.id) {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Please select a product to continue.",
+        });
         return;
       }
 
@@ -59,38 +116,68 @@ const AddBannerScreen = ({ navigation }: any) => {
       const formData = new FormData();
 
       formData.append("campaign_name", campaignName);
-      formData.append("redirect_to", "external"); // or use selected dropdown value
-      formData.append("redirect_target", redirectTo);
+      formData.append("redirect_to", redirectTo);
+      if (redirectTo === "product") {
+        formData.append("store", "");
+        formData.append("product", selectedProduct?.id);
+      } else {
+        formData.append("product", "");
+        formData.append("store", store);
+      }
+
       formData.append("boost_post", boost ? "true" : "false");
 
       if (boost) {
         formData.append("budget", amount || "0");
       }
-
-      formData.append("banner_image", {
-        uri: imageFile.uri,
-        name: imageFile.filename || "banner.jpg",
-        type: imageFile.mime || "image/jpeg",
-      });
+      console.log(imageFile, "imageFile");
+      if (imageFile?.name) {
+        formData.append("banner_image", {
+          uri: imageFile.uri,
+          name: imageFile.name || "banner.jpg",
+          type: imageFile.mime || "image/jpeg",
+        });
+      }
       setIsLoading(true);
 
-      const response = await api.post("vendor/banner-campaigns/", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      if (response.status == 201) {
-        Alert.alert(
-          "Success",
-          "Banner submitted successfully. It will be reviewed and approved shortly."
-        );
-      }
+      const response = await api[item ? "patch" : "post"](
+        "vendor/banner-campaigns/" + (item?.id ? `/${item?.id}/` : ""),
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
       navigation.goBack();
     } catch (error) {
     } finally {
       setIsLoading(false);
     }
   };
+
+  const fetchProducts = async () => {
+    try {
+      setLoadingProducts(true);
+      const res = await api.get(API_ROUTES.vendorProduct);
+      setProducts(res.data.filter((product: any) => product.is_active));
+      const foundProduct = res.data
+        .filter((product: any) => product.is_active)
+        .find((product: any) => product.id === item.product);
+      setSelectedProduct(foundProduct || null);
+    } catch (error) {
+      console.log(error, "error");
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
+  useEffect(() => {
+    if (item?.product) {
+      fetchProducts();
+    }
+  }, [item?.product]);
 
   return (
     <MainContainer>
@@ -145,22 +232,40 @@ const AddBannerScreen = ({ navigation }: any) => {
 
               {/* Redirect Dropdown */}
               <Text style={styles.label}>On click redirect to</Text>
-              <TextInput
-                placeholder="Enter URL here "
-                value={redirectTo}
-                onChangeText={setRedirectTo}
-                style={styles.input}
-                placeholderTextColor="#888"
+              <CustomDropdown
+                placeholder="Select Option"
+                options={items}
+                selectedValue={redirectTo}
+                onSelect={(option) => setRedirectTo(option.id)}
+                dropDownBoxStyle={styles.dropdown}
               />
 
-              {/* <CustomDropdown
-          onSelect={setRedirectTo}
-          placeholder='Select Redirct'
-          selectedValue={   }
-          options={items}
-          dropDownBoxStyle={{ backgroundColor: "#fff3e0" }}
-
-        /> */}
+              {redirectTo === "product" && (
+                <View style={{ marginBottom: 12 }}>
+                  <TouchableOpacity
+                    onPress={openProductPicker}
+                    style={{
+                      backgroundColor: "#006EB2",
+                      paddingVertical: 10,
+                      borderRadius: 8,
+                      alignItems: "center",
+                      marginTop: 8,
+                    }}
+                  >
+                    {loadingProducts ? (
+                      <Text style={{ color: "#fff", fontWeight: "700" }}>
+                        Loading...
+                      </Text>
+                    ) : (
+                      <Text style={{ color: "#fff", fontWeight: "700" }}>
+                        {selectedProduct?.name
+                          ? `Selected: ${selectedProduct.name}`
+                          : "Select Product"}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              )}
 
               {/* Boost Post Switch */}
               <View style={styles.switchRow}>
@@ -171,31 +276,39 @@ const AddBannerScreen = ({ navigation }: any) => {
           trackColor={{ false: '#ccc', true: '#ffb300' }}
           thumbColor={boost ? '#ffa000' : '#f4f3f4'}
         /> */}
-                <CustomSwitch value={boost} onValueChange={setBoost} />
+                <CustomSwitch
+                  value={boost}
+                  onValueChange={setBoost}
+                  disabled={true}
+                />
               </View>
 
               {/* Budget Input */}
               {boost && (
                 <>
-                  <Text style={styles.label}>Budget (Minimum - 10 Rupees)</Text>
+                  <Text style={styles.label}>Budget (Minimum - 0 Rupees)</Text>
                   <TextInput
-                    placeholder="Enter Amount"
+                    placeholder="Boosted by default"
                     value={amount}
                     onChangeText={setAmount}
                     keyboardType="numeric"
                     style={styles.input}
-                    placeholderTextColor="#888"
+                    placeholderTextColor="#000"
+                    editable={false}
                   />
                 </>
               )}
 
               {/* Approx Cost Section */}
               <View style={styles.costBox}>
-                <Text style={styles.costText}>
+                <Text style={{ color: "#ff9800" }}>
+                  We are offering free boost post for limited time!
+                </Text>
+                {/* <Text style={styles.costText}>
                   <Text style={{ color: "#ff9800" }}>Approximate Costing</Text>
                   {"\n"}
                   per view cost: <Text style={styles.bold}>10 paisa</Text> per
-                  view cost: <Text style={styles.bold}>10 paisa</Text>
+                  click cost: <Text style={styles.bold}>10 paisa</Text>
                 </Text>
                 <Text style={styles.caution}>
                   <Text style={{ color: "red", fontWeight: "bold" }}>
@@ -204,7 +317,7 @@ const AddBannerScreen = ({ navigation }: any) => {
                   Please follow platforms{" "}
                   <Text style={styles.terms}>terms & conditions</Text> for
                   speedy approval of campaigns
-                </Text>
+                </Text> */}
               </View>
 
               {/* Submit Button */}
@@ -230,6 +343,97 @@ const AddBannerScreen = ({ navigation }: any) => {
             </ScrollView>
           </KeyboardAvoidingView>
         </TouchableWithoutFeedback>
+
+        {/* Product Picker Modal */}
+        <Modal visible={showProductModal} animationType="slide" transparent>
+          <View
+            style={{
+              flex: 1,
+              backgroundColor: "rgba(0,0,0,0.5)",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <View
+              style={{
+                backgroundColor: "#fff",
+                width: "92%",
+                borderRadius: 12,
+                padding: 12,
+                maxHeight: "80%",
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginBottom: 8,
+                }}
+              >
+                <Text
+                  style={{ fontSize: 16, fontWeight: "700", color: "#000" }}
+                >
+                  Select Product
+                </Text>
+                <TouchableOpacity onPress={() => setShowProductModal(false)}>
+                  <Text style={{ color: "#006EB2", fontWeight: "700" }}>
+                    Close
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              {loadingProducts ? (
+                <View style={{ paddingVertical: 20, alignItems: "center" }}>
+                  <Text style={{ color: "#666" }}>Loading...</Text>
+                </View>
+              ) : (
+                <FlatList
+                  data={products}
+                  keyExtractor={(it: any) =>
+                    it.id?.toString() || Math.random().toString()
+                  }
+                  numColumns={2}
+                  columnWrapperStyle={{
+                    justifyContent: "space-between",
+                    marginBottom: 10,
+                  }}
+                  renderItem={({ item }: { item: any }) => (
+                    <TouchableOpacity
+                      onPress={() => {
+                        setSelectedProduct(item);
+                        setShowProductModal(false);
+                      }}
+                      style={{
+                        width: "48%",
+                        backgroundColor: "#fff",
+                        borderWidth: 1,
+                        borderColor: "#eee",
+                        borderRadius: 10,
+                        overflow: "hidden",
+                      }}
+                    >
+                      <Image
+                        source={
+                          item.image
+                            ? { uri: item.image }
+                            : require("../assets/product.png")
+                        }
+                        style={{ width: "100%", height: 110 }}
+                        resizeMode="cover"
+                      />
+                      <Text
+                        style={{ padding: 8, color: "#000" }}
+                        numberOfLines={1}
+                      >
+                        {item.name || "Unnamed"}
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                />
+              )}
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </MainContainer>
   );

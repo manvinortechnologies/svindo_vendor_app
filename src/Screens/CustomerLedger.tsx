@@ -21,6 +21,8 @@ import CalendarModal from "../Modals/CalendarModal";
 import CustomModal from "../Modals/CustomModal";
 import moment from "moment";
 import DeleteModal from "./DeleteModal";
+import CustomHeader from "../CommonComponent/CustomHeader";
+import Toast from "react-native-toast-message";
 
 interface LedgerTransaction {
   type: "invoice" | "payment";
@@ -40,6 +42,8 @@ interface CustomerInfo {
   name: string;
   phone: string;
   outstanding: number;
+  totalSale?: number;
+  creditBalance?: number;
 }
 
 const CustomerLedger = ({ navigation, route }: any) => {
@@ -48,6 +52,8 @@ const CustomerLedger = ({ navigation, route }: any) => {
     name: route?.params?.customer?.name,
     phone: route?.params?.customer?.contact,
     outstanding: 0,
+    totalSale: 0,
+    creditBalance: 0,
   });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,11 +91,17 @@ const CustomerLedger = ({ navigation, route }: any) => {
         const transformedData = transformLedgerData(response.data);
         setLedgerData(transformedData);
 
+        // Calculate total sale from ledger transactions
+        const totalSale = calculateTotalSale(response.data.ledger || []);
+        const creditBalance = response.data.balance || 0;
+
         // Update customer info from API response
         setCustomerInfo({
           name: route?.params?.customer?.name || "Customer Name",
           phone: route?.params?.customer?.contact || "+91 9999999999",
-          outstanding: response.data.balance || 0,
+          outstanding: creditBalance,
+          totalSale: totalSale,
+          creditBalance: creditBalance,
         });
       }
     } catch (error: any) {
@@ -98,6 +110,21 @@ const CustomerLedger = ({ navigation, route }: any) => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const calculateTotalSale = (ledger: any[]): number => {
+    if (!ledger || !Array.isArray(ledger)) return 0;
+
+    return ledger.reduce((total, txn) => {
+      // Sum all invoice/sale transactions
+      if (
+        txn.transaction_type?.includes("invoice") ||
+        txn.transaction_type?.includes("sale")
+      ) {
+        return total + Math.abs(txn.amount || 0);
+      }
+      return total;
+    }, 0);
   };
 
   const transformLedgerData = (apiData: any): LedgerSection[] => {
@@ -173,24 +200,32 @@ const CustomerLedger = ({ navigation, route }: any) => {
       }
     } catch (error) {
       console.error("Error opening WhatsApp:", error);
-      Alert.alert("Error", "Unable to open WhatsApp. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Unable to open WhatsApp. Please try again.",
+      });
     }
   };
 
   const openCall = async () => {
-    const phoneNumber = "+918377935333";
+    const phoneNumber = customerInfo.phone;
     const url = `tel:${phoneNumber}`;
 
     try {
       await Linking.openURL(url);
     } catch (error) {
       console.error("Error opening phone dialer:", error);
-      Alert.alert("Error", "Unable to open phone dialer. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Unable to open phone dialer. Please try again.",
+      });
     }
   };
 
   const openMessage = async () => {
-    const phoneNumber = "+918377935333";
+    const phoneNumber = customerInfo.phone;
     const message = "Hello! I need support with Svindo App.";
     const url = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`;
 
@@ -198,7 +233,11 @@ const CustomerLedger = ({ navigation, route }: any) => {
       await Linking.openURL(url);
     } catch (error) {
       console.error("Error opening SMS app:", error);
-      Alert.alert("Error", "Unable to open SMS app. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Unable to open SMS app. Please try again.",
+      });
     }
   };
 
@@ -237,11 +276,19 @@ const CustomerLedger = ({ navigation, route }: any) => {
   const handleDeleteCustomerApi = async () => {
     try {
       await api.delete(`${API_ROUTES.vendorCustomer}/${customerId}/`);
-      Alert.alert("Success", "Customer deleted successfully");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Customer deleted successfully",
+      });
       navigation.goBack();
     } catch (error) {
       console.error("Error deleting customer:", error);
-      Alert.alert("Error", "Failed to delete customer. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to delete customer. Please try again.",
+      });
     }
   };
 
@@ -268,13 +315,33 @@ const CustomerLedger = ({ navigation, route }: any) => {
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <View style={styles.headerRow}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Icon name="chevron-back" size={18} color="#fff" />
-          </TouchableOpacity>
+        <CustomHeader
+          title=""
+          rightIcon={
+            <View style={styles.headerActions}>
+              <TouchableOpacity
+                style={{ marginRight: 12 }}
+                onPress={handleEditCustomer}
+              >
+                <Text style={styles.editText}>View /Edit Details</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={handleDeleteCustomer}>
+                <Icon name="trash" size={22} color="red" />
+              </TouchableOpacity>
+            </View>
+          }
+        />
+        <Loading visible={isLoading} />
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      {/* Header */}
+      <CustomHeader
+        title=""
+        rightIcon={
           <View style={styles.headerActions}>
             <TouchableOpacity
               style={{ marginRight: 12 }}
@@ -286,62 +353,65 @@ const CustomerLedger = ({ navigation, route }: any) => {
               <Icon name="trash" size={22} color="red" />
             </TouchableOpacity>
           </View>
-        </View>
-        <Loading visible={isLoading} />
-      </View>
-    );
-  }
-
-  return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Icon name="chevron-back" size={18} color="#fff" />
-        </TouchableOpacity>
-
-        <View style={styles.headerActions}>
-          <TouchableOpacity
-            style={{ marginRight: 12 }}
-            onPress={handleEditCustomer}
-          >
-            <Text style={styles.editText}>View /Edit Details</Text>
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleDeleteCustomer}>
-            <Icon name="trash" size={22} color="red" />
-          </TouchableOpacity>
-        </View>
-      </View>
+        }
+      />
 
       {/* Customer Info */}
       <View style={styles.customerInfo}>
         <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
-          <Text style={styles.customerName}>{customerInfo.name}</Text>
-          <View style={styles.infoIcons}>
-            <TouchableOpacity onPress={openCall}>
-              <Icon name="call" size={20} color="black" style={styles.icon} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={openMessage}>
-              <Icon name="mail" size={20} color="black" style={styles.icon} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={openWhatsApp}>
-              <Icon name="logo-whatsapp" size={20} color="green" />
-            </TouchableOpacity>
+          <View>
+            <Text style={styles.customerName}>{customerInfo.name}</Text>
+            <Text style={styles.phone}>{customerInfo.phone}</Text>
+          </View>
+          <View>
+            <View style={styles.infoIcons}>
+              <TouchableOpacity onPress={openCall}>
+                <Icon name="call" size={20} color="black" style={styles.icon} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={openMessage}>
+                <Icon name="mail" size={20} color="black" style={styles.icon} />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={openWhatsApp}>
+                <Icon name="logo-whatsapp" size={20} color="green" />
+              </TouchableOpacity>
+            </View>
+            <Text
+              style={[
+                styles.outstanding,
+                {
+                  color: customerInfo.outstanding < 0 ? "red" : "green",
+                  textAlign: "right",
+                },
+              ]}
+            >
+              {customerInfo.outstanding.toFixed(2)}
+            </Text>
           </View>
         </View>
-        <Text style={styles.phone}>{customerInfo.phone}</Text>
+      </View>
 
-        <Text
-          style={[
-            styles.outstanding,
-            { color: customerInfo.outstanding < 0 ? "red" : "green" },
-          ]}
-        >
-          {customerInfo.outstanding.toFixed(2)}
-        </Text>
+      {/* Summary Cards */}
+      <View style={styles.summaryContainer}>
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryLabel}>Total Sale</Text>
+          <Text style={styles.summaryValue}>
+            Rs.{(customerInfo.totalSale || 0).toFixed(2)}
+          </Text>
+        </View>
+        <View style={[styles.summaryCard, styles.creditCard]}>
+          <Text style={styles.summaryLabel}>Credit Balance</Text>
+          <Text
+            style={[
+              styles.summaryValue,
+              {
+                color:
+                  (customerInfo.creditBalance || 0) < 0 ? "#F44336" : "#492F99",
+              },
+            ]}
+          >
+            Rs.{(customerInfo.creditBalance || 0).toFixed(2)}
+          </Text>
+        </View>
       </View>
 
       {/* Ledger Title */}
@@ -584,10 +654,41 @@ const styles = StyleSheet.create({
     padding: 12,
     marginHorizontal: 10,
   },
+  summaryContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 10,
+    marginBottom: 12,
+  },
+  summaryCard: {
+    flex: 1,
+    backgroundColor: "#FFF1D6",
+    borderRadius: 8,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#FCA311",
+    marginHorizontal: 5,
+  },
+  creditCard: {
+    backgroundColor: "#F0F4FF",
+    borderColor: "#492F99",
+  },
+  summaryLabel: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#000",
+    marginBottom: 4,
+  },
+  summaryValue: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#000",
+  },
   customerName: {
     fontSize: 16,
     fontWeight: "bold",
     flex: 1,
+    color: "#000",
   },
   phone: {
     fontSize: 14,
@@ -617,6 +718,7 @@ const styles = StyleSheet.create({
   ledgerTitle: {
     fontSize: 15,
     fontWeight: "bold",
+    color: "#000",
   },
   sectionBox: {
     marginTop: 8,

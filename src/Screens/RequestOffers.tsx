@@ -24,6 +24,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { s, ScaledSheet, vs } from "react-native-size-matters";
 import ImagePreviewModal from "../Modals/ImagePreviewModal";
 import Loading from "../CommonComponent/Loading";
+import Toast from "react-native-toast-message";
 
 const { width } = Dimensions.get("window");
 
@@ -90,7 +91,11 @@ export default function RequestOffers() {
       setOffers(offersData.map(transformOfferData));
     } catch (error) {
       console.error("Error fetching offers:", error);
-      Alert.alert("Error", "Failed to load offers. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to load offers. Please try again.",
+      });
     } finally {
       setLoadingOffers(false);
     }

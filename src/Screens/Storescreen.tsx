@@ -1,25 +1,18 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
   Image,
   TouchableOpacity,
-  StyleSheet,
   ScrollView,
-  StatusBar,
-  Platform,
-  FlatList,
   Dimensions,
   ActivityIndicator,
   Alert,
   RefreshControl,
-  TextInput,
+  Linking,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import MaterialIcon from "react-native-vector-icons/MaterialIcons";
-import Header from "./Header";
-import Bottomnavigation from "./Bottomnavigation";
-import NavigationButton from "./NavigationButton";
 import CustomSwitch from "./CustomSwitch";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { s, ScaledSheet } from "react-native-size-matters";
@@ -28,125 +21,29 @@ import {
   useUpdateVendorStoreMutation,
 } from "../services/api/state-api-slice";
 import EditStoreModal from "../Modals/EditStoreModal";
+import CustomModal from "../Modals/CustomModal";
+import LocationSelectionModal from "../Modals/LocationSelectionModal";
 import { APP_CONSTANTS } from "../constants/app.constants";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import Carousel from "react-native-reanimated-carousel";
 import Video from "react-native-video";
 import Modal from "react-native-modal";
 import CustomHeader from "../CommonComponent/CustomHeader";
+import api from "../services/api/api";
+import { API_ROUTES } from "../constants/api-routes.constants";
+import { getLocationDetails } from "../utils/locationUtils";
+import Toast from "react-native-toast-message";
+import { useIsFocused } from "@react-navigation/native";
 const screenWidth = Dimensions.get("window").width - 20;
 const { width, height } = Dimensions.get("window");
 
-interface Product {
-  id: string;
-  name: string;
-  image: any;
-}
-
-const orderTypes = ["Online Store", " | ", "Tools"];
-
-const products = [
-  {
-    id: "1",
-    name: "Product 1",
-    discount: "30",
-    description: "This is product 1",
-    price: "10",
-    image: require("../assets/product.png"),
-    type: "Top Liked",
-  },
-  {
-    id: "2",
-    name: "Product 2",
-    discount: "30",
-    description: "This is product 2",
-    price: "20",
-    image: require("../assets/product.png"),
-    type: "Top Liked",
-  },
-  {
-    id: "3",
-    name: "Product 3",
-    discount: "30",
-    description: "This is product 3",
-    price: "30",
-    image: require("../assets/product.png"),
-    type: "Top Liked",
-  },
-  {
-    id: "4",
-    name: "Product 4",
-    discount: "30",
-    description: "This is product 4",
-    price: "40",
-    image: require("../assets/product.png"),
-    type: "Top Rated",
-  },
-  {
-    id: "5",
-    name: "Product 5",
-    discount: "30",
-    description: "This is product 5",
-    price: "50",
-    image: require("../assets/product.png"),
-    type: "Top Rated",
-  },
-  {
-    id: "6",
-    name: "Product 6",
-    discount: "30",
-    description: "This is product 6",
-    price: "60",
-    image: require("../assets/product.png"),
-    type: "Top Rated",
-  },
-];
-
-const getFilteredProducts = (type: string) => {
-  return products
-    .filter((product) => product.type === type)
-    .slice(0, type === "Low Stock" ? 6 : 3);
-};
-const videoData = [
-  { id: 1, source: require("../assets/product/product3.png") },
-  { id: 2, source: require("../assets/product/product3.png") },
-  { id: 3, source: require("../assets/product/product3.png") },
-  { id: 4, source: require("../assets/product/product3.png") },
-];
-const spotlightProducts = [
-  {
-    id: 1,
-    image: require("../assets/product/spotlight.png"),
-    discount: "50% OFF",
-  },
-  {
-    id: 2,
-    image: require("../assets/product/spotlight1.png"),
-    discount: "40% OFF",
-  },
-  {
-    id: 3,
-    image: require("../assets/product/spotlight3.png"),
-    discount: "30% OFF",
-  },
-  {
-    id: 4,
-    image: require("../assets/product/spotlight1.png"),
-    discount: "20% OFF",
-  },
-  {
-    id: 5,
-    image: require("../assets/product/spotlight.png"),
-    discount: "10% OFF",
-  },
-  {
-    id: 6,
-    image: require("../assets/product/spotlight3.png"),
-    discount: "60% OFF",
-  },
-];
 const Storescreen = ({ navigation }: any) => {
+  const isFocused = useIsFocused();
   const [disabletab, setdisable] = useState(true);
+  const [showLimitModal, setShowLimitModal] = useState(false);
+  const [limitMessage, setLimitMessage] = useState<string>(
+    "You have reached the limit. Please remove items to add or edit current items."
+  );
   const [refreshing, setRefreshing] = useState(false);
 
   // Video Modal state
@@ -154,12 +51,14 @@ const Storescreen = ({ navigation }: any) => {
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
   const [isVideoPaused, setIsVideoPaused] = useState(false);
   const [isVideoLoading, setIsVideoLoading] = useState(false);
+  const [location, setLocation] = useState<any>(null);
 
   // Modal state
   const [modalVisible, setModalVisible] = useState(false);
   const [editType, setEditType] = useState<
-    "name" | "banner" | "logo" | "about" | null
+    "name" | "banner" | "logo" | "about" | "storetag" | null
   >(null);
+  const [locationModalVisible, setLocationModalVisible] = useState(false);
 
   const closeVideoModal = () => {
     setVideoModalVisible(false);
@@ -185,11 +84,14 @@ const Storescreen = ({ navigation }: any) => {
     isLoading,
     refetch,
   } = useGetVendorStoresQuery();
+
   const [updateVendorStore, { isLoading: isUpdating }] =
     useUpdateVendorStoreMutation();
 
   // Handle edit actions
-  const handleEditPress = (type: "name" | "banner" | "logo" | "about") => {
+  const handleEditPress = (
+    type: "name" | "banner" | "logo" | "about" | "storetag"
+  ) => {
     setEditType(type);
     setModalVisible(true);
   };
@@ -202,20 +104,190 @@ const Storescreen = ({ navigation }: any) => {
   const handleFormSubmit = async (formData: FormData) => {
     try {
       await updateVendorStore(formData).unwrap();
-      Alert.alert("Success", "Store details updated successfully");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Store details updated successfully",
+      });
       handleModalClose();
     } catch (error: any) {
-      Alert.alert(
-        "Error",
-        error?.data?.error || "Failed to update store details"
-      );
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error?.data?.error || "Failed to update store details",
+      });
     }
+  };
+
+  useEffect(() => {
+    if (isFocused) {
+      refetch();
+    }
+  }, [isFocused]);
+
+  const handleLocationSelect = async (location: {
+    latitude: number;
+    longitude: number;
+    address: string;
+    pincode: string;
+  }) => {
+    try {
+      const formData = new FormData();
+      formData.append("latitude", location.latitude.toString());
+      formData.append("longitude", location.longitude.toString());
+      formData.append("address", location.address);
+      formData.append("pincode", location.pincode);
+
+      await updateVendorStore(formData).unwrap();
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Store location updated successfully",
+      });
+      setLocationModalVisible(false);
+    } catch (error: any) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error?.data?.error || "Failed to update store location",
+      });
+    }
+  };
+
+  const handleDeleteBanner = (id: string | number) => {
+    Alert.alert(
+      "Delete Banner",
+      "Are you sure you want to delete this banner?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.delete(`${API_ROUTES.bannerCampaigns}${id}/`);
+              Toast.show({
+                type: "success",
+                text1: "Success",
+                text2: "Banner deleted successfully",
+              });
+              refetch();
+            } catch (e) {
+              Toast.show({
+                type: "error",
+                text1: "Error",
+                text2: "Failed to delete banner",
+              });
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteSpotlight = (id: string | number) => {
+    Alert.alert(
+      "Delete Spotlight",
+      "Are you sure you want to delete this spotlight?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.delete(`${API_ROUTES.spotlightProduct}${id}/`);
+              Toast.show({
+                type: "success",
+                text1: "Success",
+                text2: "Spotlight deleted successfully",
+              });
+              refetch();
+            } catch (e) {
+              Toast.show({
+                type: "error",
+                text1: "Error",
+                text2: "Failed to delete spotlight",
+              });
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeletePost = async (id: string | number) => {
+    Alert.alert(
+      "Delete Spotlight",
+      "Are you sure you want to delete this spotlight?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.delete(`${API_ROUTES.post}${id}/`);
+              Toast.show({
+                type: "success",
+                text1: "Success",
+                text2: "Spotlight deleted successfully",
+              });
+              refetch();
+            } catch (e) {
+              Toast.show({
+                type: "error",
+                text1: "Error",
+                text2: "Failed to delete spotlight",
+              });
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDeleteReel = async (id: string | number) => {
+    Alert.alert(
+      "Delete Spotlight",
+      "Are you sure you want to delete this spotlight?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await api.delete(`${API_ROUTES.reel}${id}/`);
+              Toast.show({
+                type: "success",
+                text1: "Success",
+                text2: "Spotlight deleted successfully",
+              });
+              refetch();
+            } catch (e) {
+              Toast.show({
+                type: "error",
+                text1: "Error",
+                text2: "Failed to delete spotlight",
+              });
+            }
+          },
+        },
+      ]
+    );
   };
 
   const toggleDisable = async () => {
     try {
-      await updateVendorStore({ is_active: !disabletab }).unwrap();
-      Alert.alert("Success", "Store disabled successfully");
+      const formData = new FormData();
+      formData.append("is_location", (!disabletab).toString());
+      await updateVendorStore(formData).unwrap();
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Store disabled successfully",
+      });
       setdisable(!disabletab);
     } catch (error) {
       console.error("Error updating disable status:", error);
@@ -233,6 +305,20 @@ const Storescreen = ({ navigation }: any) => {
       setRefreshing(false);
     }
   };
+
+  const getLocationAddress = async () => {
+    const locationDetails = await getLocationDetails(
+      storeData?.latitude || 0,
+      storeData?.longitude || 0
+    );
+    setLocation(locationDetails);
+  };
+
+  useEffect(() => {
+    if (storeData) {
+      getLocationAddress();
+    }
+  }, [storeData]);
 
   // Loading state
   if (isLoading) {
@@ -263,6 +349,9 @@ const Storescreen = ({ navigation }: any) => {
         showBackButton={false}
         rightIcon={
           <TouchableOpacity
+            onPress={() =>
+              Linking.openURL(`https://svindo.com/#/store/${storeData?.id}`)
+            }
             style={{
               padding: 5,
               backgroundColor: "#006EB2",
@@ -286,6 +375,7 @@ const Storescreen = ({ navigation }: any) => {
             titleColor="#666" // iOS
           />
         }
+        contentContainerStyle={{ paddingBottom: 20 }}
       >
         {/* Top Header */}
 
@@ -304,20 +394,31 @@ const Storescreen = ({ navigation }: any) => {
           <View style={styles.detailsCard}>
             {/* Store Logo */}
             <View style={styles.logoContainer}>
-              <Image
-                source={
-                  storeData?.profile_image
-                    ? {
-                        uri:
-                          APP_CONSTANTS.API_BASE_URL + storeData.profile_image,
-                      }
-                    : require("../assets/product/storelogo.png")
-                }
-                style={styles.logo}
-              />
-              <TouchableOpacity onPress={() => handleEditPress("logo")}>
-                <Text style={styles.openLabel}>Edit Logo</Text>
-              </TouchableOpacity>
+              <View
+                style={{
+                  position: "relative",
+                  alignSelf: "flex-start",
+                }}
+              >
+                <Image
+                  source={
+                    storeData?.profile_image
+                      ? {
+                          uri:
+                            APP_CONSTANTS.API_BASE_URL +
+                            storeData.profile_image,
+                        }
+                      : require("../assets/product/storelogo.png")
+                  }
+                  style={styles.logo}
+                />
+                <TouchableOpacity
+                  onPress={() => handleEditPress("logo")}
+                  style={styles.editLogoButton}
+                >
+                  <Icon name="pencil-outline" size={28} color="#000" />
+                </TouchableOpacity>
+              </View>
               <View style={styles.storeContainer}>
                 <Text style={styles.storetext}>
                   {storeData?.name || "Business Name"}
@@ -345,23 +446,38 @@ const Storescreen = ({ navigation }: any) => {
                 </TouchableOpacity>
               </View>
               <View style={styles.ratingContainer}>
-                <MaterialIcon name="location-on" size={25} color="#006EB2" />
-                <Text style={{ color: "#000" }}>Location</Text>
-              </View>
-              {/* Follow Button and Icons */}
-              <View style={styles.actionsContainer}>
-                {/* <Icon name="bell-outline" size={24} color="#000" style={styles.actionIcon} /> */}
-                <CustomSwitch
-                  value={disabletab}
-                  onValueChange={toggleDisable}
-                  activeColor="#830002"
-                  inactiveColor="#999"
-                  borderColor="#4CAF50"
-                />
-
-                <TouchableOpacity style={styles.followButton}>
-                  <Text style={styles.followText}>Disable</Text>
+                <TouchableOpacity
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    alignSelf: "flex-end",
+                    justifyContent: "flex-end",
+                  }}
+                  onPress={() => setLocationModalVisible(true)}
+                >
+                  <MaterialIcon name="location-on" size={25} color="#006EB2" />
+                  <Text
+                    style={{ color: "#000", width: "40%" }}
+                    numberOfLines={2}
+                  >
+                    {location?.address || "Location"}
+                  </Text>
                 </TouchableOpacity>
+                {/* Follow Button and Icons */}
+                <View style={styles.actionsContainer}>
+                  {/* <Icon name="bell-outline" size={24} color="#000" style={styles.actionIcon} /> */}
+                  {isUpdating ? (
+                    <ActivityIndicator size="small" color="#006EB2" />
+                  ) : (
+                    <CustomSwitch
+                      value={disabletab}
+                      onValueChange={toggleDisable}
+                      activeColor="#006EB2"
+                      inactiveColor="#999"
+                      // borderColor="#4CAF50"
+                    />
+                  )}
+                </View>
               </View>
             </View>
           </View>
@@ -391,7 +507,18 @@ const Storescreen = ({ navigation }: any) => {
               marginBottom: 8,
             }}
             onPress={() => {
-              navigation.navigate(HomeNavigation.ADD_BANNER_SCREEN);
+              const current = storeData?.banners?.length || 0;
+              const MAX = 3;
+              if (current >= MAX) {
+                setLimitMessage(
+                  "You have reached the limit. Please remove items to add or edit current items."
+                );
+                setShowLimitModal(true);
+              } else {
+                navigation.navigate(HomeNavigation.ADD_BANNER_SCREEN, {
+                  store: storeData?.id,
+                });
+              }
             }}
           >
             <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
@@ -401,17 +528,41 @@ const Storescreen = ({ navigation }: any) => {
           <Text style={styles.sectionTitleRight}>Max - 3</Text>
         </View>
         {/* Scrollable Banner */}
-        <Carousel
-          data={storeData?.banners || []}
-          renderItem={({ item }) => (
-            <Image
-              source={{ uri: APP_CONSTANTS.API_BASE_URL + item.banner_image }}
-              style={styles.scrollBanner}
-            />
-          )}
-          width={width}
-          height={s(150)}
-        />
+        {storeData?.banners && storeData?.banners?.length > 0 && (
+          <Carousel
+            data={storeData?.banners || []}
+            loop={false}
+            renderItem={({ item }) => (
+              <View style={{ position: "relative" }}>
+                <Image
+                  source={{
+                    uri: APP_CONSTANTS.API_BASE_URL + item.banner_image,
+                  }}
+                  style={styles.scrollBanner}
+                />
+                <TouchableOpacity
+                  style={styles.editBannerButton}
+                  onPress={() =>
+                    navigation.navigate(HomeNavigation.ADD_BANNER_SCREEN, {
+                      item: item,
+                      store: storeData?.id,
+                    })
+                  }
+                >
+                  <Icon name="pencil-outline" size={s(25)} color="#000" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.deleteBannerButton}
+                  onPress={() => handleDeleteBanner(item?.id)}
+                >
+                  <Icon name="delete-outline" size={s(25)} color="#FF0000" />
+                </TouchableOpacity>
+              </View>
+            )}
+            width={width}
+            height={s(150)}
+          />
+        )}
 
         <View style={styles.spotlightSection}>
           <View style={styles.Containerspotlight}>
@@ -425,7 +576,16 @@ const Storescreen = ({ navigation }: any) => {
                 marginBottom: 8,
               }}
               onPress={() => {
-                navigation.navigate("AddSpotlightScreen");
+                const current = storeData?.spotlight_products?.length || 0;
+                const MAX = 9; // as per UI note "Max - 4 Max - 8"
+                if (current >= MAX) {
+                  setLimitMessage(
+                    "You have reached the limit. Please remove items to add or edit current items."
+                  );
+                  setShowLimitModal(true);
+                } else {
+                  navigation.navigate("AddSpotlightScreen");
+                }
               }}
             >
               <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
@@ -433,43 +593,88 @@ const Storescreen = ({ navigation }: any) => {
               </Text>
             </TouchableOpacity>
 
-            <Text style={styles.sectionTitleRight}>Max - 4 Max - 8</Text>
+            <Text style={styles.sectionTitleRight}>Max - 9</Text>
           </View>
 
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
-            style={styles.productcontainer}
+            contentContainerStyle={styles.productcontainer}
           >
             {storeData?.spotlight_products &&
               storeData.spotlight_products.length > 0 &&
               storeData.spotlight_products.map((product) => (
                 <View key={product.id} style={styles.productCard}>
-                  <View style={styles.stockBadgeAbove}>
-                    <Text style={styles.stockText}>
-                      {product.discount} % OFF
-                    </Text>
+                  <View style={{ position: "relative" }}>
+                    {product.discount_tag && (
+                      <View style={styles.stockBadgeAbove}>
+                        <Text style={styles.stockText}>
+                          {product.discount_tag} % OFF
+                        </Text>
+                      </View>
+                    )}
+                    <Image
+                      source={{
+                        uri:
+                          APP_CONSTANTS.API_BASE_URL +
+                          product.product_details?.image,
+                      }}
+                      style={styles.productImage}
+                    />
+                    <TouchableOpacity
+                      style={[
+                        styles.editBannerButton,
+                        { right: s(5), top: s(5) },
+                      ]}
+                      onPress={() =>
+                        navigation.navigate("AddSpotlightScreen", {
+                          item: product,
+                        })
+                      }
+                    >
+                      <Icon name="pencil-outline" size={s(20)} color="#000" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={[
+                        styles.deleteBannerButton,
+                        { bottom: s(5), right: s(5) },
+                      ]}
+                      onPress={() => handleDeleteSpotlight(product.id)}
+                    >
+                      <Icon
+                        name="delete-outline"
+                        size={s(20)}
+                        color="#FF0000"
+                      />
+                    </TouchableOpacity>
                   </View>
-                  <Image source={product.image} style={styles.productImage} />
 
                   <View style={styles.productDetails}>
                     <View style={styles.productTextContainer}>
-                      <Text style={styles.productName}>{product.name}</Text>
-                      <Text style={styles.productDescription}>
-                        {product?.description?.slice(0, 15)}...
+                      <Text
+                        style={styles.productName}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
+                        {product.product_details?.name}
                       </Text>
+                      {/* {product.product_details?.description && (
+                        <Text style={styles.productDescription}>
+                          {product.product_details?.description?.slice(0, 15)}
+                          ...
+                        </Text>
+                      )} */}
                     </View>
                     <View>
-                      <Text style={styles.productPrice}>
-                        Rs {product.price}
-                      </Text>
-                      <Text style={styles.addbtn}>Remove</Text>
+                      {/* <Text style={styles.productPrice}>
+                        Rs {product.product_details?.sales_price}
+                        </Text> */}
                     </View>
                   </View>
                 </View>
               ))}
           </ScrollView>
-          <View></View>
         </View>
 
         <View style={styles.highlightsSection}>
@@ -484,7 +689,18 @@ const Storescreen = ({ navigation }: any) => {
                 marginBottom: 8,
               }}
               onPress={() => {
-                navigation.navigate("AddPostScreen");
+                const current = storeData?.posts?.length || 0;
+                const MAX = 4;
+                if (current >= MAX) {
+                  setLimitMessage(
+                    "You have reached the limit. Please remove items to add or edit current items."
+                  );
+                  setShowLimitModal(true);
+                } else {
+                  navigation.navigate(HomeNavigation.ADD_POST_SCREEN, {
+                    type: "post",
+                  });
+                }
               }}
             >
               <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
@@ -494,9 +710,50 @@ const Storescreen = ({ navigation }: any) => {
 
             <Text style={styles.sectionTitleRight}>Max - 4</Text>
           </View>
-          <Carousel
-            data={storeData?.posts || []}
-            renderItem={({ item: post }) => (
+          {storeData?.posts?.map((post: any) => (
+            <View style={[styles.highlightCard, { position: "relative" }]}>
+              <Image
+                source={
+                  post.media
+                    ? { uri: APP_CONSTANTS.API_BASE_URL + post.media }
+                    : require("../assets/product/product2.png")
+                }
+                style={styles.highlightImage}
+              />
+              <TouchableOpacity
+                style={[styles.editBannerButton, { right: s(10), top: s(10) }]}
+                onPress={() =>
+                  navigation.navigate(HomeNavigation.ADD_POST_SCREEN, {
+                    item: post,
+                    type: "post",
+                  })
+                }
+              >
+                <Icon name="pencil-outline" size={s(25)} color="#000" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.deleteBannerButton,
+                  { bottom: s(5), right: s(5) },
+                ]}
+                onPress={() => handleDeletePost(post.id)}
+              >
+                <Icon name="delete-outline" size={s(25)} color="#FF0000" />
+              </TouchableOpacity>
+              <Text style={styles.highlightDescription}>
+                {post.description}
+              </Text>
+            </View>
+          ))}
+          {/* <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          pagingEnabled
+          style={{ marginBottom: 20 }}
+        >
+          {storeData?.posts &&
+            storeData.posts.length > 0 &&
+            storeData.posts.map((post) => (
               <View style={styles.highlightCard}>
                 <Image
                   source={
@@ -521,79 +778,43 @@ const Storescreen = ({ navigation }: any) => {
                   </View>
                 </View>
               </View>
-            )}
-            width={width}
-            height={s(250)}
-          />
-          {/* <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            pagingEnabled
-            style={{ marginBottom: 20 }}
-          >
-            {storeData?.posts &&
-              storeData.posts.length > 0 &&
-              storeData.posts.map((post) => (
-                <View style={styles.highlightCard}>
-                  <Image
-                    source={
-                      post.media
-                        ? { uri: APP_CONSTANTS.API_BASE_URL + post.media }
-                        : require("../assets/product/product2.png")
-                    }
-                    style={styles.highlightImage}
-                  />
-                  <View style={styles.postcontainer}>
-                    <Text style={styles.highlightDescription}>
-                      Lorem ipsum dolor sit amet consectetur Lorem ipsum dolor
-                      sit amet consectetur Lorem ipsum dolor sit amet
-                      consectetur.
-                    </Text>
-
-                    <View style={styles.highlightControls}>
-                      <TouchableOpacity style={styles.openButton}>
-                        <Text style={styles.openText}>Boost</Text>
-                      </TouchableOpacity>
-                      <Icon name="tray-arrow-up" size={24} color="#000" />
-                      <Icon name="dots-vertical" size={24} color="#000" />
-                    </View>
-                  </View>
-                </View>
-              ))}
-          </ScrollView> */}
-        </View>
-
-        <View style={styles.Containerspotlight}>
-          <TouchableOpacity
-            style={{
-              backgroundColor: "#FCA311",
-              padding: 6,
-              borderRadius: 8,
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: 8,
-              marginLeft: 10,
-            }}
-            onPress={() => {
-              navigation.navigate(HomeNavigation.ADD_POST_SCREEN);
-            }}
-          >
-            <Text
-              style={{
-                color: "#fff",
-                fontWeight: "700",
-                fontSize: 16,
-              }}
-            >
-              Add Reel
-            </Text>
-          </TouchableOpacity>
-          <Text style={[styles.sectionTitleRight, { marginRight: 10 }]}>
-            Max - 4
-          </Text>
+            ))}
+        </ScrollView> */}
         </View>
 
         <View style={styles.videoSection}>
+          <View style={[styles.Containertitle, { marginTop: 0 }]}>
+            <TouchableOpacity
+              style={{
+                backgroundColor: "#FCA311",
+                padding: 6,
+                borderRadius: 8,
+                alignItems: "center",
+                justifyContent: "center",
+                marginBottom: 8,
+              }}
+              onPress={() => {
+                const current = storeData?.reels?.length || 0;
+                const MAX = 4;
+                if (current >= MAX) {
+                  setLimitMessage(
+                    "You have reached the limit. Please remove items to add or edit current items."
+                  );
+                  setShowLimitModal(true);
+                } else {
+                  navigation.navigate(HomeNavigation.ADD_POST_SCREEN, {
+                    type: "reel",
+                  });
+                }
+              }}
+            >
+              <Text style={{ color: "#fff", fontWeight: "700", fontSize: 16 }}>
+                Add Reels
+              </Text>
+            </TouchableOpacity>
+
+            <Text style={styles.sectionTitleRight}>Max - 4</Text>
+          </View>
           {Array.from(
             { length: Math.ceil(storeData?.reels?.length || 0 / 2) },
             (_, rowIndex: number) => (
@@ -617,18 +838,33 @@ const Storescreen = ({ navigation }: any) => {
                         color="#fff"
                         style={styles.playIcon}
                       />
-                      <Icon
-                        name="cards-heart"
-                        size={s(24)}
-                        color="red"
-                        style={styles.videoIcon}
-                      />
-                      <Icon
-                        name="briefcase-upload-outline"
-                        size={s(24)}
-                        color="#000"
-                        style={styles.videoIcon1}
-                      />
+                      <TouchableOpacity
+                        style={[
+                          styles.editBannerButton,
+                          { top: s(5), right: s(5) },
+                        ]}
+                        onPress={() =>
+                          navigation.navigate(HomeNavigation.ADD_POST_SCREEN, {
+                            item: video,
+                            type: "reel",
+                          })
+                        }
+                      >
+                        <Icon name="pencil-outline" size={s(20)} color="#000" />
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[
+                          styles.deleteBannerButton,
+                          { bottom: s(5), right: s(5) },
+                        ]}
+                        onPress={() => handleDeleteReel(video.id)}
+                      >
+                        <Icon
+                          name="delete-outline"
+                          size={s(20)}
+                          color="#FF0000"
+                        />
+                      </TouchableOpacity>
                     </TouchableOpacity>
                   ))}
               </View>
@@ -684,9 +920,18 @@ const Storescreen = ({ navigation }: any) => {
             <Text style={styles.title}>Keep Shopping</Text>
             <View style={styles.line} />
           </View>
-          <Text style={styles.location}>
-            @ Lacoste, Panjaguga, Hyderabad - A.P.
-            <TouchableOpacity>
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              marginVertical: 10,
+            }}
+          >
+            <Text style={styles.location}>
+              {storeData?.storetag || "Store Tag"}
+            </Text>
+            <TouchableOpacity onPress={() => handleEditPress("storetag")}>
               <Icon
                 name="pencil-outline"
                 size={20}
@@ -694,7 +939,7 @@ const Storescreen = ({ navigation }: any) => {
                 style={styles.actionIcon}
               />
             </TouchableOpacity>
-          </Text>
+          </View>
         </View>
       </ScrollView>
 
@@ -702,12 +947,15 @@ const Storescreen = ({ navigation }: any) => {
         visible={modalVisible}
         onClose={handleModalClose}
         onSubmit={handleFormSubmit}
-        editType={editType as "name" | "banner" | "logo" | "about" | null}
+        editType={
+          editType as "name" | "banner" | "logo" | "about" | "storetag" | null
+        }
         currentData={{
           name: storeData?.name,
           banner_image: storeData?.banner_image,
           profile_image: storeData?.profile_image,
           about_text: storeData?.about,
+          storetag: storeData?.storetag,
         }}
         isLoading={isUpdating}
       />
@@ -773,6 +1021,51 @@ const Storescreen = ({ navigation }: any) => {
           </View>
         </Modal>
       </View>
+      <CustomModal
+        visible={showLimitModal}
+        title="Limit Reached"
+        onClose={() => setShowLimitModal(false)}
+      >
+        <Text
+          style={{
+            color: "#000",
+            fontSize: 15,
+            textAlign: "center",
+            marginBottom: 16,
+          }}
+        >
+          {limitMessage}
+        </Text>
+        <View style={{ flexDirection: "row", justifyContent: "center" }}>
+          <TouchableOpacity
+            onPress={() => setShowLimitModal(false)}
+            style={{
+              backgroundColor: "#FCA311",
+              paddingVertical: 10,
+              paddingHorizontal: 24,
+              borderRadius: 8,
+            }}
+          >
+            <Text style={{ color: "#fff", fontWeight: "700" }}>OK</Text>
+          </TouchableOpacity>
+        </View>
+      </CustomModal>
+
+      <LocationSelectionModal
+        visible={locationModalVisible}
+        onClose={() => setLocationModalVisible(false)}
+        onLocationSelect={handleLocationSelect}
+        initialLocation={
+          (storeData as any)?.latitude && (storeData as any)?.longitude
+            ? {
+                latitude: parseFloat((storeData as any).latitude.toString()),
+                longitude: parseFloat((storeData as any).longitude.toString()),
+                address: (storeData as any).address || "",
+                pincode: (storeData as any).pincode || "",
+              }
+            : null
+        }
+      />
     </SafeAreaView>
   );
 };
@@ -872,13 +1165,14 @@ const styles = ScaledSheet.create({
     elevation: 5,
     borderRadius: 15,
     padding: 15,
+    borderWidth: 1,
+    borderColor: "#CDECFF",
   },
   detailsCard: {
     width: "95%",
-
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 30,
+    paddingTop: "25@s",
   },
   logoContainer: {
     width: 200,
@@ -888,8 +1182,17 @@ const styles = ScaledSheet.create({
     justifyContent: "flex-start",
 
     position: "absolute",
-    top: -50,
+    top: "-50@s",
     left: 15,
+  },
+  editLogoButton: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: "#fff",
+    borderRadius: 50,
+    padding: "2@s",
+    elevation: 5,
   },
   openLabel: {
     position: "absolute",
@@ -944,11 +1247,11 @@ const styles = ScaledSheet.create({
   },
 
   ratingContainer: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
+    // flexDirection: "row",
+    // justifyContent: "flex-end",
     marginVertical: 5,
-    alignContent: "center",
-    alignItems: "center",
+    // alignContent: "center",
+    // alignItems: "center",
     gap: 5,
     top: -60,
   },
@@ -956,8 +1259,6 @@ const styles = ScaledSheet.create({
     flexDirection: "row",
     alignItems: "flex-end",
     justifyContent: "flex-end",
-    top: -60,
-    left: 15,
   },
   Containertitle: {
     marginTop: -50,
@@ -1077,6 +1378,24 @@ const styles = ScaledSheet.create({
     alignSelf: "center",
     borderRadius: 10,
   },
+  editBannerButton: {
+    position: "absolute",
+    top: "5@s",
+    right: "15@s",
+    backgroundColor: "#fff",
+    borderRadius: 50,
+    padding: "2@s",
+    elevation: 5,
+  },
+  deleteBannerButton: {
+    position: "absolute",
+    bottom: "5@s",
+    right: "15@s",
+    backgroundColor: "#fff",
+    borderRadius: 50,
+    padding: "2@s",
+    elevation: 5,
+  },
   spotlightSection: {
     marginVertical: 10,
     paddingHorizontal: 10,
@@ -1157,14 +1476,15 @@ const styles = ScaledSheet.create({
   },
 
   highlightCard: {
-    width: width - 20,
+    // width: width - 20,
     backgroundColor: "#fff",
-    borderRadius: 10,
+    borderRadius: "10@s",
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 3,
-    padding: 10,
+    padding: "8@s",
+    marginBottom: "10@s",
   },
   highlightImage: {
     width: "100%",
@@ -1191,8 +1511,6 @@ const styles = ScaledSheet.create({
     fontSize: 11,
     color: "#000",
     fontWeight: "normal",
-    maxWidth: "65%",
-    textAlign: "left",
     padding: 5,
   },
   postcontainer: {
@@ -1286,14 +1604,13 @@ const styles = ScaledSheet.create({
     fontSize: 16,
     color: "#333",
     textAlign: "center",
-    marginTop: 5,
-    marginBottom: 20,
   },
   fottercontainer: {
     marginTop: 30,
   },
 
   productcontainer: {
+    flexGrow: 1,
     marginBottom: 20,
   },
   categoryContainer: {
@@ -1303,7 +1620,7 @@ const styles = ScaledSheet.create({
   },
 
   productCard: {
-    width: screenWidth / 3 - 10,
+    width: "120@s",
     marginRight: 20,
     backgroundColor: "#fff",
     borderRadius: 10,
@@ -1316,8 +1633,8 @@ const styles = ScaledSheet.create({
     elevation: 3,
   },
   productImage: {
-    width: "100%",
-    height: 100,
+    width: "105@s",
+    height: 150,
     borderRadius: 8,
     resizeMode: "cover",
   },
@@ -1326,7 +1643,7 @@ const styles = ScaledSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
-    paddingVertical: 10,
+    paddingTop: 10,
   },
   productTextContainer: { flex: 1 },
   productName: {
@@ -1348,18 +1665,25 @@ const styles = ScaledSheet.create({
     textAlign: "right",
     color: "#FCA311",
   },
+  removeButton: {
+    backgroundColor: "#FF0000",
+    // padding: 5,
+    borderRadius: 5,
+    marginTop: "5@s",
+    color: "#fff",
+    borderWidth: 1,
+    borderColor: "#940000",
+    paddingVertical: "1@s",
+  },
   productRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     flexWrap: "wrap",
   },
   addbtn: {
-    borderWidth: 1,
     paddingHorizontal: 4,
-    borderRadius: 5,
     fontSize: 10,
-    marginTop: 5,
-    color: "#000",
+    color: "#fff",
   },
   drafttext: {
     fontSize: 18,

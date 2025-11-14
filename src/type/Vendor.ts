@@ -29,4 +29,10 @@ export interface VendorStore {
   posts: any[];
   reels: any[];
   banners: any[];
+  storetag: string | null;
+  is_store_open: boolean;
+  latitude: number;
+  longitude: number;
+  address: string;
+  pincode: string;
 }

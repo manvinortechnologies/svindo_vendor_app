@@ -15,6 +15,7 @@ import api from "../services/api/api";
 import CustomDropdown, {
   DropDownOption,
 } from "../CommonComponent/CustomDropdown";
+import Toast from "react-native-toast-message";
 
 interface BankTransferModalProps {
   visible: boolean;
@@ -55,7 +56,10 @@ const BankTransferModal: React.FC<BankTransferModalProps> = ({
       }
     } catch (error: any) {
       console.error("Error fetching bank list:", error);
-      Alert.alert("Error", "Failed to load bank list");
+      Toast.show({
+        text1: "Failed to load bank list",
+        type: "error",
+      });
     } finally {
       setIsLoadingBanks(false);
     }
@@ -63,12 +67,18 @@ const BankTransferModal: React.FC<BankTransferModalProps> = ({
 
   const handleConfirm = async () => {
     if (!selectedBank) {
-      Alert.alert("Error", "Please select a bank account");
+      Toast.show({
+        text1: "Please select a bank account",
+        type: "error",
+      });
       return;
     }
 
     if (!amount || parseFloat(amount) <= 0) {
-      Alert.alert("Error", "Please enter a valid amount");
+      Toast.show({
+        text1: "Please enter a valid amount",
+        type: "error",
+      });
       return;
     }
 
@@ -87,13 +97,17 @@ const BankTransferModal: React.FC<BankTransferModalProps> = ({
       onClose();
       onSuccess();
 
-      Alert.alert("Success", "Bank transfer initiated successfully");
+      Toast.show({
+        text1: "Bank transfer initiated successfully",
+        type: "success",
+      });
     } catch (error: any) {
       console.error("Error initiating bank transfer:", error);
-      Alert.alert(
-        "Error",
-        error.response?.data?.message || "Failed to initiate bank transfer"
-      );
+      Toast.show({
+        text1:
+          error.response?.data?.message || "Failed to initiate bank transfer",
+        type: "error",
+      });
     } finally {
       setIsLoading(false);
     }

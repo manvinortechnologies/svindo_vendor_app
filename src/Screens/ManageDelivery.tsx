@@ -15,6 +15,7 @@ import Bottomnavigation from "./Bottomnavigation";
 import Header from "./Header";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import MainContainer from "../CommonComponent/MainContainer";
+import { HomeNavigation } from "../constants/app-routes.constants";
 
 // ✅ Define the type for the navigation stack
 type RootStackParamList = {
@@ -24,6 +25,7 @@ type RootStackParamList = {
   OrderPackingTime: undefined;
   GeneralDeliveryTime: undefined;
   DeliverySettingsScreen: undefined;
+  DeliveryArea: undefined;
 };
 
 // ✅ Define the type for navigation prop
@@ -52,7 +54,9 @@ const ManageDelivery = () => {
               <TouchableOpacity
                 key={item.title}
                 style={styles.menuItem}
-                onPress={() => item.screen && navigation.navigate(item.screen)} // ✅ Corrected navigation
+                onPress={() => {
+                  navigation.navigate(item.screen as any);
+                }}
               >
                 <Text style={styles.menuText}>{item.title}</Text>
                 <Icon
@@ -78,15 +82,16 @@ type MenuItemType = {
 
 // ✅ Ensure screen names match the navigation stack
 const menuItems: MenuItemType[] = [
-  // {
-  //   title: "Auto Assign Instant delivery  partners",
-  //   screen: "AutoAssignDelivery",
-  // },
+  {
+    title: "Auto Assign Instant delivery  partners",
+    screen: "AutoAssignDelivery",
+  },
   { title: "Manage Own Delivery Boy", screen: "AssignOwnDeliveryBoy" },
   { title: "Add Own Delivery Boy", screen: "AddDeliveryBoy" },
   // { title: 'Average Order Packing Time', screen: 'OrderPackingTime' },
   // { title: 'Average General Delivery time', screen: 'GeneralDeliveryTime' },
   { title: "Delivery settings", screen: "DeliverySettingsScreen" },
+  { title: "Instant Delivery Area", screen: HomeNavigation.DELIVERY_AREA },
 ];
 
 const styles = StyleSheet.create({

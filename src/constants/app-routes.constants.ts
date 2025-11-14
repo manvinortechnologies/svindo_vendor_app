@@ -122,7 +122,11 @@ export enum HomeNavigation {
   SELECT_ADDONS = "SelectAddons",
   SCAN_BARCODE = "ScanBarcode",
   TRANSACTION_MESSAGES = "TransactionMessages",
+  AUTOMATED_CHAT_REPLY = "AutomatedChatReply",
   SUPPORT = "Support",
   CHAT_SCREEN = "ChatScreen",
   REQUESTOFFERS = "RequestOffers",
+  ALL_CHAT_USER_SCREEN = "AllChatUserScreen",
+  CHAT_SCREEN_STREAM = "ChatScreenStream",
+  DELIVERY_AREA = "DeliveryArea",
 }

@@ -82,7 +82,7 @@ export default function WholesaleScreen() {
     keyboardType?: KeyboardTypeOptions;
   }[] = [
     { icon: "truck", label: "Dispatch Address", state: "dispatchAddress" },
-    { icon: "pencil", label: "Select Signature", state: "signature" },
+    // { icon: "pencil", label: "Select Signature", state: "signature" },
     { icon: "briefcase", label: "Add References", state: "references" },
     { icon: "file-document-edit", label: "Add Notes", state: "notes" },
     { icon: "file-document-outline", label: "Add Terms", state: "terms" },

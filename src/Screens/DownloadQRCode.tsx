@@ -20,6 +20,7 @@ import { API_ROUTES } from "../constants/api-routes.constants";
 import RNFS from "react-native-fs";
 import { CameraRoll } from "@react-native-camera-roll/camera-roll";
 import { PERMISSIONS, request, RESULTS, check } from "react-native-permissions";
+import Toast from "react-native-toast-message";
 
 const DownloadQRCode = () => {
   const [storeId, setStoreId] = useState<string>("0"); // Default value
@@ -73,7 +74,7 @@ const DownloadQRCode = () => {
   };
 
   // const qrCodeValue = `svindo://store/${storeId}`;
-  const qrCodeValue = `https://svindo-customer.netlify.app/store/${storeId}`;
+  const qrCodeValue = `https://svindo.com/store/${storeId}`;
 
   // Request permissions for both Android and iOS
   const requestStoragePermission = async () => {
@@ -105,11 +106,12 @@ const DownloadQRCode = () => {
         currentStatus === RESULTS.BLOCKED ||
         currentStatus === RESULTS.UNAVAILABLE
       ) {
-        Alert.alert(
-          "Permission Required",
-          "Please enable storage/photo permissions in your device settings to save QR codes.",
-          [{ text: "OK" }]
-        );
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2:
+            "Please enable storage/photo permissions in your device settings to save QR codes.",
+        });
         return false;
       }
 
@@ -130,10 +132,12 @@ const DownloadQRCode = () => {
       // Check permissions
       const hasPermission = await requestStoragePermission();
       if (!hasPermission) {
-        Alert.alert(
-          "Permission Denied",
-          "Storage permission is required to save QR code"
-        );
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Storage permission is required to save QR code",
+        });
+
         return;
       }
 
@@ -145,7 +149,11 @@ const DownloadQRCode = () => {
       }
     } catch (error) {
       console.error("Download error:", error);
-      Alert.alert("Error", "Failed to download QR code");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to download QR code",
+      });
     } finally {
       setIsDownloading(false);
     }
@@ -181,14 +189,18 @@ const DownloadQRCode = () => {
         }
       }
 
-      Alert.alert(
-        "Success",
-        `QR code saved successfully!\nFilename: ${filename}`,
-        [{ text: "OK" }]
-      );
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: `QR code saved successfully!\nFilename: ${filename}`,
+      });
     } catch (error) {
       console.error("Save error:", error);
-      Alert.alert("Error", "Failed to save QR code to device");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to save QR code to device",
+      });
     }
   };
 

@@ -13,16 +13,13 @@ import React, { useState } from "react";
 import Headerwithback from "./Headerwithback";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-  launchImageLibrary,
-  ImagePickerResponse,
-  MediaType,
-} from "react-native-image-picker";
+import ImageCropPicker from "react-native-image-crop-picker";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { RouteProp } from "@react-navigation/native";
+import Toast from "react-native-toast-message";
 
 const { width } = Dimensions.get("window");
 
@@ -59,27 +56,67 @@ const CreateOffer = () => {
   };
 
   // Handle image picker
-  const handleImagePicker = () => {
-    const options = {
-      mediaType: "photo" as MediaType,
-      quality: 0.8 as any,
-      maxWidth: 1000,
-      maxHeight: 1000,
-    };
+  const handleImagePicker = async () => {
+    try {
+      // Clear image error when user starts uploading
+      if (errors.image) {
+        setErrors((prev) => ({ ...prev, image: "" }));
+      }
 
-    launchImageLibrary(options, (response: ImagePickerResponse) => {
-      if (response.didCancel || response.errorMessage) {
+      const result = await ImageCropPicker.openPicker({
+        mediaType: "photo",
+        compressImageQuality: 0.8,
+        cropping: true,
+        includeBase64: false,
+      });
+
+      console.log("ImageCropPicker response--->", result);
+
+      // Validate that we have a valid path
+      if (!result.path) {
+        setErrors((prev) => ({
+          ...prev,
+          image:
+            "The selected image could not be processed. Please try selecting a different file.",
+        }));
         return;
       }
 
-      if (response.assets && response.assets[0]) {
-        const asset = response.assets[0];
-        setSelectedImage(asset);
-        if (errors.image) {
-          setErrors((prev) => ({ ...prev, image: "" }));
-        }
+      // Validate file size (max 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+      if (result.size && result.size > maxSize) {
+        setErrors((prev) => ({
+          ...prev,
+          image:
+            "The selected file is too large. Please choose a file smaller than 10MB.",
+        }));
+        return;
       }
-    });
+
+      // Convert ImageCropPicker response to format expected by the rest of the app
+      const asset = {
+        uri: result.path,
+        type: result.mime || "image/jpeg",
+        fileName:
+          result.filename || result.path?.split("/").pop() || "offer_image.jpg",
+        fileSize: result.size,
+      };
+
+      setSelectedImage(asset);
+    } catch (error: any) {
+      console.log("ImageCropPicker error--->", error);
+
+      // Check if user cancelled
+      if (error.code === "E_PICKER_CANCELLED") {
+        return; // User cancelled, don't show error
+      }
+
+      setErrors((prev) => ({
+        ...prev,
+        image:
+          error.message || "Failed to access media library. Please try again.",
+      }));
+    }
   };
 
   // Validate form
@@ -147,31 +184,33 @@ const CreateOffer = () => {
         },
       });
 
-      Alert.alert("Success", "Offer created successfully!", [
-        {
-          text: "OK",
-          onPress: () => {
-            // Reset form
-            setFormData({
-              heading: "",
-              connected_product: "",
-              selling_price: "",
-              description: "",
-            });
-            setSelectedImage(null);
-            setErrors({
-              heading: "",
-              selling_price: "",
-              description: "",
-              image: "",
-            });
-            navigation.goBack();
-          },
-        },
-      ]);
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Offer created successfully!",
+      });
+      // Reset form
+      setFormData({
+        heading: "",
+        connected_product: "",
+        selling_price: "",
+        description: "",
+      });
+      setSelectedImage(null);
+      setErrors({
+        heading: "",
+        selling_price: "",
+        description: "",
+        image: "",
+      });
+      navigation.goBack();
     } catch (error) {
       console.error("Error creating offer:", error);
-      Alert.alert("Error", "Failed to create offer. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to create offer. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }

@@ -6,6 +6,7 @@ import {
   FlatList,
   ScrollView,
   Modal,
+  RefreshControl,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,6 +17,7 @@ import { formatOrderDate } from "../utils/dateandTime";
 import { ScaledSheet } from "react-native-size-matters";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import { s } from "react-native-size-matters";
+import CalendarModal from "../Modals/CalendarModal";
 
 const Orders = ({ navigation }: any) => {
   const [selectedStatus, setSelectedStatus] = useState("All");
@@ -25,15 +27,18 @@ const Orders = ({ navigation }: any) => {
   const [orders, setOrders] = useState([]);
   const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [calendarModel, setCalendarModel] = useState("");
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
   const statuses = [
     "All",
     "Pending",
     "Accepted",
-    "Shipped",
-    "Delivered",
-    "Returned",
-    "Exchage",
-    "Cancel",
+    // "Shipped",
+    "Completed",
+    "Return/Exchange",
+    // "Cancelled",
   ];
   const orderTypes = [
     { key: "on_shop_order", label: "On Shop" },
@@ -48,20 +53,19 @@ const Orders = ({ navigation }: any) => {
     "Oldest First",
   ];
 
+  const fetchOrders = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(API_ROUTES.orders);
+      setOrders(response.data);
+      setFilteredOrders(response.data); // Initially set filtered orders to all orders
+      setLoading(false);
+    } catch (error) {
+      console.error("Failed to fetch orders:", error);
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get(API_ROUTES.orders);
-        setOrders(response.data);
-        setFilteredOrders(response.data); // Initially set filtered orders to all orders
-        setLoading(false);
-      } catch (error) {
-        console.error("Failed to fetch orders:", error);
-        setLoading(false);
-      }
-    };
-
     fetchOrders();
   }, []);
 
@@ -70,13 +74,23 @@ const Orders = ({ navigation }: any) => {
 
     // Status filter
     if (selectedStatus !== "All") {
-      filtered = filtered.filter(
-        (order: any) =>
-          order.status.toLowerCase() ===
-          (selectedStatus === "Pending"
-            ? "not_accepted"
-            : selectedStatus.toLowerCase())
-      );
+      if (selectedStatus === "Return/Exchange") {
+        filtered = filtered.filter(
+          (order: any) =>
+            !!order.items.find(
+              (item: any) =>
+                item.status.toLowerCase() === "returned/replaced_requested"
+            )
+        );
+      } else {
+        filtered = filtered.filter(
+          (order: any) =>
+            order.status.toLowerCase() ===
+            (selectedStatus === "Pending"
+              ? "not_accepted"
+              : selectedStatus.toLowerCase())
+        );
+      }
     }
 
     // Type filter
@@ -109,8 +123,25 @@ const Orders = ({ navigation }: any) => {
       );
     }
 
+    // Date range filter:
+    if (startDate && endDate) {
+      const startDateObj = new Date(startDate);
+      const endDateObj = new Date(endDate);
+      endDateObj.setHours(23, 59, 59, 999);
+      filtered = filtered.filter((order: any) => {
+        const orderDate = new Date(order.created_at);
+        return orderDate >= startDateObj && orderDate <= endDateObj;
+      });
+    }
     setFilteredOrders(filtered);
-  }, [selectedStatus, selectedType, selectedFilter, orders]);
+  }, [
+    selectedStatus,
+    selectedType,
+    selectedFilter,
+    orders,
+    startDate,
+    endDate,
+  ]);
 
   const getDiliveryType = (type: string) => {
     if (type === "on_shop_order") {
@@ -127,21 +158,23 @@ const Orders = ({ navigation }: any) => {
   return (
     <SafeAreaView style={styles.container}>
       <Loading visible={loading} />
-      <ScrollView style={styles.midcontent}>
+      <View style={styles.midcontent}>
         <CustomHeader
           title="Orders"
           titleStyle={{ textAlign: "left" }}
           showBackButton={false}
           rightIcon={
-            <TouchableOpacity
-              style={styles.filterButton}
-              onPress={() => setFilterModalVisible(true)}
-            >
-              <Text style={styles.filterText}>
-                {selectedFilter === "None" ? "Filters" : selectedFilter}
-              </Text>
-              <Icon name="chevron-down-outline" size={16} color="#333" />
-            </TouchableOpacity>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <TouchableOpacity
+                style={styles.filterButton}
+                onPress={() => setFilterModalVisible(true)}
+              >
+                <Text style={styles.filterText}>
+                  {selectedFilter === "None" ? "Filters" : selectedFilter}
+                </Text>
+                <Icon name="chevron-down-outline" size={16} color="#333" />
+              </TouchableOpacity>
+            </View>
           }
         />
 
@@ -150,6 +183,40 @@ const Orders = ({ navigation }: any) => {
           <View style={styles.modalContainer}>
             <View style={styles.modalContent}>
               <Text style={styles.modalTitle}>Select a Filter</Text>
+              <View>
+                <Text style={{ color: "#666", marginBottom: 6 }}>
+                  Start Date
+                </Text>
+                <TouchableOpacity
+                  style={{
+                    borderWidth: 1,
+                    borderColor: "#E0E0E0",
+                    borderRadius: 8,
+                    padding: 10,
+                    marginBottom: 16,
+                  }}
+                  onPress={() => setCalendarModel("start")}
+                >
+                  <Text style={{ color: startDate ? "#000" : "#999" }}>
+                    {startDate || "YYYY-MM-DD"}
+                  </Text>
+                </TouchableOpacity>
+                <Text style={{ color: "#666", marginBottom: 6 }}>End Date</Text>
+                <TouchableOpacity
+                  style={{
+                    borderWidth: 1,
+                    borderColor: "#E0E0E0",
+                    borderRadius: 8,
+                    padding: 10,
+                    marginBottom: 20,
+                  }}
+                  onPress={() => setCalendarModel("end")}
+                >
+                  <Text style={{ color: endDate ? "#000" : "#999" }}>
+                    {endDate || "YYYY-MM-DD"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
               {filters.map((filter) => (
                 <TouchableOpacity
                   key={filter}
@@ -193,37 +260,53 @@ const Orders = ({ navigation }: any) => {
           </View>
         </Modal>
 
+        <CalendarModal
+          visible={!!calendarModel}
+          initialDate={calendarModel === "start" ? startDate : endDate}
+          onClose={() => setCalendarModel("")}
+          onSelect={(e) => {
+            if (calendarModel === "start") setStartDate(e);
+            else setEndDate(e);
+            setCalendarModel("");
+          }}
+          maxDate={new Date().toISOString().slice(0, 10)}
+        />
+
         {/* 🔄 Scrollable Status Buttons */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.statusScroll}
-        >
-          {statuses.map((status) => (
-            <TouchableOpacity
-              key={status}
-              style={[
-                styles.statusButton,
-                selectedStatus === status && styles.selectedStatus,
-              ]}
-              onPress={() => setSelectedStatus(status)}
-            >
-              <Text
+        <View>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.statusScroll}
+          >
+            {statuses.map((status) => (
+              <TouchableOpacity
+                key={status}
                 style={[
-                  styles.statusText,
-                  selectedStatus === status && styles.selectedStatusText,
+                  styles.statusButton,
+                  selectedStatus === status && styles.selectedStatus,
                 ]}
+                onPress={() => setSelectedStatus(status)}
               >
-                {status}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+                <Text
+                  style={[
+                    styles.statusText,
+                    selectedStatus === status && styles.selectedStatusText,
+                  ]}
+                >
+                  {status}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
 
         {/* 📦 Order List */}
         <FlatList
           data={filteredOrders}
-          contentContainerStyle={{ paddingBottom: s(80) }}
+          contentContainerStyle={{
+            paddingBottom: s(80),
+          }}
           keyExtractor={(item: any) => item.id.toString()}
           renderItem={({ item }: { item: any }) => (
             <TouchableOpacity
@@ -270,8 +353,19 @@ const Orders = ({ navigation }: any) => {
               </View>
             </TouchableOpacity>
           )}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No orders found</Text>
+              <Text style={styles.emptySubText}>
+                Pull down to refresh or add a new order
+              </Text>
+            </View>
+          }
+          refreshControl={
+            <RefreshControl refreshing={loading} onRefresh={fetchOrders} />
+          }
         />
-      </ScrollView>
+      </View>
 
       {/* 🔽 Order Types Bottom Menu */}
       <View style={styles.typeButtonContainer}>
@@ -471,7 +565,7 @@ const styles = ScaledSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    marginBottom: "15@s",
+    marginBottom: "8@s",
     marginHorizontal: "10@s",
     textAlign: "center",
     padding: "8@s",
@@ -555,4 +649,11 @@ const styles = ScaledSheet.create({
     alignItems: "center",
   },
   closeButtonText: { color: "#fff", fontWeight: "bold" },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  emptyText: { fontSize: 16, color: "#333" },
+  emptySubText: { fontSize: 12, color: "#666" },
 });

@@ -15,6 +15,7 @@ import MainContainer from "../CommonComponent/MainContainer";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
+import Toast from "react-native-toast-message";
 
 const DeliverySettingsScreen = () => {
   const [settings, setSettings] = useState({
@@ -71,14 +72,15 @@ const DeliverySettingsScreen = () => {
       };
       const res = await api.post("vendor/deliverysettings/", payload);
       console.log(res);
-      if (res.status == 201) {
-        Alert.alert("Success", "Delivery settings saved successfully.");
-      }
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Delivery settings saved successfully.",
+      });
     } catch (error) {
     } finally {
       setIsLoading(false);
     }
-    console.log("Settings saved:", settings);
   };
 
   return (

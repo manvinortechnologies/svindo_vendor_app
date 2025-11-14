@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -43,6 +43,7 @@ interface Product {
 
 interface FormErrors {
   products?: string;
+  quantity?: string;
   customer?: string;
   dueDate?: string;
   advanceAmount?: string;
@@ -83,13 +84,20 @@ const SalePOS = () => {
   const [wholesale, setWholesale] = useState<boolean>(false);
   const [discount, setDiscount] = useState({ pr: "", amount: "" });
   const [paymentMode, setPaymentMode] = useState("Cash");
-  const [advancePaymentMode, setAdvancePaymentMode] = useState(1);
+  const [advancePaymentMode, setAdvancePaymentMode] = useState<number | null>(
+    null
+  );
   const [advanceAmount, setAdvanceAmount] = useState("");
   const [callenderModel, setCallenderModel] = useState<boolean>(false);
   const [dueDate, setDueDate] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
 
-  const paymentMethods = ["UPI", "Card", "Cash", "In Credit"];
+  const paymentMethods = [
+    { key: "upi", value: "UPI" },
+    { key: "card", value: "Cheque" },
+    { key: "cash", value: "Cash" },
+    { key: "credit", value: "In Credit" },
+  ];
 
   useEffect(() => {
     fetchAllData();
@@ -106,6 +114,31 @@ const SalePOS = () => {
     handleAmountChange(discount?.amount);
     handlePercentChange(discount?.pr);
   }, [wholesale, products]);
+
+  // Total amount for current product list (before discount)
+  const totalAmount = useMemo(() => {
+    if (!products?.length) return 0;
+    return products.reduce((sum, item) => {
+      const price = wholesale ? item.wholesale_price || item.price : item.price;
+      return sum + price * (item.quantity || 0);
+    }, 0);
+  }, [products, wholesale]);
+
+  // After-discount total and due values
+  const discountedTotal = useMemo(() => {
+    const disc = Number(discount.amount) || 0;
+    const val = totalAmount - disc;
+    return val > 0 ? val : 0;
+  }, [totalAmount, discount.amount]);
+
+  const advanceNumeric = useMemo(
+    () => Number(advanceAmount) || 0,
+    [advanceAmount]
+  );
+  const dueAmount = useMemo(() => {
+    const due = discountedTotal - advanceNumeric;
+    return due > 0 ? due : 0;
+  }, [discountedTotal, advanceNumeric]);
 
   const getSaleData = async () => {
     const res = await api.get(
@@ -166,12 +199,10 @@ const SalePOS = () => {
       setAdvanceAmount(saleData.advance_amount || "");
       setWholesale(saleData.is_wholesale_rate || false);
       setPaymentMode(
-        saleData.payment_method !== "cash"
-          ? "In Credit"
-          : paymentMethods.find(
-              (method) =>
-                method.toLowerCase() === saleData.payment_method.toLowerCase()
-            ) || "Cash"
+        paymentMethods.find(
+          (method) =>
+            method.key.toLowerCase() === saleData.payment_method.toLowerCase()
+        )?.key || "cash"
       );
       handlePercentChange(saleData.discount_percentage || "");
       setDueDate(saleData.credit_date || "");
@@ -278,6 +309,10 @@ const SalePOS = () => {
       tempErrors.products = "Please add at least one product before proceeding";
     }
 
+    if (products.some((p) => p.quantity === 0)) {
+      tempErrors.quantity = "Please remove all items with quantity 0";
+    }
+
     // ✅ check customer selection
     if (!selectedCustomer) {
       tempErrors.customer = "Please select a customer before proceeding";
@@ -287,24 +322,20 @@ const SalePOS = () => {
     // if (!discount.pr || Number(discount.pr) < 0) {
     //   tempErrors.pr = "Discount percentage must be a valid positive number";
     // }
-    if (paymentMode === "In Credit") {
+    if (paymentMode === "credit") {
       if (!dueDate) {
         tempErrors.dueDate = "Due date is required";
-      }
-      if (!advanceAmount) {
-        tempErrors.advanceAmount =
-          "Advance amount must be a valid positive number";
       }
       if (advancePaymentMode === 1 && !selectedBank) {
         tempErrors.advanceBank = "Please select bank";
       }
+    } else if (paymentMode !== "cash" && !advancePaymentMode && !selectedBank) {
+      tempErrors.advanceBank = "Please select bank";
     }
-
     setErrors(tempErrors);
-
+    console.log(tempErrors, "tempErrors");
     return Object.keys(tempErrors).length > 0; // Everything OK
   };
-
   const handleSubmit = async () => {
     if (validateForm()) return;
     try {
@@ -318,16 +349,13 @@ const SalePOS = () => {
       const totalDiscountedAmount = totalAmount - Number(discount.amount);
 
       const data = {
-        payment_method:
-          paymentMode === "In Credit"
-            ? "credit"
-            : paymentMode.toLocaleLowerCase(),
+        payment_method: paymentMode.toLocaleLowerCase(),
         company_profile: companySelected?.id,
         // //   "party": 2,
         customer: selectedCustomer?.id,
         discount_percentage: Number(discount?.pr),
         credit_date:
-          paymentMode === "In Credit" ? new Date(dueDate).toISOString() : "",
+          paymentMode === "credit" ? new Date(dueDate).toISOString() : "",
         is_wholesale_rate: wholesale,
         items: products.map((p) => ({
           product: p.id,
@@ -341,16 +369,15 @@ const SalePOS = () => {
         discount_amount: discount.amount,
         total_amount: totalDiscountedAmount,
         balance_amount:
-          paymentMode === "In Credit"
+          paymentMode === "credit"
             ? totalDiscountedAmount - Number(advanceAmount)
             : 0,
         wholesale_invoice_details: null,
         advance_bank: selectedBank?.id || "",
         advance_amount: advanceAmount || 0,
       };
-      if (paymentMode !== "In Credit") {
+      if (paymentMode !== "credit") {
         delete data.credit_date;
-        data.advance_bank = "";
         data.advance_amount = 0;
       }
       console.log(data, "data");
@@ -366,6 +393,16 @@ const SalePOS = () => {
           data
         );
         console.log(res);
+        navigation.reset({
+          index: 0,
+          routes: [
+            {
+              name: HomeNavigation.BOTTOM_NAVIGATION,
+              state: { index: 0, routes: [{ name: HomeNavigation.ERP }] },
+            },
+            { name: HomeNavigation.BILLDETAILS, params: { id: res.data?.id } },
+          ],
+        });
         navigation.navigate(HomeNavigation.BILLDETAILS, {
           id: res.data?.id,
         });
@@ -420,9 +457,12 @@ const SalePOS = () => {
           ))}
         </View> */}
         <View style={styles.optionContainer}>
-          <Text style={styles.optionLabel}>
-            Customer - {selectedCustomer?.name || "Not Selected"}
-          </Text>
+          <View>
+            <Text style={styles.optionLabel}>Customer :</Text>
+            <Text style={styles.optionLabel}>
+              {selectedCustomer?.name || "Not Selected"}
+            </Text>
+          </View>
           <TouchableOpacity
             onPress={() => setShowCustomerModal(true)}
             style={styles.changeButton}
@@ -493,10 +533,12 @@ const SalePOS = () => {
         )}
 
         {/* Table Header */}
-
+        {errors?.quantity && (
+          <Text style={{ color: "red" }}>{errors?.quantity}</Text>
+        )}
         {/* Product List */}
         {products.map((item, index) => (
-          <>
+          <View key={`${index}-${item.id}`}>
             {index === 0 && (
               <View style={[styles.tableRow, styles.tableHeader]}>
                 <Text
@@ -542,7 +584,7 @@ const SalePOS = () => {
                 {/* <Text style={[styles.tableText, {color: '#fff', fontWeight: '500'}]}>Action</Text> */}
               </View>
             )}
-            <View key={index} style={styles.tableRow}>
+            <View style={styles.tableRow}>
               <Text style={styles.tableText}>{index + 1}</Text>
               <Text style={[styles.tableText, { flex: 2 }]} numberOfLines={2}>
                 {item.name}
@@ -554,30 +596,39 @@ const SalePOS = () => {
                   const newQuantity = parseInt(text) || 0;
                   if (newQuantity >= 0) {
                     const updatedProducts = [...products];
-                    if (newQuantity === 0) {
-                      // Remove item if quantity is 0
-                      updatedProducts.splice(index, 1);
-                    } else {
-                      // Update quantity
-                      updatedProducts[index] = {
-                        ...item,
-                        quantity: newQuantity,
-                      };
-                    }
+
+                    // Update quantity
+                    updatedProducts[index] = {
+                      ...item,
+                      quantity: newQuantity,
+                    };
+
                     setProducts(updatedProducts);
                   }
                 }}
                 keyboardType="numeric"
                 selectTextOnFocus
+                // onSubmitEditing={() => {
+                //   const updatedProducts = [...products];
+                //   if (item.quantity === 0) {
+                //     // Remove item if quantity is 0
+                //     updatedProducts.splice(index, 1);
+                //     setProducts(updatedProducts);
+                //   }
+                // }}
               />
               <Text style={styles.tableText}>
-                {/* {Number(wholesale ? item?.wholesale_price : item?.price).toFixed(0)} */}
-                {formatNumber(wholesale ? item?.wholesale_price : item?.price)}
+                {formatNumber(
+                  (wholesale
+                    ? item?.wholesale_price ?? item?.price
+                    : item?.price) ?? 0
+                )}
               </Text>
               <Text style={styles.tableText}>
                 {formatNumber(
-                  (wholesale ? item?.wholesale_price : item?.price) *
-                    item?.quantity
+                  ((wholesale
+                    ? item?.wholesale_price ?? item?.price
+                    : item?.price) ?? 0) * (item?.quantity || 0)
                 )}
               </Text>
               <TouchableOpacity
@@ -590,8 +641,30 @@ const SalePOS = () => {
                 <Icon name="delete" size={16} color="red" />
               </TouchableOpacity>
             </View>
-          </>
+          </View>
         ))}
+
+        {/* Advance and Due (only when advance entered) */}
+        {advanceNumeric > 0 && (
+          <View style={styles.advanceDueBar}>
+            <View style={styles.advanceDueRow}>
+              <Text style={styles.totalLabel}>Advance</Text>
+              <Text style={styles.totalValue}>
+                {formatNumber(advanceNumeric)}
+              </Text>
+            </View>
+            <View style={styles.advanceDueRow}>
+              <Text style={styles.totalLabel}>Due</Text>
+              <Text style={styles.totalValue}>{formatNumber(dueAmount)}</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Total Amount (below product list) */}
+        <View style={styles.totalBar}>
+          <Text style={styles.totalLabel}>Total</Text>
+          <Text style={styles.totalValue}>{formatNumber(totalAmount)}</Text>
+        </View>
 
         {/* Discount */}
         <View style={styles.bottomBox}>
@@ -625,21 +698,28 @@ const SalePOS = () => {
             <View style={styles.paymentOptions}>
               {paymentMethods.map((method) => (
                 <TouchableOpacity
-                  key={method}
-                  onPress={() => setPaymentMode(method)}
+                  key={method.key}
+                  onPress={() => {
+                    setPaymentMode(method.key);
+                    method.key === "credit"
+                      ? setAdvancePaymentMode(1)
+                      : setAdvancePaymentMode(null);
+                  }}
                   style={[
                     styles.paymentButton,
-                    paymentMode === method && { backgroundColor: "#FCA311" },
+                    paymentMode === method.key && {
+                      backgroundColor: "#FCA311",
+                    },
                   ]}
                 >
-                  <Text style={styles.paymentButtonText}>{method}</Text>
+                  <Text style={styles.paymentButtonText}>{method.value}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           </View>
 
           {/* Advance */}
-          {paymentMode === "In Credit" && (
+          {paymentMode === "credit" && (
             <>
               <View style={{ flexDirection: "row", gap: 20 }}>
                 <Text style={styles.label}>Advance</Text>
@@ -678,7 +758,6 @@ const SalePOS = () => {
               {errors?.advanceAmount && (
                 <Text style={{ color: "red" }}>{errors?.advanceAmount}</Text>
               )}
-
               {advancePaymentMode === 1 && (
                 <>
                   <CustomDropdown
@@ -710,6 +789,20 @@ const SalePOS = () => {
               )}
             </>
           )}
+          {paymentMode !== "cash" && paymentMode !== "credit" && (
+            <>
+              <CustomDropdown
+                onSelect={setSelectedBank}
+                placeholder="Select Bank"
+                selectedValue={selectedBank || null}
+                options={bankList}
+                dropDownBoxStyle={{ marginTop: 10 }}
+              />
+              {errors?.advanceBank && (
+                <Text style={{ color: "red" }}>{errors?.advanceBank}</Text>
+              )}
+            </>
+          )}
         </View>
       </ScrollView>
 
@@ -720,7 +813,7 @@ const SalePOS = () => {
         </TouchableOpacity>
         <TouchableOpacity style={styles.proceedButton} onPress={handleSubmit}>
           <Text style={{ color: "#000", fontWeight: "bold" }}>
-            {route.params?.editMode ? "Update Sale" : "Proceed"}
+            {route.params?.editMode ? "Update Sale" : "Generate Invoice"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -897,10 +990,51 @@ const styles = ScaledSheet.create({
     fontWeight: "500",
     color: "#000",
   },
+  totalBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    // backgroundColor: "#FFF7EB",
+    // borderWidth: 1,
+    // borderColor: "#FCA311",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    // paddingVertical: 10,
+    marginHorizontal: 10,
+    marginTop: "6@s",
+  },
+  totalLabel: {
+    color: "#000",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  totalValue: {
+    color: "#000",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  advanceDueBar: {
+    // backgroundColor: "#FFF7EB",
+    // borderWidth: 1,
+    // borderColor: "#FCA311",
+    // borderRadius: "8@s",
+    paddingHorizontal: "12@s",
+    paddingTop: "6@s",
+    marginHorizontal: "10@s",
+    marginTop: "8@s",
+    borderBottomWidth: 1,
+    borderBottomColor: "#FCA311",
+  },
+  advanceDueRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginVertical: 2,
+  },
   bottomButtonRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingHorizontal: 20,
+    // paddingHorizontal: 20,
     paddingVertical: 12,
     marginHorizontal: 30,
   },

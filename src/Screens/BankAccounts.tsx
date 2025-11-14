@@ -121,7 +121,7 @@ const BankAccounts = ({ navigation }: any) => {
                   source={require("../assets/bank.png")}
                   style={styles.icon}
                 />
-                <View>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.title}>
                     Add your bank & UPI to Invoices
                   </Text>
@@ -232,7 +232,7 @@ const styles = ScaledSheet.create({
     fontSize: "10@s",
     color: "#333",
     marginTop: 2,
-    width: "80%",
+    // width: "80%",
   },
   sectionTitle: {
     fontSize: "14@s",

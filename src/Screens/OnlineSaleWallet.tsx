@@ -20,7 +20,7 @@ const transactions = [
     amount: "Rs. 500",
     date: "4/7/2025",
     time: "11:00 AM",
-    type: "Withdrawn",
+    type: "Settled",
     direction: "down",
   },
   {
@@ -37,7 +37,7 @@ const transactions = [
 const OnlineSaleWallet = () => {
   return (
     <View style={styles.container}>
-      <Headerwithback title="Sale wallet" />
+      <Headerwithback title="Sale Ledger" />
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <View style={styles.balanceBox}>
           <View>
@@ -66,14 +66,14 @@ const OnlineSaleWallet = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Sales and Withdrawn Boxes */}
+          {/* Sales and Settled Boxes */}
           <View style={styles.summaryContainer}>
             <View style={[styles.summaryBox, { backgroundColor: "#E3DFFC" }]}>
               <Text style={styles.summaryLabel}>Sales</Text>
               <Text style={styles.summaryAmount}>Rs.2000.00</Text>
             </View>
             <View style={[styles.summaryBox, { backgroundColor: "#CFF6CE" }]}>
-              <Text style={styles.summaryLabel}>Withdrawn</Text>
+              <Text style={styles.summaryLabel}>Settled</Text>
               <Text style={styles.summaryAmount}>Rs.1000.00</Text>
             </View>
           </View>
@@ -90,7 +90,7 @@ const OnlineSaleWallet = () => {
                     style={[
                       styles.transactionAmount,
                       {
-                        color: item.type === "Withdrawn" ? "green" : "#5E35B1",
+                        color: item.type === "Settled" ? "green" : "#5E35B1",
                       },
                     ]}
                   >
@@ -119,9 +119,9 @@ const OnlineSaleWallet = () => {
         </View>
 
         {/* Request Withdrawal Button */}
-        <TouchableOpacity style={styles.withdrawButton}>
+        {/* <TouchableOpacity style={styles.withdrawButton}>
           <Text style={styles.withdrawButtonText}>Request Withdrawal</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </ScrollView>
     </View>
   );

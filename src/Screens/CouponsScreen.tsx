@@ -18,6 +18,9 @@ import api from "../services/api/api"; // Your API service
 import { Coupon } from "../type/Coupan";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
+import { ScaledSheet } from "react-native-size-matters";
+import { HomeNavigation } from "../constants/app-routes.constants";
+import Icon from "react-native-vector-icons/Ionicons";
 
 const { width } = Dimensions.get("window");
 
@@ -58,6 +61,15 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
       console.log("Error fetching coupons:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const deleteCoupon = async (id: string) => {
+    try {
+      const response = await api.delete(`vendor/coupon/${id}/`);
+      getAllCoupons();
+    } catch (error) {
+      console.log("Error deleting coupon:", error);
     }
   };
 
@@ -121,8 +133,11 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
             </Text>
 
             {/* Action Button */}
-            <TouchableOpacity style={styles.actionButton}>
-              <View style={styles.actionIcon} />
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={() => deleteCoupon(item.id.toString())}
+            >
+              <Icon name="trash" size={16} color="#fff" />
             </TouchableOpacity>
           </View>
         </View>
@@ -135,7 +150,7 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
       <Headerwithback title="Coupons / Discounts" />
       <ScrollView contentContainerStyle={styles.container}>
         {/* Delivery Discount Section */}
-        {/* <View style={styles.discountBox}>
+        <View style={styles.discountBox}>
           <View style={styles.discountHeader}>
             <Text style={styles.discountTitle}>Delivery Discounts</Text>
             <CustomSwitch
@@ -173,7 +188,7 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
               />
             </View>
           </View>
-        </View> */}
+        </View>
 
         {/* Coupons */}
         <Text style={styles.sectionTitle}>Active Coupons</Text>
@@ -192,7 +207,7 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
       {/* Floating Button */}
       <TouchableOpacity
         style={styles.addBtn}
-        onPress={() => navigation.navigate("CreateCoupon")}
+        onPress={() => navigation.navigate(HomeNavigation.CREATECOUPON)}
       >
         <Text style={styles.addBtnText}>Add Coupon</Text>
       </TouchableOpacity>
@@ -202,7 +217,7 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
 
 export default CouponsScreen;
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     padding: 10,
     backgroundColor: "#fff",
@@ -250,9 +265,9 @@ const styles = StyleSheet.create({
   },
   couponCard: {
     backgroundColor: "#C2FFCB", // Light green background
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
+    padding: "12@s",
+    borderRadius: "12@s",
+    marginBottom: "16@s",
     elevation: 3,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -261,7 +276,7 @@ const styles = StyleSheet.create({
   },
   couponRow: {
     flexDirection: "row",
-    height: 120,
+    // height: 120,
   },
   brandSection: {
     width: "40%",
@@ -295,7 +310,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: "#000",
-    fontSize: 12,
+    fontSize: "10@s",
     fontWeight: "600",
   },
   brandLogo: {
@@ -334,7 +349,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   detailText: {
-    fontSize: 12,
+    fontSize: "10@s",
     color: "#000",
     marginBottom: 4,
   },
@@ -346,7 +361,7 @@ const styles = StyleSheet.create({
     marginVertical: 4,
   },
   discountText: {
-    fontSize: 12,
+    fontSize: "10@s",
     color: "#000",
     fontWeight: "600",
   },

@@ -7,13 +7,12 @@ import {
   Image,
   StyleSheet,
   Modal,
-  Alert,
   Platform,
   PermissionsAndroid,
   ScrollView,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
-import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import auth from "@react-native-firebase/auth";
 import { SignUpScreenProps, THomeNavigation } from "../type";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -21,22 +20,20 @@ import { HomeNavigation } from "../constants/app-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import Icon from "react-native-vector-icons/Ionicons";
 import { ScaledSheet } from "react-native-size-matters";
-import CustomTextInput from "../CommonComponent/CustomeTextInput";
+import { MaskedTextInput } from "react-native-mask-text";
 
 const SignupScreen: FC<SignUpScreenProps> = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<THomeNavigation>>();
 
-  const route =
-    useRoute<RouteProp<THomeNavigation, HomeNavigation.SIGNUP_SCREEN>>();
-  const { authType } = route?.params;
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [confirm, setConfirm] = useState<any>(null);
   const [error, setError] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
   const handleContinue = async () => {
-    if (phoneNumber.length !== 10) {
+    console.log("phoneNumber-->", phoneNumber.replaceAll("-", ""));
+    if (phoneNumber.replaceAll("-", "").length !== 10) {
       setError("Please enter a valid 10-digit phone number.");
       return;
     }
@@ -44,14 +41,14 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
     setLoading(true);
     setError("");
     try {
-      const fullPhoneNumber = `+91${phoneNumber}`;
+      const fullPhoneNumber = `+91${phoneNumber.replaceAll("-", "")}`;
       const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
 
       setConfirm(confirmation);
       navigation.navigate(HomeNavigation.OTP_SCREEN, {
         confirmAuth: confirmation,
         phoneNumber: fullPhoneNumber,
-        authType,
+        authType: "signup",
       });
       // Alert.alert('Verification code sent to your phone.');
     } catch (error: any) {
@@ -115,16 +112,18 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
       {/* Content Wrapper - Input & Button Centered */}
       <View style={styles.contentWrapper}>
         {/* Phone Number Input */}
+        <Text style={styles.headerText}>Login / Signup</Text>
         <View style={styles.inputContainer}>
           {/* <Text style={styles.countryCode}>+91</Text> */}
-          <CustomTextInput
-            placeholder="Enter Phone Number"
+          <Text style={styles.countryCode}>+91</Text>
+          <MaskedTextInput
+            mask="999-999-9999"
+            placeholder="999-999-9999"
+            placeholderTextColor="#ccc"
             keyboardType="phone-pad"
+            onChangeText={setPhoneNumber}
             value={phoneNumber}
-            onChangeText={(text) => setPhoneNumber(text)}
-            maxLength={10}
-            showLeftIcon={true}
-            leftIcon={<Text style={styles.countryCode}>+91</Text>}
+            style={styles.input}
           />
           {/* <TextInput
             placeholder="Enter Phone Number"
@@ -217,6 +216,12 @@ const styles = ScaledSheet.create({
     fontSize: "22@s",
     color: "#fff",
   },
+  headerText: {
+    fontSize: "20@s",
+    fontWeight: "bold",
+    color: "#000",
+    marginBottom: "20@s",
+  },
   inputContainer: {
     flexDirection: "row",
     // backgroundColor: "#FFF7DD",
@@ -231,14 +236,14 @@ const styles = ScaledSheet.create({
     borderColor: "#FCA511",
   },
   countryCode: {
-    fontSize: "12@s",
+    fontSize: "18@s",
     fontWeight: "bold",
     color: "#555",
-    marginLeft: "10@s",
+    marginHorizontal: "10@s",
   },
   input: {
     flex: 1,
-    fontSize: "12@s",
+    fontSize: "18@s",
     color: "#000",
   },
   continueButtonWrapper: {

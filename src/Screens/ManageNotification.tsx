@@ -18,6 +18,8 @@ import { API_ROUTES } from "../constants/api-routes.constants";
 import { useNotificationContext } from "../contexts/NotificationContext";
 import { useNotifications } from "../hooks/useNotifications";
 import { NotificationType } from "../services/notification-service";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import Toast from "react-native-toast-message";
 
 const { width } = Dimensions.get("window");
 
@@ -135,6 +137,28 @@ const ManageNotification = ({ navigation }: any) => {
     setRefreshing(false);
   };
 
+  const handleDeleteCampaign = (id: string) => {
+    Alert.alert("Delete", "Are you sure you want to delete this campaign?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await api.delete(`${API_ROUTES.notificationCampaign}${id}/`);
+            setNotifications((prev) => prev.filter((n) => n.id !== id));
+          } catch (e) {
+            Toast.show({
+              type: "error",
+              text1: "Error",
+              text2: "Failed to delete campaign",
+            });
+          }
+        },
+      },
+    ]);
+  };
+
   const getStatusFromApi = (
     apiStatus: string
   ): "Active" | "Ended" | "Pending" | "Rejected" => {
@@ -219,6 +243,12 @@ const ManageNotification = ({ navigation }: any) => {
         <View style={[styles.statusTag, { backgroundColor: item.statusColor }]}>
           <Text style={styles.statusText}>{item.status}</Text>
         </View>
+        <TouchableOpacity
+          style={styles.deleteBtn}
+          onPress={() => handleDeleteCampaign(item.id)}
+        >
+          <Icon name="delete-outline" size={20} color="#FF0000" />
+        </TouchableOpacity>
       </View>
 
       {/* Details */}
@@ -233,9 +263,9 @@ const ManageNotification = ({ navigation }: any) => {
           {item.clicks !== null && (
             <Text style={styles.detailText}>clicks - {item.clicks}</Text>
           )}
-          {item.budget && (
+          {/* {item.budget && (
             <Text style={styles.detailText}>Budget - {item.budget}</Text>
-          )}
+          )} */}
           {item.reason && (
             <Text style={styles.reasonText}>
               Reason: {item.reason}
@@ -507,5 +537,14 @@ const styles = StyleSheet.create({
     color: "#999",
     textAlign: "center",
     lineHeight: 20,
+  },
+  deleteBtn: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 4,
+    elevation: 5,
   },
 });

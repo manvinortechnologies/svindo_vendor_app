@@ -83,12 +83,12 @@ class NotificationService {
           // Android specific handling
           if (notification.foreground) {
             // Show local notification for foreground messages
-            PushNotification.localNotification({
-              title: notification.title,
-              message: notification.message,
-              playSound: true,
-              soundName: "default",
-            });
+            // PushNotification.localNotification({
+            //   title: notification.title,
+            //   message: notification.message,
+            //   playSound: true,
+            //   soundName: "default",
+            // });
           }
         }
       },
@@ -212,15 +212,15 @@ class NotificationService {
 
     if (Platform.OS === "android") {
       // Show local notification for Android
-      PushNotification.localNotification({
-        title: notification?.title || "New Notification",
-        message: notification?.body || "You have a new message",
-        channelId: "default-channel-id",
-        playSound: true,
-        soundName: "default",
-        actions: ["View", "Dismiss"],
-        userInfo: data,
-      });
+      // PushNotification.localNotification({
+      //   title: notification?.title || "New Notification",
+      //   message: notification?.body || "You have a new message",
+      //   channelId: "default-channel-id",
+      //   playSound: true,
+      //   soundName: "default",
+      //   actions: ["View", "Dismiss"],
+      //   userInfo: data,
+      // });
     } else {
       // Show alert for iOS
       Alert.alert(

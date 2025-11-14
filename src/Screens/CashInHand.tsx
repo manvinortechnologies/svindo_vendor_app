@@ -6,8 +6,12 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  Modal,
+  TextInput,
+  Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Icon from "react-native-vector-icons/Ionicons";
 import Bottomnavigation from "./Bottomnavigation";
 import Headerwithback from "./Headerwithback";
 import api from "../services/api/api";
@@ -15,27 +19,42 @@ import Loading from "../CommonComponent/Loading";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import AdjustCashModal from "../Modals/AdjustCashModal";
 import BankTransferModal from "../Modals/BankTransferModal";
+import CalendarModal from "../Modals/CalendarModal";
+import moment from "moment";
 import { ScaledSheet } from "react-native-size-matters";
 
 interface CashTransaction {
   id: number;
   date: string;
+  dateFormatted: string;
   type: string;
   detail: string;
   amount: number;
   balance: number;
   isCredit: boolean;
+  balance_after: number;
 }
 
 const CashInHand = ({ navigation }: any) => {
-  const [cash, setCash] = useState<string>("00.00");
   const [cashBalance, setCashBalance] = useState<string>("00.00");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showAdjustModal, setShowAdjustModal] = useState<boolean>(false);
   const [showBankTransferModal, setShowBankTransferModal] =
     useState<boolean>(false);
   const [transactions, setTransactions] = useState<CashTransaction[]>([]);
+  const [groupedTransactions, setGroupedTransactions] = useState<{
+    [key: string]: CashTransaction[];
+  }>({});
   const [error, setError] = useState<string | null>(null);
+
+  // Filter states
+  const [showFilterModal, setShowFilterModal] = useState<boolean>(false);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [calendarModel, setCalendarModel] = useState<string>("");
+  const [isFiltered, setIsFiltered] = useState<boolean>(false);
+  const [allTransactions, setAllTransactions] = useState<CashTransaction[]>([]);
+
   useEffect(() => {
     getCashAndLedger();
   }, []);
@@ -48,17 +67,19 @@ const CashInHand = ({ navigation }: any) => {
       const res = await api.get(API_ROUTES.vendorCashLedger);
       const res1 = await api.get(API_ROUTES.vendorCash);
       if (res.data) {
-        setCash(res.data.balance || "00.00");
         setCashBalance(res1.data.balance || "00.00");
         // Transform ledger data if available
-        if (res.data.ledger && Array.isArray(res.data.ledger)) {
-          const transformedTransactions = transformCashLedgerData(
-            res.data.ledger
-          );
+        if (res.data && Array.isArray(res.data)) {
+          const transformedTransactions = transformCashLedgerData(res.data);
+          setAllTransactions(transformedTransactions);
           setTransactions(transformedTransactions);
+          const grouped = groupTransactionsByDate(transformedTransactions);
+          setGroupedTransactions(grouped);
         } else {
           // Set empty array if no ledger data
           setTransactions([]);
+          setAllTransactions([]);
+          setGroupedTransactions({});
         }
       }
     } catch (error: any) {
@@ -66,25 +87,117 @@ const CashInHand = ({ navigation }: any) => {
       setError("Failed to load cash ledger data");
       // Set fallback data on error
       setTransactions([]);
+      setAllTransactions([]);
+      setGroupedTransactions({});
     } finally {
       setIsLoading(false);
     }
   };
 
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) {
+      return "Today";
+    } else if (date.toDateString() === yesterday.toDateString()) {
+      return "Yesterday";
+    } else {
+      return date.toLocaleDateString("en-GB", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      });
+    }
+  };
+
+  const groupTransactionsByDate = (transactions: CashTransaction[]) => {
+    const grouped: { [key: string]: CashTransaction[] } = {};
+
+    transactions.forEach((transaction) => {
+      const date = transaction.date;
+      if (!grouped[date]) {
+        grouped[date] = [];
+      }
+      grouped[date].push(transaction);
+    });
+
+    // Sort dates in descending order (newest first)
+    const sortedDates = Object.keys(grouped).sort(
+      (a, b) => new Date(b).getTime() - new Date(a).getTime()
+    );
+
+    const sortedGrouped: { [key: string]: CashTransaction[] } = {};
+    sortedDates.forEach((date) => {
+      sortedGrouped[date] = grouped[date];
+    });
+
+    return sortedGrouped;
+  };
+
   const transformCashLedgerData = (ledgerData: any[]): CashTransaction[] => {
-    return ledgerData.map((txn: any, index: number) => ({
-      id: txn.id || index + 1,
-      date: new Date(txn.created_at || txn.date).toLocaleDateString("en-GB", {
+    return ledgerData.map((txn: any, index: number) => {
+      const transactionDate = new Date(txn.created_at || txn.date);
+      const dateKey = transactionDate.toISOString().split("T")[0]; // YYYY-MM-DD for grouping
+      const dateFormatted = transactionDate.toLocaleDateString("en-GB", {
         day: "2-digit",
         month: "2-digit",
         year: "numeric",
-      }),
-      type: txn.transaction_type || txn.type || "Cash Transaction",
-      detail: txn.description || txn.detail || txn.reference || "N/A",
-      amount: Math.abs(txn.amount || 0),
-      balance: txn.balance || 0,
-      isCredit: (txn.amount || 0) > 0,
-    }));
+      });
+
+      return {
+        id: txn.id || index + 1,
+        date: dateKey,
+        dateFormatted: dateFormatted,
+        type: txn.transaction_type || txn.type || "Cash Transaction",
+        detail: txn.note || txn.detail || txn.reference || "N/A",
+        amount: Math.abs(txn.new_balance || 0),
+        balance: Number(txn.previous_balance) || 0,
+        isCredit: (Number(txn.delta_amount) || 0) > 0,
+      };
+    });
+  };
+
+  // Filter transactions by date range
+  const filterTransactionsByDateRange = (
+    start: string,
+    end: string
+  ): CashTransaction[] => {
+    if (!start || !end) return allTransactions;
+
+    const startDateObj = new Date(start);
+    const endDateObj = new Date(end);
+    // Set end date to end of day
+    endDateObj.setHours(23, 59, 59, 999);
+
+    return allTransactions.filter((transaction) => {
+      const transactionDate = new Date(transaction.date);
+      return transactionDate >= startDateObj && transactionDate <= endDateObj;
+    });
+  };
+
+  const handleApplyFilter = () => {
+    if (startDate && endDate) {
+      const filtered = filterTransactionsByDateRange(startDate, endDate);
+      setTransactions(filtered);
+      const grouped = groupTransactionsByDate(filtered);
+      setGroupedTransactions(grouped);
+      setIsFiltered(true);
+      setShowFilterModal(false);
+    }
+  };
+
+  const handleClearFilter = () => {
+    setStartDate("");
+    setEndDate("");
+    setTransactions(allTransactions);
+    const grouped = groupTransactionsByDate(allTransactions);
+    setGroupedTransactions(grouped);
+    setIsFiltered(false);
+    setShowFilterModal(false);
   };
 
   const handleAdjustSuccess = () => {
@@ -96,9 +209,67 @@ const CashInHand = ({ navigation }: any) => {
     // Refresh cash balance and ledger after successful bank transfer
     getCashAndLedger();
   };
+  const renderTransactionItem = (item: CashTransaction) => {
+    return (
+      <View key={item.id} style={styles.transactionCard}>
+        {/* Transaction Row */}
+        <View style={styles.transactionRow}>
+          <View style={styles.col}>
+            <Text style={styles.columnLabel}>Transaction</Text>
+            <Text style={styles.columnValue}>
+              {item.type === "withdrawal"
+                ? "Transfer"
+                : item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+            </Text>
+          </View>
+
+          <View style={styles.col}>
+            <Text style={styles.columnLabel}>Amount</Text>
+            <Text
+              style={[
+                styles.amountValue,
+                { color: item.isCredit ? "#163881" : "#FF0000" },
+              ]}
+            >
+              {item.amount.toFixed(2)}
+            </Text>
+          </View>
+
+          <View style={styles.col}>
+            <Text style={styles.columnLabel}>Balance</Text>
+            <Text style={styles.columnValue}>{item.balance.toFixed(2)}</Text>
+          </View>
+        </View>
+        <View style={[styles.col, { alignItems: "flex-start", marginTop: 10 }]}>
+          <Text style={styles.columnLabel}>Detail</Text>
+          <Text style={styles.columnValue}>{item.detail}</Text>
+        </View>
+      </View>
+    );
+  };
+
+  const renderDateSection = (date: string, transactions: CashTransaction[]) => {
+    return (
+      <View key={date} style={styles.dateSection}>
+        <Text style={styles.dateText}>{formatDate(date)}</Text>
+        {transactions.map((transaction) => renderTransactionItem(transaction))}
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
-      <Headerwithback title="Cash in hand" />
+      <Headerwithback
+        title="Cash in hand"
+        rightIcons={[
+          <TouchableOpacity
+            key="filter"
+            onPress={() => setShowFilterModal(true)}
+          >
+            <Icon name="calendar" size={22} color="#FCA311" />
+          </TouchableOpacity>,
+        ]}
+      />
 
       <View style={styles.balanceCard}>
         <View style={styles.row}>
@@ -111,20 +282,6 @@ const CashInHand = ({ navigation }: any) => {
             <Text style={styles.amount}>Rs {cashBalance}</Text>
           </View>
         </View>
-      </View>
-
-      {/* Ledger Section */}
-      <View style={styles.ledger}>
-        <View></View>
-        <Text style={styles.ledgerText}>Ledger</Text>
-        <Text
-          style={[
-            styles.balanceText,
-            { color: parseFloat(cash) >= 0 ? "green" : "red" },
-          ]}
-        >
-          {parseFloat(cash).toFixed(2)}
-        </Text>
       </View>
 
       {/* Error Display */}
@@ -146,46 +303,11 @@ const CashInHand = ({ navigation }: any) => {
         contentContainerStyle={{ paddingBottom: 120 }}
         showsVerticalScrollIndicator={false}
       >
-        {transactions.map((item) => (
-          <View key={item.id} style={styles.transactionCard}>
-            {/* Date */}
-            <Text style={styles.date}>Date {item.date}</Text>
+        {Object.entries(groupedTransactions).map(([date, transactions]) =>
+          renderDateSection(date, transactions)
+        )}
 
-            {/* Transaction Row */}
-            <View style={styles.transactionRow}>
-              <View style={styles.col}>
-                <Text style={styles.columnLabel}>Transaction</Text>
-                <Text style={styles.columnValue}>{item.type}</Text>
-              </View>
-
-              <View style={styles.col}>
-                <Text style={styles.columnLabel}>Detail</Text>
-                <Text style={styles.columnValue}>{item.detail}</Text>
-              </View>
-
-              <View style={styles.col}>
-                <Text style={styles.columnLabel}>Amount</Text>
-                <Text
-                  style={[
-                    styles.amountValue,
-                    { color: item.isCredit ? "#163881" : "#FF0000" },
-                  ]}
-                >
-                  {item.amount.toFixed(2)}
-                </Text>
-              </View>
-
-              <View style={styles.col}>
-                <Text style={styles.columnLabel}>Balance</Text>
-                <Text style={styles.columnValue}>
-                  {item.balance.toFixed(2)}
-                </Text>
-              </View>
-            </View>
-          </View>
-        ))}
-
-        {transactions.length === 0 && !isLoading && (
+        {Object.keys(groupedTransactions).length === 0 && !isLoading && (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyText}>No transactions found</Text>
             <Text style={styles.emptySubText}>
@@ -194,6 +316,99 @@ const CashInHand = ({ navigation }: any) => {
           </View>
         )}
       </ScrollView>
+
+      {/* Calendar Modal */}
+      <CalendarModal
+        initialDate={calendarModel === "start" ? startDate : endDate}
+        visible={calendarModel !== ""}
+        onClose={() => setCalendarModel("")}
+        onSelect={(e) =>
+          calendarModel === "start" ? setStartDate(e) : setEndDate(e)
+        }
+        maxDate={moment().format("YYYY-MM-DD")}
+      />
+
+      {/* Filter Modal */}
+      <Modal
+        visible={showFilterModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowFilterModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Filter by Date Range</Text>
+              <TouchableOpacity
+                onPress={() => setShowFilterModal(false)}
+                style={styles.closeButton}
+              >
+                <Icon name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalContent}>
+              <View style={styles.dateInputContainer}>
+                <Text style={styles.dateLabel}>Start Date</Text>
+                <TouchableOpacity onPress={() => setCalendarModel("start")}>
+                  <TextInput
+                    style={styles.dateInput}
+                    value={startDate}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor="#999"
+                    editable={false}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.dateInputContainer}>
+                <Text style={styles.dateLabel}>End Date</Text>
+                <TouchableOpacity onPress={() => setCalendarModel("end")}>
+                  <TextInput
+                    style={styles.dateInput}
+                    value={endDate}
+                    editable={false}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor="#999"
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {isFiltered && (
+                <View style={styles.filterStatus}>
+                  <Text style={styles.filterStatusText}>Filters applied</Text>
+                  <TouchableOpacity
+                    onPress={handleClearFilter}
+                    style={styles.clearFilterButton}
+                  >
+                    <Text style={styles.clearFilterText}>Clear Filter</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={() => setShowFilterModal(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.modalButton,
+                    styles.applyButton,
+                    (!startDate || !endDate) && styles.disabledButton,
+                  ]}
+                  onPress={handleApplyFilter}
+                  disabled={!startDate || !endDate}
+                >
+                  <Text style={styles.applyButtonText}>Apply Filter</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Buttons Container - Fixed at bottom */}
       <View style={styles.buttonContainer}>
@@ -325,12 +540,6 @@ const styles = ScaledSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
   },
-  date: {
-    fontSize: 12,
-    color: "gray",
-    marginBottom: 5,
-    textAlign: "center",
-  },
   transactionRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -397,6 +606,128 @@ const styles = ScaledSheet.create({
     color: "#FCA311",
     fontSize: 14,
     fontWeight: "600",
+  },
+  // Date Section
+  dateSection: {
+    marginBottom: 10,
+  },
+  dateText: {
+    marginTop: 8,
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#000",
+    alignSelf: "center",
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  // Filter Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    width: Dimensions.get("window").width * 0.9,
+    maxHeight: Dimensions.get("window").height * 0.6,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  closeButton: {
+    padding: 4,
+  },
+  modalContent: {
+    padding: 20,
+  },
+  dateInputContainer: {
+    marginBottom: 20,
+  },
+  dateLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+  },
+  dateInput: {
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: "#000",
+    backgroundColor: "#fff",
+  },
+  filterStatus: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#F0F8FF",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  filterStatusText: {
+    fontSize: 14,
+    color: "#2196F3",
+    fontWeight: "500",
+  },
+  clearFilterButton: {
+    backgroundColor: "#FF5722",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  clearFilterText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginHorizontal: 5,
+  },
+  cancelButton: {
+    backgroundColor: "#F5F5F5",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  cancelButtonText: {
+    color: "#666",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  applyButton: {
+    backgroundColor: "#FCA311",
+  },
+  applyButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
 });
 

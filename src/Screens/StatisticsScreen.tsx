@@ -13,6 +13,7 @@ import {
   PermissionsAndroid,
   Modal,
   TouchableWithoutFeedback,
+  ActivityIndicator,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Icons from "react-native-vector-icons/FontAwesome";
@@ -30,7 +31,13 @@ import { s, ScaledSheet } from "react-native-size-matters";
 import CustomDropdown from "../CommonComponent/CustomDropdown";
 import api from "../services/api/api";
 import { useIsFocused } from "@react-navigation/native";
+import {
+  useGetVendorStoresQuery,
+  useUpdateVendorStoreMutation,
+} from "../services/api/state-api-slice";
+import { APP_CONSTANTS } from "../constants/app.constants";
 NavigationButton;
+import Toast from "react-native-toast-message";
 
 const screenWidth = Dimensions.get("window").width - 20;
 interface Product {
@@ -223,11 +230,11 @@ const getFilteredProducts = (type: string) => {
 const StatisticsScreen = ({ navigation }: any) => {
   const [deliveryDiscountEnabled, setDeliveryDiscountEnabled] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState({
-    name: "Today",
-    id: "Today",
+    name: "Online",
+    id: "Online",
   });
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
-  const filters = ["Today", "This Week", "This Month", "This Year"];
+  const filters = ["Online", "Offline"];
 
   // Company profile state
   const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(
@@ -238,7 +245,18 @@ const StatisticsScreen = ({ navigation }: any) => {
 
   // Navigation state management
   const [isNavigating, setIsNavigating] = useState(false);
+  const [disabletab, setdisable] = useState(true);
   const [navigationError, setNavigationError] = useState<string | null>(null);
+  const [showStoreStatusModal, setShowStoreStatusModal] = useState(false);
+
+  const {
+    data: storeData,
+    error,
+    isLoading,
+    refetch,
+  } = useGetVendorStoresQuery();
+  const [updateVendorStore, { isLoading: isUpdating }] =
+    useUpdateVendorStoreMutation();
 
   // Fetch company profile
   const fetchCompanyProfile = async () => {
@@ -391,10 +409,13 @@ const StatisticsScreen = ({ navigation }: any) => {
             ", "
           )} conditions not met`
         );
-        Alert.alert(
-          "Navigation Blocked",
-          `Please complete the following: ${failedConditionNames.join(", ")}`
-        );
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: `Cannot navigate: ${failedConditionNames.join(
+            ", "
+          )} conditions not met`,
+        });
         return;
       }
 
@@ -403,7 +424,11 @@ const StatisticsScreen = ({ navigation }: any) => {
     } catch (error) {
       console.error("Navigation error:", error);
       setNavigationError("Navigation failed. Please try again.");
-      Alert.alert("Error", "Navigation failed. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Navigation failed. Please try again.",
+      });
     } finally {
       setIsNavigating(false);
     }
@@ -412,7 +437,7 @@ const StatisticsScreen = ({ navigation }: any) => {
   // Specific navigation functions with business logic conditions
   const navigateToExpenses = () => {
     navigateWithCondition(
-      HomeNavigation.EXPENESES_SCREEN,
+      HomeNavigation.EXPENSES,
       {},
       {
         // Add conditions here if needed
@@ -496,6 +521,36 @@ const StatisticsScreen = ({ navigation }: any) => {
     );
   };
 
+  const toggleDisable = () => {
+    setShowStoreStatusModal(true);
+  };
+
+  const handleConfirmStoreStatus = async () => {
+    try {
+      const formData = new FormData();
+      formData.append("is_offline", (!disabletab).toString());
+      await updateVendorStore(formData).unwrap();
+      Toast.show({
+        text1: disabletab
+          ? "Store closed successfully"
+          : "Store opened successfully",
+        type: "success",
+      });
+      setdisable(!disabletab);
+      setShowStoreStatusModal(false);
+    } catch (error) {
+      console.error("Error updating store status:", error);
+      Toast.show({
+        text1: "Failed to update store status",
+        type: "error",
+      });
+    }
+  };
+
+  const handleCancelStoreStatus = () => {
+    setShowStoreStatusModal(false);
+  };
+
   // Request all permissions when component mounts
   useEffect(() => {
     const requestAllPermissions = async () => {
@@ -521,6 +576,13 @@ const StatisticsScreen = ({ navigation }: any) => {
       fetchCompanyProfile();
     }
   }, [isFocused]);
+
+  useEffect(() => {
+    if (storeData) {
+      setdisable(storeData.is_store_open);
+    }
+  }, [storeData]);
+
   return (
     <SafeAreaView style={styles.container}>
       {/* Navigation Error Display */}
@@ -538,15 +600,23 @@ const StatisticsScreen = ({ navigation }: any) => {
 
       <View style={styles.header}>
         <View style={styles.headerleft}>
-          <Image
-            source={
-              companyProfile?.profile_image
-                ? { uri: companyProfile.profile_image }
-                : require("../assets/Logo_Icon.png")
-            }
-            style={styles.logo}
-            resizeMode="cover"
-          />
+          <TouchableOpacity
+            onPress={() => navigation.navigate(HomeNavigation.COMPANY_PROFILE)}
+          >
+            <Image
+              source={
+                storeData?.profile_image
+                  ? {
+                      uri: storeData?.profile_image.includes("http")
+                        ? storeData.profile_image
+                        : APP_CONSTANTS.API_BASE_URL + storeData.profile_image,
+                    }
+                  : require("../assets/Logo_Icon.png")
+              }
+              style={styles.logo}
+              resizeMode="cover"
+            />
+          </TouchableOpacity>
           <View style={styles.titlecontent}>
             <Text style={styles.headerTitle}>
               {isLoadingProfile
@@ -562,10 +632,12 @@ const StatisticsScreen = ({ navigation }: any) => {
           </View>
         </View>
         <View style={styles.headerRight}>
-          <CustomSwitch
-            value={deliveryDiscountEnabled}
-            onValueChange={setDeliveryDiscountEnabled}
-          />
+          {isLoading ? (
+            <ActivityIndicator size="small" color="#ff9900" />
+          ) : (
+            <CustomSwitch value={disabletab} onValueChange={toggleDisable} />
+          )}
+
           <TouchableOpacity
             onPress={navigateToNotifications}
             disabled={isNavigating}
@@ -579,7 +651,9 @@ const StatisticsScreen = ({ navigation }: any) => {
           </TouchableOpacity>
         </View>
       </View>
-      <ScrollView style={{ paddingHorizontal: 10 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingHorizontal: 10, paddingBottom: 60 }}
+      >
         <RequestFromBuyers />
         <View style={styles.titleRow}>
           <Text style={styles.title}>Statistics</Text>
@@ -591,7 +665,8 @@ const StatisticsScreen = ({ navigation }: any) => {
             }))}
             onSelect={setSelectedFilter}
             selectedValue={selectedFilter.id}
-            styles={{ width: s(100), height: s(30) }}
+            styles={{ width: s(70), height: s(30), marginRight: 10 }}
+            isSearchable={false}
           />
         </View>
         <View style={styles.chartPlaceholder}>
@@ -609,7 +684,7 @@ const StatisticsScreen = ({ navigation }: any) => {
               changeIcon: "arrow-up",
             },
             {
-              title: "Total Orders",
+              title: "Total Sales",
               value: "2,50,000",
               icon: "cart-outline",
               change: "-0.20",
@@ -658,11 +733,15 @@ const StatisticsScreen = ({ navigation }: any) => {
                   case "Total Purchases":
                     // navigateToReports();
                     break;
-                  case "Total Orders":
-                    navigateWithCondition(HomeNavigation.ORDERS, {}, {});
+                  case "Total Sales":
+                    navigateWithCondition(HomeNavigation.SALES_LEDGER, {}, {});
                     break;
                   case "Total Expense":
-                    navigateToExpenses();
+                    navigateWithCondition(
+                      HomeNavigation.EXPENESES_SCREEN,
+                      {},
+                      {}
+                    );
                     break;
                   case "Total Stock Value":
                     navigateToStockScreen();
@@ -767,7 +846,10 @@ const StatisticsScreen = ({ navigation }: any) => {
                     <View style={styles.productDetails}>
                       <View style={styles.productTextContainer}>
                         <Text style={styles.productName}>{product.name}</Text>
-                        <Text style={styles.productDescription}>
+                        <Text
+                          style={styles.productDescription}
+                          numberOfLines={1}
+                        >
                           {product.description.slice(0, 15)}...
                         </Text>
                       </View>
@@ -801,27 +883,25 @@ const StatisticsScreen = ({ navigation }: any) => {
           </View>
         </View>
         <View style={styles.productcontainer}>
-          {["Low Stock"].map((category) => (
-            <View key={category} style={styles.categoryContainer}>
-              <Text style={styles.categoryTitle}>{category} Products</Text>
-              <View style={styles.productRow}>
-                {getFilteredProducts(category).map((product) => (
-                  <View key={product.id} style={styles.productCard}>
-                    <Image source={product.image} style={styles.productImage} />
-                    <View style={styles.productDetails}>
-                      <View style={styles.productTextContainer}>
-                        <Text style={styles.productName}>{product.name}</Text>
-                        <Text style={styles.productDescription}>
-                          {product.description.slice(0, 15)}...
-                        </Text>
-                      </View>
-                      <Text style={styles.productPrice}>{product.price}</Text>
+          <View style={styles.categoryContainer}>
+            <Text style={styles.categoryTitle}>Low Stock Products</Text>
+            <View style={styles.productRow}>
+              {getFilteredProducts("Low Stock").map((product) => (
+                <View key={product.id} style={styles.productCard}>
+                  <Image source={product.image} style={styles.productImage} />
+                  <View style={styles.productDetails}>
+                    <View style={styles.productTextContainer}>
+                      <Text style={styles.productName}>{product.name}</Text>
+                      <Text style={styles.productDescription} numberOfLines={1}>
+                        {product.description.slice(0, 15)}...
+                      </Text>
                     </View>
+                    <Text style={styles.productPrice}>{product.price}</Text>
                   </View>
-                ))}
-              </View>
+                </View>
+              ))}
             </View>
-          ))}
+          </View>
         </View>
 
         <View>
@@ -846,6 +926,76 @@ const StatisticsScreen = ({ navigation }: any) => {
           </View>
         </View>
       </ScrollView>
+
+      {/* Store Status Confirmation Modal */}
+      <Modal
+        visible={showStoreStatusModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCancelStoreStatus}
+      >
+        <TouchableWithoutFeedback onPress={handleCancelStoreStatus}>
+          <View style={styles.modalOverlay}>
+            <TouchableWithoutFeedback onPress={() => {}}>
+              <View style={styles.storeStatusModalContainer}>
+                <View style={styles.storeStatusModalHeader}>
+                  <Icon
+                    name={
+                      disabletab ? "store-off-outline" : "store-check-outline"
+                    }
+                    size={40}
+                    color={disabletab ? "#FF6B6B" : "#4CAF50"}
+                  />
+                  <Text style={styles.storeStatusModalTitle}>
+                    {disabletab ? "Close Store?" : "Open Store?"}
+                  </Text>
+                </View>
+
+                <View style={styles.storeStatusModalContent}>
+                  <Text style={styles.storeStatusModalMessage}>
+                    {disabletab
+                      ? "Your store will be closed and customers won't be able to place orders until you enable it again."
+                      : "Your store will be opened and customers will be able to place orders."}
+                  </Text>
+                </View>
+
+                <View style={styles.storeStatusModalButtons}>
+                  <TouchableOpacity
+                    style={[
+                      styles.storeStatusModalButton,
+                      styles.storeStatusModalCancelButton,
+                    ]}
+                    onPress={handleCancelStoreStatus}
+                  >
+                    <Text style={styles.storeStatusModalCancelButtonText}>
+                      Cancel
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[
+                      styles.storeStatusModalButton,
+                      disabletab
+                        ? styles.storeStatusModalDisableButton
+                        : styles.storeStatusModalEnableButton,
+                    ]}
+                    onPress={handleConfirmStoreStatus}
+                    disabled={isUpdating}
+                  >
+                    {isUpdating ? (
+                      <ActivityIndicator size="small" color="#fff" />
+                    ) : (
+                      <Text style={styles.storeStatusModalActionButtonText}>
+                        {disabletab ? "Close Store" : "Open Store"}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
       <View style={styles.floatingButtons}>
         <TouchableOpacity
           style={[styles.addButtonRed, isNavigating && styles.disabledButton]}
@@ -875,46 +1025,6 @@ const StatisticsScreen = ({ navigation }: any) => {
           <Text style={styles.buttongreen}>+ New Sale</Text>
         </TouchableOpacity>
       </View>
-
-      {/* Filter Dropdown Modal */}
-      <Modal
-        visible={showFilterDropdown}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setShowFilterDropdown(false)}
-      >
-        <TouchableWithoutFeedback onPress={() => setShowFilterDropdown(false)}>
-          <View style={styles.modalOverlay}>
-            <View style={styles.dropdownContainer}>
-              {filters.map((filter) => (
-                <TouchableOpacity
-                  key={filter}
-                  style={[
-                    styles.dropdownItem,
-                    selectedFilter === filter && styles.selectedDropdownItem,
-                  ]}
-                  onPress={() => {
-                    setSelectedFilter(filter);
-                    setShowFilterDropdown(false);
-                  }}
-                >
-                  <Text
-                    style={[
-                      styles.dropdownText,
-                      selectedFilter === filter && styles.selectedDropdownText,
-                    ]}
-                  >
-                    {filter}
-                  </Text>
-                  {selectedFilter === filter && (
-                    <Icon name="check" size={18} color="#FCA311" />
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
     </SafeAreaView>
   );
 };
@@ -944,7 +1054,12 @@ const styles = ScaledSheet.create({
   subTitle: { color: "#555" },
   titlecontent: { paddingHorizontal: 10 },
   notificationIcon: { marginLeft: 10 },
-  title: { fontSize: 22, fontWeight: "bold", marginBottom: 10 },
+  title: {
+    fontSize: 22,
+    marginBottom: 10,
+    color: "#000",
+    flex: 1,
+  },
   chartPlaceholder: {
     height: 220,
     justifyContent: "center",
@@ -1107,15 +1222,20 @@ const styles = ScaledSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
-    paddingVertical: 10,
+    paddingVTop: 10,
   },
   productTextContainer: { flex: 1 },
-  productName: { fontSize: 14, fontWeight: "bold", textAlign: "left" },
+  productName: {
+    fontSize: 14,
+    fontWeight: "bold",
+    textAlign: "left",
+    color: "#000",
+  },
   productDescription: {
-    fontSize: 12,
+    fontSize: 10,
     textAlign: "left",
     color: "#555",
-    marginHorizontal: 5,
+    // marginHorizontal: 5,
   },
   productPrice: {
     fontSize: 14,
@@ -1140,7 +1260,7 @@ const styles = ScaledSheet.create({
     color: "#FCA311",
   },
   recentActivityContainer: {
-    marginTop: 20,
+    marginVertical: 20,
     padding: 10,
     backgroundColor: "#fff",
     borderRadius: 10,
@@ -1164,7 +1284,7 @@ const styles = ScaledSheet.create({
     borderColor: "#C3C3C3",
   },
   activityTextContainer: { flex: 1, flexDirection: "row" },
-  userid: { fontSize: 14, fontWeight: "bold" },
+  userid: { fontSize: 14, fontWeight: "bold", color: "#000" },
   comment: {
     fontSize: 14,
     color: "#555",
@@ -1172,8 +1292,16 @@ const styles = ScaledSheet.create({
     fontWeight: "bold",
   },
   activityImage: { width: 40, height: 40, borderRadius: 20, marginLeft: 10 },
-  notificationtext: { fontSize: 12, paddingHorizontal: 10, marginRight: 10 },
-  datesection: { alignItems: "flex-end", justifyContent: "flex-end" },
+  notificationtext: {
+    fontSize: 12,
+    paddingHorizontal: 10,
+    marginRight: 10,
+    color: "#000",
+  },
+  datesection: {
+    alignItems: "flex-end",
+    justifyContent: "flex-end",
+  },
 
   notificationcontain: {
     backgroundColor: "#fff",
@@ -1186,7 +1314,7 @@ const styles = ScaledSheet.create({
     shadowRadius: 5,
     elevation: 3,
   },
-  datentext: { fontSize: 12 },
+  datentext: { fontSize: 12, color: "#000" },
   errorContainer: {
     backgroundColor: "#f44336",
     flexDirection: "row",
@@ -1216,10 +1344,77 @@ const styles = ScaledSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-start",
-    alignItems: "flex-end",
-    paddingTop: 100,
-    paddingRight: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  storeStatusModalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 24,
+    width: "90%",
+    maxWidth: 400,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  storeStatusModalHeader: {
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  storeStatusModalTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    color: "#292D32",
+    marginTop: 12,
+    textAlign: "center",
+  },
+  storeStatusModalContent: {
+    marginBottom: 24,
+  },
+  storeStatusModalMessage: {
+    fontSize: 16,
+    color: "#555",
+    lineHeight: 24,
+    textAlign: "center",
+  },
+  storeStatusModalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  storeStatusModalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginHorizontal: 6,
+  },
+  storeStatusModalCancelButton: {
+    backgroundColor: "#F5F5F5",
+    borderWidth: 1,
+    borderColor: "#DDD",
+  },
+  storeStatusModalCancelButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#666",
+  },
+  storeStatusModalEnableButton: {
+    backgroundColor: "#4CAF50",
+  },
+  storeStatusModalDisableButton: {
+    backgroundColor: "#FF6B6B",
+  },
+  storeStatusModalActionButtonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#fff",
   },
   dropdownContainer: {
     backgroundColor: "#fff",

@@ -8,23 +8,35 @@ import {
   ScrollView,
   Dimensions,
   Alert,
+  Modal,
+  FlatList,
+  Image,
 } from "react-native";
 import React, { useState, useEffect } from "react";
-import Icon from "react-native-vector-icons/MaterialIcons";
 import Headerwithback from "./Headerwithback";
 import CustomSwitch from "./CustomSwitch";
-import CustomDropdown from "../CommonComponent/CustomDropdown";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useNavigation } from "@react-navigation/native";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import Toast from "react-native-toast-message";
+
+type RootStackParamList = {
+  AddSpotlight: {
+    item?: any;
+  };
+};
+
+type AddSpotlightRouteProp = RouteProp<RootStackParamList, "AddSpotlight">;
 
 const { width } = Dimensions.get("window");
 
 interface ProductOption {
   id: number;
   name: string;
+  image?: string;
+  is_active?: boolean;
 }
 
 interface SpotlightFormData {
@@ -42,15 +54,22 @@ interface FormErrors {
 
 const AddSpotlightScreen = () => {
   const navigation = useNavigation();
+  const route = useRoute<AddSpotlightRouteProp>();
+  const item = route.params?.item;
   const [formData, setFormData] = useState<SpotlightFormData>({
-    product: "",
-    discount_tag: "",
-    boost: false,
-    budget: "",
+    product: item?.product || "",
+    discount_tag: item?.discount_tag || "",
+    boost: item?.boost || true,
+    budget: "0",
   });
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<FormErrors>({});
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<ProductOption | null>(
+    null
+  );
 
   useEffect(() => {
     fetchProducts();
@@ -58,10 +77,49 @@ const AddSpotlightScreen = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await api.get("/vendor/product/");
-      setProducts(response.data || []);
+      const response = await api.get(API_ROUTES.vendorProduct);
+      const activeProducts = response.data.filter(
+        (product: any) => product.is_active
+      );
+      setProducts(activeProducts || []);
+      if (item?.product) {
+        const foundProduct = activeProducts.find(
+          (product: any) => product.id === item.product
+        );
+        if (foundProduct) {
+          setSelectedProduct(foundProduct);
+          handleInputChange("product", foundProduct.id.toString());
+        }
+      }
     } catch (error) {
       console.error("Failed to fetch products:", error);
+    }
+  };
+
+  const openProductPicker = async () => {
+    try {
+      setLoadingProducts(true);
+      if (products.length === 0) {
+        const res = await api.get(API_ROUTES.vendorProduct);
+        const activeProducts = res.data.filter(
+          (product: any) => product.is_active
+        );
+        setProducts(activeProducts);
+        if (item?.product) {
+          const foundProduct = activeProducts.find(
+            (product: any) => product.id === item.product
+          );
+          if (foundProduct) {
+            setSelectedProduct(foundProduct);
+          }
+        }
+      }
+      setShowProductModal(true);
+    } catch (e) {
+      setProducts([]);
+      setShowProductModal(true);
+    } finally {
+      setLoadingProducts(false);
     }
   };
 
@@ -88,12 +146,12 @@ const AddSpotlightScreen = () => {
     if (!formData.product) {
       newErrors.product = "Please select a product";
     }
-    if (!formData.discount_tag.trim()) {
-      newErrors.discount_tag = "Please enter discount tag";
-    }
-    if (!formData.budget.trim()) {
-      newErrors.budget = "Please enter budget amount";
-    }
+    // if (!formData.discount_tag.trim()) {
+    //   newErrors.discount_tag = "Please enter discount tag";
+    // }
+    // if (!formData.budget.trim()) {
+    //   newErrors.budget = "Please enter budget amount";
+    // }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -114,10 +172,17 @@ const AddSpotlightScreen = () => {
         budget: formData.budget,
       };
 
-      const response = await api.post(API_ROUTES.spotlightProduct, payload);
+      const response = await api[item ? "patch" : "post"](
+        API_ROUTES.spotlightProduct + (item?.id ? `/${item?.id}/` : ""),
+        payload
+      );
       navigation.goBack();
       if (response.status === 200 || response.status === 201) {
-        Alert.alert("Success", "Spotlight product submitted successfully");
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Spotlight product submitted successfully",
+        });
         // Reset form
         setFormData({
           product: "",
@@ -127,11 +192,19 @@ const AddSpotlightScreen = () => {
         });
         setErrors({});
       } else {
-        Alert.alert("Error", "Failed to submit spotlight product");
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Failed to submit spotlight product",
+        });
       }
     } catch (error) {
       console.error("Error submitting spotlight product:", error);
-      Alert.alert("Error", "Failed to submit spotlight product");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to submit spotlight product",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -147,15 +220,20 @@ const AddSpotlightScreen = () => {
         <View style={{ marginTop: 10 }}>
           {/* Select Product */}
           <Text style={styles.label}>Select Product</Text>
-          <CustomDropdown
-            placeholder="Search by Product name"
-            options={products}
-            onSelect={(option) =>
-              handleInputChange("product", option.id.toString())
-            }
-            selectedValue={formData.product}
-            dropDownBoxStyle={styles.dropdownStyle}
-          />
+          <TouchableOpacity
+            onPress={openProductPicker}
+            style={styles.productSelectButton}
+          >
+            {loadingProducts ? (
+              <Text style={styles.productSelectButtonText}>Loading...</Text>
+            ) : (
+              <Text style={styles.productSelectButtonText}>
+                {selectedProduct?.name
+                  ? `Selected: ${selectedProduct.name}`
+                  : "Select Product"}
+              </Text>
+            )}
+          </TouchableOpacity>
           {errors.product && (
             <Text style={styles.errorText}>{errors.product}</Text>
           )}
@@ -183,14 +261,15 @@ const AddSpotlightScreen = () => {
           </View>
 
           {/* Budget */}
-          <Text style={styles.budgetLabel}>Budget (Minimum - 10 Rupees)</Text>
+          <Text style={styles.budgetLabel}>Budget (Minimum - 0 Rupees)</Text>
           <TextInput
             style={styles.inputField}
-            placeholder="Enter Amount"
+            placeholder="Boosted by default"
             placeholderTextColor="#555"
             keyboardType="numeric"
             value={formData.budget}
             onChangeText={(text) => handleInputChange("budget", text)}
+            editable={false}
           />
           {errors.budget && (
             <Text style={styles.errorText}>{errors.budget}</Text>
@@ -198,14 +277,16 @@ const AddSpotlightScreen = () => {
 
           {/* Approximate Costing */}
           <View style={styles.costBox}>
-            {/* Approximate Costing Title */}
             <Text
+              style={[styles.costText, { fontWeight: "600", color: "#FCA311" }]}
+            >
+              We are offering free boost post for limited time!
+            </Text>
+            {/* <Text
               style={[styles.costText, { fontWeight: "600", color: "#FCA311" }]}
             >
               Approximate Costing
             </Text>
-
-            {/* Row with per view costs */}
             <View
               style={{
                 flexDirection: "row",
@@ -220,20 +301,18 @@ const AddSpotlightScreen = () => {
                 </Text>
               </Text>
               <Text>
-                per view cost:{" "}
+                per click cost:{" "}
                 <Text style={{ color: "#000", fontWeight: "600" }}>
                   10 paisa
                 </Text>
               </Text>
             </View>
-
-            {/* Caution */}
             <Text style={[styles.cautionText, { marginTop: 8 }]}>Caution:</Text>
             <Text style={styles.cautionDescription}>
               Please follow platforms{" "}
               <Text style={{ color: "#FF0000" }}>terms & conditions</Text> for
               speedy approval of campaigns
-            </Text>
+            </Text> */}
           </View>
 
           {/* Submit Button */}
@@ -242,6 +321,57 @@ const AddSpotlightScreen = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Product Picker Modal */}
+      <Modal visible={showProductModal} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Product</Text>
+              <TouchableOpacity onPress={() => setShowProductModal(false)}>
+                <Text style={styles.modalCloseText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+            {loadingProducts ? (
+              <View style={styles.loadingContainer}>
+                <Text style={styles.loadingText}>Loading...</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={products}
+                keyExtractor={(item) =>
+                  item.id?.toString() || Math.random().toString()
+                }
+                numColumns={2}
+                columnWrapperStyle={styles.columnWrapper}
+                renderItem={({ item: product }) => (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSelectedProduct(product);
+                      handleInputChange("product", product.id.toString());
+                      setShowProductModal(false);
+                    }}
+                    style={styles.productCard}
+                  >
+                    <Image
+                      source={
+                        product.image
+                          ? { uri: product.image }
+                          : require("../assets/product.png")
+                      }
+                      style={styles.productImage}
+                      resizeMode="cover"
+                    />
+                    <Text style={styles.productName} numberOfLines={1}>
+                      {product.name || "Unnamed"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -350,5 +480,72 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: -10,
     marginBottom: 10,
+  },
+  productSelectButton: {
+    backgroundColor: "#006EB2",
+    paddingVertical: 14,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  productSelectButtonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 15,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    width: "92%",
+    borderRadius: 12,
+    padding: 12,
+    maxHeight: "80%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#000",
+  },
+  modalCloseText: {
+    color: "#006EB2",
+    fontWeight: "700",
+  },
+  loadingContainer: {
+    paddingVertical: 20,
+    alignItems: "center",
+  },
+  loadingText: {
+    color: "#666",
+  },
+  columnWrapper: {
+    justifyContent: "space-between",
+    marginBottom: 10,
+  },
+  productCard: {
+    width: "48%",
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#eee",
+    borderRadius: 10,
+    overflow: "hidden",
+  },
+  productImage: {
+    width: "100%",
+    height: 110,
+  },
+  productName: {
+    padding: 8,
+    color: "#000",
   },
 });

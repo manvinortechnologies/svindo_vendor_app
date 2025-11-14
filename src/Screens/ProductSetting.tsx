@@ -7,6 +7,7 @@ import CustomButton from "../CommonComponent/CustomeButton";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import { API_ROUTES } from "../constants/api-routes.constants";
+import Toast from "react-native-toast-message";
 
 // UI Display Arrays
 const productSettings = [
@@ -144,7 +145,11 @@ const ProductSetting = ({ navigation }: any) => {
       const response = await api.post(API_ROUTES.productSettings, payload);
       if (response.status === 200 || response.status === 201) {
         console.log("Settings updated successfully:", response.data);
-        Alert.alert("Success", "Product Settings updated successfully");
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Product Settings updated successfully",
+        });
       } else {
         console.warn("Unexpected response:", response);
       }
@@ -170,13 +175,21 @@ const ProductSetting = ({ navigation }: any) => {
       // }
       const res = await api.post(API_ROUTES.productSettings, payload);
       if (res.status === 200 || res.status === 201) {
-        Alert.alert("Success", "Product Settings saved successfully");
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Product Settings saved successfully",
+        });
       } else {
         console.warn("Unexpected response while saving:", res);
       }
     } catch (error) {
       console.error("Failed to save product settings:", error);
-      Alert.alert("Error", "Failed to save product settings");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to save product settings",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -202,7 +215,7 @@ const ProductSetting = ({ navigation }: any) => {
     <MainContainer>
       <View style={styles.container}>
         <Headerwithback title="Product Settings" />
-        <ScrollView>
+        <ScrollView showsVerticalScrollIndicator={false}>
           {renderSection("", productSettings)}
           {renderSection("Delivery Details", deliveryDetails)}
           {renderSection("Policies", policies)}

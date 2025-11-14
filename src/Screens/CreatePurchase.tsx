@@ -304,7 +304,13 @@ const CreatePurchase = ({ navigation }: any) => {
         payment_method:
           selectedPayment === "In Credit"
             ? "credit"
-            : selectedPayment.toLowerCase(),
+            : selectedPayment === "Cheques"
+            ? "cheques"
+            : selectedPayment === "UPI"
+            ? "upi"
+            : selectedPayment === "Cash"
+            ? "cash"
+            : "other",
         discount_percent: Number(discount) || 0,
         discount_amount: Number(extraDiscount) || 0,
         advance_amount: Number(advanceAmount) || 0,
@@ -740,7 +746,7 @@ const CreatePurchase = ({ navigation }: any) => {
                     Payment
                   </Text>
                   <View style={styles.optionsRow}>
-                    {["UPI", "Card", "Cash", "In Credit"].map((method) => (
+                    {["UPI", "Cheques", "Cash", "In Credit"].map((method) => (
                       <TouchableOpacity
                         key={method}
                         style={[
@@ -845,6 +851,24 @@ const CreatePurchase = ({ navigation }: any) => {
                   </>
                 )}
               </View>
+
+              {selectedPayment !== "Cash" &&
+                selectedPayment !== "In Credit" && (
+                  <>
+                    <CustomDropdown
+                      onSelect={setSelectedBank}
+                      placeholder="Select Bank"
+                      selectedValue={selectedBank?.name || ""}
+                      options={bankList}
+                      dropDownBoxStyle={{ marginTop: 10 }}
+                    />
+                    {errors?.advanceBank && (
+                      <Text style={{ color: "red" }}>
+                        {errors?.advanceBank}
+                      </Text>
+                    )}
+                  </>
+                )}
 
               {/* Proceed Button */}
               <TouchableOpacity
@@ -1343,7 +1367,7 @@ const styles = StyleSheet.create({
   },
   optionsRow: {
     flexDirection: "row",
-    gap: 8,
+    // gap: 5,
     flex: 1,
   },
   optionButton: {

@@ -5,10 +5,10 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  Alert,
   ScrollView,
   Image,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import MainContainer from "../CommonComponent/MainContainer";
 import Headerwithback from "./Headerwithback";
 import { InputBox } from "../CommonComponent/InputBox";
@@ -17,7 +17,7 @@ import ModalUpdatePhoto from "../Modals/ModalUpdatePhoto";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { HomeNavigation } from "../constants/app-routes.constants";
 
 interface AddonFormData {
@@ -35,11 +35,12 @@ interface CategoryOption {
 
 const AddAddOns = () => {
   const navigation = useNavigation();
-  const route = useRoute();
-  const { productId, isEdit } = route.params as {
-    productId: string;
-    isEdit: boolean;
-  };
+  const route =
+    useRoute<
+      RouteProp<{ params: { productId: string; isEdit: boolean } }, "params">
+    >();
+  const productId = route.params?.productId;
+  const isEdit = route.params?.isEdit;
 
   const [formData, setFormData] = useState<AddonFormData>({
     description: "",
@@ -51,6 +52,12 @@ const AddAddOns = () => {
   const [isImageModalVisible, setIsImageModalVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [errors, setErrors] = useState<{
+    name?: string;
+    price_per_unit?: string;
+    description?: string;
+    product_category?: string;
+  }>({});
 
   useEffect(() => {
     fetchCategories();
@@ -81,6 +88,10 @@ const AddAddOns = () => {
       ...prev,
       [field]: value,
     }));
+    // Clear error when user starts typing
+    if (errors[field as keyof typeof errors]) {
+      setErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
   };
 
   const handleImageSelect = (file: any) => {
@@ -90,7 +101,7 @@ const AddAddOns = () => {
       ...prev,
       image: {
         uri: file.uri,
-        name: file.filename || "banner.jpg",
+        name: file.name || "banner.jpg",
         type: file.mime || "image/jpeg",
       },
     }));
@@ -98,21 +109,38 @@ const AddAddOns = () => {
   };
 
   const handleSubmit = async () => {
+    // Reset errors
+    setErrors({});
+
     // Validate form data
+    const newErrors: {
+      name?: string;
+      price_per_unit?: string;
+      description?: string;
+      product_category?: string;
+    } = {};
+
     if (!formData.name.trim()) {
-      Alert.alert("Error", "Please enter addon name");
-      return;
+      newErrors.name = "Please enter addon name";
     }
     if (!formData.price_per_unit.trim()) {
-      Alert.alert("Error", "Please enter price per unit");
-      return;
+      newErrors.price_per_unit = "Please enter price per unit";
+    } else if (
+      isNaN(parseFloat(formData.price_per_unit)) ||
+      parseFloat(formData.price_per_unit) <= 0
+    ) {
+      newErrors.price_per_unit = "Please enter a valid price";
     }
     if (!formData.description.trim()) {
-      Alert.alert("Error", "Please enter description");
-      return;
+      newErrors.description = "Please enter description";
     }
     if (!formData.product_category) {
-      Alert.alert("Error", "Please select a category");
+      newErrors.product_category = "Please select a category";
+    }
+
+    // If there are errors, set them and return
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
 
@@ -144,9 +172,13 @@ const AddAddOns = () => {
         productImage: formData.image?.uri,
         stock: 5, // Default stock or get from response
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating addon:", error);
-      Alert.alert("Error", "Failed to create addon");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.response?.data?.message || "Failed to create addon",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -173,7 +205,9 @@ const AddAddOns = () => {
               background="#FFF8EB"
               value={formData.name}
               onChangeText={(text) => handleInputChange("name", text)}
+              textInputStyle={errors.name ? styles.inputError : undefined}
             />
+            {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
           </View>
 
           {/* Category Section */}
@@ -182,12 +216,24 @@ const AddAddOns = () => {
             <CustomDropdown
               placeholder="Select Category"
               options={categories}
-              onSelect={(option) =>
-                handleInputChange("product_category", option.id)
-              }
+              onSelect={(option) => {
+                handleInputChange("product_category", option.id);
+                if (errors.product_category) {
+                  setErrors((prev) => ({
+                    ...prev,
+                    product_category: undefined,
+                  }));
+                }
+              }}
               selectedValue={formData.product_category}
-              dropDownBoxStyle={styles.inputField}
+              dropDownBoxStyle={[
+                styles.inputField,
+                errors.product_category && styles.dropdownError,
+              ]}
             />
+            {errors.product_category && (
+              <Text style={styles.errorText}>{errors.product_category}</Text>
+            )}
           </View>
 
           {/* Price per Unit Section */}
@@ -199,14 +245,23 @@ const AddAddOns = () => {
               value={formData.price_per_unit}
               onChangeText={(text) => handleInputChange("price_per_unit", text)}
               keyboardType="numeric"
+              textInputStyle={
+                errors.price_per_unit ? styles.inputError : undefined
+              }
             />
+            {errors.price_per_unit && (
+              <Text style={styles.errorText}>{errors.price_per_unit}</Text>
+            )}
           </View>
 
           {/* Description Section */}
           <View style={styles.section}>
             <Text style={styles.label}>Description</Text>
             <TextInput
-              style={styles.descriptionInput}
+              style={[
+                styles.descriptionInput,
+                errors.description && styles.descriptionInputError,
+              ]}
               placeholder="Enter description here..."
               placeholderTextColor="#888"
               value={formData.description}
@@ -215,6 +270,9 @@ const AddAddOns = () => {
               numberOfLines={4}
               textAlignVertical="top"
             />
+            {errors.description && (
+              <Text style={styles.errorText}>{errors.description}</Text>
+            )}
           </View>
 
           {/* Image Section */}
@@ -306,6 +364,21 @@ const styles = StyleSheet.create({
     fontSize: 16,
     minHeight: 100,
     color: "#333",
+  },
+  descriptionInputError: {
+    borderColor: "#FF0000",
+  },
+  inputError: {
+    borderColor: "#FF0000",
+  },
+  dropdownError: {
+    borderColor: "#FF0000",
+  },
+  errorText: {
+    color: "#FF0000",
+    fontSize: 12,
+    marginTop: 4,
+    marginBottom: 8,
   },
   imagePlaceholder: {
     backgroundColor: "#FFF8EB",

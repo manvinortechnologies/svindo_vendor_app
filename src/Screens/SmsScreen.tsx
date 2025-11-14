@@ -30,7 +30,7 @@ const SmsScreen = () => {
             style={{ flexDirection: "row", justifyContent: "space-between" }}
           >
             <Text style={styles.sectionTitle}>SMS Credits Details</Text>
-            <View
+            {/* <View
               style={{
                 flexDirection: "row",
                 gap: 2,
@@ -46,7 +46,7 @@ const SmsScreen = () => {
               <TouchableOpacity>
                 <Icon name="chevron-down" size={18} />
               </TouchableOpacity>
-            </View>
+            </View> */}
           </View>
           <View style={styles.creditRow}>
             <View style={[styles.creditBox, { backgroundColor: "#CDBDFF" }]}>
@@ -69,9 +69,9 @@ const SmsScreen = () => {
             This feature is to automatically send different transactions to your
             customer via SMS.
           </Text>
-          <Text style={styles.noteText}>
+          {/* <Text style={styles.noteText}>
             It's a paid service, add SMS credits to avail the benefits
-          </Text>
+          </Text> */}
         </View>
 
         {/* Toggle */}
@@ -110,9 +110,9 @@ const SmsScreen = () => {
       </ScrollView>
 
       {/* Add Credit Button */}
-      <TouchableOpacity style={styles.addButton}>
+      {/* <TouchableOpacity style={styles.addButton}>
         <Text style={styles.addButtonText}>Add Credit</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 };

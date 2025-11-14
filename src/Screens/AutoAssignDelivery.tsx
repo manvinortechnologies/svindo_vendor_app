@@ -14,17 +14,22 @@ import CustomSwitch from "./CustomSwitch";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import { SafeAreaView } from "react-native-safe-area-context";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import moment from "moment";
 
 const { width } = Dimensions.get("window");
 
 const AutoAssignDelivery = () => {
   const [isEnabled, setIsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [tillDate, setTillDate] = useState<Date>(new Date());
+  const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const toggleSwitch = async () => {
     setLoading(true);
     try {
       await api.post("/vendor/deliverymode/", {
         is_auto_assign_enabled: !isEnabled,
+        is_self_delivery_enabled: isEnabled,
       });
       setIsEnabled((previousState) => !previousState);
     } catch (error) {
@@ -49,6 +54,19 @@ const AutoAssignDelivery = () => {
   useEffect(() => {
     getValues();
   }, []);
+
+  const showDatePicker = () => {
+    setDatePickerVisible(true);
+  };
+
+  const handleDateConfirm = (date: Date) => {
+    setTillDate(date);
+    setDatePickerVisible(false);
+  };
+
+  const handleDateCancel = () => {
+    setDatePickerVisible(false);
+  };
 
   const transactions = [
     {
@@ -99,23 +117,34 @@ const AutoAssignDelivery = () => {
           borderColor: "#C7C7C7",
           padding: 10,
           borderRadius: 8,
+          marginHorizontal: 16,
         }}
       >
         <View style={styles.rowSpace}>
           <Text style={styles.sectionTitle}>Delivery Details</Text>
-          <TouchableOpacity style={styles.filterButton}>
-            <Text style={styles.filterButtonText}>Till day</Text>
-            <Icon name="chevron-down" size={20} />
+          <TouchableOpacity
+            style={styles.filterButton}
+            onPress={showDatePicker}
+          >
+            <Text style={styles.filterButtonText}>
+              {moment(tillDate).format("DD/MM/YYYY")}
+            </Text>
+            <Icon
+              name="calendar-month-outline"
+              size={20}
+              color="#FCA311"
+              style={{ marginLeft: 5 }}
+            />
           </TouchableOpacity>
         </View>
 
         <View style={styles.summaryBox}>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Spent</Text>
+            <Text style={styles.summaryLabel}>Total Discount Amount</Text>
             <Text style={styles.summaryAmount}>Rs.2000.00</Text>
           </View>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryLabel}>Available</Text>
+            <Text style={styles.summaryLabel}>Total Delivery Amount</Text>
             <View
               style={{
                 flexDirection: "row",
@@ -167,14 +196,24 @@ const AutoAssignDelivery = () => {
             />
           </View>
         )}
-        style={{ marginTop: 12 }}
+        style={{ marginTop: 12, marginHorizontal: 16 }}
         showsVerticalScrollIndicator={false}
       />
 
       {/* Add Amount Button */}
-      <TouchableOpacity style={styles.addBtn}>
+      {/* <TouchableOpacity style={styles.addBtn}>
         <Text style={styles.addBtnText}>Add Amount</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
+
+      {/* Date Picker Modal */}
+      <DateTimePickerModal
+        isVisible={isDatePickerVisible}
+        mode="date"
+        onConfirm={handleDateConfirm}
+        onCancel={handleDateCancel}
+        date={tillDate}
+        maximumDate={new Date()}
+      />
     </SafeAreaView>
   );
 };
@@ -185,7 +224,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingHorizontal: 16,
   },
   box: {
     backgroundColor: "#FFF",
@@ -194,6 +232,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     marginBottom: 12,
+    marginHorizontal: 16,
   },
   rowSpace: {
     flexDirection: "row",
@@ -212,7 +251,7 @@ const styles = StyleSheet.create({
   },
   filterButton: {
     flexDirection: "row",
-    gap: 5,
+    alignItems: "center",
     borderWidth: 1,
     borderColor: "#C7C7C7",
     paddingHorizontal: 16,
@@ -235,8 +274,8 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   summaryLabel: {
-    fontSize: 18,
-    fontWeight: "600",
+    fontSize: 13,
+    fontWeight: "500",
     color: "#000",
   },
   summaryAmount: {
@@ -271,11 +310,15 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   addBtn: {
-    width: "40%",
-    alignSelf: "flex-end",
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    // width: "40%",
+    // alignSelf: "flex-end",
     backgroundColor: "#169729",
     borderRadius: 20,
     paddingVertical: 10,
+    paddingHorizontal: 20,
     alignItems: "center",
     marginTop: 12,
   },

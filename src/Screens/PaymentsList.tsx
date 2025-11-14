@@ -7,6 +7,10 @@ import {
   TouchableOpacity,
   RefreshControl,
   Alert,
+  Modal,
+  TextInput,
+  Dimensions,
+  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
@@ -20,6 +24,8 @@ import { useIsFocused, useNavigation } from "@react-navigation/native";
 import moment from "moment";
 import CustomModal from "../Modals/CustomModal";
 import DeleteModal from "./DeleteModal";
+import CalendarModal from "../Modals/CalendarModal";
+import Toast from "react-native-toast-message";
 
 interface CustomerDetails {
   id: number;
@@ -83,6 +89,18 @@ const PaymentsList = () => {
   const [isEditing, setIsEditing] = useState(false);
   const isFocused = useIsFocused();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  // Filter states
+  const [showFilterModal, setShowFilterModal] = useState<boolean>(false);
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [calendarModel, setCalendarModel] = useState<string>("");
+  const [isFiltered, setIsFiltered] = useState<boolean>(false);
+  const [allPayments, setAllPayments] = useState<Payment[]>([]);
+  const [showImageModal, setShowImageModal] = useState<boolean>(false);
+  const [selectedAttachment, setSelectedAttachment] = useState<string | null>(
+    null
+  );
   // Fetch payments data from API
   const fetchPayments = async (isRefresh = false) => {
     try {
@@ -93,10 +111,16 @@ const PaymentsList = () => {
       }
 
       const response = await api.get(API_ROUTES.paymnet);
-      setPayments(response.data || []);
+      const paymentsData = response.data || [];
+      setAllPayments(paymentsData);
+      setPayments(paymentsData);
     } catch (error) {
       console.error("Error fetching payments:", error);
-      Alert.alert("Error", "Failed to load payments. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to load payments. Please try again.",
+      });
     } finally {
       if (isRefresh) {
         setIsRefreshing(false);
@@ -117,6 +141,38 @@ const PaymentsList = () => {
 
   const formatDate = (dateString: string) => {
     return moment(dateString).format("DD MMM YYYY");
+  };
+
+  // Filter payments by date range
+  const filterPaymentsByDateRange = (start: string, end: string): Payment[] => {
+    if (!start || !end) return allPayments;
+
+    const startDateObj = new Date(start);
+    const endDateObj = new Date(end);
+    // Set end date to end of day
+    endDateObj.setHours(23, 59, 59, 999);
+
+    return allPayments.filter((payment) => {
+      const paymentDate = new Date(payment.payment_date);
+      return paymentDate >= startDateObj && paymentDate <= endDateObj;
+    });
+  };
+
+  const handleApplyFilter = () => {
+    if (startDate && endDate) {
+      const filtered = filterPaymentsByDateRange(startDate, endDate);
+      setPayments(filtered);
+      setIsFiltered(true);
+      setShowFilterModal(false);
+    }
+  };
+
+  const handleClearFilter = () => {
+    setStartDate("");
+    setEndDate("");
+    setPayments(allPayments);
+    setIsFiltered(false);
+    setShowFilterModal(false);
   };
 
   const getPaymentTypeIcon = (type: string) => {
@@ -247,14 +303,19 @@ const PaymentsList = () => {
   };
 
   // Group payments by date
-  const groupedPayments = payments.reduce((groups, payment) => {
-    const date = formatDate(payment.payment_date);
-    if (!groups[date]) {
-      groups[date] = [];
-    }
-    groups[date].push(payment);
-    return groups;
-  }, {} as Record<string, Payment[]>);
+  const groupedPayments = payments
+    .sort(
+      (a, b) =>
+        new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime()
+    )
+    .reduce((groups, payment) => {
+      const date = formatDate(payment.payment_date);
+      if (!groups[date]) {
+        groups[date] = [];
+      }
+      groups[date].push(payment);
+      return groups;
+    }, {} as Record<string, Payment[]>);
 
   const renderDateGroup = ({ item: date }: { item: string }) => (
     <View style={styles.dateGroup}>
@@ -284,14 +345,8 @@ const PaymentsList = () => {
         <CustomHeader
           title="Payments"
           rightIcon={
-            <TouchableOpacity
-              style={styles.addButton}
-              onPress={() =>
-                (navigation as any).navigate(HomeNavigation.PAYMENTSCREEN)
-              }
-            >
-              <Icon name="add" size={20} color="#fff" />
-              <Text style={styles.addButtonText}>Add</Text>
+            <TouchableOpacity onPress={() => setShowFilterModal(true)}>
+              <Icon name="calendar" size={22} color="#FCA311" />
             </TouchableOpacity>
           }
         />
@@ -350,7 +405,111 @@ const PaymentsList = () => {
             </View>
           }
         />
+
+        {/* FAB - Floating Action Button */}
+        <TouchableOpacity
+          style={styles.fab}
+          onPress={() =>
+            (navigation as any).navigate(HomeNavigation.PAYMENTSCREEN)
+          }
+          activeOpacity={0.8}
+        >
+          <Icon name="add" size={28} color="#fff" />
+        </TouchableOpacity>
       </View>
+
+      {/* Calendar Modal */}
+      <CalendarModal
+        initialDate={calendarModel === "start" ? startDate : endDate}
+        visible={calendarModel !== ""}
+        onClose={() => setCalendarModel("")}
+        onSelect={(e) =>
+          calendarModel === "start" ? setStartDate(e) : setEndDate(e)
+        }
+        maxDate={moment().format("YYYY-MM-DD")}
+      />
+
+      {/* Filter Modal */}
+      <Modal
+        visible={showFilterModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowFilterModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.filterModalHeader}>
+              <Text style={styles.filterModalTitle}>Filter by Date Range</Text>
+              <TouchableOpacity
+                onPress={() => setShowFilterModal(false)}
+                style={styles.filterCloseButton}
+              >
+                <Icon name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.filterModalContent}>
+              <View style={styles.dateInputContainer}>
+                <Text style={styles.dateLabel}>Start Date</Text>
+                <TouchableOpacity onPress={() => setCalendarModel("start")}>
+                  <TextInput
+                    style={styles.dateInput}
+                    value={startDate}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor="#999"
+                    editable={false}
+                  />
+                </TouchableOpacity>
+              </View>
+
+              <View style={styles.dateInputContainer}>
+                <Text style={styles.dateLabel}>End Date</Text>
+                <TouchableOpacity onPress={() => setCalendarModel("end")}>
+                  <TextInput
+                    style={styles.dateInput}
+                    value={endDate}
+                    editable={false}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor="#999"
+                  />
+                </TouchableOpacity>
+              </View>
+
+              {isFiltered && (
+                <View style={styles.filterStatus}>
+                  <Text style={styles.filterStatusText}>Filters applied</Text>
+                  <TouchableOpacity
+                    onPress={handleClearFilter}
+                    style={styles.clearFilterButton}
+                  >
+                    <Text style={styles.clearFilterText}>Clear Filter</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+
+              <View style={styles.filterModalButtons}>
+                <TouchableOpacity
+                  style={[styles.filterModalButton, styles.filterCancelButton]}
+                  onPress={() => setShowFilterModal(false)}
+                >
+                  <Text style={styles.filterCancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.filterModalButton,
+                    styles.filterApplyButton,
+                    (!startDate || !endDate) && styles.disabledButton,
+                  ]}
+                  onPress={handleApplyFilter}
+                  disabled={!startDate || !endDate}
+                >
+                  <Text style={styles.filterApplyButtonText}>Apply Filter</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Payment Details Modal */}
       <CustomModal
@@ -460,7 +619,13 @@ const PaymentsList = () => {
               {selectedPayment.attachment && (
                 <View style={styles.modalDetailRow}>
                   <Text style={styles.modalLabel}>Attachment:</Text>
-                  <TouchableOpacity style={styles.attachmentButton}>
+                  <TouchableOpacity
+                    style={styles.attachmentButton}
+                    onPress={() => {
+                      setSelectedAttachment(selectedPayment.attachment);
+                      setShowImageModal(true);
+                    }}
+                  >
                     <Icon name="document-outline" size={16} color="#FCA311" />
                     <Text style={styles.attachmentText}>View Attachment</Text>
                   </TouchableOpacity>
@@ -506,6 +671,38 @@ const PaymentsList = () => {
         buttonText="Cancel"
         buttonText2="Delete"
       />
+
+      {/* Image Preview Modal */}
+      <Modal
+        visible={showImageModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => {
+          setShowImageModal(false);
+          setSelectedAttachment(null);
+        }}
+      >
+        <View style={styles.imageModalOverlay}>
+          <TouchableOpacity
+            style={styles.imageModalCloseButton}
+            onPress={() => {
+              setShowImageModal(false);
+              setSelectedAttachment(null);
+            }}
+          >
+            <Icon name="close" size={28} color="#fff" />
+          </TouchableOpacity>
+          <View style={styles.imageModalContent}>
+            {selectedAttachment && (
+              <Image
+                source={{ uri: selectedAttachment }}
+                style={styles.fullImage}
+                resizeMode="contain"
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </MainContainer>
   );
 };
@@ -697,19 +894,21 @@ const styles = StyleSheet.create({
     color: "#999",
     textAlign: "center",
   },
-  addButton: {
+  fab: {
+    position: "absolute",
+    bottom: 20,
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: "#FCA311",
-    flexDirection: "row",
+    justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-  },
-  addButtonText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
-    marginLeft: 4,
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   // Modal styles
   modalContent: {
@@ -785,5 +984,142 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     marginLeft: 8,
+  },
+  // Filter Modal Styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    width: Dimensions.get("window").width * 0.9,
+    maxHeight: Dimensions.get("window").height * 0.6,
+  },
+  filterModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  filterModalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  filterCloseButton: {
+    padding: 4,
+  },
+  filterModalContent: {
+    padding: 20,
+  },
+  dateInputContainer: {
+    marginBottom: 20,
+  },
+  dateLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+  },
+  dateInput: {
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: "#000",
+    backgroundColor: "#fff",
+  },
+  filterStatus: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#F0F8FF",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  filterStatusText: {
+    fontSize: 14,
+    color: "#2196F3",
+    fontWeight: "500",
+  },
+  clearFilterButton: {
+    backgroundColor: "#FF5722",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  clearFilterText: {
+    color: "#fff",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  filterModalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+  },
+  filterModalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    marginHorizontal: 5,
+  },
+  filterCancelButton: {
+    backgroundColor: "#F5F5F5",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  filterCancelButtonText: {
+    color: "#666",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  filterApplyButton: {
+    backgroundColor: "#FCA311",
+  },
+  filterApplyButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  imageModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imageModalCloseButton: {
+    position: "absolute",
+    top: 40,
+    right: 20,
+    zIndex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imageModalContent: {
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  fullImage: {
+    width: Dimensions.get("window").width - 40,
+    height: Dimensions.get("window").height - 100,
   },
 });

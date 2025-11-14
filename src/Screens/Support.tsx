@@ -16,6 +16,7 @@ import { s } from "react-native-size-matters";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import api from "../services/api/api";
 import { HomeNavigation } from "../constants/app-routes.constants";
+import Toast from "react-native-toast-message";
 
 interface NavigationProp {
   navigate: (screen: string, params: any) => void;
@@ -37,7 +38,11 @@ const Support = () => {
       setTickets(response.data);
     } catch (error) {
       console.error("Error fetching tickets:", error);
-      Alert.alert("Error", "Failed to fetch support tickets");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to fetch support tickets",
+      });
     } finally {
       setIsLoadingTickets(false);
     }
@@ -45,7 +50,11 @@ const Support = () => {
 
   const handleCreateTicket = async () => {
     if (!subject) {
-      Alert.alert("Error", "Please select an order first");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please select an order first",
+      });
       return;
     }
 
@@ -61,14 +70,18 @@ const Support = () => {
       setSubject("");
       fetchTickets();
 
-      console.log("Ticket created:", response);
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Support ticket created successfully",
+      });
     } catch (error) {
       console.error("Error creating ticket:", error);
-      Alert.alert(
-        "Error",
-        "Failed to create support ticket. Please try again.",
-        [{ text: "OK" }]
-      );
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to create support ticket. Please try again.",
+      });
     } finally {
       setIsCreatingTicket(false);
     }

@@ -11,22 +11,24 @@ import {
 } from "react-native";
 import { ScaledSheet } from "react-native-size-matters";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import {
-  launchImageLibrary,
-  ImagePickerResponse,
-  MediaType,
-} from "react-native-image-picker";
+import ImageCropPicker, {
+  ImageOrVideo,
+  Options,
+} from "react-native-image-crop-picker";
+import Toast from "react-native-toast-message";
+import { APP_CONSTANTS } from "../constants/app.constants";
 
 interface EditStoreModalProps {
   visible: boolean;
   onClose: () => void;
   onSubmit: (formData: FormData) => void;
-  editType: "name" | "banner" | "logo" | "about" | null;
+  editType: "name" | "banner" | "logo" | "about" | "storetag" | null;
   currentData: {
     name?: string;
     banner_image?: string | null;
     profile_image?: string | null;
     about_text?: string | null;
+    storetag?: string | null;
   };
   isLoading?: boolean;
 }
@@ -52,39 +54,38 @@ const EditStoreModal: React.FC<EditStoreModalProps> = ({
         setSelectedImage(currentData.profile_image || null);
       } else if (editType === "about") {
         setAboutText(currentData.about_text || "");
+      } else if (editType === "storetag") {
+        setAboutText(currentData.storetag || "");
       }
       setImageUri(null);
     }
   }, [visible, currentData, editType]);
 
-  const selectImage = () => {
-    const options = {
-      mediaType: "photo" as MediaType,
-      includeBase64: false,
-      maxHeight: 2000,
-      maxWidth: 2000,
+  const selectImage = async () => {
+    const options: Options = {
+      mediaType: "photo",
+      cropping: true,
     };
 
-    launchImageLibrary(options, (response: ImagePickerResponse) => {
-      if (response.didCancel || response.errorMessage) {
-        return;
-      }
+    const image: ImageOrVideo = await ImageCropPicker.openPicker(options);
 
-      if (response.assets && response.assets[0]) {
-        const asset = response.assets[0];
-        setImageUri(asset.uri || null);
-      }
-    });
+    setImageUri(image.path);
   };
 
   const handleSubmit = () => {
     if (editType === "name" && !name.trim()) {
-      Alert.alert("Error", "Please enter a store name");
+      Toast.show({
+        text1: "Please enter a store name",
+        type: "error",
+      });
       return;
     }
 
     if ((editType === "banner" || editType === "logo") && !imageUri) {
-      Alert.alert("Error", "Please select an image");
+      Toast.show({
+        text1: "Please select an image",
+        type: "error",
+      });
       return;
     }
 
@@ -106,6 +107,8 @@ const EditStoreModal: React.FC<EditStoreModalProps> = ({
       } as any);
     } else if (editType === "about" && aboutText) {
       formData.append("about", aboutText);
+    } else if (editType === "storetag" && aboutText) {
+      formData.append("storetag", aboutText);
     }
     onSubmit(formData);
   };
@@ -136,7 +139,11 @@ const EditStoreModal: React.FC<EditStoreModalProps> = ({
             >
               {imageUri ? (
                 <Image
-                  source={{ uri: imageUri }}
+                  source={{
+                    uri: imageUri.includes("http")
+                      ? imageUri
+                      : APP_CONSTANTS.API_BASE_URL + imageUri,
+                  }}
                   style={styles.selectedImage}
                 />
               ) : selectedImage ? (
@@ -195,18 +202,25 @@ const EditStoreModal: React.FC<EditStoreModalProps> = ({
         );
 
       case "about":
+      case "storetag":
         return (
           <View style={styles.inputContainer}>
-            <Text style={styles.label}>Store About</Text>
+            <Text style={styles.label}>
+              {editType === "about" ? "Store About" : "Store Tagline"}
+            </Text>
             <TextInput
               style={styles.textInput}
               value={aboutText}
               onChangeText={setAboutText}
-              placeholder="Enter store about"
+              placeholder={
+                editType === "about"
+                  ? "Enter store about"
+                  : "Enter store tagline"
+              }
               placeholderTextColor="#999"
               multiline
               numberOfLines={6}
-              maxLength={150}
+              maxLength={editType === "about" ? 150 : 40}
               textAlignVertical="top"
             />
           </View>
@@ -233,47 +247,49 @@ const EditStoreModal: React.FC<EditStoreModalProps> = ({
   };
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          <View style={styles.header}>
-            <Text style={styles.title}>{getModalTitle()}</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-              <Icon name="close" size={24} color="#333" />
-            </TouchableOpacity>
-          </View>
+    <View>
+      <Modal
+        visible={visible}
+        transparent
+        animationType="slide"
+        onRequestClose={onClose}
+      >
+        <View style={styles.overlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.header}>
+              <Text style={styles.title}>{getModalTitle()}</Text>
+              <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                <Icon name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
 
-          <View style={styles.content}>{renderContent()}</View>
+            <View style={styles.content}>{renderContent()}</View>
 
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
-              onPress={onClose}
-              disabled={isLoading}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={[styles.button, styles.cancelButton]}
+                onPress={onClose}
+                disabled={isLoading}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.button, styles.submitButton]}
-              onPress={handleSubmit}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" size="small" />
-              ) : (
-                <Text style={styles.submitButtonText}>Submit</Text>
-              )}
-            </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, styles.submitButton]}
+                onPress={handleSubmit}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.submitButtonText}>Submit</Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+    </View>
   );
 };
 

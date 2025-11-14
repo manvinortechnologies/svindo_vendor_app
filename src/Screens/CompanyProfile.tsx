@@ -10,8 +10,6 @@ import {
   Platform,
   Keyboard,
   TouchableWithoutFeedback,
-  Alert,
-  KeyboardTypeOptions,
   Image,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons";
@@ -22,6 +20,9 @@ import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import { InputBox } from "../CommonComponent/InputBox";
 import ModalUpdatePhoto from "../Modals/ModalUpdatePhoto";
+import Toast from "react-native-toast-message";
+import CustomDropdown from "../CommonComponent/CustomDropdown";
+import { DropDownOption } from "../CommonComponent/CustomDropdown";
 
 const CompanyProfile = ({ navigation, route }: any) => {
   const profileId = route?.params?.id;
@@ -29,12 +30,14 @@ const CompanyProfile = ({ navigation, route }: any) => {
   const [imageFile, setImageFile] = useState<any>();
   const [imagePickerModel, setImagePickerModel] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [states, setStates] = useState<DropDownOption[]>([]);
 
   const [form, setForm] = useState({
     companyName: "",
     gstin: "",
     email: "",
     contact: "",
+    state: "",
     brandName: "",
     billing: {
       address1: "",
@@ -62,6 +65,21 @@ const CompanyProfile = ({ navigation, route }: any) => {
     getProfileData();
   }, [profileId]);
 
+  useEffect(() => {
+    const fetchStates = async () => {
+      try {
+        const response = await api.get("masters/get-state/");
+        if (Array.isArray(response?.data)) {
+          setStates(response.data);
+        }
+      } catch (error) {
+        console.error("Failed to load states:", error);
+      }
+    };
+
+    fetchStates();
+  }, []);
+
   const getProfileData = async () => {
     try {
       setIsLoading(true);
@@ -79,7 +97,11 @@ const CompanyProfile = ({ navigation, route }: any) => {
         data = companies && companies.length > 0 ? companies[0] : null;
 
         if (!data) {
-          Alert.alert("No Data", "No company profile found.");
+          Toast.show({
+            type: "error",
+            text1: "Error",
+            text2: "No company profile found.",
+          });
           return;
         }
       }
@@ -93,6 +115,7 @@ const CompanyProfile = ({ navigation, route }: any) => {
         email: data.email || "",
         contact: data.contact || "",
         brandName: data.brand_name || "",
+        state: billingFields.state || "",
         billing: billingFields,
         shipping: shippingFields,
         pan: data.pan || "",
@@ -104,7 +127,11 @@ const CompanyProfile = ({ navigation, route }: any) => {
       setImageFile({ uri: data.profile_image });
     } catch (error) {
       console.log("getProfileData error:", error);
-      Alert.alert("Error", "Failed to fetch company profile data.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to fetch company profile data.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -159,6 +186,7 @@ const CompanyProfile = ({ navigation, route }: any) => {
       formData.append("email", form.email || "");
       formData.append("gstin", form.gstin || "");
       formData.append("contact", form.contact || "");
+      formData.append("state", form.state || "");
       formData.append("billing_address", billingAddress);
       formData.append("address", shippingAddress);
       formData.append("pan", form.pan || "");
@@ -184,10 +212,18 @@ const CompanyProfile = ({ navigation, route }: any) => {
       );
 
       if (response.status === 201 || response.status === 200) {
-        Alert.alert("Success", "Company Add successfully!");
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Company Add successfully!",
+        });
         navigation.goBack();
       } else {
-        Alert.alert("Fail", "Update failed!");
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Update failed!",
+        });
       }
     } catch (error) {
       console.error("Update error:", error);
@@ -274,6 +310,21 @@ const CompanyProfile = ({ navigation, route }: any) => {
                 placeholder="Your brand"
                 value={form.brandName}
                 onChangeText={(text) => setForm({ ...form, brandName: text })}
+              />
+              <Text style={styles.dropdownLabel}>State</Text>
+              <CustomDropdown
+                placeholder="Select State"
+                options={states}
+                onSelect={(option) =>
+                  setForm((prev) => ({
+                    ...prev,
+                    state: option?.name ?? option?.id?.toString() ?? "",
+                  }))
+                }
+                selectedValue={
+                  states.find((item) => item.name === form.state)?.id ?? null
+                }
+                dropDownBoxStyle={styles.dropdown}
               />
 
               {/* Billing Address */}
@@ -425,6 +476,12 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#000",
   },
+  dropdownLabel: {
+    marginTop: 12,
+    marginBottom: 6,
+    fontWeight: "600",
+    color: "#000",
+  },
 
   sectionTitle: {
     fontSize: 16,
@@ -460,6 +517,9 @@ const styles = StyleSheet.create({
     color: "#000",
     fontSize: 13,
     marginRight: 6,
+  },
+  dropdown: {
+    marginBottom: 12,
   },
   saveButton: {
     backgroundColor: "#FCA511",

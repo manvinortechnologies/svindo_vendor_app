@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import Ionicons from "react-native-vector-icons/Ionicons";
 import Headerwithback from "./Headerwithback";
 import Bottomnavigation from "./Bottomnavigation";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -44,7 +45,7 @@ const ManageCustomers = ({ navigation }: any) => {
   const [customersList, setCustomersList] = useState<Customer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
-
+  const [totalPendingAmount, setTotalPendingAmount] = useState<number>(0);
   useFocusEffect(
     useCallback(() => {
       getCustomerData();
@@ -57,6 +58,12 @@ const ManageCustomers = ({ navigation }: any) => {
       const res = await api.get("vendor/customer/");
       setCustomersList(res.data);
       setFilteredCustomers(res.data); // initially show all
+      setTotalPendingAmount(
+        res.data.reduce(
+          (acc: number, customer: Customer) => acc + customer.balance,
+          0
+        )
+      );
     } catch (error) {
       console.error(error);
     } finally {
@@ -92,15 +99,17 @@ const ManageCustomers = ({ navigation }: any) => {
               onChangeText={setSearchTerm}
             />
           </View>
-          <TouchableOpacity onPress={() => navigation.navigate("AddCustomer")}>
+          {/* <TouchableOpacity onPress={() => navigation.navigate("AddCustomer")}>
             <Text style={styles.addText}>+ Add New Customer</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {/* You Collect & Pay */}
         <View style={styles.summaryContainer}>
           <TouchableOpacity style={styles.summaryBox}>
-            <Text style={styles.summaryText}>You Collect: ₹0</Text>
+            <Text style={styles.summaryText}>
+              Pending Amount: ₹{totalPendingAmount}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -108,7 +117,7 @@ const ManageCustomers = ({ navigation }: any) => {
         <View style={styles.tableHeader}>
           <Text style={styles.headerText}>Name</Text>
           <Text style={styles.headerText}>Contact Info</Text>
-          <Text style={styles.headerText}>Opening Balance</Text>
+          <Text style={styles.headerText}>Credit Balance</Text>
         </View>
 
         {/* Customer List */}
@@ -150,6 +159,15 @@ const ManageCustomers = ({ navigation }: any) => {
           }
         />
 
+        {/* FAB: Add New Customer */}
+        <TouchableOpacity
+          style={styles.fab}
+          activeOpacity={0.9}
+          onPress={() => navigation.navigate("AddCustomer")}
+        >
+          <Ionicons name="add" size={26} color="#fff" />
+        </TouchableOpacity>
+
         <Loading visible={isLoading} />
       </SafeAreaView>
     </View>
@@ -163,6 +181,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
   },
+  fab: {
+    position: "absolute",
+    right: 20,
+    bottom: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: "#FCA311",
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -175,7 +209,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     borderRadius: 8,
     alignItems: "center",
-    width: "80%",
+    // width: "80%",
   },
   searchInput: {
     flex: 1,
@@ -220,6 +254,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     fontSize: 13,
     color: "#000",
+    textAlign: "center",
   },
   customerRow: {
     flexDirection: "row",

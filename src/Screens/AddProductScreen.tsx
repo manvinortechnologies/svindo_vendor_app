@@ -35,6 +35,18 @@ import { HomeNavigation } from "../constants/app-routes.constants";
 import { s, ScaledSheet } from "react-native-size-matters";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Icon from "react-native-vector-icons/Ionicons";
+import Toast from "react-native-toast-message";
+import { useIsFocused } from "@react-navigation/native";
+
+interface PrintVariantProps {
+  variant: any;
+  index: number;
+  onUpdate: (key: string, value: any) => void;
+  onRemove: () => void;
+  variantData: any;
+  errors: any;
+  touched: any;
+}
 
 // Constants
 const PRODUCT_TYPES = ["product", "service", "print"];
@@ -64,7 +76,10 @@ const getValidationSchema = (selectedType: string) =>
   Yup.object().shape({
     name: Yup.string().required("Product name is required"),
     sales_price: Yup.string().required("Sales price is required"),
-    mrp: Yup.string().required("MRP is required"),
+    mrp:
+      selectedType === "print"
+        ? Yup.string().notRequired()
+        : Yup.string().required("MRP is required"),
     unit: Yup.string().required("Unit is required"),
     category: Yup.string().required("Please select a category"),
     sub_category: Yup.string().required("Please select a sub category"),
@@ -104,11 +119,24 @@ const getValidationSchema = (selectedType: string) =>
       then: (schema) => schema.required("Food type is required"),
       otherwise: (schema) => schema.notRequired(),
     }),
-    print_variants: Yup.array().when("product_type", {
-      is: "print",
-      then: (schema) => schema.min(1, "At least one print variant is required"),
-      otherwise: (schema) => schema.notRequired(),
-    }),
+    print_variants:
+      selectedType === "print"
+        ? Yup.array()
+            .min(1, "At least one print variant is required")
+            .of(
+              Yup.object().shape({
+                paper: Yup.string().required("Paper is required"),
+                sided: Yup.string().required("Sides is required"),
+                price: Yup.string().required("Price per page is required"),
+                min_quantity: Yup.string().required(
+                  "Minimum quantity is required"
+                ),
+                max_quantity: Yup.string().required(
+                  "Maximum quantity is required"
+                ),
+              })
+            )
+        : Yup.array().notRequired(),
     customize_print_variants: Yup.array().when(
       ["product_type", "is_customize"],
       {
@@ -175,6 +203,11 @@ const TypeSelector = ({
   selectedType,
   onSelect,
   disabled = {} as any,
+}: {
+  types: string[];
+  selectedType: string;
+  onSelect: (value: string) => void;
+  disabled: any;
 }) => (
   <View style={styles.row}>
     <Text style={styles.label}>Type :</Text>
@@ -210,6 +243,12 @@ const ForSelector = ({
   onSelect,
   selectedType,
   disabled = {} as any,
+}: {
+  options: string[];
+  selectedFor: string;
+  onSelect: (value: string) => void;
+  selectedType: string;
+  disabled: any;
 }) => (
   <View style={styles.row}>
     <Text style={styles.label}>For :</Text>
@@ -252,6 +291,13 @@ const SectionHeader = ({
   onSwitchChange,
   showAddButton,
   onAddPress,
+}: {
+  title: string;
+  showSwitch: boolean;
+  switchValue: boolean;
+  onSwitchChange: (value: boolean) => void;
+  showAddButton: boolean;
+  onAddPress: () => void;
 }) => (
   <View style={styles.headerRow}>
     <Text style={styles.sectionTitle}>{title}</Text>
@@ -266,7 +312,17 @@ const SectionHeader = ({
   </View>
 );
 
-const FormField = ({ label, error, children, required = false }) => (
+const FormField = ({
+  label,
+  error,
+  children,
+  required = false,
+}: {
+  label: string;
+  error?: string;
+  children: React.ReactNode;
+  required?: boolean;
+}) => (
   <View style={{ marginBottom: 12 }}>
     {label && (
       <Text style={styles.smallLabel}>
@@ -278,14 +334,32 @@ const FormField = ({ label, error, children, required = false }) => (
   </View>
 );
 
-const ToggleRow = ({ label, value, onValueChange }) => (
+const ToggleRow = ({
+  label,
+  value,
+  onValueChange,
+}: {
+  label: string;
+  value: boolean;
+  onValueChange: (value: boolean) => void;
+}) => (
   <View style={styles.toggleRow}>
     <Text style={styles.smallLabel}>{label}</Text>
     <CustomSwitch value={value} onValueChange={onValueChange} />
   </View>
 );
 
-const ImageUploader = ({ images, onImagePress, selectedFor, error = null }) => (
+const ImageUploader = ({
+  images,
+  onImagePress,
+  selectedFor,
+  error = null,
+}: {
+  images: any;
+  onImagePress: (key: string) => void;
+  selectedFor: string;
+  error: string | null;
+}) => (
   <View style={styles.section}>
     <View style={styles.headerRow}>
       <Text style={[styles.sectionTitle, { marginBottom: 0 }]}>Images</Text>
@@ -305,31 +379,41 @@ const ImageUploader = ({ images, onImagePress, selectedFor, error = null }) => (
       )}
     </TouchableOpacity>
 
-    <Text style={styles.sectionTitle}> (Optional)</Text>
     {selectedFor === "both" && (
-      <View style={styles.imageRow}>
-        {["image2", "image3", "image4"].map((imageKey, i) => (
-          <TouchableOpacity
-            key={i}
-            onPress={() => onImagePress(imageKey)}
-            style={styles.imageBox}
-          >
-            {images[imageKey]?.uri ? (
-              <Image
-                source={{ uri: images[imageKey]?.uri }}
-                style={styles.imagePreview}
-              />
-            ) : (
-              <Text style={styles.plusIcon}>+</Text>
-            )}
-          </TouchableOpacity>
-        ))}
-      </View>
+      <>
+        <Text style={styles.sectionTitle}> (Optional)</Text>
+        <View style={styles.imageRow}>
+          {["image2", "image3", "image4"].map((imageKey, i) => (
+            <TouchableOpacity
+              key={i}
+              onPress={() => onImagePress(imageKey)}
+              style={styles.imageBox}
+            >
+              {images[imageKey]?.uri ? (
+                <Image
+                  source={{ uri: images[imageKey]?.uri }}
+                  style={styles.imagePreview}
+                />
+              ) : (
+                <Text style={styles.plusIcon}>+</Text>
+              )}
+            </TouchableOpacity>
+          ))}
+        </View>
+      </>
     )}
   </View>
 );
 
-const PrintVariant = ({ variant, index, onUpdate, onRemove, variantData }) => (
+const PrintVariant = ({
+  variant,
+  index,
+  onUpdate,
+  onRemove,
+  variantData,
+  errors,
+  touched,
+}: PrintVariantProps) => (
   <View style={styles.variantContainer}>
     <View style={styles.variantHeader}>
       <Text style={styles.variantTitle}>Variant {index + 1}</Text>
@@ -339,8 +423,8 @@ const PrintVariant = ({ variant, index, onUpdate, onRemove, variantData }) => (
     </View>
 
     <View style={styles.priceRow}>
-      <View style={styles.inputHalf}>
-        <FormField label="Paper">
+      <View style={[styles.inputHalf, { flex: 1 }]}>
+        <FormField label="Paper" error={touched?.paper && errors?.paper}>
           <CustomDropdown
             options={variantData?.paper_choices?.map((p) => ({
               ...p,
@@ -354,7 +438,7 @@ const PrintVariant = ({ variant, index, onUpdate, onRemove, variantData }) => (
           />
         </FormField>
       </View>
-      <View style={styles.inputHalf}>
+      {/* <View style={styles.inputHalf}>
         <FormField label="Color Type">
           <CustomDropdown
             options={variantData?.color_type_choices?.map((p) => ({
@@ -368,12 +452,12 @@ const PrintVariant = ({ variant, index, onUpdate, onRemove, variantData }) => (
             dropDownBoxStyle={styles.dropdownStyle}
           />
         </FormField>
-      </View>
+      </View> */}
     </View>
 
     <View style={styles.priceRow}>
       <View style={styles.inputHalf}>
-        <FormField label="Sides">
+        <FormField label="Sides" error={touched?.sided && errors?.sided}>
           <CustomDropdown
             options={variantData?.sided_choices?.map((p) => ({
               ...p,
@@ -388,7 +472,10 @@ const PrintVariant = ({ variant, index, onUpdate, onRemove, variantData }) => (
         </FormField>
       </View>
       <View style={styles.inputHalf}>
-        <FormField label="Price per page">
+        <FormField
+          label="Price per page"
+          error={touched?.price && errors?.price}
+        >
           <InputBox
             placeholder="Enter price"
             background="#FFF8EB"
@@ -402,22 +489,28 @@ const PrintVariant = ({ variant, index, onUpdate, onRemove, variantData }) => (
 
     <View style={styles.priceRow}>
       <View style={styles.inputHalf}>
-        <FormField label="Minimum Quantity">
+        <FormField
+          label="Minimum Quantity"
+          error={touched?.min_quantity && errors?.min_quantity}
+        >
           <InputBox
             placeholder="Min qty"
             background="#FFF8EB"
-            value={variant.min_quantity}
+            value={variant.min_quantity.toString()}
             keyboardType="number-pad"
             onChangeText={(text) => onUpdate("min_quantity", text)}
           />
         </FormField>
       </View>
       <View style={styles.inputHalf}>
-        <FormField label="Maximum Quantity">
+        <FormField
+          label="Maximum Quantity"
+          error={touched?.max_quantity && errors?.max_quantity}
+        >
           <InputBox
             placeholder="Max qty"
             background="#FFF8EB"
-            value={variant.max_quantity}
+            value={variant.max_quantity.toString()}
             keyboardType="number-pad"
             onChangeText={(text) => onUpdate("max_quantity", text)}
           />
@@ -436,7 +529,7 @@ const AddProductScreen = ({
   route: any;
 }) => {
   const formikRef = useRef<FormikProps<FormValues> | null>(null);
-
+  const isFocused = useIsFocused();
   // State Management
   const [selectedType, setSelectedType] = useState("product");
   const [selectedFor, setSelectedFor] = useState("offline");
@@ -473,6 +566,22 @@ const AddProductScreen = ({
   const [existingProduct, setExistingProduct] = useState<any>(null);
 
   const [settings, setSettings] = useState<{ [key: string]: boolean }>({});
+  const [hasCompanyGst, setHasCompanyGst] = useState<boolean | null>(null);
+
+  // Helper function to check if a field should be shown
+  const shouldShowField = (fieldKey: string): boolean => {
+    if (selectedFor === "both") {
+      return true;
+    }
+    if (fieldKey === "wholesale_price" && hasCompanyGst === false) {
+      return false;
+    }
+    // If settings are not loaded yet, show field by default
+    if (Object.keys(settings).length === 0) return true;
+    // Return true if setting is true or undefined, false if explicitly false
+    return settings[fieldKey] !== false;
+  };
+
   useEffect(() => {
     fetchAllData();
     loadProductSettings();
@@ -612,7 +721,11 @@ const AddProductScreen = ({
       }
     } catch (error) {
       console.error("Error fetching existing product:", error);
-      Alert.alert("Error", "Failed to load product data for editing");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to load product data for editing",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -621,20 +734,39 @@ const AddProductScreen = ({
   const fetchAllData = async () => {
     try {
       setIsLoading(true);
-      const [categoryRes, subCategoryRes, addonRes, variantRes, sizeRes] =
-        await Promise.all([
-          api.get(API_ROUTES.productCategory),
-          api.get(API_ROUTES.productSubCategory),
-          api.get(API_ROUTES.addons),
-          api.get(API_ROUTES.printVariantChoices),
-          api.get(API_ROUTES.productSizes),
-        ]);
+      const [
+        categoryRes,
+        subCategoryRes,
+        addonRes,
+        variantRes,
+        sizeRes,
+        companyRes,
+      ] = await Promise.all([
+        api.get(API_ROUTES.productCategory),
+        api.get(API_ROUTES.productSubCategory),
+        api.get(API_ROUTES.addons),
+        api.get(API_ROUTES.printVariantChoices),
+        api.get(API_ROUTES.productSizes),
+        api.get(API_ROUTES.companyProfle),
+      ]);
 
       setCategoryList(categoryRes.data);
       setSubCategoryList(subCategoryRes.data);
       setAddonData(addonRes.data);
       setVariantData(variantRes.data);
       setSizeList(sizeRes.data);
+
+      const companyData = Array.isArray(companyRes.data)
+        ? companyRes.data[0]
+        : companyRes.data;
+      const gstRaw =
+        companyData?.gstin ?? companyData?.gst ?? companyData?.gst_number ?? "";
+      const hasGst =
+        gstRaw !== undefined && gstRaw !== null && String(gstRaw).trim() !== "";
+      setHasCompanyGst(hasGst);
+      if (!hasGst) {
+        setIsWholesaleEnabled(false);
+      }
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -642,7 +774,7 @@ const AddProductScreen = ({
     }
   };
 
-  const handleSaveProduct = async (values) => {
+  const handleSaveProduct = async (values: FormValues) => {
     try {
       setIsLoading(true);
       // Create FormData
@@ -777,11 +909,10 @@ const AddProductScreen = ({
 
       // Add addons
       if (values.selectedAddons && values.selectedAddons.length > 0) {
-        values.selectedAddons.forEach((addon, index) => {
-          Object.keys(addon).forEach((key) => {
-            formData.append(`addons[${index}][${key}]`, addon[key]);
-          });
-        });
+        const addons = values.selectedAddons.map((addon) => ({
+          addon: addon.id,
+        }));
+        formData.append(`addons`, JSON.stringify(addons));
       }
 
       // Add print variants
@@ -843,19 +974,25 @@ const AddProductScreen = ({
         payload: res.data,
       });
       // }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving product:", error);
-      Alert.alert("Error", "Failed to save product");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.response?.data?.message || "Failed to save product",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   // Helper Functions
-  const addPrintVariant = (setFieldValue, values) => {
+  const addPrintVariant = (
+    setFieldValue: (field: string, value: any) => void,
+    values: FormValues
+  ) => {
     const newVariant = {
       paper: "",
-      color_type: "",
       sided: "",
       min_quantity: "",
       max_quantity: "",
@@ -867,7 +1004,10 @@ const AddProductScreen = ({
     ]);
   };
 
-  const addCustomizeVariant = (setFieldValue, values) => {
+  const addCustomizeVariant = (
+    setFieldValue: (field: string, value: any) => void,
+    values: FormValues
+  ) => {
     const newVariant = { size: "", price: "" };
     setFieldValue("customize_print_variants", [
       ...(values.customize_print_variants || []),
@@ -875,19 +1015,30 @@ const AddProductScreen = ({
     ]);
   };
 
-  const removePrintVariant = (setFieldValue, values, index) => {
+  const removePrintVariant = (
+    setFieldValue: (field: string, value: any) => void,
+    values: FormValues,
+    index: number
+  ) => {
     const updatedVariants = values.print_variants.filter((_, i) => i !== index);
     setFieldValue("print_variants", updatedVariants);
   };
 
-  const removeCustomizeVariant = (setFieldValue, values, index) => {
+  const removeCustomizeVariant = (
+    setFieldValue: (field: string, value: any) => void,
+    values: FormValues,
+    index: number
+  ) => {
     const updatedVariants = values.customize_print_variants.filter(
       (_, i) => i !== index
     );
     setFieldValue("customize_print_variants", updatedVariants);
   };
 
-  const addSelectedAddons = (setFieldValue, values) => {
+  const addSelectedAddons = (
+    setFieldValue: (field: string, value: any) => void,
+    values: FormValues
+  ) => {
     const newVariant = { id: "", name: "" };
     setFieldValue("selectedAddons", [
       ...(values.selectedAddons || []),
@@ -895,12 +1046,16 @@ const AddProductScreen = ({
     ]);
   };
 
-  const removeSelectedAddons = (setFieldValue, values, index) => {
+  const removeSelectedAddons = (
+    setFieldValue: (field: string, value: any) => void,
+    values: FormValues,
+    index: number
+  ) => {
     const updatedVariants = values.selectedAddons.filter((_, i) => i !== index);
     setFieldValue("selectedAddons", updatedVariants);
   };
 
-  const handleTypeSelect = (type) => {
+  const handleTypeSelect = (type: string) => {
     setSelectedType(type);
     if (type === "print") setSelectedFor("both");
   };
@@ -923,7 +1078,7 @@ const AddProductScreen = ({
       formikRef.current?.resetForm();
       loadProductSettings();
     }
-  }, [selectedType, isEditMode]);
+  }, [selectedType, isEditMode, isFocused]);
 
   // Update form values when settings change
   useEffect(() => {
@@ -1108,7 +1263,7 @@ const AddProductScreen = ({
                       : {}
                   }
                 />
-                <TouchableOpacity
+                {/* <TouchableOpacity
                   style={[
                     styles.optionButton,
                     { alignSelf: "flex-end" },
@@ -1124,7 +1279,7 @@ const AddProductScreen = ({
                   >
                     Use Default Settings
                   </Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
 
               <Formik<FormValues>
@@ -1141,8 +1296,10 @@ const AddProductScreen = ({
                   handleChange,
                   handleSubmit,
                   setFieldValue,
+                  setFieldTouched,
                 }) => (
                   <>
+                    {console.log(values.print_variants, "errors")}
                     {/* Modals */}
                     <CalendarModal
                       initialDate={values.expiry_date}
@@ -1196,46 +1353,48 @@ const AddProductScreen = ({
                           Pricing Details
                         </Text>
 
-                        <ToggleRow
-                          label={
-                            values.tax_inclusive
-                              ? "Inclusive of Tax"
-                              : "Exclusive of Tax"
-                          }
-                          value={values.tax_inclusive}
-                          onValueChange={(val) =>
-                            setFieldValue("tax_inclusive", val)
-                          }
-                        />
+                        {shouldShowField("tax") && (
+                          <ToggleRow
+                            label={
+                              values.tax_inclusive
+                                ? "Inclusive of Tax"
+                                : "Exclusive of Tax"
+                            }
+                            value={values.tax_inclusive}
+                            onValueChange={(val) =>
+                              setFieldValue("tax_inclusive", val)
+                            }
+                          />
+                        )}
                       </View>
 
                       {/* 2-Column Grid Layout */}
                       <View style={styles.pricingGrid}>
                         {/* Wholesale Price Toggle - Full Width */}
-                        {selectedType !== "print" && (
-                          <View style={styles.gridItemFullWidth}>
-                            <ToggleRow
-                              label="Wholesale Price (Optional)"
-                              value={isWholesaleEnabled}
-                              onValueChange={setIsWholesaleEnabled}
-                            />
-                          </View>
-                        )}
+                        {selectedType !== "print" &&
+                          shouldShowField("wholesale_price") && (
+                            <View style={styles.gridItemFullWidth}>
+                              <Text style={styles.sectionTitle}>
+                                Wholesale Price (Optional)
+                              </Text>
+                            </View>
+                          )}
 
                         {/* Wholesale Price Input - Full Width */}
-                        {selectedType !== "print" && isWholesaleEnabled && (
-                          <View style={styles.gridItemFullWidth}>
-                            <FormField>
-                              <InputBox
-                                placeholder="Enter here"
-                                background="#FFF8EB"
-                                value={values.wholesale_price}
-                                keyboardType="number-pad"
-                                onChangeText={handleChange("wholesale_price")}
-                              />
-                            </FormField>
-                          </View>
-                        )}
+                        {selectedType !== "print" &&
+                          shouldShowField("wholesale_price") && (
+                            <View style={styles.gridItemFullWidth}>
+                              <FormField label="Wholesale Price">
+                                <InputBox
+                                  placeholder="Enter here"
+                                  background="#FFF8EB"
+                                  value={values.wholesale_price}
+                                  keyboardType="number-pad"
+                                  onChangeText={handleChange("wholesale_price")}
+                                />
+                              </FormField>
+                            </View>
+                          )}
 
                         {/* Purchase Price - Left Column */}
                         {selectedType !== "print" && (
@@ -1311,28 +1470,32 @@ const AddProductScreen = ({
                         </View>
 
                         {/* HSN - Left Column */}
-                        <View style={styles.gridItemHalf}>
-                          <FormField label="HSN">
-                            <InputBox
-                              placeholder="Enter here"
-                              background="#FFF8EB"
-                              value={values.hsn}
-                              onChangeText={handleChange("hsn")}
-                            />
-                          </FormField>
-                        </View>
+                        {shouldShowField("tax") && (
+                          <View style={styles.gridItemHalf}>
+                            <FormField label="HSN">
+                              <InputBox
+                                placeholder="Enter here"
+                                background="#FFF8EB"
+                                value={values.hsn}
+                                onChangeText={handleChange("hsn")}
+                              />
+                            </FormField>
+                          </View>
+                        )}
 
                         {/* GST % - Right Column */}
-                        <View style={styles.gridItemHalf}>
-                          <FormField label="GST">
-                            <InputBox
-                              placeholder="ex: 5%"
-                              background="#FFF8EB"
-                              value={values.gst}
-                              onChangeText={handleChange("gst")}
-                            />
-                          </FormField>
-                        </View>
+                        {shouldShowField("tax") && (
+                          <View style={styles.gridItemHalf}>
+                            <FormField label="GST">
+                              <InputBox
+                                placeholder="ex: 5%"
+                                background="#FFF8EB"
+                                value={values.gst}
+                                onChangeText={handleChange("gst")}
+                              />
+                            </FormField>
+                          </View>
+                        )}
                       </View>
 
                       <Text style={styles.warningText}>
@@ -1342,7 +1505,7 @@ const AddProductScreen = ({
                     </View>
 
                     {/* Stock Section (Only for Product) */}
-                    {selectedType === "product" && (
+                    {selectedType === "product" && shouldShowField("stock") && (
                       <View style={styles.section}>
                         <SectionHeader
                           title="Stock"
@@ -1358,48 +1521,55 @@ const AddProductScreen = ({
                               * Disable stock to create a simple product for
                               billing only
                             </Text>
-                            <View style={styles.imeiRow}>
-                              <View
-                                style={{
-                                  flexDirection: "row",
-                                  alignItems: "center",
-                                }}
-                              >
-                                <Text style={styles.stockLabel}>
-                                  IMEI / Serial No
-                                </Text>
-                                <Text style={styles.optionalText}>
-                                  (Optional)
-                                </Text>
-                              </View>
-                              <TouchableOpacity
-                                style={styles.addButtonSmall}
-                                onPress={() => {
-                                  setImeiModalVisible(true);
-                                }}
-                                disabled={
-                                  useDefaultSettings && settings.imei_serial_no
-                                }
-                              >
-                                <Text style={styles.addButtonTextSmall}>
-                                  Add +
-                                </Text>
-                              </TouchableOpacity>
-                            </View>
-                            <FlatList
-                              data={imeiList}
-                              keyExtractor={(_, index) => index.toString()}
-                              renderItem={({ item, index }) => (
-                                <View style={styles.listItem}>
-                                  <Text style={styles.itemText}>
-                                    {index + 1}. {item}
+                            {shouldShowField("imei") && (
+                              <View style={styles.imeiRow}>
+                                <View
+                                  style={{
+                                    flexDirection: "row",
+                                    alignItems: "center",
+                                  }}
+                                >
+                                  <Text style={styles.stockLabel}>
+                                    IMEI / Serial No
+                                  </Text>
+                                  <Text style={styles.optionalText}>
+                                    (Optional)
                                   </Text>
                                 </View>
-                              )}
-                            />
-                            <Text style={styles.stockWarning}>
-                              * Stock will be calculated based on this
-                            </Text>
+                                <TouchableOpacity
+                                  style={styles.addButtonSmall}
+                                  onPress={() => {
+                                    setImeiModalVisible(true);
+                                  }}
+                                  disabled={
+                                    useDefaultSettings &&
+                                    settings.imei_serial_no
+                                  }
+                                >
+                                  <Text style={styles.addButtonTextSmall}>
+                                    Add +
+                                  </Text>
+                                </TouchableOpacity>
+                              </View>
+                            )}
+                            {shouldShowField("imei") && imeiList.length > 0 && (
+                              <>
+                                <FlatList
+                                  data={imeiList}
+                                  keyExtractor={(_, index) => index.toString()}
+                                  renderItem={({ item, index }) => (
+                                    <View style={styles.listItem}>
+                                      <Text style={styles.itemText}>
+                                        {index + 1}. {item}
+                                      </Text>
+                                    </View>
+                                  )}
+                                />
+                                <Text style={styles.stockWarning}>
+                                  * Stock will be calculated based on this
+                                </Text>
+                              </>
+                            )}
                             <FormField
                               label="Opening Stock"
                               error={
@@ -1416,82 +1586,96 @@ const AddProductScreen = ({
                               />
                             </FormField>
 
-                            <ToggleRow
-                              label="Low stock alert"
-                              value={values.low_stock_alert}
-                              onValueChange={(val) =>
-                                setFieldValue("low_stock_alert", val)
-                              }
-                            />
-
-                            {values.low_stock_alert && (
-                              <FormField
-                                label="Low Stock Quantity"
-                                error={
-                                  touched.low_stock_quantity &&
-                                  errors.low_stock_quantity
+                            {shouldShowField("low_stock_alert") && (
+                              <ToggleRow
+                                label="Low stock alert"
+                                value={values.low_stock_alert}
+                                onValueChange={(val) =>
+                                  setFieldValue("low_stock_alert", val)
                                 }
-                              >
-                                <InputBox
-                                  placeholder="Enter here"
-                                  background="#FFF8EB"
-                                  value={values.low_stock_quantity}
-                                  keyboardType="number-pad"
-                                  onChangeText={handleChange(
-                                    "low_stock_quantity"
-                                  )}
-                                />
-                              </FormField>
+                              />
                             )}
+
+                            {shouldShowField("low_stock_alert") &&
+                              values.low_stock_alert && (
+                                <FormField
+                                  label="Low Stock Quantity"
+                                  error={
+                                    touched.low_stock_quantity &&
+                                    errors.low_stock_quantity
+                                  }
+                                >
+                                  <InputBox
+                                    placeholder="Enter here"
+                                    background="#FFF8EB"
+                                    value={values.low_stock_quantity}
+                                    keyboardType="number-pad"
+                                    onChangeText={handleChange(
+                                      "low_stock_quantity"
+                                    )}
+                                  />
+                                </FormField>
+                              )}
                           </>
                         )}
                       </View>
                     )}
 
                     {/* Category Section */}
-                    <View style={styles.section}>
-                      <Text style={styles.sectionTitle}>
-                        Category & Sub Category
-                      </Text>
-                      <FormField
-                        label="Category"
-                        error={touched.category && errors.category}
-                        required={true}
-                      >
-                        <CustomDropdown
-                          placeholder="Select Category"
-                          onSelect={(opt) => {
-                            setFieldValue("category", opt.id);
-                            // Clear subcategory when category changes
-                            setFieldValue("sub_category", "");
-                          }}
-                          selectedValue={values.category}
-                          options={categoryList}
-                          disabled={!isEditMode && !!route.params?.productId}
-                        />
-                      </FormField>
+                    {(shouldShowField("category") ||
+                      shouldShowField("sub_category")) && (
+                      <View style={styles.section}>
+                        <Text style={styles.sectionTitle}>
+                          Category & Sub Category
+                        </Text>
+                        {shouldShowField("category") && (
+                          <FormField
+                            label="Category"
+                            error={touched.category && errors.category}
+                            required={true}
+                          >
+                            <CustomDropdown
+                              placeholder="Select Category"
+                              onSelect={(opt) => {
+                                setFieldValue("category", opt.id);
+                                // Clear subcategory when category changes
+                                setFieldValue("sub_category", "");
+                              }}
+                              selectedValue={values.category}
+                              options={categoryList}
+                              disabled={
+                                !isEditMode && !!route.params?.productId
+                              }
+                            />
+                          </FormField>
+                        )}
 
-                      <FormField
-                        label="Sub Category"
-                        error={touched.sub_category && errors.sub_category}
-                        required={true}
-                      >
-                        <CustomDropdown
-                          onSelect={(opt) => {
-                            setFieldValue("sub_category", opt.id);
-                          }}
-                          selectedValue={values.sub_category}
-                          placeholder="Select Sub Category"
-                          options={subCategoryList?.filter(
-                            (sub: any) => sub.category === values.category
-                          )}
-                          disabled={!isEditMode && !!route.params?.productId}
-                        />
-                      </FormField>
-                    </View>
+                        {shouldShowField("sub_category") && (
+                          <FormField
+                            label="Sub Category"
+                            error={touched.sub_category && errors.sub_category}
+                            required={true}
+                          >
+                            <CustomDropdown
+                              onSelect={(opt) => {
+                                setFieldValue("sub_category", opt.id);
+                              }}
+                              selectedValue={values.sub_category}
+                              placeholder="Select Sub Category"
+                              options={subCategoryList?.filter(
+                                (sub: any) => sub.category === values.category
+                              )}
+                              disabled={
+                                !isEditMode && !!route.params?.productId
+                              }
+                            />
+                          </FormField>
+                        )}
+                      </View>
+                    )}
 
                     {/* Food Option for Service */}
-                    {selectedType === "service" && (
+                    {selectedType === "service" && shouldShowField("food") && (
                       <View style={styles.section}>
                         <ToggleRow
                           label="Include Food Option?"
@@ -1518,125 +1702,148 @@ const AddProductScreen = ({
 
                     {/* Optional Details Section */}
                     {(selectedType === "product" ||
-                      selectedType === "service") && (
-                      <View style={styles.section}>
-                        <Text style={styles.sectionTitle}>
-                          Optional Details
-                        </Text>
+                      selectedType === "service") &&
+                      (shouldShowField("brand_name") ||
+                        shouldShowField("color") ||
+                        shouldShowField("size") ||
+                        shouldShowField("batch_number") ||
+                        shouldShowField("expiry_date") ||
+                        shouldShowField("description")) && (
+                        <View style={styles.section}>
+                          <Text style={styles.sectionTitle}>
+                            Optional Details
+                          </Text>
 
-                        {selectedType !== "service" && (
-                          <FormField label="Brand Name">
-                            <InputBox
-                              placeholder="Enter here"
-                              background="#FFF8EB"
-                              value={values.brand_name}
-                              onChangeText={handleChange("brand_name")}
-                            />
-                          </FormField>
-                        )}
-
-                        {selectedType !== "service" && (
-                          <FormField label="Pick Color">
-                            <View style={styles.colorPickerContainer}>
-                              <View style={styles.colorDropdownWrapper}>
-                                <CustomDropdown
-                                  options={COLOR_OPTIONS}
-                                  placeholder="Select Color"
-                                  onSelect={(val) =>
-                                    setFieldValue("color", val.id)
-                                  }
-                                  selectedValue={values.color || ""}
-                                />
-                              </View>
-                              <View
-                                style={[
-                                  styles.colorIndicator,
-                                  {
-                                    backgroundColor:
-                                      (
-                                        values?.color || "#E5E5E5"
-                                      )?.toLowerCase() || "#E5E5E5",
-                                  },
-                                ]}
-                              />
-                            </View>
-                          </FormField>
-                        )}
-
-                        {selectedType !== "service" && (
-                          <FormField label="Select Size">
-                            <CustomDropdown
-                              options={sizeList}
-                              placeholder="Select Size"
-                              onSelect={(val) => setFieldValue("size", val.id)}
-                              selectedValue={values.size || ""}
-                            />
-                          </FormField>
-                        )}
-
-                        {selectedType !== "service" && (
-                          <>
-                            <ToggleRow
-                              label="Batch Number"
-                              value={batchSwitch}
-                              onValueChange={setBatchSwitch}
-                            />
-                            {batchSwitch && (
-                              <FormField
-                                error={
-                                  touched.batch_number && errors.batch_number
-                                }
-                              >
+                          {selectedType !== "service" &&
+                            shouldShowField("brand_name") && (
+                              <FormField label="Brand Name">
                                 <InputBox
                                   placeholder="Enter here"
                                   background="#FFF8EB"
-                                  value={values.batch_number || ""}
-                                  onChangeText={handleChange("batch_number")}
+                                  value={values.brand_name}
+                                  onChangeText={handleChange("brand_name")}
                                 />
                               </FormField>
                             )}
 
-                            <ToggleRow
-                              label="Expiry Date"
-                              value={expirySwitch}
-                              onValueChange={setExpirySwitch}
-                            />
-                          </>
-                        )}
+                          {selectedType !== "service" &&
+                            shouldShowField("color") && (
+                              <FormField label="Pick Color">
+                                <View style={styles.colorPickerContainer}>
+                                  <View style={styles.colorDropdownWrapper}>
+                                    <CustomDropdown
+                                      options={COLOR_OPTIONS}
+                                      placeholder="Select Color"
+                                      onSelect={(val) =>
+                                        setFieldValue("color", val.id)
+                                      }
+                                      selectedValue={values.color || ""}
+                                    />
+                                  </View>
+                                  <View
+                                    style={[
+                                      styles.colorIndicator,
+                                      {
+                                        backgroundColor:
+                                          (
+                                            values?.color || "#E5E5E5"
+                                          )?.toLowerCase() || "#E5E5E5",
+                                      },
+                                    ]}
+                                  />
+                                </View>
+                              </FormField>
+                            )}
 
-                        {expirySwitch && (
-                          <FormField
-                            error={touched.expiry_date && errors.expiry_date}
-                          >
-                            <TouchableOpacity
-                              style={styles.inputBox}
-                              onPress={() => setCallenderModel(true)}
+                          {selectedType !== "service" &&
+                            shouldShowField("size") && (
+                              <FormField label="Select Size">
+                                <CustomDropdown
+                                  options={sizeList}
+                                  placeholder="Select Size"
+                                  onSelect={(val) =>
+                                    setFieldValue("size", val.id)
+                                  }
+                                  selectedValue={values.size || ""}
+                                />
+                              </FormField>
+                            )}
+
+                          {selectedType !== "service" &&
+                            shouldShowField("batch_number") && (
+                              <>
+                                <ToggleRow
+                                  label="Batch Number"
+                                  value={batchSwitch}
+                                  onValueChange={setBatchSwitch}
+                                />
+                                {batchSwitch && (
+                                  <FormField
+                                    error={
+                                      touched.batch_number &&
+                                      errors.batch_number
+                                    }
+                                  >
+                                    <InputBox
+                                      placeholder="Enter here"
+                                      background="#FFF8EB"
+                                      value={values.batch_number || ""}
+                                      onChangeText={handleChange(
+                                        "batch_number"
+                                      )}
+                                    />
+                                  </FormField>
+                                )}
+                              </>
+                            )}
+
+                          {selectedType !== "service" &&
+                            shouldShowField("expiry_date") && (
+                              <>
+                                <ToggleRow
+                                  label="Expiry Date"
+                                  value={expirySwitch}
+                                  onValueChange={setExpirySwitch}
+                                />
+                                {expirySwitch && (
+                                  <FormField
+                                    error={
+                                      touched.expiry_date && errors.expiry_date
+                                    }
+                                  >
+                                    <TouchableOpacity
+                                      style={styles.inputBox}
+                                      onPress={() => setCallenderModel(true)}
+                                    >
+                                      <TextInput
+                                        placeholder="Enter here"
+                                        value={values.expiry_date}
+                                        editable={false}
+                                      />
+                                    </TouchableOpacity>
+                                  </FormField>
+                                )}
+                              </>
+                            )}
+
+                          {shouldShowField("description") && (
+                            <FormField
+                              label="Description"
+                              error={touched.description && errors.description}
                             >
-                              <TextInput
+                              <InputBox
                                 placeholder="Enter here"
-                                value={values.expiry_date}
-                                editable={false}
+                                background="#FFF8EB"
+                                value={values.description}
+                                onChangeText={handleChange("description")}
+                                numberOfLines={5}
+                                multiline={true}
+                                textInputStyle={styles.descriptionInput}
                               />
-                            </TouchableOpacity>
-                          </FormField>
-                        )}
-
-                        <FormField
-                          label="Description"
-                          error={touched.description && errors.description}
-                        >
-                          <InputBox
-                            placeholder="Enter here"
-                            background="#FFF8EB"
-                            value={values.description}
-                            onChangeText={handleChange("description")}
-                            numberOfLines={5}
-                            multiline={true}
-                            textInputStyle={styles.descriptionInput}
-                          />
-                        </FormField>
-                      </View>
-                    )}
+                            </FormField>
+                          )}
+                        </View>
+                      )}
 
                     {/* Print Variants Section */}
                     {selectedType === "print" && (
@@ -1649,7 +1856,6 @@ const AddProductScreen = ({
                             setFieldValue("print_variants", [
                               {
                                 paper: "",
-                                color_type: "",
                                 sided: "",
                                 min_quantity: "",
                                 max_quantity: "",
@@ -1676,12 +1882,16 @@ const AddProductScreen = ({
                                 variant={variant}
                                 index={index}
                                 variantData={variantData}
-                                onUpdate={(field, value) =>
+                                onUpdate={(field, value) => {
                                   setFieldValue(
                                     `print_variants.${index}.${field}`,
                                     value
-                                  )
-                                }
+                                  );
+                                  setFieldTouched(
+                                    `print_variants.${index}.${field}`,
+                                    true
+                                  );
+                                }}
                                 onRemove={() =>
                                   removePrintVariant(
                                     setFieldValue,
@@ -1689,13 +1899,27 @@ const AddProductScreen = ({
                                     index
                                   )
                                 }
+                                errors={
+                                  errors.print_variants?.[index] &&
+                                  typeof errors.print_variants[index] ===
+                                    "object"
+                                    ? errors.print_variants[index]
+                                    : undefined
+                                }
+                                touched={
+                                  touched.print_variants?.[index] &&
+                                  typeof touched.print_variants[index] ===
+                                    "object"
+                                    ? touched.print_variants[index]
+                                    : undefined
+                                }
                               />
                             ))}
 
-                            {touched.print_variants &&
-                              errors.print_variants && (
+                            {errors?.print_variants &&
+                              !Array.isArray(errors?.print_variants) && (
                                 <Text style={styles.errorText}>
-                                  {errors.print_variants}
+                                  {errors?.print_variants}
                                 </Text>
                               )}
                           </>
@@ -1783,20 +2007,22 @@ const AddProductScreen = ({
 
                         {/* Custom Size Variants */}
 
-                        <FormField
-                          label="Description"
-                          error={touched.description && errors.description}
-                        >
-                          <InputBox
-                            placeholder="Enter here"
-                            background="#FFF8EB"
-                            value={values.description}
-                            onChangeText={handleChange("description")}
-                            numberOfLines={4}
-                            multiline={true}
-                            textInputStyle={styles.descriptionInput}
-                          />
-                        </FormField>
+                        {shouldShowField("description") && (
+                          <FormField
+                            label="Description"
+                            error={touched.description && errors.description}
+                          >
+                            <InputBox
+                              placeholder="Enter here"
+                              background="#FFF8EB"
+                              value={values.description}
+                              onChangeText={handleChange("description")}
+                              numberOfLines={4}
+                              multiline={true}
+                              textInputStyle={styles.descriptionInput}
+                            />
+                          </FormField>
+                        )}
                       </View>
                     )}
 
@@ -1850,12 +2076,14 @@ const AddProductScreen = ({
                       )}
 
                     {/* Images Section */}
-                    <ImageUploader
-                      images={values}
-                      onImagePress={setActiveImageModal}
-                      selectedFor={selectedFor}
-                      error={touched.image1 && errors.image1}
-                    />
+                    {shouldShowField("image") && (
+                      <ImageUploader
+                        images={values}
+                        onImagePress={setActiveImageModal}
+                        selectedFor={selectedFor}
+                        error={touched.image1 && errors.image1}
+                      />
+                    )}
 
                     {/* Delivery Details Section */}
                     {selectedFor === "both" && (

@@ -22,7 +22,7 @@ type RootStackParamList = {
   [HomeNavigation.ONLINE_STORE]: undefined;
   [HomeNavigation.ONLINE_SALE_WALLET]: undefined;
   [HomeNavigation.AD_WALLET]: undefined;
-  [HomeNavigation.BOOST_SALES]: undefined;
+  [HomeNavigation.MANAGENOTIFICATION]: undefined;
   [HomeNavigation.CUSTOMER_FEEDBACK]: undefined;
   [HomeNavigation.CHATS]: undefined;
   [HomeNavigation.DOWNLOAD_QR_CODE]: undefined;
@@ -32,6 +32,8 @@ type RootStackParamList = {
   [HomeNavigation.MANAGE_DELIVERY]: undefined;
   [HomeNavigation.TRANSACTION_MESSAGES]: undefined;
   [HomeNavigation.MARKETING_TOOLS]: undefined;
+  [HomeNavigation.COUPONS_SCREEN]: undefined;
+  [HomeNavigation.ALL_CHAT_USER_SCREEN]: undefined;
 };
 
 // ✅ Define the type for navigation prop (fixed)
@@ -90,7 +92,7 @@ const menuItems: MenuItemType[] = [
     screen: HomeNavigation.ONLINE_STORE,
   },
   {
-    title: "Online Sale Wallet",
+    title: "Online Sale Ledger",
     icon: "wallet",
     screen: HomeNavigation.ONLINE_SALE_WALLET,
   },
@@ -100,16 +102,26 @@ const menuItems: MenuItemType[] = [
   //   screen: HomeNavigation.AD_WALLET,
   // },
   {
-    title: "Boost your Sales",
-    icon: "trending-up",
-    screen: HomeNavigation.BOOST_SALES,
+    title: "Send Notifications on svindo app",
+    icon: "bell-outline",
+    screen: HomeNavigation.MANAGENOTIFICATION,
+  },
+  {
+    title: "Coupons / Discounts",
+    icon: "ticket-percent-outline",
+    screen: HomeNavigation.COUPONS_SCREEN,
   },
   {
     title: "Customer Feedback",
     icon: "star-circle",
     screen: HomeNavigation.CUSTOMER_FEEDBACK,
   },
-  // { title: "Chats", icon: "chat", screen: HomeNavigation.CHATS },
+  { title: "Chats", icon: "chat", screen: HomeNavigation.ALL_CHAT_USER_SCREEN },
+  {
+    title: "Automated Chat reply for online Orders",
+    icon: "chat",
+    screen: HomeNavigation.TRANSACTION_MESSAGES,
+  },
   {
     title: "Download Shop QR Code",
     icon: "qrcode",
@@ -131,11 +143,11 @@ const menuItems: MenuItemType[] = [
     icon: "truck-delivery-outline",
     screen: HomeNavigation.MANAGE_DELIVERY,
   },
-  // {
-  //   title: "Transaction Messages",
-  //   icon: "message-text-outline",
-  //   screen: HomeNavigation.TRANSACTION_MESSAGES,
-  // },
+  {
+    title: "Transaction Messages",
+    icon: "message-text-outline",
+    screen: HomeNavigation.SMS_SCREEN,
+  },
 ];
 
 const styles = StyleSheet.create({

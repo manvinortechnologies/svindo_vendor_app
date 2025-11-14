@@ -8,6 +8,7 @@ import {
   Dimensions,
   ScrollView,
   Image,
+  Modal,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import Headerwithback from "./Headerwithback";
@@ -60,6 +61,7 @@ const PaymentsScreen = () => {
   const [paymentCalModel, setPaymentCalModel] = useState<boolean>(false);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [paymentId, setPaymentId] = useState<number | null>(null);
+  const [showImageModal, setShowImageModal] = useState<boolean>(false);
 
   const paymentMethods = ["UPI", "Card", "Cash"];
 
@@ -114,6 +116,7 @@ const PaymentsScreen = () => {
       }
     }
   }, [route.params]);
+
   const getAllCategory = async () => {
     try {
       setIsLoadingBanks(true);
@@ -457,15 +460,24 @@ const PaymentsScreen = () => {
         {/* Attachments */}
         <Text style={styles.label}>Attachments</Text>
         {imageFile?.uri ? (
-          <TouchableOpacity
-            onPress={() => setImagePickerModel(true)}
-            style={styles.imageBox}
-          >
-            <Image
-              source={{ uri: imageFile?.uri }}
-              style={styles.imagePreview}
-            />
-          </TouchableOpacity>
+          <View style={styles.row}>
+            <TouchableOpacity
+              onPress={() => setShowImageModal(true)}
+              style={styles.imageBox}
+            >
+              <Image
+                source={{ uri: imageFile?.uri }}
+                style={styles.imagePreview}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setImagePickerModel(true)}
+              style={styles.changeImageButton}
+            >
+              <Icon name="edit" size={18} color="#FCA311" />
+              <Text style={styles.changeImageText}>Change</Text>
+            </TouchableOpacity>
+          </View>
         ) : (
           <View style={styles.row}>
             <TouchableOpacity
@@ -485,6 +497,7 @@ const PaymentsScreen = () => {
           </Text>
         </TouchableOpacity>
       </ScrollView>
+
       <ModalUpdatePhoto
         isVisible={imagePickerModel}
         onClose={() => setImagePickerModel(false)}
@@ -493,6 +506,7 @@ const PaymentsScreen = () => {
         }}
         onChange={(image) => console.log("Full crop picker image:", image)}
       />
+
       <CalendarModal
         visible={paymentCalModel}
         initialDate={paymentDate}
@@ -500,6 +514,30 @@ const PaymentsScreen = () => {
         onSelect={setPaymentDate}
         maxDate={moment().format("YYYY-MM-DD")}
       />
+
+      {/* Image Preview Modal */}
+      <Modal
+        visible={showImageModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowImageModal(false)}
+      >
+        <View style={styles.imageModalOverlay}>
+          <TouchableOpacity
+            style={styles.imageModalCloseButton}
+            onPress={() => setShowImageModal(false)}
+          >
+            <Icon name="close" size={28} color="#fff" />
+          </TouchableOpacity>
+          <View style={styles.imageModalContent}>
+            <Image
+              source={{ uri: imageFile?.uri }}
+              style={styles.fullImage}
+              resizeMode="contain"
+            />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -659,5 +697,51 @@ const styles = StyleSheet.create({
     color: "#FCA311",
     fontSize: 14,
     fontWeight: "500",
+  },
+  changeImageButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderWidth: 1,
+    borderColor: "#FCA311",
+    borderRadius: 6,
+    padding: 8,
+    justifyContent: "center",
+    backgroundColor: "#FFF8EB",
+    alignSelf: "flex-start",
+    marginTop: 0,
+  },
+  changeImageText: {
+    fontSize: 13,
+    fontWeight: "500",
+    color: "#FCA311",
+  },
+  imageModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imageModalCloseButton: {
+    position: "absolute",
+    top: 40,
+    right: 20,
+    zIndex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imageModalContent: {
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  fullImage: {
+    width: Dimensions.get("window").width - 40,
+    height: Dimensions.get("window").height - 100,
   },
 });

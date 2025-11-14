@@ -16,6 +16,7 @@ import { StorageUtils } from "../utils/storage";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
+import Toast from "react-native-toast-message";
 
 const ResetDataScreen = () => {
   const navigation = useNavigation();
@@ -89,7 +90,11 @@ const ResetDataScreen = () => {
       );
     } catch (error) {
       console.error("Error resetting data:", error);
-      Alert.alert("Error", "Failed to reset data. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to reset data. Please try again.",
+      });
     } finally {
       setIsResetting(false);
     }

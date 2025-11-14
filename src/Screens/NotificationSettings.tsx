@@ -12,6 +12,7 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Headerwithback from "./Headerwithback";
 import MainContainer from "../CommonComponent/MainContainer";
 import NotificationService from "../services/notification-service";
+import Toast from "react-native-toast-message";
 
 interface NotificationSettings {
   pushNotifications: boolean;
@@ -62,12 +63,18 @@ const NotificationSettings = () => {
         await NotificationService.requestPermissionWithMessage();
       if (hasPermission) {
         setSettings((prev) => ({ ...prev, [key]: true }));
-        Alert.alert("Success", "Push notifications enabled successfully!");
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Push notifications enabled successfully!",
+        });
       } else {
-        Alert.alert(
-          "Permission Denied",
-          "Push notifications are disabled. Please enable them in your device settings."
-        );
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2:
+            "Push notifications are disabled. Please enable them in your device settings.",
+        });
       }
     } else {
       setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -81,10 +88,18 @@ const NotificationSettings = () => {
       // Save settings to local storage or send to server
       // You can implement this based on your backend API
 
-      Alert.alert("Success", "Notification settings saved successfully!");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Notification settings saved successfully!",
+      });
     } catch (error) {
       console.error("Error saving settings:", error);
-      Alert.alert("Error", "Failed to save notification settings");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to save notification settings",
+      });
     } finally {
       setIsLoading(false);
     }

@@ -13,6 +13,7 @@ import { ScaledSheet } from "react-native-size-matters";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import api from "../services/api/api";
+import Toast from "react-native-toast-message";
 
 interface AdjustCashModalProps {
   visible: boolean;
@@ -30,13 +31,19 @@ const AdjustCashModal: React.FC<AdjustCashModalProps> = ({
 
   const handleConfirm = async () => {
     if (!amount.trim()) {
-      Alert.alert("Error", "Please enter an amount");
+      Toast.show({
+        text1: "Please enter an amount",
+        type: "error",
+      });
       return;
     }
 
     const numericAmount = parseFloat(amount);
     if (isNaN(numericAmount) || numericAmount <= 0) {
-      Alert.alert("Error", "Please enter a valid amount");
+      Toast.show({
+        text1: "Please enter a valid amount",
+        type: "error",
+      });
       return;
     }
 

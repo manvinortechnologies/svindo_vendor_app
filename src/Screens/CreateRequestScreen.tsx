@@ -12,16 +12,12 @@ import React, { useEffect, useState } from "react";
 import Headerwithback from "./Headerwithback";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CustomDropdown from "../CommonComponent/CustomDropdown";
-import {
-  launchImageLibrary,
-  launchCamera,
-  ImagePickerResponse,
-  MediaType,
-} from "react-native-image-picker";
+import ImageCropPicker from "react-native-image-crop-picker";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import { useNavigation } from "@react-navigation/native";
+import Toast from "react-native-toast-message";
 
 const CreateRequestScreen = () => {
   const navigation = useNavigation();
@@ -84,47 +80,116 @@ const CreateRequestScreen = () => {
     );
   };
 
-  const openCamera = () => {
-    const options = {
-      mediaType: "photo" as MediaType,
-      includeBase64: false,
-      maxHeight: 2000,
-      maxWidth: 2000,
-    };
+  const openCamera = async () => {
+    try {
+      // Clear image error when user starts uploading
+      if (errors.images) {
+        setErrors((prev) => ({ ...prev, images: "" }));
+      }
 
-    launchCamera(options, (response: ImagePickerResponse) => {
-      if (response.didCancel || response.errorMessage) {
-        return;
-      }
-      if (response.assets && response.assets[0]) {
-        const imageUri = response.assets[0].uri;
-        if (imageUri) {
-          setSelectedImages((prev) => [...prev, imageUri]);
+      const result = await ImageCropPicker.openCamera({
+        mediaType: "photo",
+        compressImageQuality: 0.8,
+        cropping: true,
+        includeBase64: false,
+      });
+
+      if (result.path) {
+        // Validate file size (max 10MB)
+        const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+        if (result.size && result.size > maxSize) {
+          setErrors((prev) => ({
+            ...prev,
+            images:
+              "The selected file is too large. Please choose a file smaller than 10MB.",
+          }));
+          return;
         }
+
+        setSelectedImages((prev) => [...prev, result.path]);
       }
-    });
+    } catch (error: any) {
+      console.log("ImageCropPicker camera error--->", error);
+
+      // Check if user cancelled
+      if (error.code === "E_PICKER_CANCELLED") {
+        return; // User cancelled, don't show error
+      }
+
+      setErrors((prev) => ({
+        ...prev,
+        images: error.message || "Failed to access camera. Please try again.",
+      }));
+    }
   };
 
-  const openImageLibrary = () => {
-    const options = {
-      mediaType: "photo" as MediaType,
-      includeBase64: false,
-      maxHeight: 2000,
-      maxWidth: 2000,
-      selectionLimit: 5, // Allow multiple images
-    };
+  const openImageLibrary = async () => {
+    try {
+      // Clear image error when user starts uploading
+      if (errors.images) {
+        setErrors((prev) => ({ ...prev, images: "" }));
+      }
 
-    launchImageLibrary(options, (response: ImagePickerResponse) => {
-      if (response.didCancel || response.errorMessage) {
+      // Calculate how many more images can be selected (max 5 total)
+      const remainingSlots = 5 - selectedImages.length;
+      if (remainingSlots <= 0) {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "You can select a maximum of 5 images.",
+        });
         return;
       }
-      if (response.assets) {
-        const imageUris = response.assets
-          .map((asset) => asset.uri)
-          .filter(Boolean) as string[];
-        setSelectedImages((prev) => [...prev, ...imageUris]);
+
+      const result = await ImageCropPicker.openPicker({
+        mediaType: "photo",
+        compressImageQuality: 0.8,
+        cropping: true,
+        multiple: remainingSlots > 1, // Enable multiple selection if we can select more than 1
+        maxFiles: remainingSlots,
+        includeBase64: false,
+      });
+
+      // Handle both single and multiple results
+      const results = Array.isArray(result) ? result : [result];
+      const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+
+      const validImages: string[] = [];
+      for (const imageResult of results) {
+        if (!imageResult.path) {
+          continue;
+        }
+
+        // Validate file size
+        if (imageResult.size && imageResult.size > maxSize) {
+          setErrors((prev) => ({
+            ...prev,
+            images:
+              "Some selected files are too large. Please choose files smaller than 10MB.",
+          }));
+          continue;
+        }
+
+        validImages.push(imageResult.path);
       }
-    });
+
+      if (validImages.length > 0) {
+        setSelectedImages((prev) => [...prev, ...validImages]);
+      }
+    } catch (error: any) {
+      console.log("ImageCropPicker library error--->", error);
+
+      // Check if user cancelled
+      if (error.code === "E_PICKER_CANCELLED") {
+        return; // User cancelled, don't show error
+      }
+
+      setErrors((prev) => ({
+        ...prev,
+        images:
+          error.message || "Failed to access media library. Please try again.",
+      }));
+    }
   };
 
   const removeImage = (index: number) => {
@@ -255,40 +320,38 @@ const CreateRequestScreen = () => {
       );
 
       if (response.status === 200 || response.status === 201) {
-        Alert.alert(
-          "Success",
-          "Request created successfully! You will receive offers from vendors soon.",
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                // Reset form
-                setFormData({
-                  productName: "",
-                  budget: "",
-                  description: "",
-                });
-                setSelectedCategory(null);
-                setSelectedSubCategory(null);
-                setSelectedImages([]);
-                setSelectedType("Business");
-                setErrors({
-                  productName: "",
-                  category: "",
-                  subCategory: "",
-                  budget: "",
-                  description: "",
-                  images: "",
-                });
-                navigation.goBack();
-              },
-            },
-          ]
-        );
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2:
+            "Request created successfully! You will receive offers from vendors soon.",
+        });
+        setFormData({
+          productName: "",
+          budget: "",
+          description: "",
+        });
+        setSelectedCategory(null);
+        setSelectedSubCategory(null);
+        setSelectedImages([]);
+        setSelectedType("Business");
+        setErrors({
+          productName: "",
+          category: "",
+          subCategory: "",
+          budget: "",
+          description: "",
+          images: "",
+        });
+        navigation.goBack();
       }
     } catch (error) {
       console.error("Error creating request:", error);
-      Alert.alert("Error", "Failed to create request. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to create request. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }

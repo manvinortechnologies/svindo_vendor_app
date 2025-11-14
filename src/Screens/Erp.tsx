@@ -14,6 +14,7 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import Header from "./Header";
 import Bottomnavigation from "./Bottomnavigation";
 import { HomeNavigation } from "../constants/app-routes.constants";
+import Toast from "react-native-toast-message";
 
 type RootStackParamList = {
   SalePOS: undefined;
@@ -161,11 +162,11 @@ const Erp = () => {
       icon: "account-tie-outline",
       screen: HomeNavigation.MANAGE_VENDORS,
     },
-    {
-      title: "Recycle Bin",
-      icon: "delete-restore",
-      screen: HomeNavigation.RECYCLE_BIN_SCREEN,
-    },
+    // {
+    //   title: "Recycle Bin",
+    //   icon: "delete-restore",
+    //   screen: HomeNavigation.RECYCLE_BIN_SCREEN,
+    // },
     // {
     //   title: "Close Financial Year",
     //   icon: "calendar-plus",
@@ -182,16 +183,16 @@ const Erp = () => {
       icon: "cog-outline",
       screen: HomeNavigation.PRODUCTSETTING,
     },
-    {
-      title: "Reminders",
-      icon: "bell-alert-outline",
-      screen: HomeNavigation.REMINDERS_SCREEN,
-    },
     // {
-    //   title: "Reminders Setting",
+    //   title: "Reminders",
     //   icon: "bell-alert-outline",
-    //   screen: HomeNavigation.REMINDERSETTINGS,
+    //   screen: HomeNavigation.REMINDERS_SCREEN,
     // },
+    {
+      title: "Reminders Setting",
+      icon: "bell-alert-outline",
+      screen: HomeNavigation.REMINDERSETTINGS,
+    },
     // {
     //   title: "Sales Ledger",
     //   icon: "bell-alert-outline",
@@ -265,7 +266,11 @@ const Erp = () => {
       }
     } catch (error) {
       console.error("Error opening WhatsApp:", error);
-      Alert.alert("Error", "Unable to open WhatsApp. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Unable to open WhatsApp. Please try again.",
+      });
     }
   };
 
@@ -277,7 +282,11 @@ const Erp = () => {
       await Linking.openURL(url);
     } catch (error) {
       console.error("Error opening phone dialer:", error);
-      Alert.alert("Error", "Unable to open phone dialer. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Unable to open phone dialer. Please try again.",
+      });
     }
   };
   const openEmail = async () => {
@@ -288,7 +297,11 @@ const Erp = () => {
       await Linking.openURL(url);
     } catch (error) {
       console.error("Error opening email:", error);
-      Alert.alert("Error", "Unable to open email. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Unable to open email. Please try again.",
+      });
     }
   };
 
@@ -301,7 +314,11 @@ const Erp = () => {
       await Linking.openURL(url);
     } catch (error) {
       console.error("Error opening SMS app:", error);
-      Alert.alert("Error", "Unable to open SMS app. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Unable to open SMS app. Please try again.",
+      });
     }
   };
 

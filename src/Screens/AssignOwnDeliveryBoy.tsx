@@ -13,15 +13,24 @@ import CustomSwitch from "./CustomSwitch";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { HomeNavigation } from "../constants/app-routes.constants";
+import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+
+type RootStackParamList = {
+  AddDeliveryBoy: undefined;
+};
 
 const AssignOwnDeliveryBoy = () => {
   const [isEnabled, setIsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const toggleSwitch = async () => {
     setLoading(true);
     try {
       await api.post("/vendor/deliverymode/", {
         is_self_delivery_enabled: !isEnabled,
+        is_auto_assign_enabled: isEnabled,
       });
       setIsEnabled((previousState) => !previousState);
     } catch (error) {
@@ -79,7 +88,10 @@ const AssignOwnDeliveryBoy = () => {
       </View>
 
       {/* Manage Delivery Boy Button */}
-      <TouchableOpacity style={styles.manageBtn}>
+      <TouchableOpacity
+        style={styles.manageBtn}
+        onPress={() => navigation.navigate(HomeNavigation.ADDDELIVERYBOY)}
+      >
         <Text style={styles.manageBtnText}>Manage Delivery Boy</Text>
       </TouchableOpacity>
 

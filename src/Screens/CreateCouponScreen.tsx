@@ -23,12 +23,22 @@ import CalendarModal from "../Modals/CalendarModal";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { formatToISOString } from "../utils/dateandTime";
 import api from "../services/api/api";
+import { HomeNavigation } from "../constants/app-routes.constants";
+import { useRoute, RouteProp, ParamListBase } from "@react-navigation/native";
+import Toast from "react-native-toast-message";
 
 const { width } = Dimensions.get("window");
 
+interface RootStackParamList extends ParamListBase {
+  CreateCoupon: { requestId: string };
+}
+
 const CreateCouponScreen = ({ navigation }: any) => {
+  const route = useRoute<RouteProp<RootStackParamList, "CreateCoupon">>();
+  const requestId = route.params?.requestId;
   const [selectedType, setSelectedType] = useState<string>("discount");
-  const [customerIdEnabled, setCustomerIdEnabled] = useState(false);
+  const [customerIdEnabled, setCustomerIdEnabled] = useState(!!requestId);
+  const [customerId, setCustomerIdValue] = useState(requestId || "");
   const [onlyFollowers, setOnlyFollowers] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [discountAmount, setDiscountAmount] = useState<string>("");
@@ -93,9 +103,11 @@ const CreateCouponScreen = ({ navigation }: any) => {
         },
       });
       navigation.goBack();
-      if (res.status == 201) {
-        Alert.alert("Success", "Coupon code added successfully!");
-      }
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Coupon code added successfully!",
+      });
     } catch (error) {
       console.log("error-->", error);
     } finally {
@@ -339,6 +351,8 @@ const CreateCouponScreen = ({ navigation }: any) => {
             placeholder="Enter here"
             placeholderTextColor="#727272"
             style={styles.inputFull}
+            value={customerId}
+            onChangeText={setCustomerIdValue}
           />
         )}
         <Text

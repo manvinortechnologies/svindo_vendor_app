@@ -6,6 +6,7 @@ import {
   View,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import CustomSwitch from "./CustomSwitch";
 
 export default function OptionInput({
   icon,
@@ -35,14 +36,28 @@ export default function OptionInput({
           {/* <Text style={styles.optionText}>{label}</Text> */}
         </>
       )}
-      <TextInput
-        style={styles.optionInput}
-        value={value}
-        onChangeText={onChangeText}
-        keyboardType={keyboardType || "default"}
-        placeholder={label}
-        placeholderTextColor="#aaa"
-      />
+      {label === "Reverse Charge" ? (
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flex: 1,
+          }}
+        >
+          <Text style={[styles.optionText]}>{label}</Text>
+          <CustomSwitch value={value} onValueChange={onChangeText} />
+        </View>
+      ) : (
+        <TextInput
+          style={styles.optionInput}
+          value={value}
+          onChangeText={onChangeText}
+          keyboardType={keyboardType || "default"}
+          placeholder={label}
+          placeholderTextColor="#aaa"
+        />
+      )}
     </View>
   );
 }

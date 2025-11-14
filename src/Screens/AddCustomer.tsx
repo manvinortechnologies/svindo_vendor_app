@@ -10,7 +10,6 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  Alert,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import Headerwithback from "./Headerwithback";
@@ -19,6 +18,8 @@ import MainContainer from "../CommonComponent/MainContainer";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import { useRoute, RouteProp } from "@react-navigation/native";
+import Toast from "react-native-toast-message";
+import CustomDropdown from "../CommonComponent/CustomDropdown";
 
 type RootStackParamList = {
   AddCustomer: {
@@ -40,7 +41,8 @@ const AddCustomer = ({ navigation }: any) => {
     name: "",
     mobile: "",
     email: "",
-    opening_balance: "",
+    opening_balance: "0",
+    state: "",
   });
 
   const [businessDetails, setBusinessDetails] = useState({
@@ -71,6 +73,9 @@ const AddCustomer = ({ navigation }: any) => {
   const [transportName, setTransportName] = useState("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [states, setStates] = useState<{ id: string | number; name: string }[]>(
+    []
+  );
 
   useEffect(() => {
     if (isEdit && customer) {
@@ -83,6 +88,7 @@ const AddCustomer = ({ navigation }: any) => {
           customer.opening_balance?.toString() ||
           customer.balance?.toString() ||
           "0",
+        state: customer.state || customer.billing_state || "",
       });
 
       // Set business details
@@ -124,6 +130,25 @@ const AddCustomer = ({ navigation }: any) => {
     }
   }, [isEdit, customer]);
 
+  useEffect(() => {
+    const fetchStates = async () => {
+      try {
+        const response = await api.get("masters/get-state/");
+        if (response?.data) {
+          const formattedStates = response.data.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+          }));
+          setStates(formattedStates);
+        }
+      } catch (error) {
+        console.error("Failed to load states:", error);
+      }
+    };
+
+    fetchStates();
+  }, []);
+
   const validateForm = () => {
     let tempErrors: { [key: string]: string } = {};
 
@@ -136,15 +161,16 @@ const AddCustomer = ({ navigation }: any) => {
     } else if (basicDetails.mobile.length !== 10) {
       tempErrors.mobile = "Mobile number must be 10 digits";
     }
-    if (!basicDetails.email.trim()) {
-      tempErrors.email = "Email is required";
-    } else if (!/\S+@\S+\.\S+/.test(basicDetails.email)) {
+    if (basicDetails.email.trim() && !/\S+@\S+\.\S+/.test(basicDetails.email)) {
       tempErrors.email = "Please enter a valid email";
     }
     if (!basicDetails.opening_balance.trim()) {
       tempErrors.opening_balance = "Opening balance is required";
     } else if (isNaN(Number(basicDetails.opening_balance))) {
       tempErrors.opening_balance = "Opening balance must be a number";
+    }
+    if (!basicDetails.state) {
+      tempErrors.state = "Please select a state";
     }
 
     setErrors(tempErrors);
@@ -163,6 +189,7 @@ const AddCustomer = ({ navigation }: any) => {
         email: basicDetails.email,
         contact: basicDetails.mobile,
         balance: basicDetails.opening_balance, // or you can add balance field in your state
+        state: basicDetails.state,
 
         company_name: businessDetails.name,
         gst_number: businessDetails.gst,
@@ -189,23 +216,32 @@ const AddCustomer = ({ navigation }: any) => {
         // Update existing customer
         res = await api.put(`vendor/customer/${customer.id}/`, payload);
         if (res.status === 200) {
-          Alert.alert("Success", "Customer information updated successfully.");
+          Toast.show({
+            type: "success",
+            text1: "Success",
+            text2: "Customer information updated successfully.",
+          });
           navigation.goBack();
         }
       } else {
         // Create new customer
         res = await api.post("vendor/customer/", payload);
         if (res.status === 201) {
-          Alert.alert("Success", "Customer information saved successfully.");
+          Toast.show({
+            type: "success",
+            text1: "Success",
+            text2: "Customer information saved successfully.",
+          });
           navigation.goBack();
         }
       }
     } catch (error) {
       console.error("Error saving customer:", error);
-      Alert.alert(
-        "Error",
-        "Failed to save customer information. Please try again."
-      );
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to save customer information. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -261,6 +297,7 @@ const AddCustomer = ({ navigation }: any) => {
                         placeholderTextColor="#999"
                         style={[styles.input, errors[key] && styles.inputError]}
                         value={basicDetails[key]}
+                        editable={!(isEdit && key === "opening_balance")}
                         keyboardType={
                           key === "mobile"
                             ? "numeric"
@@ -278,12 +315,37 @@ const AddCustomer = ({ navigation }: any) => {
                             setErrors((prev) => ({ ...prev, [key]: "" }));
                           }
                         }}
+                        selectTextOnFocus={key !== "opening_balance"}
                       />
                       {errors[key] && (
                         <Text style={styles.errorText}>{errors[key]}</Text>
                       )}
                     </View>
                   ))}
+                  <View style={styles.inputWrapper}>
+                    <Text style={styles.label}>State</Text>
+                    <CustomDropdown
+                      placeholder="Select State"
+                      options={states}
+                      onSelect={(option) => {
+                        setBasicDetails((prev) => ({
+                          ...prev,
+                          state: option.id,
+                        }));
+                        if (errors.state) {
+                          setErrors((prev) => ({ ...prev, state: "" }));
+                        }
+                      }}
+                      selectedValue={basicDetails.state || null}
+                      dropDownBoxStyle={[
+                        styles.dropdown,
+                        errors.state && styles.inputError,
+                      ]}
+                    />
+                    {errors.state && (
+                      <Text style={styles.errorText}>{errors.state}</Text>
+                    )}
+                  </View>
                   <TouchableOpacity
                     style={[styles.saveButton, { width: "100%" }]}
                     onPress={handelSubmit}
@@ -519,6 +581,9 @@ const styles = StyleSheet.create({
   inputError: {
     borderColor: "#f44336",
     backgroundColor: "#ffebee",
+  },
+  dropdown: {
+    marginTop: 4,
   },
   errorText: {
     color: "#f44336",

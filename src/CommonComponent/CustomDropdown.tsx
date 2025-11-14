@@ -16,6 +16,7 @@ interface CustomDropdownProps {
   styles?: StyleProp<ViewStyle>;
   dropDownBoxStyle?: StyleProp<ViewStyle>;
   disabled?: boolean;
+  isSearchable?: boolean;
 }
 
 const CustomDropdown: React.FC<CustomDropdownProps> = ({
@@ -26,6 +27,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   styles: customStyles,
   dropDownBoxStyle,
   disabled = false,
+  isSearchable = true,
 }) => {
   return (
     <Dropdown
@@ -36,7 +38,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
       iconStyle={styles.iconStyle}
       itemTextStyle={styles.itemTextStyle}
       data={options}
-      search
+      search={isSearchable}
       maxHeight={300}
       labelField="name"
       valueField="id"

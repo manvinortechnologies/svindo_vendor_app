@@ -26,6 +26,11 @@ import Headerwithback from "./Headerwithback";
 import MainContainer from "../CommonComponent/MainContainer";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import CustomHeader from "../CommonComponent/CustomHeader";
+import Toast from "react-native-toast-message";
+import {
+  useGetVendorStoresQuery,
+  useUpdateVendorStoreMutation,
+} from "../services/api/state-api-slice";
 
 // ✅ Define the type for the navigation stack
 type RootStackParamList = {
@@ -51,25 +56,57 @@ const OnlineStore = ({ navigation }: any) => {
   const [display, setDisplay] = useState<boolean>(true);
   const [isPrivate, setIsPrivate] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const {
+    data: storeData,
+    error,
+    isLoading: isLoadingStore,
+    refetch,
+  } = useGetVendorStoresQuery();
+
+  const [updateVendorStore, { isLoading: isUpdating }] =
+    useUpdateVendorStoreMutation();
+
   useEffect(() => {
-    getData();
-  }, []);
-  const getData = async () => {
+    if (storeData) {
+      setEnable(storeData.is_online);
+      setLocation(storeData.is_location);
+      setDisplay(storeData.display_as_catalog);
+      setIsPrivate(storeData.private_catalog);
+    }
+  }, [storeData]);
+
+  const handleConfirmStoreStatus = async (
+    key: string,
+    value: boolean,
+    title: string
+  ) => {
     try {
-      setIsLoading(true);
-      const res = await api.get(API_ROUTES.storeOnlineSetting);
-      if (res.status == 200) {
-        const data = res.data;
-        console.log(data);
-        setEnable(data.store_page_visible);
-        setLocation(data.store_location_visible);
-        setDisplay(data.display_as_catalog);
-        setIsPrivate(data.private_catalog);
+      const formData = new FormData();
+      formData.append(key, (!value).toString());
+      await updateVendorStore(formData).unwrap();
+      Toast.show({
+        text1: value
+          ? `${title} disabled successfully`
+          : `${title} enabled successfully`,
+        type: "success",
+      });
+      if (key === "is_online") {
+        setEnable(!value);
+      } else if (key === "is_location") {
+        setLocation(!value);
+      } else if (key === "display_as_catalog") {
+        setDisplay(!value);
+      } else if (key === "private_catalog") {
+        setIsPrivate(!value);
       }
+      refetch();
     } catch (error) {
-      console.log("error-->", error);
-    } finally {
-      setIsLoading(false);
+      console.error("Error updating store status:", error);
+      Toast.show({
+        text1: `Failed to update ${title} status`,
+        type: "error",
+      });
     }
   };
 
@@ -85,9 +122,11 @@ const OnlineStore = ({ navigation }: any) => {
       console.log("data-->", data);
       const res = await api.post(API_ROUTES.storeOnlineSetting, data);
       console.log("ressss->", res);
-      if (res.status == 200) {
-        Alert.alert("Success", "Online Store Setting updated successfully");
-      }
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Online Store Setting updated successfully",
+      });
     } catch (error) {
       console.log("error-->", error);
     } finally {
@@ -115,7 +154,13 @@ const OnlineStore = ({ navigation }: any) => {
                 <Text style={styles.switchtext}>visible on svindo</Text>
                 <CustomSwitch
                   value={isEnabled}
-                  onValueChange={setEnable}
+                  onValueChange={() =>
+                    handleConfirmStoreStatus(
+                      "is_online",
+                      isEnabled,
+                      "Store Page"
+                    )
+                  }
                   activeColor="#FCA311"
                   inactiveColor="#999"
                   borderColor="#999"
@@ -155,7 +200,13 @@ const OnlineStore = ({ navigation }: any) => {
                 <Text style={styles.switchtext}>visible on svindo</Text>
                 <CustomSwitch
                   value={location}
-                  onValueChange={setLocation}
+                  onValueChange={() =>
+                    handleConfirmStoreStatus(
+                      "is_location",
+                      location,
+                      "Store Location"
+                    )
+                  }
                   activeColor="#FCA311"
                   inactiveColor="#999"
                   borderColor="#999"
@@ -179,7 +230,13 @@ const OnlineStore = ({ navigation }: any) => {
               <View>
                 <CustomSwitch
                   value={display}
-                  onValueChange={setDisplay}
+                  onValueChange={() =>
+                    handleConfirmStoreStatus(
+                      "display_as_catalog",
+                      display,
+                      "Display products as Catalog"
+                    )
+                  }
                   activeColor="#FCA311"
                   inactiveColor="#999"
                   borderColor="#999"
@@ -211,7 +268,13 @@ const OnlineStore = ({ navigation }: any) => {
               <View>
                 <CustomSwitch
                   value={isPrivate}
-                  onValueChange={setIsPrivate}
+                  onValueChange={() =>
+                    handleConfirmStoreStatus(
+                      "private_catalog",
+                      isPrivate,
+                      "Private Catalog"
+                    )
+                  }
                   activeColor="#FCA311"
                   inactiveColor="#999"
                   borderColor="#999"

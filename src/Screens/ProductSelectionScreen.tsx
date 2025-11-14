@@ -7,16 +7,19 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
+  Alert,
 } from "react-native";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import CustomModal from "../Modals/CustomModal";
 
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScaledSheet } from "react-native-size-matters";
+import Toast from "react-native-toast-message";
 
 // Constants
 const INITIAL_QUANTITY = 1;
@@ -30,6 +33,8 @@ interface Product {
   price: number;
   image: string;
   quantity?: number;
+  stock?: number;
+  product_type?: string;
 }
 
 interface CartItem {
@@ -80,6 +85,11 @@ const ProductSelectionScreen: React.FC = () => {
   const [searchText, setSearchText] = useState("");
   const [productList, setProductList] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [showPrintLimitModal, setShowPrintLimitModal] =
+    useState<boolean>(false);
+  const [selectedPrintProductId, setSelectedPrintProductId] = useState<
+    number | null
+  >(null);
 
   useEffect(() => {
     fetchProducts();
@@ -153,6 +163,47 @@ const ProductSelectionScreen: React.FC = () => {
     });
   }, []);
 
+  const hasAnotherPrintSelected = useCallback(
+    (currentId?: number): boolean => {
+      // Build a set of product ids in cart with qty > 0
+      const selectedIds = new Set(
+        cart.filter((c) => c.quantity > 0).map((c) => c.id)
+      );
+      // Iterate over selected products and see if any other print item exists
+      for (const id of selectedIds) {
+        if (currentId !== undefined && id === currentId) continue;
+        const prod = productList.find((p) => p.id === id);
+        if (prod?.product_type === "print") return true;
+      }
+      return false;
+    },
+    [cart, productList]
+  );
+
+  const handleSelectPrintProduct = useCallback(() => {
+    if (
+      selectedPrintProductId &&
+      hasAnotherPrintSelected(selectedPrintProductId)
+    ) {
+      setShowPrintLimitModal(false);
+      return;
+    } else {
+      const currentItem = findCartItem(selectedPrintProductId as number);
+      const product = productList.find((p) => p.id === selectedPrintProductId);
+      const stock = Number(product?.stock ?? 0);
+      const currentQty = currentItem ? currentItem.quantity : 0;
+      const nextQty = currentQty === 0 ? INITIAL_QUANTITY : currentQty + 1;
+      updateCartItemQuantity(selectedPrintProductId as number, nextQty);
+      setSelectedPrintProductId(null);
+      setShowPrintLimitModal(false);
+    }
+  }, [
+    findCartItem,
+    updateCartItemQuantity,
+    productList,
+    selectedPrintProductId,
+    hasAnotherPrintSelected,
+  ]);
   /**
    * Increments the quantity of a product in the cart
    * @param id - Product ID to increment
@@ -160,12 +211,21 @@ const ProductSelectionScreen: React.FC = () => {
   const increment = useCallback(
     (id: number) => {
       const currentItem = findCartItem(id);
-      const newQuantity = currentItem
-        ? currentItem.quantity + 1
-        : INITIAL_QUANTITY;
-      updateCartItemQuantity(id, newQuantity);
+      const product = productList.find((p) => p.id === id);
+      const stock = Number(product?.stock ?? 0);
+      const currentQty = currentItem ? currentItem.quantity : 0;
+      const nextQty = currentQty === 0 ? INITIAL_QUANTITY : currentQty + 1;
+      const isPrintProduct = product?.product_type === "print";
+      if (isPrintProduct) {
+        setShowPrintLimitModal(true);
+        setSelectedPrintProductId(id);
+        return;
+      }
+      if (stock > 0 && nextQty <= stock) {
+        updateCartItemQuantity(id, nextQty);
+      }
     },
-    [findCartItem, updateCartItemQuantity]
+    [findCartItem, updateCartItemQuantity, productList, selectedPrintProductId]
   );
 
   /**
@@ -227,15 +287,25 @@ const ProductSelectionScreen: React.FC = () => {
   const handleQuantityChange = useCallback(
     (itemId: number, text: string) => {
       const quantity = parseInt(text) || 0;
-      if (quantity >= 0) {
-        updateCartItemQuantity(itemId, quantity);
+      const product = productList.find((p) => p.id === itemId);
+      const stock = Number(product?.stock ?? 0);
+      const boundedQty = stock > 0 ? Math.min(quantity, stock) : 0;
+      if (boundedQty >= 0) {
+        updateCartItemQuantity(itemId, boundedQty);
       }
     },
-    [updateCartItemQuantity]
+    [updateCartItemQuantity, productList]
   );
 
   const renderQuantityControls = useCallback(
     (item: Product, quantity: number) => {
+      const stock = Number(item?.stock ?? 0);
+      const isPrintProduct = item?.product_type === "print";
+      // If no stock, hide Add/quantity controls entirely
+      if ((!stock || stock <= 0) && !isPrintProduct) {
+        return null;
+      }
+
       if (quantity === 0) {
         return (
           <TouchableOpacity
@@ -246,6 +316,8 @@ const ProductSelectionScreen: React.FC = () => {
           </TouchableOpacity>
         );
       }
+
+      const canIncrement = quantity < stock;
 
       return (
         <View style={styles.qtyRow}>
@@ -260,8 +332,15 @@ const ProductSelectionScreen: React.FC = () => {
             keyboardType="numeric"
             selectTextOnFocus
           />
-          <TouchableOpacity onPress={() => increment(item.id)}>
-            <Text style={styles.qtyBtn}>+</Text>
+          <TouchableOpacity
+            onPress={() => canIncrement && increment(item.id)}
+            disabled={!canIncrement && isPrintProduct}
+          >
+            <Text
+              style={[styles.qtyBtn, !canIncrement && styles.qtyBtnDisabled]}
+            >
+              +
+            </Text>
           </TouchableOpacity>
         </View>
       );
@@ -270,7 +349,7 @@ const ProductSelectionScreen: React.FC = () => {
   );
 
   const renderItem = useCallback(
-    ({ item }: { item: Product }) => {
+    ({ item, index }: { item: Product; index: number }) => {
       // Prioritize cart quantity over item quantity for real-time updates
       const cartQuantity = findCartItem(item.id)?.quantity;
       const quantity =
@@ -280,7 +359,7 @@ const ProductSelectionScreen: React.FC = () => {
         <View style={styles.card}>
           <Image source={{ uri: item.image }} style={styles.image} />
           <Text style={styles.title}>{item.name}</Text>
-          <Text style={styles.desc}>{item.desc}</Text>
+          {item.desc && <Text style={styles.desc}>{item.desc}</Text>}
           <View style={styles.bottomRow}>
             {renderQuantityControls(item, quantity)}
             <Text style={styles.price}>₹ {item.price}</Text>
@@ -326,13 +405,21 @@ const ProductSelectionScreen: React.FC = () => {
   );
 
   const handleProceed = useCallback(() => {
+    if (cart.length === 0) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Please add products to the cart",
+      });
+      return;
+    }
     const cartProducts = convertCartToProducts();
     const mergedProducts = mergeProductsWithCart(
       selectedProducts,
       cartProducts
     );
 
-    navigation.replace(navigateScreen as any, {
+    navigation.popTo(navigateScreen as any, {
       selectedProducts: mergedProducts,
       editMode: editMode,
       saleData: saleData,
@@ -376,26 +463,47 @@ const ProductSelectionScreen: React.FC = () => {
       />
 
       <View style={styles.footer}>
-        <View style={styles.scanRow}>
-          <TouchableOpacity style={styles.scanBtn}>
-            <Icon name="qr-code-scanner" size={20} color="#fff" />
-            <Text style={styles.scanText}>Scan</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.addProductBtn}
-            onPress={() =>
-              navigation.navigate(HomeNavigation.ADD_PRODUCT_SCREEN as any)
-            }
-          >
-            <Text style={styles.addProductText}>Add Product</Text>
-          </TouchableOpacity>
-        </View>
-
+        <TouchableOpacity style={styles.scanBtn}>
+          <Icon name="qr-code-scanner" size={20} color="#fff" />
+          <Text style={styles.scanText}>Scan</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.proceedBtn} onPress={handleProceed}>
           <Text style={styles.proceedText}>Proceed</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.addProductBtn}
+          onPress={() =>
+            navigation.navigate(HomeNavigation.ADD_PRODUCT_SCREEN as any)
+          }
+        >
+          <Text style={styles.addProductText}>Add Product</Text>
+        </TouchableOpacity>
       </View>
       <Loading visible={isLoading} />
+      <CustomModal
+        visible={showPrintLimitModal}
+        title="Notice"
+        onClose={() => setShowPrintLimitModal(false)}
+      >
+        <View style={{ padding: 16 }}>
+          <Text style={{ color: "#000", textAlign: "center" }}>
+            Only one print product can be select
+          </Text>
+          <View style={{ height: 12 }} />
+          <TouchableOpacity
+            onPress={handleSelectPrintProduct}
+            style={{
+              alignSelf: "center",
+              backgroundColor: "#FCA311",
+              paddingHorizontal: 20,
+              paddingVertical: 8,
+              borderRadius: 8,
+            }}
+          >
+            <Text style={{ color: "#fff", fontWeight: "600" }}>OK</Text>
+          </TouchableOpacity>
+        </View>
+      </CustomModal>
     </SafeAreaView>
   );
 };
@@ -438,16 +546,18 @@ const styles = ScaledSheet.create({
     fontWeight: "bold",
     fontSize: 14,
     marginVertical: 4,
+    color: "#000",
   },
   desc: {
     fontSize: 12,
-    color: "#777",
+    color: "#000",
+    marginBottom: "6@s",
   },
   bottomRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 8,
+    marginTop: "auto",
   },
   addButton: {
     backgroundColor: "#FFA500",
@@ -487,11 +597,19 @@ const styles = ScaledSheet.create({
     fontSize: 14,
     color: "#FF9900",
   },
+  qtyBtnDisabled: {
+    opacity: 0.4,
+  },
   footer: {
     position: "absolute",
-    bottom: 10,
+    bottom: 0,
     left: 10,
     right: 10,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    paddingVertical: "10@s",
   },
   scanRow: {
     flexDirection: "row",
@@ -526,7 +644,6 @@ const styles = ScaledSheet.create({
     alignItems: "center",
     width: "50%",
     alignSelf: "center",
-    marginBottom: "10@s",
   },
   proceedText: {
     fontWeight: "bold",

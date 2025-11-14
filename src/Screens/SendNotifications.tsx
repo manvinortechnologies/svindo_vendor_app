@@ -14,24 +14,31 @@ import {
 import Headerwithback from "./Headerwithback";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { launchImageLibrary } from "react-native-image-picker";
+import ImageCropPicker from "react-native-image-crop-picker";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import moment from "moment";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import { useNotificationContext } from "../contexts/NotificationContext";
+import Toast from "react-native-toast-message";
 
 const SendNotifications = ({ navigation }: any) => {
   const [formData, setFormData] = useState({
     campaign_name: "",
     redirect_to: "store",
     description: "",
-    budget: "",
+    budget: "0",
     start_time: "",
     end_time: "",
   });
   const [bannerImage, setBannerImage] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<any>({});
+  const [isDateTimePickerVisible, setDateTimePickerVisible] = useState(false);
+  const [pickerType, setPickerType] = useState<
+    "start_time" | "end_time" | null
+  >(null);
   const { showNotification } = useNotificationContext();
 
   const redirectOptions = [
@@ -50,24 +57,97 @@ const SendNotifications = ({ navigation }: any) => {
     }
   };
 
-  const handleImagePicker = () => {
-    const options = {
-      mediaType: "photo" as const,
-      quality: 0.8 as const,
-      maxWidth: 1920,
-      maxHeight: 1080,
-    };
+  const showDateTimePicker = (type: "start_time" | "end_time") => {
+    setPickerType(type);
+    setDateTimePickerVisible(true);
+    // Clear error when opening picker
+    if (errors[type]) {
+      setErrors((prev: any) => ({ ...prev, [type]: "" }));
+    }
+  };
 
-    launchImageLibrary(options, (response) => {
-      if (response.didCancel || response.errorMessage) {
+  const handleDateTimeConfirm = (date: Date) => {
+    const formattedDateTime = moment(date).format("YYYY-MM-DD HH:mm");
+    if (pickerType) {
+      handleInputChange(pickerType, formattedDateTime);
+    }
+    setDateTimePickerVisible(false);
+    setPickerType(null);
+  };
+
+  const getPickerDate = () => {
+    if (pickerType === "start_time" && formData.start_time) {
+      return moment(formData.start_time, "YYYY-MM-DD HH:mm").toDate();
+    }
+    if (pickerType === "end_time" && formData.end_time) {
+      return moment(formData.end_time, "YYYY-MM-DD HH:mm").toDate();
+    }
+    return new Date();
+  };
+
+  const handleImagePicker = async () => {
+    try {
+      // Clear image error when user starts uploading
+      if (errors.image) {
+        setErrors((prev: any) => ({ ...prev, image: "" }));
+      }
+
+      const result = await ImageCropPicker.openPicker({
+        mediaType: "photo",
+        compressImageQuality: 0.8,
+        cropping: true,
+        includeBase64: false,
+      });
+
+      console.log("ImageCropPicker response--->", result);
+
+      // Validate that we have a valid path
+      if (!result.path) {
+        setErrors((prev: any) => ({
+          ...prev,
+          image:
+            "The selected image could not be processed. Please try selecting a different file.",
+        }));
         return;
       }
 
-      if (response.assets && response.assets[0]) {
-        const asset = response.assets[0];
-        setBannerImage(asset);
+      // Validate file size (max 1MB as per UI hint)
+      const maxSize = 1 * 1024 * 1024; // 1MB in bytes
+      if (result.size && result.size > maxSize) {
+        setErrors((prev: any) => ({
+          ...prev,
+          image:
+            "The selected file is too large. Please choose a file smaller than 1MB.",
+        }));
+        return;
       }
-    });
+
+      // Convert ImageCropPicker response to format expected by the rest of the app
+      const asset = {
+        uri: result.path,
+        type: result.mime || "image/jpeg",
+        fileName:
+          result.filename ||
+          result.path?.split("/").pop() ||
+          "banner_image.jpg",
+        fileSize: result.size,
+      };
+
+      setBannerImage(asset);
+    } catch (error: any) {
+      console.log("ImageCropPicker error--->", error);
+
+      // Check if user cancelled
+      if (error.code === "E_PICKER_CANCELLED") {
+        return; // User cancelled, don't show error
+      }
+
+      setErrors((prev: any) => ({
+        ...prev,
+        image:
+          error.message || "Failed to access media library. Please try again.",
+      }));
+    }
   };
 
   const validateForm = () => {
@@ -83,14 +163,14 @@ const SendNotifications = ({ navigation }: any) => {
       newErrors.description = "Description must be under 90 characters";
     }
 
-    if (!formData.budget.trim()) {
-      newErrors.budget = "Budget is required";
-    } else if (
-      isNaN(parseFloat(formData.budget)) ||
-      parseFloat(formData.budget) <= 0
-    ) {
-      newErrors.budget = "Please enter a valid budget amount";
-    }
+    // if (!formData.budget.trim()) {
+    //   newErrors.budget = "Budget is required";
+    // } else if (
+    //   isNaN(parseFloat(formData.budget)) ||
+    //   parseFloat(formData.budget) <= 0
+    // ) {
+    //   newErrors.budget = "Please enter a valid budget amount";
+    // }
 
     if (!formData.start_time.trim()) {
       newErrors.start_time = "Start time is required";
@@ -167,11 +247,11 @@ const SendNotifications = ({ navigation }: any) => {
       }
     } catch (error) {
       console.error("Error submitting notification campaign:", error);
-      Alert.alert(
-        "Error",
-        "Failed to submit notification campaign. Please try again.",
-        [{ text: "OK" }]
-      );
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to submit notification campaign. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -246,7 +326,7 @@ const SendNotifications = ({ navigation }: any) => {
         )}
 
         {/* Budget */}
-        <Text style={styles.label}>Budget (₹) *</Text>
+        {/* <Text style={styles.label}>Budget (₹) *</Text>
         <TextInput
           style={[styles.input, errors.budget && styles.inputError]}
           placeholder="Enter budget amount"
@@ -255,30 +335,52 @@ const SendNotifications = ({ navigation }: any) => {
           onChangeText={(text) => handleInputChange("budget", text)}
           keyboardType="numeric"
         />
-        {errors.budget && <Text style={styles.errorText}>{errors.budget}</Text>}
+        {errors.budget && <Text style={styles.errorText}>{errors.budget}</Text>} */}
 
         {/* Start Time */}
         <Text style={styles.label}>Start Time *</Text>
-        <TextInput
-          style={[styles.input, errors.start_time && styles.inputError]}
-          placeholder="YYYY-MM-DD HH:MM"
-          placeholderTextColor="#FCA311"
-          value={formData.start_time}
-          onChangeText={(text) => handleInputChange("start_time", text)}
-        />
+        <TouchableOpacity
+          style={[
+            styles.timeInput,
+            errors.start_time && styles.inputError,
+            !formData.start_time && styles.placeholderInput,
+          ]}
+          onPress={() => showDateTimePicker("start_time")}
+        >
+          <Text
+            style={[
+              styles.timeInputText,
+              !formData.start_time && styles.placeholderText,
+            ]}
+          >
+            {formData.start_time || "YYYY-MM-DD HH:MM"}
+          </Text>
+          <Icon name="access-time" size={20} color="#FCA311" />
+        </TouchableOpacity>
         {errors.start_time && (
           <Text style={styles.errorText}>{errors.start_time}</Text>
         )}
 
         {/* End Time */}
         <Text style={styles.label}>End Time *</Text>
-        <TextInput
-          style={[styles.input, errors.end_time && styles.inputError]}
-          placeholder="YYYY-MM-DD HH:MM"
-          placeholderTextColor="#FCA311"
-          value={formData.end_time}
-          onChangeText={(text) => handleInputChange("end_time", text)}
-        />
+        <TouchableOpacity
+          style={[
+            styles.timeInput,
+            errors.end_time && styles.inputError,
+            !formData.end_time && styles.placeholderInput,
+          ]}
+          onPress={() => showDateTimePicker("end_time")}
+        >
+          <Text
+            style={[
+              styles.timeInputText,
+              !formData.end_time && styles.placeholderText,
+            ]}
+          >
+            {formData.end_time || "YYYY-MM-DD HH:MM"}
+          </Text>
+          <Icon name="access-time" size={20} color="#FCA311" />
+        </TouchableOpacity>
         {errors.end_time && (
           <Text style={styles.errorText}>{errors.end_time}</Text>
         )}
@@ -309,6 +411,19 @@ const SendNotifications = ({ navigation }: any) => {
         </TouchableOpacity>
       </ScrollView>
       <Loading visible={isLoading} />
+
+      {/* DateTime Picker Modal */}
+      <DateTimePickerModal
+        isVisible={isDateTimePickerVisible}
+        mode="datetime"
+        onConfirm={handleDateTimeConfirm}
+        onCancel={() => {
+          setDateTimePickerVisible(false);
+          setPickerType(null);
+        }}
+        date={getPickerDate()}
+        minimumDate={new Date()}
+      />
     </SafeAreaView>
   );
 };
@@ -421,5 +536,27 @@ const styles = StyleSheet.create({
   },
   submitButtonDisabled: {
     backgroundColor: "#ccc",
+  },
+  timeInput: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#FCA311",
+    borderRadius: 6,
+    padding: 10,
+    marginBottom: 16,
+    backgroundColor: "#fff",
+  },
+  timeInputText: {
+    color: "#000",
+    fontSize: 14,
+    flex: 1,
+  },
+  placeholderInput: {
+    backgroundColor: "#fff",
+  },
+  placeholderText: {
+    color: "#FCA311",
   },
 });

@@ -17,6 +17,7 @@ import { convert24To12Hour, convertTo24Hour } from "../utils/dateandTime";
 import Loading from "../CommonComponent/Loading";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
+import Toast from "react-native-toast-message";
 
 const daysOfWeek = [
   "Sunday",
@@ -137,10 +138,17 @@ const StoreWorkingHours = () => {
 
       const res = await api.post(API_ROUTES.storeWorkingHourBulk, payload);
 
-      if (res.status == 201) {
-        Alert.alert("Success", "Store timing has been successfully updated.");
-      }
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Store timing has been successfully updated.",
+      });
     } catch (error) {
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to update store timing",
+      });
     } finally {
       setIsLoading(false);
     }

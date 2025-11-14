@@ -6,6 +6,7 @@ import {
   StatusBar,
   Image,
   ActivityIndicator,
+  SafeAreaView,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { SplashScreenProps } from "../type";
@@ -33,6 +34,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
   const checkAdminProfile = async (): Promise<boolean> => {
     try {
       const response = await api.get(API_ROUTES.userProfile);
+      await StorageUtils.setUserData(response.data);
       return response.data;
     } catch (error) {
       console.error("Error checking admin profile:", error);
@@ -47,8 +49,6 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
 
         // Get authentication and profile status
         const isAuthenticated = StorageUtils.isAuthenticated();
-        const hasCompletedSignup = StorageUtils.hasCompletedSignup();
-        const hasLocationData = StorageUtils.hasLocationData();
 
         // Check admin profile and company profile via API (only if authenticated)
         let hasCompletedAdminProfile = false;
@@ -59,7 +59,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
         }
 
         // Determine navigation based on user state
-        let targetScreen = HomeNavigation.WELCOME_SCREEN;
+        let targetScreen = HomeNavigation.SIGNUP_SCREEN;
 
         if (isAuthenticated) {
           if (hasCompletedAdminProfile) {
@@ -76,7 +76,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
           }
         } else {
           // User is not authenticated - go to welcome screen
-          targetScreen = HomeNavigation.WELCOME_SCREEN;
+          targetScreen = HomeNavigation.SIGNUP_SCREEN;
         }
 
         // Add a small delay for better UX
@@ -103,24 +103,26 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
   }, [navigation]);
 
   return (
-    <LinearGradient colors={["#F9C313", "#FCA511"]} style={styles.container}>
-      <StatusBar
-        translucent={true}
-        backgroundColor="transparent"
-        barStyle="dark-content"
-      />
-      <Image source={require("../assets/logo.png")} style={styles.logo} />
-      <Text style={styles.logoTitle}>Svindo</Text>
-      <Text style={styles.logoTitle}>Business</Text>
-      <Text style={styles.logoText}>Window to Real Growth</Text>
+    <SafeAreaView style={{ flex: 1 }}>
+      <LinearGradient colors={["#F9C313", "#FCA511"]} style={styles.container}>
+        <StatusBar
+          translucent={true}
+          backgroundColor="transparent"
+          barStyle="dark-content"
+        />
+        <Image source={require("../assets/logo.png")} style={styles.logo} />
+        <Text style={styles.logoTitle}>Svindo</Text>
+        <Text style={styles.logoTitle}>Business</Text>
+        <Text style={styles.logoText}>Window to Real Growth</Text>
 
-      {isLoading && (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#fff" />
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
-      )}
-    </LinearGradient>
+        {isLoading && (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#fff" />
+            <Text style={styles.loadingText}>Loading...</Text>
+          </View>
+        )}
+      </LinearGradient>
+    </SafeAreaView>
   );
 };
 

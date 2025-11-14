@@ -75,27 +75,28 @@ export default function GroupedBars() {
           flexDirection: "row",
           justifyContent: "center",
           marginTop: 10,
+          gap: 10,
         }}
       >
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+          <Text style={{ color: "gray", marginRight: 2 }}>Total Sales</Text>
           <View
             style={{
               height: 10,
               width: 16,
               borderRadius: 6,
               backgroundColor: "#177AD5",
-              marginRight: 8,
             }}
           />
         </View>
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 5 }}>
+          <Text style={{ color: "gray", marginRight: 2 }}>Total Expense</Text>
           <View
             style={{
               height: 10,
               width: 16,
               borderRadius: 6,
               backgroundColor: "#ED6665",
-              marginRight: 8,
             }}
           />
         </View>

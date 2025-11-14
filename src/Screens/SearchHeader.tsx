@@ -12,27 +12,32 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 
-{/* <SearchHeader
+{
+  /* <SearchHeader
   title="Search Products"
   draftName="Edit Product Draft"
   imageIcon={require("../assets/draft-icon.png")}
   paddingTop={30}
-/> */}
+/> */
+}
 
 // HeaderProps with dynamic icon, title, draft name, and padding
 type HeaderProps = {
   title?: string;
   draftName?: string;
-  
   imageIcon?: ImageSourcePropType;
   paddingTop?: number;
+  value?: string;
+  onChangeText?: (text: string) => void;
 };
 
 const SearchHeader: React.FC<HeaderProps> = ({
   title = "Search",
   draftName = "",
   imageIcon = require("../assets/img.png"),
-  paddingTop =0,
+  paddingTop = 0,
+  value,
+  onChangeText,
 }) => {
   return (
     <View style={[styles.container, { paddingTop }]}>
@@ -47,13 +52,15 @@ const SearchHeader: React.FC<HeaderProps> = ({
             placeholder={title}
             placeholderTextColor="#000"
             style={styles.searchInput}
+            value={value}
+            onChangeText={onChangeText}
           />
-          <TouchableOpacity>
+          {/* <TouchableOpacity>
             <Image
               source={require("../assets/mic.png")}
               style={styles.micIcon}
             />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         {/* Draft Section */}
@@ -75,11 +82,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     alignItems: "center",
-    
+
     borderColor: "#fff",
     paddingHorizontal: 10,
     paddingVertical: 10,
-    
   },
   searchBar: {
     flexDirection: "row",
@@ -90,7 +96,7 @@ const styles = StyleSheet.create({
     height: 40,
     flex: 1,
     marginRight: 10,
-    elevation:3,
+    elevation: 3,
   },
   searchIcon: {
     width: 18,
@@ -112,7 +118,8 @@ const styles = StyleSheet.create({
   draftSection: {
     flexDirection: "row",
     alignItems: "center",
-    marginRight:10  },
+    marginRight: 10,
+  },
   draftIcon: {
     width: 24,
     height: 24,

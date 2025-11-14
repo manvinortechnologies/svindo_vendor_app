@@ -3,6 +3,7 @@ import axios from "axios";
 import { Alert } from "react-native";
 import { StorageUtils } from "../../utils/storage";
 import { APP_CONSTANTS } from "../../constants/app.constants";
+import Toast from "react-native-toast-message";
 
 const api = axios.create({
   baseURL: APP_CONSTANTS.API_BASE_URL,
@@ -35,9 +36,17 @@ api.interceptors.response.use(
     console.log("API Error Response →", error);
 
     if (error.response?.data?.error) {
-      Alert.alert("Alert", error.response.data.error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.response.data.error,
+      });
     } else {
-      Alert.alert("Error", "Something went wrong, please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Something went wrong, please try again.",
+      });
     }
 
     if (error.response?.status === 401) {

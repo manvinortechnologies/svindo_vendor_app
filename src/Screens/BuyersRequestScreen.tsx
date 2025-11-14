@@ -26,6 +26,7 @@ import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import { APP_CONSTANTS } from "../constants/app.constants";
 import ImagePreviewModal from "../Modals/ImagePreviewModal";
+import Toast from "react-native-toast-message";
 
 const { width } = Dimensions.get("window");
 
@@ -107,6 +108,14 @@ type RootStackParamList = {
   CreateRequest: undefined;
   CreateOffer: { requestId: string };
   RequestOffers: { requestId?: string };
+  ChatScreenStream: {
+    userId: string;
+    token?: string;
+    channelId?: string; // Optional - will be determined after checking for existing channel
+    otherUserId: string;
+  };
+  AllChatUserScreen: undefined;
+  CreateCoupon: { customerId: string };
 };
 
 type BuyersRequestScreenNavigationProp = NativeStackNavigationProp<
@@ -154,7 +163,11 @@ const BuyersRequestScreen: React.FC = () => {
       setCustomerRequests(requests);
     } catch (error) {
       console.error("Error fetching customer requests:", error);
-      Alert.alert("Error", "Failed to load requests. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to load requests. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -174,10 +187,11 @@ const BuyersRequestScreen: React.FC = () => {
       );
     } catch (error) {
       console.error("Error fetching wholesale requests:", error);
-      Alert.alert(
-        "Error",
-        "Failed to load wholesale requests. Please try again."
-      );
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to load wholesale requests. Please try again.",
+      });
     } finally {
       setLoadingWholesale(false);
     }
@@ -204,10 +218,18 @@ const BuyersRequestScreen: React.FC = () => {
         prev.filter((request) => request.id.toString() !== requestId)
       );
 
-      Alert.alert("Success", "Request deleted successfully");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Request deleted successfully",
+      });
     } catch (error) {
       console.error("Error deleting request:", error);
-      Alert.alert("Error", "Failed to delete request. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to delete request. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -241,7 +263,11 @@ const BuyersRequestScreen: React.FC = () => {
       setOffers(offersData);
     } catch (error) {
       console.error("Error fetching offers:", error);
-      Alert.alert("Error", "Failed to load offers. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to load offers. Please try again.",
+      });
     } finally {
       setLoadingOffers(false);
     }
@@ -315,10 +341,8 @@ const BuyersRequestScreen: React.FC = () => {
       productName: request.product_name,
       category: request.category_details?.name || "Unknown",
       subCategory: request.sub_category_details?.name || "Unknown",
-      userId:
-        request.user_details?.first_name +
-          " " +
-          request.user_details?.last_name || "Unknown User",
+      userId: "VNDR" + request.user_details?.id || "Unknown User",
+      // store: request?.store_details,
       city: request.user_details?.pincode?.toString() || "Unknown",
       description: request.description,
       budget: request.budget,
@@ -365,6 +389,7 @@ const BuyersRequestScreen: React.FC = () => {
       vendor_details: offer.seller_user_details,
       store_details: offer.store,
       request_details: offer.request_details,
+      ...offer,
     };
   };
 
@@ -411,6 +436,12 @@ const BuyersRequestScreen: React.FC = () => {
     { id: 4, name: "Within 50km" },
     { id: 5, name: "Any distance" },
   ];
+
+  const handleOfferCoupon = (item: any) => {
+    navigation.navigate(HomeNavigation.CREATECOUPON, {
+      customerId: item.userId,
+    });
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -651,6 +682,11 @@ const BuyersRequestScreen: React.FC = () => {
                     selectedToggle === "Offers for you"
                   ) {
                     // Buy now for offers
+                    // navigation.navigate(HomeNavigation.ALL_CHAT_USER_SCREEN);
+                    navigation.navigate(HomeNavigation.CHAT_SCREEN_STREAM, {
+                      userId: item.userId,
+                      otherUserId: item.seller_user_details.id,
+                    });
                     console.log("Buy now:", item.id);
                   } else if (selectedTab !== "Requested") {
                     // Sell now for other tabs
@@ -722,19 +758,23 @@ const BuyersRequestScreen: React.FC = () => {
                     <Text style={styles.label}>Sub Category</Text>
                     <Text style={styles.subLabel}>{item.subCategory}</Text>
                   </View>
-                  {selectedTab === "Wholesale" && (
-                    <View style={{ alignItems: "flex-end" }}>
-                      <Text style={styles.label}>User</Text>
-                      <Text style={styles.subLabel}>{item.userId}</Text>
-                    </View>
-                  )}
+
                   {/* Show Offer Coupon button only for non-Requested tabs */}
-                  {selectedTab !== "Requested" && (
-                    <TouchableOpacity style={styles.couponButton}>
+                  {selectedTab === "Retail" && (
+                    <TouchableOpacity
+                      style={styles.couponButton}
+                      onPress={() => handleOfferCoupon(item)}
+                    >
                       <Text style={styles.couponButtonText}>Offer Coupon</Text>
                     </TouchableOpacity>
                   )}
                 </View>
+                {selectedTab === "Wholesale" && (
+                  <View style={{ marginBottom: s(10) }}>
+                    <Text style={styles.label}>User</Text>
+                    <Text style={styles.subLabel}>{item.userId}</Text>
+                  </View>
+                )}
                 <View>
                   <Text style={[styles.label]}>Description</Text>
                   <Text style={styles.descriptionText}>{item.description}</Text>

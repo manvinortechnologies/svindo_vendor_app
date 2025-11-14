@@ -28,6 +28,7 @@ import { StorageUtils } from "../utils/storage";
 import Loading from "../CommonComponent/Loading";
 import Icon from "react-native-vector-icons/Ionicons";
 import { ScaledSheet } from "react-native-size-matters";
+import Toast from "react-native-toast-message";
 
 const OtpScreen: React.FC<OtpScreenProps> = () => {
   const navigation =
@@ -160,7 +161,11 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
     try {
       const confirmation = await auth().signInWithPhoneNumber(phoneNumber);
       setConfirm(confirmation);
-      Alert.alert("New verification code sent to your phone.");
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "New verification code sent to your phone.",
+      });
     } catch (error: any) {
       setError(error.message);
     }

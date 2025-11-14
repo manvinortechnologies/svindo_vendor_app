@@ -22,6 +22,11 @@ import CustomHeader from "../CommonComponent/CustomHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
 import CalendarModal from "../Modals/CalendarModal";
 import moment from "moment";
+import { HomeNavigation } from "../constants/app-routes.constants";
+import CustomDropdown, {
+  DropDownOption,
+} from "../CommonComponent/CustomDropdown";
+import { CategoryType } from "../modelType/CommonType";
 
 const ExpensesScreen = ({ navigation }: any) => {
   const isFocused = useIsFocused();
@@ -32,18 +37,40 @@ const ExpensesScreen = ({ navigation }: any) => {
     [key: string]: Expense[];
   }>({});
   const [total, setTotal] = useState<number>(0);
+  const [totalPaid, setTotalPaid] = useState<number>(0);
+  const [totalUnpaid, setTotalUnpaid] = useState<number>(0);
 
-  // Calendar modal states
+  // Filter modal states
   const [showCalendarModal, setShowCalendarModal] = useState<boolean>(false);
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>([]);
   const [isFiltered, setIsFiltered] = useState<boolean>(false);
   const [callenderModel, setCallenderModel] = useState<string>("");
+  const [categories, setCategories] = useState<CategoryType[]>([]);
+  const [categoryOptions, setCategoryOptions] = useState<DropDownOption[]>([]);
 
   useEffect(() => {
     getAllExpenses();
+    getAllCategories();
   }, [isFocused]);
+
+  const getAllCategories = async () => {
+    try {
+      const res = await api.get(API_ROUTES.expenseCategory);
+      if (res.data && res.data.length > 0) {
+        setCategories(res.data);
+        const options: DropDownOption[] = res.data.map((cat: CategoryType) => ({
+          id: cat.id,
+          name: cat.name,
+        }));
+        setCategoryOptions(options);
+      }
+    } catch (error) {
+      console.log("Error loading categories:", error);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -89,24 +116,67 @@ const ExpensesScreen = ({ navigation }: any) => {
     return sortedGrouped;
   };
 
-  // Date filtering functions
-  const filterExpensesByDateRange = (start: string, end: string) => {
-    if (!start || !end) return expensesList;
+  // Calculate totals from expenses
+  const calculateTotals = (expenses: Expense[]) => {
+    let paid = 0;
+    let unpaid = 0;
+    let grandTotal = 0;
 
-    const startDateObj = new Date(start);
-    const endDateObj = new Date(end);
-
-    return expensesList.filter((expense) => {
-      const expenseDate = new Date(expense.expense_date);
-      return expenseDate >= startDateObj && expenseDate <= endDateObj;
+    expenses.forEach((expense) => {
+      const amount = parseFloat(expense.amount) || 0;
+      grandTotal += amount;
+      if (expense.is_paid) {
+        paid += amount;
+      } else {
+        unpaid += amount;
+      }
     });
+
+    setTotal(grandTotal);
+    setTotalPaid(paid);
+    setTotalUnpaid(unpaid);
+  };
+
+  // Filtering functions
+  const filterExpenses = (
+    start: string,
+    end: string,
+    categoryId: number | null
+  ) => {
+    let filtered = expensesList;
+
+    // Filter by date range
+    if (start && end) {
+      const startDateObj = new Date(start);
+      const endDateObj = new Date(end);
+      filtered = filtered.filter((expense) => {
+        const expenseDate = new Date(expense.expense_date);
+        return expenseDate >= startDateObj && expenseDate <= endDateObj;
+      });
+    }
+
+    // Filter by category
+    if (categoryId !== null && categoryId !== undefined) {
+      filtered = filtered.filter((expense) => {
+        return (
+          expense.category === categoryId ||
+          (expense as any).category_details?.id === categoryId
+        );
+      });
+    }
+
+    return filtered;
   };
 
   const handleApplyFilter = () => {
-    if (startDate && endDate) {
-      const filtered = filterExpensesByDateRange(startDate, endDate);
+    const hasDateFilter = startDate && endDate;
+    const hasCategoryFilter = selectedCategory !== null;
+
+    if (hasDateFilter || hasCategoryFilter) {
+      const filtered = filterExpenses(startDate, endDate, selectedCategory);
       setFilteredExpenses(filtered);
       setGroupedExpenses(groupExpensesByDate(filtered));
+      calculateTotals(filtered);
       setIsFiltered(true);
       setShowCalendarModal(false);
     }
@@ -115,8 +185,10 @@ const ExpensesScreen = ({ navigation }: any) => {
   const handleClearFilter = () => {
     setStartDate("");
     setEndDate("");
+    setSelectedCategory(null);
     setFilteredExpenses([]);
     setGroupedExpenses(groupExpensesByDate(expensesList));
+    calculateTotals(expensesList);
     setIsFiltered(false);
     setShowCalendarModal(false);
   };
@@ -129,12 +201,12 @@ const ExpensesScreen = ({ navigation }: any) => {
         setExpenseseList(res.data);
         const grouped = groupExpensesByDate(res.data);
         setGroupedExpenses(grouped);
-
-        let temptotal = 0;
-        res.data.map((item: Expense) => {
-          temptotal = temptotal + parseInt(item.amount);
-        });
-        setTotal(temptotal);
+        calculateTotals(res.data);
+      } else {
+        // Reset totals if no expenses
+        setTotal(0);
+        setTotalPaid(0);
+        setTotalUnpaid(0);
       }
     } catch (error) {
     } finally {
@@ -195,16 +267,23 @@ const ExpensesScreen = ({ navigation }: any) => {
         title="Expenses"
         rightIcon={
           <TouchableOpacity onPress={() => setShowCalendarModal(true)}>
-            <Icon name="calendar-outline" size={22} color="#FCA311" />
+            <Icon name="filter-outline" size={22} color="#FCA311" />
           </TouchableOpacity>
         }
       />
 
       {/* Ledger */}
       <View style={styles.ledger}>
-        <Text style={styles.ledgerText}></Text>
-        <Text style={[styles.ledgerText]}>Ledger</Text>
-        <Text style={styles.ledgerAmount}>{total}</Text>
+        <View style={styles.ledgerItem}>
+          <Text style={styles.ledgerText}>Total Paid: </Text>
+          <Text style={styles.ledgerAmount}>₹{totalPaid.toFixed(2)}</Text>
+        </View>
+        <View style={styles.ledgerItem}>
+          <Text style={styles.ledgerText}>Total Unpaid: </Text>
+          <Text style={styles.ledgerAmountUnpaid}>
+            ₹{totalUnpaid.toFixed(2)}
+          </Text>
+        </View>
       </View>
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
         {Object.entries(groupedExpenses).map(([date, expenses]) =>
@@ -216,7 +295,7 @@ const ExpensesScreen = ({ navigation }: any) => {
       <TouchableOpacity
         style={styles.addButton}
         onPress={() => {
-          navigation.navigate("Expenses");
+          navigation.navigate(HomeNavigation.EXPENSES);
         }}
       >
         <Text style={styles.addText}>Add Expenses</Text>
@@ -252,6 +331,16 @@ const ExpensesScreen = ({ navigation }: any) => {
 
             <View style={styles.modalContent}>
               <View style={styles.dateInputContainer}>
+                <Text style={styles.dateLabel}>Category</Text>
+                <CustomDropdown
+                  placeholder="Select Category"
+                  options={categoryOptions}
+                  selectedValue={selectedCategory}
+                  onSelect={(item) => setSelectedCategory(item?.id || null)}
+                />
+              </View>
+
+              <View style={styles.dateInputContainer}>
                 <Text style={styles.dateLabel}>Start Date</Text>
                 <TouchableOpacity onPress={() => setCallenderModel("start")}>
                   <TextInput
@@ -279,9 +368,7 @@ const ExpensesScreen = ({ navigation }: any) => {
 
               {isFiltered && (
                 <View style={styles.filterStatus}>
-                  <Text style={styles.filterStatusText}>
-                    Filtered by date range
-                  </Text>
+                  <Text style={styles.filterStatusText}>Filters applied</Text>
                   <TouchableOpacity
                     onPress={handleClearFilter}
                     style={styles.clearFilterButton}
@@ -299,9 +386,15 @@ const ExpensesScreen = ({ navigation }: any) => {
                   <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                  style={[styles.modalButton, styles.applyButton]}
+                  style={[
+                    styles.modalButton,
+                    styles.applyButton,
+                    (!startDate || !endDate) &&
+                      !selectedCategory &&
+                      styles.disabledButton,
+                  ]}
                   onPress={handleApplyFilter}
-                  disabled={!startDate || !endDate}
+                  disabled={(!startDate || !endDate) && !selectedCategory}
                 >
                   <Text style={styles.applyButtonText}>Apply Filter</Text>
                 </TouchableOpacity>
@@ -348,17 +441,29 @@ const styles = ScaledSheet.create({
     backgroundColor: "#FFEBCB",
     flexDirection: "row",
     justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 15,
     paddingVertical: 8,
   },
+  ledgerItem: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   ledgerText: {
-    fontWeight: "bold",
+    fontWeight: "600",
     fontSize: "12@s",
     color: "#000",
+    marginRight: 4,
   },
   ledgerAmount: {
     color: "green",
     fontWeight: "bold",
+    fontSize: "12@s",
+  },
+  ledgerAmountUnpaid: {
+    color: "red",
+    fontWeight: "bold",
+    fontSize: "12@s",
   },
   scrollContainer: {
     paddingHorizontal: 15,
@@ -531,5 +636,8 @@ const styles = ScaledSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
+  },
+  disabledButton: {
+    opacity: 0.5,
   },
 });

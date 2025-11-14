@@ -17,6 +17,7 @@ import Bottomnavigation from "./Bottomnavigation";
 import { useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { HomeNavigation } from "../constants/app-routes.constants";
 
 const CreateAddons = () => {
   const navigation = useNavigation();
@@ -58,7 +59,7 @@ const CreateAddons = () => {
       </ScrollView>
       <View style={styles.floatingButtons}>
         <NavigationButton
-          screen="AddAddOns"
+          screen={HomeNavigation.ADD_ADDONS}
           label="Create New"
           color="#000"
           fontSize={16}

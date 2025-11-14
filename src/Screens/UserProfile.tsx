@@ -6,25 +6,16 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  Platform,
-  StatusBar,
 } from "react-native";
 import Headerwithback from "./Headerwithback";
-import Bottomnavigation from "./Bottomnavigation";
-
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
 import Loading from "../CommonComponent/Loading";
 import api from "../services/api/api";
-import CustomTextInput from "../CommonComponent/CustomeTextInput";
-import CustomButton from "../CommonComponent/CustomeButton";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { HomeNavigation } from "../constants/app-routes.constants";
-import { Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StorageUtils } from "../utils/storage";
-import { useNotificationContext } from "../contexts/NotificationContext";
+import Toast from "react-native-toast-message";
 
 const UserProfile = ({ navigation }: any) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -34,17 +25,16 @@ const UserProfile = ({ navigation }: any) => {
   const [contact, setContact] = useState<string>("");
   const [isFormModified, setIsFormModified] = useState<boolean>(false);
   const [originalData, setOriginalData] = useState<any>({});
-  const { showSuccess, showError, hasPermission, requestPermission } =
-    useNotificationContext();
 
   useEffect(() => {
     getUserData();
   }, []);
+
   const getUserData = async () => {
     try {
       setIsLoading(true);
       const res = await api.get(API_ROUTES.userProfile);
-      console.log("userData-->", res);
+      await StorageUtils.setUserData(res.data);
       if (res.data) {
         const userData = {
           firstName: res.data.first_name || "",
@@ -100,7 +90,11 @@ const UserProfile = ({ navigation }: any) => {
       });
 
       if (res.status === 200) {
-        Alert.alert("Success", "Profile updated successfully");
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Profile updated successfully",
+        });
         // Update original data to reflect changes
         setOriginalData({
           firstName,
@@ -112,7 +106,11 @@ const UserProfile = ({ navigation }: any) => {
       }
     } catch (error) {
       console.error("Update profile error:", error);
-      Alert.alert("Error", "Failed to update profile. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to update profile. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -150,7 +148,11 @@ const UserProfile = ({ navigation }: any) => {
       });
     } catch (error) {
       console.error("Logout error:", error);
-      Alert.alert("Error", "Failed to logout. Please try again.");
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to logout. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }

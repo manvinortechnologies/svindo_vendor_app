@@ -18,6 +18,7 @@ import MainContainer from "../CommonComponent/MainContainer";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import { useRoute, RouteProp } from "@react-navigation/native";
+import Toast from "react-native-toast-message";
 
 type RootStackParamList = {
   AddVendor: {
@@ -149,23 +150,32 @@ const AddVendor = ({ navigation }: any) => {
         // Update existing vendor
         res = await api.put(`vendor/vendor/${vendor.id}/`, payload);
         if (res.status === 200) {
-          Alert.alert("Success", "Vendor information updated successfully.");
+          Toast.show({
+            type: "success",
+            text1: "Success",
+            text2: "Vendor information updated successfully.",
+          });
           navigation.goBack();
         }
       } else {
         // Create new vendor
         res = await api.post("vendor/vendor/", payload);
         if (res.status === 201) {
-          Alert.alert("Success", "Vendor information saved successfully.");
+          Toast.show({
+            type: "success",
+            text1: "Success",
+            text2: "Vendor information saved successfully.",
+          });
           navigation.goBack();
         }
       }
     } catch (error) {
       console.error("Error saving vendor:", error);
-      Alert.alert(
-        "Error",
-        "Failed to save vendor information. Please try again."
-      );
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to save vendor information. Please try again.",
+      });
     } finally {
       setIsLoading(false);
     }

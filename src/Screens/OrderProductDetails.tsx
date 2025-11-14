@@ -8,6 +8,9 @@ import {
   Image,
   ActivityIndicator,
   Linking,
+  TextInput,
+  Modal,
+  Alert,
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import CustomHeader from "../CommonComponent/CustomHeader";
@@ -30,6 +33,7 @@ type OrderProductDetailsRouteParams = {
 interface OrderItem {
   id: number;
   product_details: {
+    product_type: string;
     name: string;
     description: string;
     image: string;
@@ -39,6 +43,7 @@ interface OrderItem {
   quantity: number;
   sales_price: number;
   mrp: number;
+  status?: string;
 }
 
 interface Order {
@@ -64,6 +69,17 @@ interface Order {
   created_at: string;
   delivery_boy: number | null;
   items: OrderItem[];
+  instructions: string;
+  address_details: {
+    full_name: string;
+    flat_building: string;
+    area_street: string;
+    landmark: string;
+    town_city: string;
+    state: string;
+    pincode: string;
+    mobile_number?: string;
+  };
 }
 
 const OrderProductDetails = ({ navigation }: any) => {
@@ -75,31 +91,43 @@ const OrderProductDetails = ({ navigation }: any) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [deliveryBoys, setDeliveryBoys] = useState<any[]>([]);
   const [selectedDeliveryBoy, setSelectedDeliveryBoy] = useState<any>(null);
+  const [trackingLink, setTrackingLink] = useState<string>("");
+  const [updatingStatus, setUpdatingStatus] = useState<{
+    [key: number]: boolean;
+  }>({});
+  const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
+  const [pendingStatusUpdate, setPendingStatusUpdate] = useState<{
+    itemId: number;
+    newStatus: string;
+  } | null>(null);
+  const [deliveryMode, setDeliveryMode] = useState<{
+    is_auto_assign_enabled: boolean;
+    is_self_delivery_enabled: boolean;
+  } | null>(null);
 
-  useEffect(() => {
-    const fetchOrderDetails = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get(`${API_ROUTES.orders}${orderId}/`);
-        setOrder(response.data);
+  const fetchOrderDetails = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get(`${API_ROUTES.orders}${orderId}/`);
+      setOrder(response.data);
 
-        // Set selected delivery boy if order already has one assigned
-        if (response.data.delivery_boy) {
-          const assignedDeliveryBoy = deliveryBoys.find(
-            (db) => db.id === response.data.delivery_boy
-          );
-          if (assignedDeliveryBoy) {
-            setSelectedDeliveryBoy(assignedDeliveryBoy);
-          }
+      // Set selected delivery boy if order already has one assigned
+      if (response.data.delivery_boy) {
+        const assignedDeliveryBoy = deliveryBoys.find(
+          (db) => db.id === response.data.delivery_boy
+        );
+        if (assignedDeliveryBoy) {
+          setSelectedDeliveryBoy(assignedDeliveryBoy);
         }
-
-        setLoading(false);
-      } catch (error) {
-        console.error("Failed to fetch order details:", error);
-        setLoading(false);
       }
-    };
 
+      setLoading(false);
+    } catch (error) {
+      console.error("Failed to fetch order details:", error);
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
     const fetchDeliveryBoys = async () => {
       try {
         const response = await api.get(API_ROUTES.deliveryBoys);
@@ -109,9 +137,21 @@ const OrderProductDetails = ({ navigation }: any) => {
       }
     };
 
+    const fetchDeliveryMode = async () => {
+      try {
+        const response = await api.get("/vendor/deliverymode/");
+        if (response.data?.delivery_mode) {
+          setDeliveryMode(response.data.delivery_mode);
+        }
+      } catch (error) {
+        console.error("Failed to fetch delivery mode:", error);
+      }
+    };
+
     if (orderId) {
       fetchOrderDetails();
       fetchDeliveryBoys();
+      fetchDeliveryMode();
     }
   }, [orderId]);
 
@@ -129,11 +169,11 @@ const OrderProductDetails = ({ navigation }: any) => {
     }
   };
 
-  const handleAcceptOrder = async () => {
+  const handleAcceptOrder = async (status: string) => {
     try {
       setLoading(true);
       const response = await api.put(`${API_ROUTES.orders}${orderId}/`, {
-        status: "accepted",
+        status: status,
         delivery_boy: selectedDeliveryBoy?.id,
       });
       setOrder(response.data);
@@ -141,6 +181,83 @@ const OrderProductDetails = ({ navigation }: any) => {
     } catch (error) {
       console.error("Failed to update order:", error);
       setLoading(false);
+    }
+  };
+
+  const handleStatusButtonPress = (itemId: number, currentStatus: string) => {
+    // Determine next status based on current status
+    let newStatus: string;
+    if (currentStatus === "pending" || !currentStatus) {
+      newStatus = "intransit";
+    } else if (currentStatus === "intransit") {
+      newStatus = "delivered";
+    } else if (currentStatus === "returned/replaced_approved") {
+      newStatus = "completed";
+    } else {
+      return; // Already delivered, no button should show
+    }
+
+    // Show confirmation modal
+    setPendingStatusUpdate({ itemId, newStatus });
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmStatusUpdate = async () => {
+    if (!pendingStatusUpdate) return;
+
+    const { itemId, newStatus } = pendingStatusUpdate;
+
+    try {
+      setUpdatingStatus((prev) => ({ ...prev, [itemId]: true }));
+      await api.post(`/vendor/order-item-status/${itemId}/`, {
+        status: newStatus,
+      });
+
+      // Update the order state with the new status
+      if (order) {
+        const updatedItems = order.items.map((item) =>
+          item.id === itemId ? { ...item, status: newStatus } : item
+        );
+        setOrder({ ...order, items: updatedItems });
+      }
+
+      setShowConfirmModal(false);
+      setPendingStatusUpdate(null);
+    } catch (error) {
+      console.error("Failed to update item status:", error);
+    } finally {
+      setUpdatingStatus((prev) => ({ ...prev, [itemId]: false }));
+    }
+  };
+
+  const handleCancelStatusUpdate = () => {
+    setShowConfirmModal(false);
+    setPendingStatusUpdate(null);
+  };
+
+  const handleReturnExchangeAction = async (
+    itemId: number,
+    action: "approve" | "reject" | "complete"
+  ) => {
+    try {
+      setUpdatingStatus((prev) => ({ ...prev, [itemId]: true }));
+
+      const response = await api.post(API_ROUTES.returnExchange, {
+        id: itemId,
+        action: action,
+      });
+
+      // Refresh order details to get updated status
+      fetchOrderDetails();
+    } catch (error: any) {
+      console.error("Failed to process return/exchange:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to process return/exchange request";
+    } finally {
+      setUpdatingStatus((prev) => ({ ...prev, [itemId]: false }));
     }
   };
 
@@ -180,6 +297,278 @@ const OrderProductDetails = ({ navigation }: any) => {
     }
   };
 
+  const formatCurrency = (value: any) => {
+    if (value === undefined || value === null || value === "") return "₹0";
+    const numberValue = Number(value);
+    if (isNaN(numberValue)) return "₹0";
+    return `₹${
+      Number.isInteger(numberValue)
+        ? numberValue.toFixed(0)
+        : numberValue.toFixed(2)
+    }`;
+  };
+
+  const extractFileName = (path: string | null | undefined) => {
+    if (!path) return "File";
+    const parts = path.split("/");
+    return parts[parts.length - 1] || path;
+  };
+
+  const renderPrintJobCard = (item: any) => {
+    const productDetails = item?.product_details || {};
+    const printJob = item?.print_job || {};
+    const files = Array.isArray(printJob?.files) ? printJob.files : [];
+    const addons = Array.isArray(productDetails?.addons)
+      ? productDetails.addons
+      : [];
+    const selectedAddonNames = addons
+      .filter((addon: any) =>
+        (printJob?.add_ons || []).includes(
+          addon?.addon_details?.id || addon?.addon
+        )
+      )
+      .map(
+        (addon: any) =>
+          addon?.addon_details?.name || addon?.addon_details?.title || "Add-on"
+      );
+
+    const variant =
+      (productDetails?.print_variants || []).find(
+        (variant: any) => variant?.id === printJob?.print_variant
+      ) || null;
+
+    const totalPages = files.reduce(
+      (sum: number, file: any) => sum + Number(file?.page_count || 0),
+      0
+    );
+    const totalCopies = files.reduce(
+      (sum: number, file: any) => sum + Number(file?.number_of_copies || 0),
+      0
+    );
+
+    return (
+      <View style={styles.printCard} key={`print-${item?.id}`}>
+        <View style={styles.printHeader}>
+          <Image
+            source={
+              productDetails?.image
+                ? { uri: productDetails.image }
+                : require("../assets/product.png")
+            }
+            style={styles.printImage}
+          />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.printTitle}>
+              {productDetails?.name || "Print Product"}
+            </Text>
+            <Text style={styles.printSubtitle}>Print Product</Text>
+            <Text style={styles.printSubtitle}>
+              {productDetails?.store?.name || "Print service"}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.printSection}>
+          <View style={styles.printSectionHeader}>
+            <Text style={styles.printSectionTitle}>Print Job Summary</Text>
+          </View>
+          <View style={styles.printSummaryRow}>
+            <Text style={styles.printSummaryLabel}>Print Type:</Text>
+            <Text style={styles.printSummaryValue}>
+              {variant?.sided_display || "Single Side"}
+            </Text>
+          </View>
+          <View style={styles.printSummaryRow}>
+            <Text style={styles.printSummaryLabel}>Instructions:</Text>
+            <Text style={styles.printSummaryValue}>
+              {printJob?.instructions
+                ? printJob.instructions
+                : "No additional instructions"}
+            </Text>
+          </View>
+        </View>
+
+        <View style={styles.printSection}>
+          <View style={styles.printSectionHeader}>
+            <Text style={styles.printSectionTitle}>
+              Files ({files.length || 0})
+            </Text>
+          </View>
+          {files.length === 0 ? (
+            <Text style={styles.printSummaryValue}>No files available</Text>
+          ) : (
+            files.map((file: any) => (
+              <View style={styles.printFileCard} key={file?.id || file?.file}>
+                <Text style={styles.printFileName}>
+                  File: {extractFileName(file?.file)}
+                </Text>
+                <Text style={styles.printFileMeta}>
+                  Number of copies: {file?.number_of_copies || 0}
+                </Text>
+                <Text style={styles.printFileMeta}>
+                  Page numbers: {file?.page_numbers || "-"}
+                </Text>
+                <Text style={styles.printFileMeta}>
+                  Page count: {file?.page_count || 0}
+                </Text>
+              </View>
+            ))
+          )}
+        </View>
+
+        <View style={styles.printSection}>
+          <View style={styles.printSectionHeader}>
+            <Text style={styles.printSectionTitle}>Add-ons</Text>
+          </View>
+          {selectedAddonNames.length === 0 ? (
+            <Text style={styles.printSummaryValue}>No add-ons selected</Text>
+          ) : (
+            <View style={styles.addonChipContainer}>
+              {selectedAddonNames.map((addonName: string, index: number) => (
+                <View style={styles.addonChip} key={`${addonName}-${index}`}>
+                  <Text style={styles.addonChipText}>{addonName}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+        </View>
+
+        <View style={styles.printSection}>
+          <View style={styles.printSectionHeader}>
+            <Text style={styles.printSectionTitle}>Pricing Details</Text>
+          </View>
+          <View style={styles.printPricingRow}>
+            <Text style={styles.printSummaryLabel}>Number of Pages:</Text>
+            <Text style={styles.printSummaryValue}>{totalPages}</Text>
+          </View>
+          <View style={styles.printPricingRow}>
+            <Text style={styles.printSummaryLabel}>Total Copies:</Text>
+            <Text style={styles.printSummaryValue}>{totalCopies}</Text>
+          </View>
+          <View style={styles.printPricingRow}>
+            <Text style={styles.printSummaryLabel}>Variant Selected:</Text>
+            <Text style={styles.printSummaryValue}>
+              {variant
+                ? `${variant?.min_quantity || 0} - ${
+                    variant?.max_quantity || 0
+                  }`
+                : "-"}
+            </Text>
+          </View>
+          <View style={styles.printPricingRow}>
+            <Text style={styles.printSummaryLabel}>Price per Page:</Text>
+            <Text style={styles.printSummaryValue}>
+              {variant ? formatCurrency(variant?.price) : "-"}
+            </Text>
+          </View>
+          <View style={styles.printTotalRow}>
+            <Text style={styles.printTotalLabel}>Total Amount</Text>
+            <Text style={styles.printTotalValue}>
+              {formatCurrency(printJob?.total_amount)}
+            </Text>
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  const renderRegularItem = (item: OrderItem) => (
+    <View style={styles.itemRow} key={item.id}>
+      <Image
+        source={{
+          uri: item?.product_details?.image
+            ? item?.product_details?.image
+            : undefined,
+        }}
+        style={styles.itemImg}
+      />
+      <View style={{ flex: 1 }}>
+        <Text style={styles.itemName}>
+          {item?.product_details?.name} | {item.quantity} Qty
+        </Text>
+        <Text style={styles.itemDesc}>
+          {item?.product_details?.description}
+          <View style={styles.priceRow}>
+            <Text style={styles.price}>
+              Rs {item?.product_details.sales_price}
+            </Text>
+            {item?.product_details?.mrp > item?.product_details.sales_price && (
+              <Text style={styles.oldPrice}>
+                Rs {item?.product_details?.mrp}
+              </Text>
+            )}
+          </View>
+        </Text>
+
+        {item.status === "returned/replaced_requested" && (
+          <Text style={styles.pickup}>Requested Return/Exchange</Text>
+        )}
+        {/* Status Button */}
+        {order.status === "accepted" &&
+        item.status !== "delivered" &&
+        item.status !== "returned/replaced_requested" ? (
+          <View style={styles.statusContainer}>
+            <TouchableOpacity
+              style={styles.statusButton}
+              onPress={() =>
+                handleStatusButtonPress(item.id, item.status || "")
+              }
+              disabled={updatingStatus[item.id]}
+            >
+              {updatingStatus[item.id] ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.statusButtonText}>
+                  {item.status === "intransit"
+                    ? "Mark as Delivered"
+                    : item.status === "returned/replaced_approved"
+                    ? "Complete Return/Exchange"
+                    : "Mark as In Transit"}
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        ) : (
+          item.status === "returned/replaced_requested" && (
+            <View
+              style={[
+                styles.statusContainer,
+                {
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  gap: 10,
+                },
+              ]}
+            >
+              <TouchableOpacity
+                style={styles.returnButton}
+                onPress={() => handleReturnExchangeAction(item.id, "approve")}
+                disabled={updatingStatus[item.id]}
+              >
+                {updatingStatus[item.id] ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.statusButtonText}>Approve</Text>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => handleReturnExchangeAction(item.id, "reject")}
+                disabled={updatingStatus[item.id]}
+              >
+                {updatingStatus[item.id] ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.statusButtonText}>Cancel</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          )
+        )}
+      </View>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
@@ -216,14 +605,14 @@ const OrderProductDetails = ({ navigation }: any) => {
               .split("_")
               .join(" ")}
           </Text>
-          {order.status !== "not_accepted" && (
+          {/* {order.status !== "not_accepted" && (
             <TouchableOpacity
               style={styles.cancelBtn}
               onPress={handleCancelOrder}
             >
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
-          )}
+          )} */}
         </View>
 
         {/* Order details */}
@@ -246,10 +635,17 @@ const OrderProductDetails = ({ navigation }: any) => {
             >
               {order.is_paid ? "Paid" : "Unpaid"} / {order.payment_mode}
             </Text>
-            <TouchableOpacity style={styles.downloadBtn}>
-              <Text style={styles.downloadText}>Download Bill</Text>
-            </TouchableOpacity>
+            {order.status === "completed" && (
+              <TouchableOpacity style={styles.downloadBtn}>
+                <Text style={styles.downloadText}>Download Bill</Text>
+              </TouchableOpacity>
+            )}
           </View>
+          {order.instructions && (
+            <Text style={styles.instructionsText}>
+              Instructions: {order.instructions}
+            </Text>
+          )}
         </View>
 
         {/* Items */}
@@ -260,49 +656,38 @@ const OrderProductDetails = ({ navigation }: any) => {
           {order.items.length === 0 ? (
             <Text style={styles.noItemsText}>No items in this order</Text>
           ) : (
-            order.items.map((item: OrderItem) => (
-              <View style={styles.itemRow} key={item.id}>
-                <Image
-                  source={{
-                    uri: item?.product_details?.image
-                      ? item?.product_details?.image
-                      : undefined,
-                  }}
-                  style={styles.itemImg}
-                />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.itemName}>
-                    {item?.product_details?.name} | {item.quantity} Qty
-                  </Text>
-                  <Text style={styles.itemDesc}>
-                    {item?.product_details?.description}
-                  </Text>
-                  <View style={styles.priceRow}>
-                    <Text style={styles.price}>
-                      Rs {item?.product_details.sales_price}
-                    </Text>
-                    {item?.product_details?.mrp >
-                      item?.product_details.sales_price && (
-                      <Text style={styles.oldPrice}>
-                        Rs {item?.product_details?.mrp}
-                      </Text>
-                    )}
-                  </View>
-                </View>
-              </View>
-            ))
+            order.items.map((item: any) =>
+              item?.product_details?.product_type === "print"
+                ? renderPrintJobCard(item)
+                : renderRegularItem(item)
+            )
           )}
         </View>
 
         {/* Delivery Boy Selection */}
         <View style={[styles.card, { zIndex: 3000 }]}>
           <Text style={styles.sectionTitle}>DELIVERY ASSIGNMENT</Text>
-          <CustomDropdown
-            placeholder="Select Delivery Boy"
-            options={deliveryBoys.map((db) => ({ name: db.name, id: db.id }))}
-            onSelect={(value) => setSelectedDeliveryBoy(value)}
-            selectedValue={selectedDeliveryBoy ? selectedDeliveryBoy.name : ""}
-          />
+          {order?.delivery_type === "general_delivery" ? (
+            <TextInput
+              placeholder="Enter Tracking Link"
+              placeholderTextColor="#ccc"
+              style={styles.input}
+              value={trackingLink}
+              onChangeText={(text) => setTrackingLink(text)}
+            />
+          ) : order?.delivery_type === "on_shop_order" ||
+            order?.delivery_type === "self_pickup" ||
+            (order?.delivery_type === "instant_delivery" &&
+              !deliveryMode?.is_auto_assign_enabled) ? null : (
+            <CustomDropdown
+              placeholder="Select Delivery Boy"
+              options={deliveryBoys.map((db) => ({ name: db.name, id: db.id }))}
+              onSelect={(value) => setSelectedDeliveryBoy(value)}
+              selectedValue={
+                selectedDeliveryBoy ? selectedDeliveryBoy.name : ""
+              }
+            />
+          )}
           {order.delivery_boy && (
             <Text style={styles.assignedText}>
               Currently assigned to:{" "}
@@ -362,11 +747,23 @@ const OrderProductDetails = ({ navigation }: any) => {
           <View style={styles.deliverySection}>
             <Text style={styles.deliveryLabel}>Address :</Text>
             <Text style={styles.addressText}>
-              {order?.user_details?.first_name || order.customer_name}
+              {order?.address_details?.full_name}
+              {", "}
+              {order.address_details?.flat_building}
+              {", "}
+              {order.address_details?.area_street}
+              {", "}
+              {order.address_details?.landmark}
+              {", "}
+              {order.address_details?.town_city}
+              {", "}
+              {order.address_details?.state}
+              {", "}
+              {order.address_details?.pincode}
             </Text>
             <Text style={styles.addressText}>{order.customer_address}</Text>
             <Text style={styles.addressText}>
-              Mobile - {order.user_details?.mobile}
+              Mobile - {order.address_details?.mobile_number}
             </Text>
           </View>
 
@@ -387,7 +784,7 @@ const OrderProductDetails = ({ navigation }: any) => {
             <TouchableOpacity
               style={styles.callButton}
               onPress={() => {
-                Linking.openURL(`tel:${order.user_details?.mobile}`);
+                Linking.openURL(`tel:${order.address_details?.mobile_number}`);
               }}
             >
               <Icon name="call" size={16} color="#fff" />
@@ -398,34 +795,97 @@ const OrderProductDetails = ({ navigation }: any) => {
       </ScrollView>
 
       {/* Accept Order - Swipeable */}
-      {order.status === "not_accepted" && (
-        <Swipeable
-          ref={swipeableRef}
-          containerStyle={[styles.swipeContainer, { bottom: insets.bottom }]}
-          friction={2}
-          enableTrackpadTwoFingerGesture
-          rightThreshold={60}
-          leftThreshold={60}
-          renderLeftActions={RightAction}
-          onSwipeableOpen={() => {
-            handleAcceptOrder();
-            swipeableRef.current?.close();
-          }}
-        >
-          <TouchableOpacity
-            style={styles.acceptBtn}
-            onPress={() => navigation.navigate("ProductDetails")}
+      {
+        order.status === "not_accepted" && (
+          <Swipeable
+            ref={swipeableRef}
+            containerStyle={[styles.swipeContainer, { bottom: insets.bottom }]}
+            friction={2}
+            enableTrackpadTwoFingerGesture
+            rightThreshold={60}
+            leftThreshold={60}
+            renderLeftActions={RightAction}
+            onSwipeableOpen={() => {
+              handleAcceptOrder("accepted");
+              swipeableRef.current?.close();
+            }}
           >
-            <View style={styles.swipeIndicator}>
-              <Icon name="arrow-forward-outline" size={20} color="#FF9800" />
+            <TouchableOpacity
+              style={styles.acceptBtn}
+              // onPress={() => navigation.navigate("ProductDetails")}
+            >
+              <View style={styles.swipeIndicator}>
+                <Icon name="arrow-forward-outline" size={20} color="#FF9800" />
+              </View>
+              <View style={styles.acceptTextContainer}>
+                <Text style={styles.acceptText}>Accept Order</Text>
+                <Text style={styles.acceptSub}>Swipe to change status</Text>
+              </View>
+            </TouchableOpacity>
+          </Swipeable>
+        )
+        //  (
+        //   (order.delivery_type === "general_delivery" ||
+        //     order.delivery_type === "instant_delivery") &&
+        //   order.items.filter((item: OrderItem) => item.status === "delivered")
+        //     .length === order.items.length &&
+        //   order.status !== "completed" && (
+        //     <TouchableOpacity
+        //       style={styles.orderStatusBtn}
+        //       onPress={() => handleAcceptOrder("completed")}
+        //     >
+        //       <View style={styles.acceptTextContainer}>
+        //         <Text style={styles.acceptText}>Mark as Completed</Text>
+        //       </View>
+        //     </TouchableOpacity>
+        //   )
+        // )
+      }
+
+      {/* Confirmation Modal */}
+      <Modal
+        visible={showConfirmModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleCancelStatusUpdate}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Confirm Status Update</Text>
+            <Text style={styles.modalMessage}>
+              Are you sure you want to change the status to{" "}
+              {pendingStatusUpdate?.newStatus === "intransit"
+                ? "In Transit"
+                : "Delivered"}
+              ?
+            </Text>
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.cancelButton]}
+                onPress={handleCancelStatusUpdate}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.confirmButton]}
+                onPress={handleConfirmStatusUpdate}
+                disabled={
+                  pendingStatusUpdate?.itemId
+                    ? updatingStatus[pendingStatusUpdate.itemId]
+                    : false
+                }
+              >
+                {pendingStatusUpdate?.itemId &&
+                updatingStatus[pendingStatusUpdate.itemId] ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.confirmButtonText}>Confirm</Text>
+                )}
+              </TouchableOpacity>
             </View>
-            <View style={styles.acceptTextContainer}>
-              <Text style={styles.acceptText}>Accept Order</Text>
-              <Text style={styles.acceptSub}>Swipe to change status</Text>
-            </View>
-          </TouchableOpacity>
-        </Swipeable>
-      )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -556,6 +1016,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#333",
   },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 10,
+    fontSize: 14,
+  },
   noItemsText: {
     textAlign: "center",
     color: "#666",
@@ -658,6 +1126,15 @@ const styles = StyleSheet.create({
     // flex: 1,
     color: "#666",
     fontSize: 14,
+  },
+  orderStatusBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FF9800",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    width: "100%",
+    // borderRadius: 12,
   },
   acceptBtn: {
     flexDirection: "row",
@@ -774,5 +1251,216 @@ const styles = StyleSheet.create({
     // backgroundColor: "#FCA511",
     // borderRadius: 20,
     padding: 6,
+  },
+  statusContainer: {
+    marginTop: 10,
+    width: "100%",
+  },
+  statusButton: {
+    flex: 1,
+    backgroundColor: "#FCA311",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 6,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  returnButton: {
+    flex: 1,
+    backgroundColor: "#4CAF50",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 6,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: "#FF0000",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderRadius: 6,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  statusButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    width: "80%",
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  modalMessage: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 20,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 6,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  cancelButtonText: {
+    color: "#333",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  confirmButton: {
+    backgroundColor: "#FCA311",
+    marginLeft: 5,
+  },
+  confirmButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  instructionsText: {
+    fontSize: 14,
+    color: "#666",
+    marginBottom: 10,
+  },
+  printCard: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#eee",
+    marginBottom: 16,
+  },
+  printHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  printImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    marginRight: 16,
+    backgroundColor: "#F3F3F3",
+  },
+  printTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1F1F1F",
+  },
+  printSubtitle: {
+    fontSize: 13,
+    color: "#7A7A7A",
+    marginTop: 2,
+  },
+  printSection: {
+    backgroundColor: "#F8F9FC",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+  },
+  printSectionHeader: {
+    marginBottom: 10,
+  },
+  printSectionTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#2B2B2B",
+  },
+  printSummaryRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 8,
+  },
+  printPricingRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginBottom: 6,
+  },
+  printSummaryLabel: {
+    fontSize: 13,
+    color: "#6B6B6B",
+  },
+  printSummaryValue: {
+    fontSize: 13,
+    color: "#1F1F1F",
+    fontWeight: "600",
+    flex: 1,
+    textAlign: "right",
+  },
+  printFileCard: {
+    borderWidth: 1,
+    borderColor: "#E0E7FF",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 10,
+    backgroundColor: "#fff",
+  },
+  printFileName: {
+    fontWeight: "700",
+    color: "#1F1F1F",
+    marginBottom: 6,
+  },
+  printFileMeta: {
+    fontSize: 12,
+    color: "#5C5C5C",
+    marginBottom: 2,
+  },
+  addonChipContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  addonChip: {
+    backgroundColor: "#E6F2FF",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  addonChipText: {
+    color: "#006EB2",
+    fontWeight: "600",
+    fontSize: 12,
+  },
+  printTotalRow: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#E0E0E0",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  printTotalLabel: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#1F1F1F",
+  },
+  printTotalValue: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#006EB2",
   },
 });

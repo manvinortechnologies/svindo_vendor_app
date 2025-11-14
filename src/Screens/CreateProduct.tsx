@@ -22,6 +22,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
+import { s, ScaledSheet } from "react-native-size-matters";
 
 const CreateProduct = () => {
   const navigation = useNavigation();
@@ -76,14 +77,62 @@ const CreateProduct = () => {
         <Text style={styles.productName} numberOfLines={2}>
           {item.name || "Unnamed Product"}
         </Text>
-        <Text style={styles.productDescription} numberOfLines={2}>
-          {item.description || "No description available"}
-        </Text>
-        <View style={styles.productDetails}>
-          <Text style={styles.productPrice}>₹{item.price || "0.00"}</Text>
-          <View style={styles.stockContainer}>
-            <Text style={styles.stockText}>Stock: {item.stock || 0}</Text>
-          </View>
+        <View
+          style={{
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: s(2),
+            marginTop: 8,
+          }}
+        >
+          {item.color ? (
+            <View
+              style={{
+                backgroundColor: "#FFF7DD",
+                borderRadius: 12,
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+              }}
+            >
+              <Text
+                style={{ color: "#FCA311", fontWeight: "bold", fontSize: 13 }}
+              >
+                Color: {item.color}
+              </Text>
+            </View>
+          ) : null}
+          {item.size ? (
+            <View
+              style={{
+                backgroundColor: "#EDF4FF",
+                borderRadius: 12,
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+              }}
+            >
+              <Text
+                style={{ color: "#163881", fontWeight: "bold", fontSize: 13 }}
+              >
+                Size: {item.size}
+              </Text>
+            </View>
+          ) : null}
+          {item.unit ? (
+            <View
+              style={{
+                backgroundColor: "#E8FFFB",
+                borderRadius: 12,
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+              }}
+            >
+              <Text
+                style={{ color: "#0A8263", fontWeight: "bold", fontSize: 13 }}
+              >
+                Unit: {item.unit}
+              </Text>
+            </View>
+          ) : null}
         </View>
       </View>
     </TouchableOpacity>
@@ -127,6 +176,8 @@ const CreateProduct = () => {
             }
             showsVerticalScrollIndicator={false}
             contentContainerStyle={styles.productsList}
+            numColumns={2}
+            columnWrapperStyle={{ justifyContent: "space-between" }}
           />
         ) : (
           <View style={styles.emptyContainer}>
@@ -160,7 +211,7 @@ const CreateProduct = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     padding: 10,
     backgroundColor: "#FFF",
@@ -168,8 +219,8 @@ const styles = StyleSheet.create({
   },
   floatingButtons: {
     position: "absolute",
-    top: "90%",
-    right: 20,
+    bottom: "30@s",
+    right: "20@s",
     flexDirection: "column",
     gap: 10,
   },
@@ -261,9 +312,9 @@ const styles = StyleSheet.create({
   },
   productsList: {
     padding: 10,
+    paddingBottom: "60@s",
   },
   productCard: {
-    flexDirection: "row",
     backgroundColor: "#fff",
     borderRadius: 10,
     marginBottom: 10,
@@ -276,10 +327,11 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 3.84,
     elevation: 5,
+    width: "48%",
   },
   productImageContainer: {
-    width: 80,
-    height: 80,
+    width: "100%",
+    height: "120@s",
     marginRight: 15,
   },
   productImage: {

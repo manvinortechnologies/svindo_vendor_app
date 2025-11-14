@@ -1,22 +1,24 @@
-import React, { useEffect, useRef } from "react";
+import "react-native-url-polyfill/auto";
+import React, { RefObject, useEffect, useRef } from "react";
 import AppNavigation from "./src/navigation/AppNavigation";
 import { Provider } from "react-redux";
 import { store } from "./src/services/store/api-store";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import NotificationService from "./src/services/notification-service";
 import { NotificationProvider } from "./src/contexts/NotificationContext";
-import { StorageUtils } from "./src/utils/storage";
 import { NavigationContainerRef } from "@react-navigation/native";
 
 const App = () => {
-  const navigationRef = useRef<NavigationContainerRef<any>>(null);
+  const navigationRef = useRef<NavigationContainerRef<any> | null>(null);
 
   useEffect(() => {
     // Initialize push notifications
     const initializeNotifications = async () => {
       try {
         // Set navigation reference
-        NotificationService.setNavigationRef(navigationRef.current);
+        NotificationService.setNavigationRef(
+          navigationRef.current as NavigationContainerRef<any>
+        );
 
         // Initialize notification service
         await NotificationService.initialize();
@@ -34,7 +36,7 @@ const App = () => {
     <Provider store={store}>
       <GestureHandlerRootView style={{ flex: 1 }}>
         <NotificationProvider>
-          <AppNavigation ref={navigationRef} />
+          <AppNavigation />
         </NotificationProvider>
       </GestureHandlerRootView>
     </Provider>
