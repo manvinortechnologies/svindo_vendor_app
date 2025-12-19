@@ -12,7 +12,6 @@ import {
   Alert,
   PermissionsAndroid,
   Modal,
-  TouchableWithoutFeedback,
   ActivityIndicator,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -31,6 +30,7 @@ import { s, ScaledSheet } from "react-native-size-matters";
 import CustomDropdown from "../CommonComponent/CustomDropdown";
 import api from "../services/api/api";
 import { useIsFocused } from "@react-navigation/native";
+import { StorageUtils } from "../utils/storage";
 import {
   useGetVendorStoresQuery,
   useUpdateVendorStoreMutation,
@@ -262,11 +262,31 @@ const StatisticsScreen = ({ navigation }: any) => {
   const fetchCompanyProfile = async () => {
     try {
       setIsLoadingProfile(true);
-      const response = await api.get(API_ROUTES.companyProfle);
-      setCompanyProfile(response.data[0]);
+
+      // Try to load from storage first
+      const storedProfile = StorageUtils.getCompanyProfile();
+      if (storedProfile) {
+        setCompanyProfile(storedProfile);
+        setIsLoadingProfile(false);
+      }
+
+      // Fetch from API and update storage
+      try {
+        const response = await api.get(API_ROUTES.companyProfle);
+        if (response.data && response.data.length > 0) {
+          const profile = response.data[0];
+          setCompanyProfile(profile);
+          StorageUtils.setCompanyProfile(profile);
+        }
+      } catch (error) {
+        console.error("Error fetching company profile from API:", error);
+        // If API fails and we have stored profile, keep using it
+        if (!storedProfile) {
+          console.error("No stored profile available");
+        }
+      }
     } catch (error) {
-      console.error("Error fetching company profile:", error);
-      // Set default values if API fails
+      console.error("Error in fetchCompanyProfile:", error);
     } finally {
       setIsLoadingProfile(false);
     }
@@ -363,29 +383,29 @@ const StatisticsScreen = ({ navigation }: any) => {
     }
   };
 
-  const requestSmsPermission = async () => {
-    if (Platform.OS === "android") {
-      try {
-        const granted = await PermissionsAndroid.requestMultiple([
-          PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
-          PermissionsAndroid.PERMISSIONS.READ_SMS,
-        ]);
+  // const requestSmsPermission = async () => {
+  //   if (Platform.OS === "android") {
+  //     try {
+  //       const granted = await PermissionsAndroid.requestMultiple([
+  //         PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
+  //         PermissionsAndroid.PERMISSIONS.READ_SMS,
+  //       ]);
 
-        if (
-          granted[PermissionsAndroid.PERMISSIONS.RECEIVE_SMS] ===
-            PermissionsAndroid.RESULTS.GRANTED &&
-          granted[PermissionsAndroid.PERMISSIONS.READ_SMS] ===
-            PermissionsAndroid.RESULTS.GRANTED
-        ) {
-          console.log("SMS permissions granted");
-        } else {
-          console.log("SMS permissions denied");
-        }
-      } catch (err) {
-        console.warn("Error requesting SMS permissions:", err);
-      }
-    }
-  };
+  //       if (
+  //         granted[PermissionsAndroid.PERMISSIONS.RECEIVE_SMS] ===
+  //           PermissionsAndroid.RESULTS.GRANTED &&
+  //         granted[PermissionsAndroid.PERMISSIONS.READ_SMS] ===
+  //           PermissionsAndroid.RESULTS.GRANTED
+  //       ) {
+  //         console.log("SMS permissions granted");
+  //       } else {
+  //         console.log("SMS permissions denied");
+  //       }
+  //     } catch (err) {
+  //       console.warn("Error requesting SMS permissions:", err);
+  //     }
+  //   }
+  // };
 
   // Navigation helper functions with condition checking
   const navigateWithCondition = async (
@@ -536,7 +556,7 @@ const StatisticsScreen = ({ navigation }: any) => {
           : "Store opened successfully",
         type: "success",
       });
-      setdisable(!disabletab);
+      // setdisable(!disabletab);
       setShowStoreStatusModal(false);
     } catch (error) {
       console.error("Error updating store status:", error);
@@ -560,7 +580,7 @@ const StatisticsScreen = ({ navigation }: any) => {
           requestLocationPermission(),
           requestCameraPermission(),
           requestStoragePermission(),
-          requestSmsPermission(),
+          // requestSmsPermission(),
         ]);
       } catch (error) {
         console.warn("Error requesting permissions:", error);
@@ -579,7 +599,7 @@ const StatisticsScreen = ({ navigation }: any) => {
 
   useEffect(() => {
     if (storeData) {
-      setdisable(storeData.is_store_open);
+      setdisable(storeData.is_offline);
     }
   }, [storeData]);
 
@@ -602,33 +622,39 @@ const StatisticsScreen = ({ navigation }: any) => {
         <View style={styles.headerleft}>
           <TouchableOpacity
             onPress={() => navigation.navigate(HomeNavigation.COMPANY_PROFILE)}
+            style={styles.logoContainer}
           >
             <Image
               source={
-                storeData?.profile_image
+                companyProfile?.profile_image
                   ? {
-                      uri: storeData?.profile_image.includes("http")
-                        ? storeData.profile_image
-                        : APP_CONSTANTS.API_BASE_URL + storeData.profile_image,
+                      uri: companyProfile?.profile_image?.includes("http")
+                        ? companyProfile?.profile_image
+                        : APP_CONSTANTS.API_BASE_URL +
+                          companyProfile.profile_image,
                     }
-                  : require("../assets/Logo_Icon.png")
+                  : require("../assets/logo.png")
               }
               style={styles.logo}
               resizeMode="cover"
             />
           </TouchableOpacity>
           <View style={styles.titlecontent}>
-            <Text style={styles.headerTitle}>
+            <Text
+              style={styles.headerTitle}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
               {isLoadingProfile
                 ? "Loading..."
-                : companyProfile?.company_name || "Business Name"}
+                : companyProfile?.company_name || "Business Name"}{" "}
             </Text>
-            <Text style={styles.subTitle}>
+            {/* <Text style={styles.subTitle}>
               ID:{" "}
               {isLoadingProfile
                 ? "Loading..."
                 : companyProfile?.id || "12345678"}
-            </Text>
+            </Text> */}
           </View>
         </View>
         <View style={styles.headerRight}>
@@ -934,66 +960,60 @@ const StatisticsScreen = ({ navigation }: any) => {
         animationType="fade"
         onRequestClose={handleCancelStoreStatus}
       >
-        <TouchableWithoutFeedback onPress={handleCancelStoreStatus}>
-          <View style={styles.modalOverlay}>
-            <TouchableWithoutFeedback onPress={() => {}}>
-              <View style={styles.storeStatusModalContainer}>
-                <View style={styles.storeStatusModalHeader}>
-                  <Icon
-                    name={
-                      disabletab ? "store-off-outline" : "store-check-outline"
-                    }
-                    size={40}
-                    color={disabletab ? "#FF6B6B" : "#4CAF50"}
-                  />
-                  <Text style={styles.storeStatusModalTitle}>
-                    {disabletab ? "Close Store?" : "Open Store?"}
-                  </Text>
-                </View>
+        <View style={styles.modalOverlay}>
+          <View style={styles.storeStatusModalContainer}>
+            <View style={styles.storeStatusModalHeader}>
+              <Icon
+                name={disabletab ? "store-off-outline" : "store-check-outline"}
+                size={40}
+                color={disabletab ? "#FF6B6B" : "#4CAF50"}
+              />
+              <Text style={styles.storeStatusModalTitle}>
+                {disabletab ? "Close Store?" : "Open Store?"}
+              </Text>
+            </View>
 
-                <View style={styles.storeStatusModalContent}>
-                  <Text style={styles.storeStatusModalMessage}>
-                    {disabletab
-                      ? "Your store will be closed and customers won't be able to place orders until you enable it again."
-                      : "Your store will be opened and customers will be able to place orders."}
-                  </Text>
-                </View>
+            <View style={styles.storeStatusModalContent}>
+              <Text style={styles.storeStatusModalMessage}>
+                {disabletab
+                  ? "Your store will be closed and customers won't be able to place orders until you enable it again."
+                  : "Your store will be opened and customers will be able to place orders."}
+              </Text>
+            </View>
 
-                <View style={styles.storeStatusModalButtons}>
-                  <TouchableOpacity
-                    style={[
-                      styles.storeStatusModalButton,
-                      styles.storeStatusModalCancelButton,
-                    ]}
-                    onPress={handleCancelStoreStatus}
-                  >
-                    <Text style={styles.storeStatusModalCancelButtonText}>
-                      Cancel
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[
-                      styles.storeStatusModalButton,
-                      disabletab
-                        ? styles.storeStatusModalDisableButton
-                        : styles.storeStatusModalEnableButton,
-                    ]}
-                    onPress={handleConfirmStoreStatus}
-                    disabled={isUpdating}
-                  >
-                    {isUpdating ? (
-                      <ActivityIndicator size="small" color="#fff" />
-                    ) : (
-                      <Text style={styles.storeStatusModalActionButtonText}>
-                        {disabletab ? "Close Store" : "Open Store"}
-                      </Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </TouchableWithoutFeedback>
+            <View style={styles.storeStatusModalButtons}>
+              <TouchableOpacity
+                style={[
+                  styles.storeStatusModalButton,
+                  styles.storeStatusModalCancelButton,
+                ]}
+                onPress={handleCancelStoreStatus}
+              >
+                <Text style={styles.storeStatusModalCancelButtonText}>
+                  Cancel
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.storeStatusModalButton,
+                  disabletab
+                    ? styles.storeStatusModalDisableButton
+                    : styles.storeStatusModalEnableButton,
+                ]}
+                onPress={handleConfirmStoreStatus}
+                disabled={isUpdating}
+              >
+                {isUpdating ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.storeStatusModalActionButtonText}>
+                    {disabletab ? "Close Store" : "Open Store"}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
-        </TouchableWithoutFeedback>
+        </View>
       </Modal>
 
       <View style={styles.floatingButtons}>
@@ -1048,15 +1068,22 @@ const styles = ScaledSheet.create({
     elevation: 5,
     zIndex: 1000,
   },
-  headerTitle: { fontSize: 20, fontWeight: "bold", color: "#292D32" },
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#292D32",
+  },
   headerleft: { flexDirection: "row", alignItems: "center" },
   headerRight: { flexDirection: "row", alignItems: "center" },
   subTitle: { color: "#555" },
-  titlecontent: { paddingHorizontal: 10 },
+  titlecontent: {
+    paddingHorizontal: 10,
+    maxWidth: "80%",
+  },
   notificationIcon: { marginLeft: 10 },
   title: {
     fontSize: 22,
-    marginBottom: 10,
+    // marginBottom: 10,
     color: "#000",
     flex: 1,
   },
@@ -1079,11 +1106,17 @@ const styles = ScaledSheet.create({
     flexWrap: "wrap",
     justifyContent: "space-between",
   },
-  logo: {
+  logoContainer: {
     width: "40@s",
     height: "40@s",
     borderRadius: "25@s",
-    resizeMode: "cover",
+    borderWidth: 1,
+    borderColor: "#ddd",
+    overflow: "hidden",
+  },
+  logo: {
+    width: "100%",
+    height: "100%",
   },
 
   changeContainer: { flexDirection: "row", alignItems: "center" },

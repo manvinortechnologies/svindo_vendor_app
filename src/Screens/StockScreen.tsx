@@ -29,24 +29,7 @@ import ProductItem from "../CommonComponent/ProductItem";
 import DeleteModal from "./DeleteModal";
 import CustomModal from "../Modals/CustomModal";
 import Toast from "react-native-toast-message";
-
-interface Product {
-  id: string;
-  batch_number?: string;
-  name: string;
-  stock: number;
-  description: string;
-  image?: string;
-  price: number;
-  category?: string;
-  sub_category?: string;
-  color?: string;
-  size?: string;
-  sale_type?: string;
-  is_active?: boolean;
-  parent?: string | null;
-  variants?: Product[];
-}
+import { ProductType } from "../CommonComponent/ProductItem";
 
 interface Addon {
   id: string;
@@ -60,12 +43,29 @@ interface Addon {
 }
 
 const orderTypes = ["Product/Service", " | ", "Add Ons"];
+// Static color and price, but size is now from API
+const staticFilterOptions = {
+  color: [
+    { id: "red", name: "Red" },
+    { id: "blue", name: "Blue" },
+    { id: "green", name: "Green" },
+    { id: "black", name: "Black" },
+    { id: "white", name: "White" },
+    { id: "yellow", name: "Yellow" },
+    { id: "pink", name: "Pink" },
+  ],
+  price: [
+    { id: "low-to-high", name: "Low to High" },
+    { id: "high-to-low", name: "High to Low" },
+  ],
+};
+
 const StockScreen = () => {
   const navigation = useNavigation();
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [selectedType, setSelectedType] = useState("Product/Service");
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<ProductType[]>([]);
   const [addons, setAddons] = useState<Addon[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -92,22 +92,14 @@ const StockScreen = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
 
-  // Static color and price, but size is now from API
-  const staticFilterOptions = {
-    color: [
-      { id: "red", name: "Red" },
-      { id: "blue", name: "Blue" },
-      { id: "green", name: "Green" },
-      { id: "black", name: "Black" },
-      { id: "white", name: "White" },
-      { id: "yellow", name: "Yellow" },
-      { id: "pink", name: "Pink" },
-    ],
-    price: [
-      { id: "low-to-high", name: "Low to High" },
-      { id: "high-to-low", name: "High to Low" },
-    ],
-  };
+  const [showActiveModal, setShowActiveModal] = useState(false);
+  const [pendingActiveChange, setPendingActiveChange] = useState<{
+    id: string;
+    value: boolean;
+  } | null>(null);
+  const [updatingActiveStatus, setUpdatingActiveStatus] = useState<
+    string | null
+  >(null);
 
   // Sizes from API
   const [sizeOptions, setSizeOptions] = useState<DropDownOption[]>([]);
@@ -132,9 +124,11 @@ const StockScreen = () => {
   }, []);
 
   // Organize products hierarchically
-  const organizeProductsHierarchically = (products: Product[]): Product[] => {
-    const parentProducts: Product[] = [];
-    const childProducts: Product[] = [];
+  const organizeProductsHierarchically = (
+    products: ProductType[]
+  ): ProductType[] => {
+    const parentProducts: ProductType[] = [];
+    const childProducts: ProductType[] = [];
 
     // Separate parent and child products
     products.forEach((product) => {
@@ -270,85 +264,100 @@ const StockScreen = () => {
     }
   };
 
-  const getFilteredData = (): (Product | Addon)[] => {
-    let data: (Product | Addon)[] =
+  const getFilteredData = (): (ProductType | Addon)[] => {
+    let data: (ProductType | Addon)[] =
       selectedType === "Product/Service" ? products : addons;
 
     // Apply sale_type filter for products
     if (selectedType === "Product/Service" && selectedFilter !== "All") {
       data = data.filter((item) => {
-        const product = item as Product;
+        const product = item as ProductType;
         return (
           product.sale_type?.toLowerCase() === selectedFilter.toLowerCase()
         );
       });
     }
-    // Apply advanced filters (only for products)
-    if (selectedType === "Product/Service") {
-      let productsArr = data as Product[];
-      productsArr = productsArr.filter((product) => {
-        // Category filter
-        if (
-          appliedFilters.category &&
-          product.category !== appliedFilters.category
-        ) {
-          return false;
-        }
-
-        // Subcategory filter
-        if (
-          appliedFilters.subcategory &&
-          product.sub_category !== appliedFilters.subcategory
-        ) {
-          return false;
-        }
-
-        // Color filter
-        if (appliedFilters.color && product.color !== appliedFilters.color) {
-          return false;
-        }
-
-        // Size filter
-        if (appliedFilters.size && product.size !== appliedFilters.size) {
-          return false;
-        }
-
-        // Price filter
-        // if (appliedFilters.price) {
-        //   const price = parseFloat(product.price.toString());
-        //   switch (appliedFilters.price) {
-        //     case "Under ₹500":
-        //       if (price >= 500) return false;
-        //       break;
-        //     case "₹500-₹1000":
-        //       if (price < 500 || price > 1000) return false;
-        //       break;
-        //     case "₹1000-₹2000":
-        //       if (price < 1000 || price > 2000) return false;
-        //       break;
-        //     case "₹2000-₹5000":
-        //       if (price < 2000 || price > 5000) return false;
-        //       break;
-        //     case "Above ₹5000":
-        //       if (price <= 5000) return false;
-        //       break;
-        //   }
-        // }
-
-        return true;
-      });
-      // Price order (sort)
-      if (appliedFilters.price === "low-to-high") {
-        productsArr = [...productsArr].sort(
-          (a, b) => (a.price ?? 0) - (b.price ?? 0)
-        );
-      } else if (appliedFilters.price === "high-to-low") {
-        productsArr = [...productsArr].sort(
-          (a, b) => (b.price ?? 0) - (a.price ?? 0)
-        );
+    // Apply advanced filters (only for products)\
+    let productsArr = data as ProductType[];
+    productsArr = productsArr.filter((product) => {
+      // Category filter
+      if (
+        appliedFilters.category &&
+        product[
+          selectedType === "Product/Service" ? "category" : "product_category"
+        ] !== appliedFilters.category
+      ) {
+        return false;
       }
-      data = productsArr;
+
+      // Subcategory filter
+      if (
+        appliedFilters.subcategory &&
+        product.sub_category !== appliedFilters.subcategory &&
+        selectedType === "Product/Service"
+      ) {
+        return false;
+      }
+
+      // Color filter
+      if (
+        appliedFilters.color &&
+        product.color !== appliedFilters.color &&
+        selectedType === "Product/Service"
+      ) {
+        return false;
+      }
+
+      // Size filter
+      if (
+        appliedFilters.size &&
+        product.size !== appliedFilters.size &&
+        selectedType === "Product/Service"
+      ) {
+        return false;
+      }
+
+      // Price filter
+      // if (appliedFilters.price) {
+      //   const price = parseFloat(product.price.toString());
+      //   switch (appliedFilters.price) {
+      //     case "Under ₹500":
+      //       if (price >= 500) return false;
+      //       break;
+      //     case "₹500-₹1000":
+      //       if (price < 500 || price > 1000) return false;
+      //       break;
+      //     case "₹1000-₹2000":
+      //       if (price < 1000 || price > 2000) return false;
+      //       break;
+      //     case "₹2000-₹5000":
+      //       if (price < 2000 || price > 5000) return false;
+      //       break;
+      //     case "Above ₹5000":
+      //       if (price <= 5000) return false;
+      //       break;
+      //   }
+      // }
+
+      return true;
+    });
+    // Price order (sort)
+    if (appliedFilters.price === "low-to-high") {
+      const addOnsArr = data.map(
+        (item) => ({ ...item, price: item.price_per_unit } as Addon)
+      );
+      productsArr = [
+        ...(selectedType === "Product/Service" ? productsArr : addOnsArr),
+      ].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
+    } else if (appliedFilters.price === "high-to-low") {
+      const addOnsArr = data.map(
+        (item) => ({ ...item, price: item.price_per_unit } as Addon)
+      );
+      productsArr = [
+        ...(selectedType === "Product/Service" ? productsArr : addOnsArr),
+      ].sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
     }
+    data = productsArr;
 
     // Apply search filter
     if (searchQuery.trim() !== "") {
@@ -406,15 +415,6 @@ const StockScreen = () => {
     setSelectedFilters({ ...appliedFilters });
     setFilterModalVisible(true);
   };
-
-  const [showActiveModal, setShowActiveModal] = useState(false);
-  const [pendingActiveChange, setPendingActiveChange] = useState<{
-    id: string;
-    value: boolean;
-  } | null>(null);
-  const [updatingActiveStatus, setUpdatingActiveStatus] = useState<
-    string | null
-  >(null);
 
   const handleActiveChange = (id: string, value: boolean) => {
     setPendingActiveChange({ id, value });
@@ -491,7 +491,7 @@ const StockScreen = () => {
     }
   };
 
-  const handleProductPress = (product: Product) => {
+  const handleProductPress = (product: ProductType) => {
     if (selectedType === "Product/Service") {
       // Navigate to VariantsScreen with product data
       (navigation as any).navigate(HomeNavigation.VARIANTS_SCREEN, {
@@ -585,7 +585,7 @@ const StockScreen = () => {
               </View>
             }
             renderItem={({ item }) => {
-              const product = item as Product;
+              const product = item as ProductType;
 
               return (
                 <ProductItem
@@ -595,9 +595,8 @@ const StockScreen = () => {
                   onEdit={handleEditProduct}
                   onDelete={handleDeleteProduct}
                   onActiveChange={handleActiveChange}
-                  showStock={selectedType === "Product/Service"}
                   showActions={true}
-                  showSwitch={true}
+                  showSwitch={selectedType === "Product/Service"}
                   isActiveLoading={updatingActiveStatus === product.id}
                 />
               );
@@ -711,22 +710,19 @@ const StockScreen = () => {
                       dropDownBoxStyle={styles.dropdown}
                     />
                   </View>
-
-                  {/* Price Filter */}
-                  <View style={styles.filterSection}>
-                    <Text style={styles.filterSectionTitle}>Price</Text>
-                    <CustomDropdown
-                      placeholder="Select Price Sort"
-                      options={staticFilterOptions.price}
-                      onSelect={(option) =>
-                        handleFilterSelect("price", option.id)
-                      }
-                      selectedValue={selectedFilters.price || null}
-                      dropDownBoxStyle={styles.dropdown}
-                    />
-                  </View>
                 </>
               )}
+              {/* Price Filter */}
+              <View style={styles.filterSection}>
+                <Text style={styles.filterSectionTitle}>Price</Text>
+                <CustomDropdown
+                  placeholder="Select Price Sort"
+                  options={staticFilterOptions.price}
+                  onSelect={(option) => handleFilterSelect("price", option.id)}
+                  selectedValue={selectedFilters.price || null}
+                  dropDownBoxStyle={styles.dropdown}
+                />
+              </View>
             </ScrollView>
 
             {/* Action Buttons */}
@@ -869,14 +865,14 @@ const styles = ScaledSheet.create({
     paddingTop: 10,
   },
   floatingButtons: {
-    position: "absolute",
-    top: s(-30),
-    right: 10,
+    // position: "absolute",
+    // top: s(-30),
+    // right: 10,
     // bottom: "25%",
     // right: 20,
     zIndex: 100,
-    flexDirection: "column",
-    gap: 10,
+    alignSelf: "flex-end",
+    right: "10@s",
   },
   addButtonGreen: {
     flexDirection: "row",
@@ -951,23 +947,22 @@ const styles = ScaledSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    alignItems: "center",
-    margin: "10@s",
-    paddingHorizontal: "18@s",
-    backgroundColor: "#fff",
-    elevation: 2,
-    // overflow: "hidden",
-    borderRadius: "10@s",
-    borderWidth: 1,
-    borderColor: "#BEBEBE",
   },
 
   typeButtonWrapper: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    borderRadius: 10,
-    padding: "8@s",
+    padding: "5@s",
+    marginHorizontal: "10@s",
+    marginVertical: "6@s",
+    // paddingHorizontal: "18@s",
+    backgroundColor: "#fff",
+    elevation: 2,
+    // overflow: "hidden",
+    borderRadius: "10@s",
+    borderWidth: 1,
+    borderColor: "#BEBEBE",
   },
 
   typeButton: {
@@ -985,6 +980,7 @@ const styles = ScaledSheet.create({
   typeText: {
     color: "#333",
     fontWeight: "bold",
+    fontSize: "12@s",
   },
 
   selectedTypeText: {

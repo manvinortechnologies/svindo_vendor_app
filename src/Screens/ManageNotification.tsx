@@ -7,7 +7,6 @@ import {
   Image,
   FlatList,
   Dimensions,
-  SafeAreaView,
   RefreshControl,
   Alert,
 } from "react-native";
@@ -20,6 +19,7 @@ import { useNotifications } from "../hooks/useNotifications";
 import { NotificationType } from "../services/notification-service";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Toast from "react-native-toast-message";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
@@ -53,14 +53,14 @@ const ManageNotification = ({ navigation }: any) => {
   const { sendNotification } = useNotifications();
   useEffect(() => {
     fetchNotifications();
-    sendNotification({
-      title: "Manage Notification",
-      body: "Manage Notification",
-      type: NotificationType.GENERAL,
-      data: {
-        notification: "Manage Notification",
-      },
-    });
+    // sendNotification({
+    //   title: "Manage Notification",
+    //   body: "Manage Notification",
+    //   type: NotificationType.GENERAL,
+    //   data: {
+    //     notification: "Manage Notification",
+    //   },
+    // });
   }, []);
 
   const fetchNotifications = async () => {

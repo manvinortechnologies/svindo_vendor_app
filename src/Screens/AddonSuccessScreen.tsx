@@ -30,7 +30,7 @@ const AddonSuccessScreen: React.FC<AddonSuccessScreenProps> = ({
 
   const handleContinue = () => {
     // Navigate back or to next screen
-    navigation.navigate(HomeNavigation.STOCK_SCREEN);
+    navigation.replace(HomeNavigation.STOCK_SCREEN);
   };
 
   return (

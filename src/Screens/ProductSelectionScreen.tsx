@@ -6,13 +6,12 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-  StyleSheet,
-  Alert,
 } from "react-native";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import CustomModal from "../Modals/CustomModal";
+import ScanProductModal, { VerifiedProduct } from "../Modals/ScanProductModal";
 
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
@@ -35,6 +34,7 @@ interface Product {
   quantity?: number;
   stock?: number;
   product_type?: string;
+  track_stock?: boolean;
 }
 
 interface CartItem {
@@ -90,6 +90,7 @@ const ProductSelectionScreen: React.FC = () => {
   const [selectedPrintProductId, setSelectedPrintProductId] = useState<
     number | null
   >(null);
+  const [showScanModal, setShowScanModal] = useState<boolean>(false);
 
   useEffect(() => {
     fetchProducts();
@@ -181,6 +182,10 @@ const ProductSelectionScreen: React.FC = () => {
   );
 
   const handleSelectPrintProduct = useCallback(() => {
+    console.log(
+      "selectedPrintProductId",
+      hasAnotherPrintSelected(selectedPrintProductId as number)
+    );
     if (
       selectedPrintProductId &&
       hasAnotherPrintSelected(selectedPrintProductId)
@@ -213,16 +218,25 @@ const ProductSelectionScreen: React.FC = () => {
       const currentItem = findCartItem(id);
       const product = productList.find((p) => p.id === id);
       const stock = Number(product?.stock ?? 0);
+      const trackStock = product?.track_stock !== false; // Default to true if not specified
       const currentQty = currentItem ? currentItem.quantity : 0;
       const nextQty = currentQty === 0 ? INITIAL_QUANTITY : currentQty + 1;
       const isPrintProduct = product?.product_type === "print";
+
       if (isPrintProduct) {
         setShowPrintLimitModal(true);
         setSelectedPrintProductId(id);
         return;
       }
-      if (stock > 0 && nextQty <= stock) {
+
+      // If track_stock is false, allow unlimited increments
+      if (trackStock === false) {
         updateCartItemQuantity(id, nextQty);
+      } else {
+        // If track_stock is true, check if current quantity < stock
+        if (currentQty < stock) {
+          updateCartItemQuantity(id, nextQty);
+        }
       }
     },
     [findCartItem, updateCartItemQuantity, productList, selectedPrintProductId]
@@ -289,7 +303,13 @@ const ProductSelectionScreen: React.FC = () => {
       const quantity = parseInt(text) || 0;
       const product = productList.find((p) => p.id === itemId);
       const stock = Number(product?.stock ?? 0);
-      const boundedQty = stock > 0 ? Math.min(quantity, stock) : 0;
+      const trackStock = product?.track_stock !== false; // Default to true if not specified
+
+      // If track_stock is false, allow any quantity (no limit)
+      // If track_stock is true, bound by stock
+      const boundedQty =
+        trackStock && stock > 0 ? Math.min(quantity, stock) : quantity;
+
       if (boundedQty >= 0) {
         updateCartItemQuantity(itemId, boundedQty);
       }
@@ -300,11 +320,12 @@ const ProductSelectionScreen: React.FC = () => {
   const renderQuantityControls = useCallback(
     (item: Product, quantity: number) => {
       const stock = Number(item?.stock ?? 0);
+      const trackStock = item?.track_stock !== false; // Default to true if not specified
       const isPrintProduct = item?.product_type === "print";
       // If no stock, hide Add/quantity controls entirely
-      if ((!stock || stock <= 0) && !isPrintProduct) {
-        return null;
-      }
+      // if ((!stock || stock <= 0) && !isPrintProduct) {
+      //   return null;
+      // }
 
       if (quantity === 0) {
         return (
@@ -317,7 +338,9 @@ const ProductSelectionScreen: React.FC = () => {
         );
       }
 
-      const canIncrement = quantity < stock;
+      // If track_stock is false, allow unlimited increments
+      // If track_stock is true, check if quantity < stock
+      const canIncrement = trackStock === false ? true : quantity < stock;
 
       return (
         <View style={styles.qtyRow}>
@@ -334,7 +357,7 @@ const ProductSelectionScreen: React.FC = () => {
           />
           <TouchableOpacity
             onPress={() => canIncrement && increment(item.id)}
-            disabled={!canIncrement && isPrintProduct}
+            disabled={!canIncrement || isPrintProduct}
           >
             <Text
               style={[styles.qtyBtn, !canIncrement && styles.qtyBtnDisabled]}
@@ -438,6 +461,118 @@ const ProductSelectionScreen: React.FC = () => {
     navigation.goBack();
   }, [navigation]);
 
+  // Add verified product to cart
+  const addVerifiedProductToCart = useCallback(
+    (verifiedProduct: {
+      productId: number;
+      name: string;
+      price: number;
+      stock?: number;
+      product_type?: string;
+      track_stock?: boolean;
+      quantity?: number;
+    }) => {
+      const productId = verifiedProduct.productId;
+      const productVerified = productList.find((p) => p.id === productId);
+      const currentItem = findCartItem(productId);
+      const currentQty = currentItem ? currentItem.quantity : 0;
+      const scannedQty = verifiedProduct.quantity || 1;
+      const stock = Number(verifiedProduct.stock ?? 0);
+      const trackStock = verifiedProduct.track_stock !== false;
+      const isPrintProduct = verifiedProduct.product_type === "print";
+
+      if (isPrintProduct) {
+        setShowPrintLimitModal(true);
+        setSelectedPrintProductId(productId);
+        return true;
+      } else {
+        // Add the scanned quantity to current quantity
+        const nextQty = currentQty + scannedQty;
+        // If track_stock is false, allow unlimited quantity
+        if (!productVerified?.track_stock) {
+          updateCartItemQuantity(productId, nextQty);
+          return true;
+        } else if (
+          productVerified?.track_stock &&
+          productVerified?.stock &&
+          productVerified?.stock > 0 &&
+          nextQty > productVerified?.stock
+        ) {
+          // Cap at stock limit
+          updateCartItemQuantity(productId, productVerified.stock);
+          return false;
+        } else {
+          updateCartItemQuantity(productId, nextQty);
+          return true;
+        }
+      }
+    },
+    [findCartItem, updateCartItemQuantity, productList]
+  );
+
+  const handleScanBarcode = useCallback(() => {
+    // Show ScanProductModal instead of navigating
+    setShowScanModal(true);
+  }, []);
+
+  const handleProductsScanned = useCallback(
+    (verifiedProducts: VerifiedProduct[]) => {
+      if (!verifiedProducts || verifiedProducts.length === 0) {
+        return;
+      }
+
+      let addedCount = 0;
+      let failedCount = 0;
+      let totalQuantity = 0;
+
+      // Add each verified product to cart with its quantity
+      verifiedProducts.forEach((verifiedProduct) => {
+        if (verifiedProduct.verified) {
+          const success = addVerifiedProductToCart({
+            productId: verifiedProduct.productId,
+            name: verifiedProduct.name,
+            price: verifiedProduct.price,
+            stock: verifiedProduct.stock,
+            product_type: verifiedProduct.product_type,
+            track_stock: verifiedProduct.track_stock,
+            quantity: verifiedProduct.quantity || 1,
+          });
+
+          if (success) {
+            addedCount++;
+            totalQuantity += verifiedProduct.quantity || 1;
+          } else {
+            failedCount++;
+          }
+        } else {
+          failedCount++;
+        }
+      });
+
+      // Show appropriate toast message
+      if (addedCount > 0 && failedCount === 0) {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: `${totalQuantity} item(s) added to cart`,
+        });
+      } else if (addedCount > 0 && failedCount > 0) {
+        Toast.show({
+          type: "info",
+          text1: "Partial Success",
+          text2: `${totalQuantity} items added, ${failedCount} failed`,
+        });
+      } else {
+        Toast.show({
+          type: "error",
+          text1: "Failed",
+          text2: "No products could be added to cart",
+        });
+      }
+    },
+    [addVerifiedProductToCart]
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
@@ -463,7 +598,7 @@ const ProductSelectionScreen: React.FC = () => {
       />
 
       <View style={styles.footer}>
-        <TouchableOpacity style={styles.scanBtn}>
+        <TouchableOpacity style={styles.scanBtn} onPress={handleScanBarcode}>
           <Icon name="qr-code-scanner" size={20} color="#fff" />
           <Text style={styles.scanText}>Scan</Text>
         </TouchableOpacity>
@@ -504,6 +639,11 @@ const ProductSelectionScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </CustomModal>
+      <ScanProductModal
+        visible={showScanModal}
+        onClose={() => setShowScanModal(false)}
+        onProductsScanned={handleProductsScanned}
+      />
     </SafeAreaView>
   );
 };

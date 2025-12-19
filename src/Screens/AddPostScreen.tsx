@@ -9,7 +9,6 @@ import {
   Image,
   ScrollView,
   KeyboardAvoidingView,
-  TouchableWithoutFeedback,
   Keyboard,
   Platform,
   Alert,
@@ -401,131 +400,130 @@ const AddPostScreen = ({ navigation }: any) => {
   return (
     <MainContainer>
       <Headerwithback title="Add Post / Reel" />
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+      >
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.container}
         >
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.container}
+          {/* Upload Box */}
+          <TouchableOpacity
+            style={[styles.uploadBox, errors.image && styles.inputError]}
+            onPress={handleMediaUpload}
           >
-            {/* Upload Box */}
-            <TouchableOpacity
-              style={[styles.uploadBox, errors.image && styles.inputError]}
-              onPress={handleMediaUpload}
-            >
-              {media ? (
-                media?.type?.startsWith("video") ? (
-                  <Video
-                    source={{ uri: media.uri }}
-                    style={[styles.uploadedMedia, { width: "20%" }]}
-                    resizeMode="cover"
-                    repeat
-                    muted
-                  />
-                ) : (
-                  <Image
-                    source={{ uri: media.uri }}
-                    style={styles.uploadedMedia}
-                    resizeMode="cover"
-                  />
-                )
+            {media ? (
+              media?.type?.startsWith("video") ? (
+                <Video
+                  source={{ uri: media.uri }}
+                  style={[styles.uploadedMedia, { width: "20%" }]}
+                  resizeMode="cover"
+                  repeat
+                  muted
+                />
               ) : (
-                <>
-                  {mediaType === "video" ? (
-                    <Icon name="videocam" size={48} color="#FCA311" />
-                  ) : mediaType === "image" ? (
-                    <Icon name="camera" size={48} color="#FCA311" />
-                  ) : (
-                    <Icon name="add-circle-outline" size={48} color="#FCA311" />
-                  )}
-                  <Text style={styles.uploadHint}>
-                    Upload Media{"\n"}
-                    For Photos keep the dimension ratio 1:1{"\n"}
-                    for videos use vertical videos
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-            {errors.image ? (
-              <Text style={styles.errorText}>{errors.image}</Text>
-            ) : null}
+                <Image
+                  source={{ uri: media.uri }}
+                  style={styles.uploadedMedia}
+                  resizeMode="cover"
+                />
+              )
+            ) : (
+              <>
+                {mediaType === "video" ? (
+                  <Icon name="videocam" size={48} color="#FCA311" />
+                ) : mediaType === "image" ? (
+                  <Icon name="camera" size={48} color="#FCA311" />
+                ) : (
+                  <Icon name="add-circle-outline" size={48} color="#FCA311" />
+                )}
+                <Text style={styles.uploadHint}>
+                  Upload Media{"\n"}
+                  For Photos keep the dimension ratio 1:1{"\n"}
+                  for videos use vertical videos
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+          {errors.image ? (
+            <Text style={styles.errorText}>{errors.image}</Text>
+          ) : null}
 
-            {/* Description Input */}
-            <Text style={styles.label}>Description</Text>
-            <TextInput
-              style={[styles.input, errors.description && styles.inputError]}
-              placeholder="Enter here"
-              value={description}
-              placeholderTextColor={"#727272"}
-              onChangeText={handleDescriptionChange}
-            />
-            {errors.description ? (
-              <Text style={styles.errorText}>{errors.description}</Text>
-            ) : null}
+          {/* Description Input */}
+          <Text style={styles.label}>Description</Text>
+          <TextInput
+            style={[styles.input, errors.description && styles.inputError]}
+            placeholder="Enter here"
+            value={description}
+            placeholderTextColor={"#727272"}
+            onChangeText={handleDescriptionChange}
+          />
+          {errors.description ? (
+            <Text style={styles.errorText}>{errors.description}</Text>
+          ) : null}
 
-            {/* Product Selection */}
-            <Text style={styles.label}>Select product to connect</Text>
-            <TouchableOpacity
-              style={[
-                styles.productSelectButton,
-                errors.selectedProduct && styles.inputError,
-              ]}
-              onPress={openProductModal}
-            >
-              <Text style={styles.productSelectButtonText}>
-                {isLoadingProducts
-                  ? "Loading..."
-                  : selectedProduct?.name
-                  ? `Selected: ${selectedProduct.name}`
-                  : "Select Product"}
-              </Text>
-            </TouchableOpacity>
-            {errors.selectedProduct ? (
-              <Text style={styles.errorText}>{errors.selectedProduct}</Text>
-            ) : null}
+          {/* Product Selection */}
+          <Text style={styles.label}>Select product to connect</Text>
+          <TouchableOpacity
+            style={[
+              styles.productSelectButton,
+              errors.selectedProduct && styles.inputError,
+            ]}
+            onPress={openProductModal}
+          >
+            <Text style={styles.productSelectButtonText}>
+              {isLoadingProducts
+                ? "Loading..."
+                : selectedProduct?.name
+                ? `Selected: ${selectedProduct.name}`
+                : "Select Product"}
+            </Text>
+          </TouchableOpacity>
+          {errors.selectedProduct ? (
+            <Text style={styles.errorText}>{errors.selectedProduct}</Text>
+          ) : null}
 
-            {/* Boost Post Toggle */}
-            <View style={styles.boostRow}>
-              <Text style={styles.label}>Boost Post</Text>
-              {/* <Switch
+          {/* Boost Post Toggle */}
+          <View style={styles.boostRow}>
+            <Text style={styles.label}>Boost Post</Text>
+            {/* <Switch
           value={boostEnabled}
           onValueChange={setBoostEnabled}
           trackColor={{ false: '#727272', true: '#FCA311' }}
           thumbColor={boostEnabled ? '#fff' : '#fff'}
           
         /> */}
-              <CustomSwitch
-                value={boostEnabled}
-                onValueChange={setBoostEnabled}
-                activeColor="#FCA311"
-                disabled={true}
-              />
-            </View>
-
-            {/* Budget */}
-            <Text style={styles.label}>Budget (Minimum - 0 Rupees)</Text>
-            <TextInput
-              style={[styles.input, errors.budget && styles.inputError]}
-              placeholder="Boosted by default"
-              value={amount}
-              onChangeText={handleAmountChange}
-              keyboardType="numeric"
-              placeholderTextColor={"#727272"}
-              editable={false}
+            <CustomSwitch
+              value={boostEnabled}
+              onValueChange={setBoostEnabled}
+              activeColor="#FCA311"
+              disabled={true}
             />
-            {errors.budget ? (
-              <Text style={styles.errorText}>{errors.budget}</Text>
-            ) : null}
+          </View>
 
-            {/* Approximate Costing Box */}
-            <View style={styles.infoBox}>
-              <Text style={{ fontWeight: "bold", color: "#FCA311" }}>
-                We are offering free boost post for limited time!
-              </Text>
-              {/* <Text style={styles.infoText}>
+          {/* Budget */}
+          <Text style={styles.label}>Budget (Minimum - 0 Rupees)</Text>
+          <TextInput
+            style={[styles.input, errors.budget && styles.inputError]}
+            placeholder="Boosted by default"
+            value={amount}
+            onChangeText={handleAmountChange}
+            keyboardType="numeric"
+            placeholderTextColor={"#727272"}
+            editable={false}
+          />
+          {errors.budget ? (
+            <Text style={styles.errorText}>{errors.budget}</Text>
+          ) : null}
+
+          {/* Approximate Costing Box */}
+          <View style={styles.infoBox}>
+            <Text style={{ fontWeight: "bold", color: "#FCA311" }}>
+              We are offering free boost post for limited time!
+            </Text>
+            {/* <Text style={styles.infoText}>
                 <Text style={{ fontWeight: "bold", color: "#FCA311" }}>
                   Approximate Costing{"\n \n"}
                 </Text>
@@ -541,19 +539,15 @@ const AddPostScreen = ({ navigation }: any) => {
                 <Text style={styles.termsHighlight}>terms & conditions</Text>{" "}
                 for speedy approval of campaigns
               </Text> */}
-            </View>
-            <Loading visible={isLoading} />
+          </View>
+          <Loading visible={isLoading} />
 
-            {/* Submit Button */}
-            <TouchableOpacity
-              onPress={handelSubmit}
-              style={styles.submitButton}
-            >
-              <Text style={styles.submitText}>Submit for approval</Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </TouchableWithoutFeedback>
+          {/* Submit Button */}
+          <TouchableOpacity onPress={handelSubmit} style={styles.submitButton}>
+            <Text style={styles.submitText}>Submit for approval</Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
       <Modal visible={showProductModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>

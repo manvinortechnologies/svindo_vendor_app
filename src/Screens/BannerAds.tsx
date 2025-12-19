@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   Image,
   StyleSheet,
-  SafeAreaView,
   Alert,
 } from "react-native";
 import {
@@ -62,12 +61,12 @@ const BannerAds = ({ navigation }: any) => {
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const [deleteBannerData, setDeleteBannerData] =
     useState<BannerCampaign | null>(null);
-  useFocusEffect(
-    useCallback(() => {
-      getBannerData();
-      return () => {};
-    }, [])
-  );
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     getBannerData();
+  //     return () => {};
+  //   }, [])
+  // );
 
   const getBannerData = async () => {
     try {
@@ -204,7 +203,7 @@ const BannerAds = ({ navigation }: any) => {
   return (
     <MainContainer>
       <CustomHeader title="Banner Ads" />
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <Loading visible={isLoading || deletingId !== null} />
 
         {/* Summary Box */}
@@ -259,7 +258,7 @@ const BannerAds = ({ navigation }: any) => {
         >
           <Text style={styles.addBannerText}>Add Banner</Text>
         </TouchableOpacity>
-      </SafeAreaView>
+      </View>
       <DeleteModal
         showDeleteModal={showDeleteModal}
         handleCancelDelete={handleCancelDelete}

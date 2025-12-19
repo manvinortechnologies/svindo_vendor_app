@@ -6,19 +6,108 @@ import {
   Switch,
   ScrollView,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import CustomSwitch from "../CommonComponent/CustomSwitch";
 import Icon from "react-native-vector-icons/Ionicons";
+import api from "../services/api/api";
+import { API_ROUTES } from "../constants/api-routes.constants";
+import Loading from "../CommonComponent/Loading";
+import Toast from "react-native-toast-message";
 
 const SmsScreen = () => {
-  const [availableCredits, setAvailableCredits] = useState(2000);
-  const [usedCredits, setUsedleCredits] = useState(1000);
+  const [isLoading, setIsLoading] = useState(false);
+  const [availableCredits, setAvailableCredits] = useState(0);
+  const [usedCredits, setUsedCredits] = useState(0);
+  const [purchaseMsgEnabled, setPurchaseMsgEnabled] = useState(false);
+  const [quoteMsgEnabled, setQuoteMsgEnabled] = useState(false);
+  const [creditReminderEnabled, setCreditReminderEnabled] = useState(false);
 
-  const [purchaseMsgEnabled, setPurchaseMsgEnabled] = useState(true);
+  useEffect(() => {
+    fetchSmsSettings();
+  }, []);
 
-  const [quoteMsgEnabled, setQuoteMsgEnabled] = useState(true);
-  const [creditReminderEnabled, setCreditReminderEnabled] = useState(true);
+  const fetchSmsSettings = async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.get(API_ROUTES.smsSettings);
+      if (res.data) {
+        const data = res.data;
+        // Parse credits from string to number
+        // Parse credits from string format like "0.00" to number
+        setAvailableCredits(
+          data.available_credits !== undefined &&
+            data.available_credits !== null
+            ? parseFloat(
+                typeof data.available_credits === "string"
+                  ? data.available_credits
+                  : data.available_credits.toString()
+              )
+            : 0
+        );
+        setUsedCredits(
+          data.used_credits !== undefined && data.used_credits !== null
+            ? parseFloat(
+                typeof data.used_credits === "string"
+                  ? data.used_credits
+                  : data.used_credits.toString()
+              )
+            : 0
+        );
+        setPurchaseMsgEnabled(
+          data.enable_purchase_message !== undefined
+            ? data.enable_purchase_message
+            : false
+        );
+        setQuoteMsgEnabled(
+          data.enable_quote_message !== undefined
+            ? data.enable_quote_message
+            : false
+        );
+        setCreditReminderEnabled(
+          data.enable_credit_reminder_message !== undefined
+            ? data.enable_credit_reminder_message
+            : false
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching SMS settings:", error);
+      // Keep default values on error
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSaveSettings = async () => {
+    try {
+      setIsLoading(true);
+      const payload = {
+        available_credits: availableCredits,
+        used_credits: usedCredits,
+        enable_purchase_message: purchaseMsgEnabled,
+        enable_quote_message: quoteMsgEnabled,
+        enable_credit_reminder_message: creditReminderEnabled,
+      };
+
+      const res = await api.post(API_ROUTES.smsSettings, payload);
+      if (res.status === 200 || res.status === 201) {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "SMS settings saved successfully",
+        });
+      }
+    } catch (error: any) {
+      console.error("Error saving SMS settings:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error?.response?.data?.message || "Failed to save SMS settings",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <View style={styles.container}>
       <CustomHeader title="SMS" />
@@ -52,12 +141,12 @@ const SmsScreen = () => {
             <View style={[styles.creditBox, { backgroundColor: "#CDBDFF" }]}>
               <Text style={styles.creditLabel}>Available</Text>
               <Text style={styles.creditValue}>
-                {availableCredits.toFixed(2)}
+                {availableCredits?.toFixed(2)}
               </Text>
             </View>
             <View style={[styles.creditBox, { backgroundColor: "#CEFFB7" }]}>
               <Text style={styles.creditLabel}>Used</Text>
-              <Text style={styles.creditValue}>{usedCredits.toFixed(2)}</Text>
+              <Text style={styles.creditValue}>{usedCredits?.toFixed(2)}</Text>
             </View>
           </View>
         </View>
@@ -109,10 +198,16 @@ const SmsScreen = () => {
         </View>
       </ScrollView>
 
-      {/* Add Credit Button */}
-      {/* <TouchableOpacity style={styles.addButton}>
-        <Text style={styles.addButtonText}>Add Credit</Text>
-      </TouchableOpacity> */}
+      {/* Save Button */}
+      <TouchableOpacity
+        style={styles.saveButton}
+        onPress={handleSaveSettings}
+        disabled={isLoading}
+      >
+        <Text style={styles.saveButtonText}>Save Settings</Text>
+      </TouchableOpacity>
+
+      <Loading visible={isLoading} />
     </View>
   );
 };
@@ -217,17 +312,18 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#000",
   },
-  addButton: {
-    width: "30%",
+  saveButton: {
     position: "absolute",
     bottom: 20,
-    right: 20,
-    backgroundColor: "#169729",
-    paddingVertical: 8,
-    borderRadius: 20,
+    left: 16,
+    right: 16,
+    backgroundColor: "#FCA311",
+    paddingVertical: 14,
+    borderRadius: 8,
     alignItems: "center",
+    justifyContent: "center",
   },
-  addButtonText: {
+  saveButtonText: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",

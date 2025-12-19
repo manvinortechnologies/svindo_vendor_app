@@ -2,16 +2,13 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TouchableOpacity,
   Dimensions,
-  FlatList,
   Modal,
   TextInput,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import MainContainer from "../CommonComponent/MainContainer";
 import { Expense } from "../type/common";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
@@ -278,12 +275,12 @@ const ExpensesScreen = ({ navigation }: any) => {
           <Text style={styles.ledgerText}>Total Paid: </Text>
           <Text style={styles.ledgerAmount}>₹{totalPaid.toFixed(2)}</Text>
         </View>
-        <View style={styles.ledgerItem}>
+        {/* <View style={styles.ledgerItem}>
           <Text style={styles.ledgerText}>Total Unpaid: </Text>
           <Text style={styles.ledgerAmountUnpaid}>
             ₹{totalUnpaid.toFixed(2)}
           </Text>
-        </View>
+        </View> */}
       </View>
       <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
         {Object.entries(groupedExpenses).map(([date, expenses]) =>

@@ -5,12 +5,10 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
-  Platform,
-  StatusBar,
-  SafeAreaView,
 } from "react-native";
 import Headerwithback from "./Headerwithback";
 import CustomSwitch from "./CustomSwitch"; // Make sure this path is correct
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const Purchase = () => {
   const [SupplierInNo, SupplierInvoiceNo] = useState(false);

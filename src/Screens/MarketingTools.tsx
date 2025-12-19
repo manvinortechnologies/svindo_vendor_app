@@ -7,15 +7,14 @@ import {
   StyleSheet,
   StatusBar,
   Platform,
-  SafeAreaView,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Icons from "react-native-vector-icons/AntDesign";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useNavigation } from "@react-navigation/native";
-import Bottomnavigation from "./Bottomnavigation";
 import Header from "./Header";
 import { HomeNavigation } from "../constants/app-routes.constants";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 // ✅ Define the type for the navigation stack
 type RootStackParamList = {
@@ -118,8 +117,8 @@ const menuItems: MenuItemType[] = [
   },
   { title: "Chats", icon: "chat", screen: HomeNavigation.ALL_CHAT_USER_SCREEN },
   {
-    title: "Automated Chat reply for online Orders",
-    icon: "chat",
+    title: "Automated Notification for Online Orders",
+    icon: "bell",
     screen: HomeNavigation.TRANSACTION_MESSAGES,
   },
   {

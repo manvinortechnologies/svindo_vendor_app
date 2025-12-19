@@ -3,10 +3,11 @@ import {
   View,
   Text,
   StyleSheet,
-  Alert,
   TouchableOpacity,
   Platform,
   Linking,
+  FlatList,
+  Dimensions,
 } from "react-native";
 import {
   Camera,
@@ -14,16 +15,34 @@ import {
   useCodeScanner,
   useCameraPermission,
 } from "react-native-vision-camera";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
+import { SafeAreaView } from "react-native-safe-area-context";
+import Icon from "react-native-vector-icons/MaterialIcons";
+
+const { height: SCREEN_HEIGHT } = Dimensions.get("window");
+
+type ScannedItem = {
+  id: string;
+  value: string;
+  type: string;
+  timestamp: number;
+};
+
+type RootStackParamList = {
+  ScanBarcode: {
+    onScanComplete: (scannedItems: ScannedItem[]) => void;
+  };
+};
 
 const VisionCameraScanner = () => {
   const [isActive, setIsActive] = useState(true);
-  const [scannedData, setScannedData] = useState("");
+  const [scannedItems, setScannedItems] = useState<ScannedItem[]>([]);
 
   const device = useCameraDevice("back");
   const { hasPermission, requestPermission } = useCameraPermission();
-  const navigation = useNavigation();
-  const route = useRoute();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, "ScanBarcode">>();
   useEffect(() => {
     if (!hasPermission) {
       requestPermission();
@@ -45,44 +64,53 @@ const VisionCameraScanner = () => {
       "upc-e",
     ],
     onCodeScanned: (codes) => {
-      if (codes.length > 0 && !scannedData) {
+      if (codes.length > 0 && isActive) {
         const { type, value } = codes[0];
-        setScannedData(value || "");
-        setIsActive(false);
+        const scannedValue = value || "";
 
-        Alert.alert("Code Scanned!", `Type: ${type}\nValue: ${value}`, [
-          {
-            text: "Scan Again",
-            onPress: () => {
-              setScannedData("");
-              setIsActive(true);
-            },
-          },
-          {
-            text: "OK",
-            style: "default",
-            onPress: () => {
-              // Pass the scanned data back to the previous screen
-              navigation.goBack();
-              // Use a callback or event to pass the scanned data
-              if (route.params?.onScanComplete) {
-                route.params.onScanComplete(value, type);
-              }
-            },
-          },
-        ]);
+        // Check if this code was already scanned
+        const isDuplicate = scannedItems.some(
+          (item) => item.value === scannedValue && item.type === type
+        );
+
+        if (!isDuplicate && scannedValue) {
+          // Add to scanned items list
+          const newItem: ScannedItem = {
+            id: `${Date.now()}-${Math.random()}`,
+            value: scannedValue,
+            type: type || "unknown",
+            timestamp: Date.now(),
+          };
+          setScannedItems((prev) => [...prev, newItem]);
+
+          // Temporarily pause scanning to prevent duplicate scans
+          setIsActive(false);
+          setTimeout(() => {
+            setIsActive(true);
+          }, 1000);
+        }
       }
     },
   });
 
-  const startScanning = useCallback(() => {
-    setScannedData("");
-    setIsActive(true);
+  const handleContinue = useCallback(() => {
+    if (route.params?.onScanComplete && scannedItems.length > 0) {
+      route.params.onScanComplete(scannedItems);
+    }
+    navigation.goBack();
+  }, [scannedItems, route.params, navigation]);
+
+  const handleRemoveItem = useCallback((id: string) => {
+    setScannedItems((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
-  const stopScanning = useCallback(() => {
-    setIsActive(false);
+  const handleClearAll = useCallback(() => {
+    setScannedItems([]);
   }, []);
+
+  const handleClose = useCallback(() => {
+    navigation.goBack();
+  }, [navigation]);
 
   if (!hasPermission) {
     return (
@@ -107,7 +135,8 @@ const VisionCameraScanner = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
+      {/* Top Half - Scanner */}
       <View style={styles.cameraContainer}>
         <Camera
           style={StyleSheet.absoluteFill}
@@ -120,8 +149,8 @@ const VisionCameraScanner = () => {
         {/* Scanning overlay */}
         <View style={styles.overlay}>
           <View style={styles.header}>
-            <TouchableOpacity style={styles.closeButton} onPress={stopScanning}>
-              <Text style={styles.closeButtonText}>×</Text>
+            <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+              <Icon name="close" size={24} color="#fff" />
             </TouchableOpacity>
           </View>
 
@@ -141,7 +170,68 @@ const VisionCameraScanner = () => {
           </View>
         </View>
       </View>
-    </View>
+
+      {/* Bottom Half - Scanned Data List */}
+      <View style={styles.dataContainer}>
+        <View style={styles.dataHeader}>
+          <Text style={styles.dataHeaderText}>
+            Scanned Items ({scannedItems.length})
+          </Text>
+          {scannedItems.length > 0 && (
+            <TouchableOpacity
+              style={styles.clearButton}
+              onPress={handleClearAll}
+            >
+              <Text style={styles.clearButtonText}>Clear All</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {scannedItems.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Icon name="qr-code-scanner" size={48} color="#999" />
+            <Text style={styles.emptyText}>No items scanned yet</Text>
+            <Text style={styles.emptySubtext}>
+              Scan barcodes to see them here
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={scannedItems}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <View style={styles.scannedItem}>
+                <View style={styles.itemContent}>
+                  <Text style={styles.itemValue} numberOfLines={1}>
+                    {item.value}
+                  </Text>
+                  <Text style={styles.itemType}>{item.type.toUpperCase()}</Text>
+                </View>
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => handleRemoveItem(item.id)}
+                >
+                  <Icon name="close" size={20} color="#FF5C5C" />
+                </TouchableOpacity>
+              </View>
+            )}
+            contentContainerStyle={styles.listContent}
+          />
+        )}
+
+        {/* Continue Button */}
+        {scannedItems.length > 0 && (
+          <View style={styles.footer}>
+            <TouchableOpacity
+              style={styles.continueButton}
+              onPress={handleContinue}
+            >
+              <Text style={styles.continueButtonText}>Continue</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </View>
+    </SafeAreaView>
   );
 };
 
@@ -150,10 +240,111 @@ export default VisionCameraScanner;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#1a1a1a",
+    backgroundColor: "#fff",
   },
   cameraContainer: {
+    height: SCREEN_HEIGHT * 0.5,
+    backgroundColor: "#1a1a1a",
+  },
+  dataContainer: {
     flex: 1,
+    backgroundColor: "#fff",
+    borderTopWidth: 2,
+    borderTopColor: "#FCA311",
+  },
+  dataHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: "#F9F9F9",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  dataHeaderText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000",
+  },
+  clearButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  clearButtonText: {
+    color: "#FF5C5C",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 40,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#666",
+    marginTop: 12,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: "#999",
+    marginTop: 4,
+  },
+  listContent: {
+    padding: 16,
+    paddingBottom: 80,
+  },
+  scannedItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#F9F9F9",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#eee",
+  },
+  itemContent: {
+    flex: 1,
+    marginRight: 8,
+  },
+  itemValue: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#000",
+    marginBottom: 4,
+  },
+  itemType: {
+    fontSize: 12,
+    color: "#666",
+  },
+  removeButton: {
+    padding: 4,
+  },
+  footer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#fff",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#eee",
+  },
+  continueButton: {
+    backgroundColor: "#FCA311",
+    borderRadius: 8,
+    paddingVertical: 14,
+    alignItems: "center",
+  },
+  continueButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,

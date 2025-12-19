@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   Image,
   ScrollView,
@@ -12,7 +11,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
-import Bottomnavigation from "./Bottomnavigation";
 import Headerwithback from "./Headerwithback";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
@@ -21,7 +19,7 @@ import AdjustCashModal from "../Modals/AdjustCashModal";
 import BankTransferModal from "../Modals/BankTransferModal";
 import CalendarModal from "../Modals/CalendarModal";
 import moment from "moment";
-import { ScaledSheet } from "react-native-size-matters";
+import { s, ScaledSheet } from "react-native-size-matters";
 
 interface CashTransaction {
   id: number;
@@ -32,7 +30,6 @@ interface CashTransaction {
   amount: number;
   balance: number;
   isCredit: boolean;
-  balance_after: number;
 }
 
 const CashInHand = ({ navigation }: any) => {
@@ -69,8 +66,10 @@ const CashInHand = ({ navigation }: any) => {
       if (res.data) {
         setCashBalance(res1.data.balance || "00.00");
         // Transform ledger data if available
-        if (res.data && Array.isArray(res.data)) {
-          const transformedTransactions = transformCashLedgerData(res.data);
+        if (res.data && Array.isArray(res.data.ledger)) {
+          const transformedTransactions = transformCashLedgerData(
+            res.data.ledger || []
+          );
           setAllTransactions(transformedTransactions);
           setTransactions(transformedTransactions);
           const grouped = groupTransactionsByDate(transformedTransactions);
@@ -140,7 +139,7 @@ const CashInHand = ({ navigation }: any) => {
 
   const transformCashLedgerData = (ledgerData: any[]): CashTransaction[] => {
     return ledgerData.map((txn: any, index: number) => {
-      const transactionDate = new Date(txn.created_at || txn.date);
+      const transactionDate = new Date(txn.created_at);
       const dateKey = transactionDate.toISOString().split("T")[0]; // YYYY-MM-DD for grouping
       const dateFormatted = transactionDate.toLocaleDateString("en-GB", {
         day: "2-digit",
@@ -152,11 +151,11 @@ const CashInHand = ({ navigation }: any) => {
         id: txn.id || index + 1,
         date: dateKey,
         dateFormatted: dateFormatted,
-        type: txn.transaction_type || txn.type || "Cash Transaction",
-        detail: txn.note || txn.detail || txn.reference || "N/A",
-        amount: Math.abs(txn.new_balance || 0),
-        balance: Number(txn.previous_balance) || 0,
-        isCredit: (Number(txn.delta_amount) || 0) > 0,
+        type: txn.transaction_type,
+        detail: txn.description || "N/A",
+        amount: Math.abs(txn.amount || 0),
+        balance: Number(txn.balance_after) || 0,
+        isCredit: (Number(txn.balance_after) || 0) > 0,
       };
     });
   };
@@ -240,8 +239,19 @@ const CashInHand = ({ navigation }: any) => {
             <Text style={styles.columnValue}>{item.balance.toFixed(2)}</Text>
           </View>
         </View>
-        <View style={[styles.col, { alignItems: "flex-start", marginTop: 10 }]}>
-          <Text style={styles.columnLabel}>Detail</Text>
+        <View
+          style={[
+            styles.col,
+            {
+              alignItems: "flex-start",
+              marginTop: 10,
+              borderTopWidth: 1,
+              borderTopColor: "#FCA311",
+              paddingTop: s(5),
+            },
+          ]}
+        >
+          {/* <Text style={styles.columnLabel}>Detail</Text> */}
           <Text style={styles.columnValue}>{item.detail}</Text>
         </View>
       </View>

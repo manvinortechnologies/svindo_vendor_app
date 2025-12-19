@@ -126,7 +126,7 @@ const ChatScreenStream = () => {
             <CustomHeader title="Chat" />
             <View style={styles.chatContainer}>
               <MessageList />
-              <MessageInput />
+              <MessageInput InputButtons={() => null} />
             </View>
           </Channel>
         </Chat>

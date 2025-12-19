@@ -7,7 +7,6 @@ import {
   Dimensions,
   ViewStyle,
   StyleProp,
-  TouchableWithoutFeedback,
 } from "react-native";
 import Ionicons from "react-native-vector-icons/Ionicons"; // Or any icon lib
 import Modal from "react-native-modal";

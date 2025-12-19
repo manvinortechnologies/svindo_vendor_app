@@ -43,7 +43,7 @@ const BillDetails: React.FC = () => {
     (async () => {
       setIsLoading(true);
       try {
-        const res = await api.get(`${API_ROUTES.posSales}/${params?.id}/`);
+        const res = await api.get(`${API_ROUTES.posSales}${params?.id}/`);
 
         setBillData({ ...res.data });
       } catch (error) {

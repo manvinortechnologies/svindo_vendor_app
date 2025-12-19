@@ -74,6 +74,7 @@ export enum HomeNavigation {
   SALES = "Sales",
   PURCHASE = "Purchase",
   SALES_LEDGER = "SalesLedger",
+  PURCHASE_LEDGER = "PurchaseLedger",
   DISCOUNT_SETTINGS = "DiscountSettings",
   TAXES_AND_GST = "TaxesAndGST",
   INVOICE_SETTINGS = "InvoiceSettings",
@@ -129,4 +130,9 @@ export enum HomeNavigation {
   ALL_CHAT_USER_SCREEN = "AllChatUserScreen",
   CHAT_SCREEN_STREAM = "ChatScreenStream",
   DELIVERY_AREA = "DeliveryArea",
+  SECURITY_SCREEN = "SecurityScreen",
+  RETURN_EXCHANGE = "ReturnExchange",
+  SHIPPING_DELIVERY = "ShippingDelivery",
+  TERMS_SCREEN = "TermsScreen",
+  SCAN_PRODUCT = "ScanProduct",
 }

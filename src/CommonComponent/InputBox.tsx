@@ -21,6 +21,8 @@ export const InputBox = ({
   textInputStyle,
   multiline,
   numberOfLines,
+  onBlur,
+  error,
   ...props
 }: {
   label?: string;
@@ -36,13 +38,20 @@ export const InputBox = ({
   textInputStyle?: StyleProp<TextStyle>;
   multiline?: boolean;
   numberOfLines?: number;
+  onBlur?: () => void;
+  error?: string;
 }) => (
   <View style={[{ marginBottom: 12 }, styless]}>
     {label && <Text style={styles.label}>{label}</Text>}
     <TextInput
       placeholder={placeholder}
       editable={editable}
-      style={[styles.input, { backgroundColor: background }, textInputStyle]}
+      style={[
+        styles.input,
+        { backgroundColor: background },
+        error && styles.inputError,
+        textInputStyle,
+      ]}
       placeholderTextColor="#888"
       value={value}
       onChangeText={onChangeText}
@@ -51,8 +60,10 @@ export const InputBox = ({
       keyboardType={keyboardType}
       multiline={multiline}
       numberOfLines={numberOfLines}
+      onBlur={onBlur}
       {...props}
     />
+    {error && <Text style={styles.errorText}>{error}</Text>}
   </View>
 );
 const styles = StyleSheet.create({
@@ -70,5 +81,14 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#000",
     textAlignVertical: "top", // For Android multiline text alignment
+  },
+  inputError: {
+    borderColor: "#FF0000",
+  },
+  errorText: {
+    color: "#FF0000",
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
   },
 });

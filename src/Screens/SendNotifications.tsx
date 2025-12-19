@@ -10,18 +10,21 @@ import {
   StatusBar,
   Alert,
   Image,
+  Modal,
+  FlatList,
 } from "react-native";
 import Headerwithback from "./Headerwithback";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import ImageCropPicker from "react-native-image-crop-picker";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import moment from "moment";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import { useNotificationContext } from "../contexts/NotificationContext";
 import Toast from "react-native-toast-message";
+import CustomDropdown from "../CommonComponent/CustomDropdown";
 
 const SendNotifications = ({ navigation }: any) => {
   const [formData, setFormData] = useState({
@@ -40,13 +43,14 @@ const SendNotifications = ({ navigation }: any) => {
     "start_time" | "end_time" | null
   >(null);
   const { showNotification } = useNotificationContext();
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
 
   const redirectOptions = [
-    { label: "Store", value: "store" },
-    { label: "Products", value: "products" },
-    { label: "Orders", value: "orders" },
-    { label: "Profile", value: "profile" },
-    { label: "Settings", value: "settings" },
+    { name: "Store", id: "store" },
+    { name: "Product", id: "product" },
   ];
 
   const handleInputChange = (field: string, value: string) => {
@@ -54,6 +58,26 @@ const SendNotifications = ({ navigation }: any) => {
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors((prev: any) => ({ ...prev, [field]: "" }));
+    }
+    // Clear selected product when redirect changes from product
+    if (field === "redirect_to" && value !== "product") {
+      setSelectedProduct(null);
+    }
+  };
+
+  const openProductPicker = async () => {
+    try {
+      setLoadingProducts(true);
+      if (products.length === 0) {
+        const res = await api.get(API_ROUTES.vendorProduct);
+        setProducts(res.data.filter((product: any) => product.is_active));
+      }
+      setShowProductModal(true);
+    } catch (e) {
+      setProducts([]);
+      setShowProductModal(true);
+    } finally {
+      setLoadingProducts(false);
     }
   };
 
@@ -66,8 +90,12 @@ const SendNotifications = ({ navigation }: any) => {
     }
   };
 
-  const handleDateTimeConfirm = (date: Date) => {
-    const formattedDateTime = moment(date).format("YYYY-MM-DD HH:mm");
+  const handleDateTimeConfirm = (event: any, date: Date) => {
+    const {
+      type,
+      nativeEvent: { timestamp, utcOffset },
+    } = event;
+    const formattedDateTime = moment(timestamp).format("YYYY-MM-DD HH:mm");
     if (pickerType) {
       handleInputChange(pickerType, formattedDateTime);
     }
@@ -163,6 +191,10 @@ const SendNotifications = ({ navigation }: any) => {
       newErrors.description = "Description must be under 90 characters";
     }
 
+    if (formData.redirect_to === "product" && !selectedProduct?.id) {
+      newErrors.product = "Please select a product";
+    }
+
     // if (!formData.budget.trim()) {
     //   newErrors.budget = "Budget is required";
     // } else if (
@@ -200,48 +232,70 @@ const SendNotifications = ({ navigation }: any) => {
     try {
       setIsLoading(true);
 
-      const payload = {
-        campaign_name: formData.campaign_name.trim(),
-        redirect_to: formData.redirect_to,
-        description: formData.description.trim(),
-        status: "pending",
-        budget: parseFloat(formData.budget).toFixed(2),
-        rejection_reason: "",
-        views: 0,
-        clicks: 0,
-        start_time: new Date(formData.start_time).toISOString(),
-        end_time: new Date(formData.end_time).toISOString(),
-      };
+      // Create FormData
+      const formDataPayload = new FormData();
 
-      console.log("Submitting notification campaign:", payload);
+      // Append text fields
+      formDataPayload.append("campaign_name", formData.campaign_name.trim());
+      formDataPayload.append("redirect_to", formData.redirect_to);
+      formDataPayload.append("description", formData.description.trim());
+      formDataPayload.append("status", "pending");
+      formDataPayload.append("budget", parseFloat(formData.budget).toFixed(2));
+      formDataPayload.append("rejection_reason", "");
+      formDataPayload.append("views", "0");
+      formDataPayload.append("clicks", "0");
+      formDataPayload.append(
+        "start_time",
+        new Date(formData.start_time).toISOString()
+      );
+      formDataPayload.append(
+        "end_time",
+        new Date(formData.end_time).toISOString()
+      );
 
-      const response = await api.post(API_ROUTES.notificationCampaign, payload);
+      // Append product if redirect_to is product
+      if (formData.redirect_to === "product" && selectedProduct?.id) {
+        formDataPayload.append("product", selectedProduct.id.toString());
+      }
+
+      // Append banner image if available
+      if (bannerImage) {
+        formDataPayload.append("banner", {
+          uri: bannerImage.uri,
+          type: bannerImage.type || "image/jpeg",
+          name: bannerImage.fileName || "banner_image.jpg",
+        });
+      }
+
+      const response = await api.post(
+        API_ROUTES.notificationCampaign,
+        formDataPayload,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
 
       if (response.status === 200 || response.status === 201) {
-        Alert.alert(
-          "Success",
-          "Notification campaign submitted successfully! It will be reviewed and approved soon.",
-          [
-            {
-              text: "OK",
-              onPress: () => {
-                // Reset form
-                setFormData({
-                  campaign_name: "",
-                  redirect_to: "store",
-                  description: "",
-                  budget: "",
-                  start_time: "",
-                  end_time: "",
-                });
-                setBannerImage(null);
-                setErrors({});
-                // Navigate back to manage notifications
-                navigation.goBack();
-              },
-            },
-          ]
-        );
+        Toast.show({
+          type: "success",
+          text1: "Notification campaign submitted successfully!",
+          text2: " It will be reviewed and approved soon.",
+        });
+        setFormData({
+          campaign_name: "",
+          redirect_to: "store",
+          description: "",
+          budget: "",
+          start_time: "",
+          end_time: "",
+        });
+        setBannerImage(null);
+        setSelectedProduct(null);
+        setErrors({});
+        // Navigate back to manage notifications
+        navigation.goBack();
       } else {
         throw new Error("Failed to submit campaign");
       }
@@ -293,15 +347,45 @@ const SendNotifications = ({ navigation }: any) => {
 
         {/* On click redirect */}
         <Text style={styles.label}>On click redirect to *</Text>
-        <View
-          style={[styles.dropdown, errors.redirect_to && styles.inputError]}
-        >
-          <Text style={styles.dropdownText}>
-            {redirectOptions.find((opt) => opt.value === formData.redirect_to)
-              ?.label || "Store"}
-          </Text>
-          <Icon name="arrow-drop-down" size={24} color="#333" />
-        </View>
+        <CustomDropdown
+          placeholder="Select Option"
+          options={redirectOptions}
+          selectedValue={formData.redirect_to}
+          onSelect={(option) => handleInputChange("redirect_to", option.id)}
+          dropDownBoxStyle={[
+            styles.dropdown,
+            errors.redirect_to && styles.inputError,
+          ]}
+        />
+        {errors.redirect_to && (
+          <Text style={styles.errorText}>{errors.redirect_to}</Text>
+        )}
+
+        {/* Product Selection Button - Show when Product is selected */}
+        {formData.redirect_to === "product" && (
+          <View style={{ marginBottom: 16 }}>
+            <TouchableOpacity
+              onPress={openProductPicker}
+              style={[
+                styles.productButton,
+                errors.product && styles.inputError,
+              ]}
+            >
+              {loadingProducts ? (
+                <Text style={styles.productButtonText}>Loading...</Text>
+              ) : (
+                <Text style={styles.productButtonText}>
+                  {selectedProduct?.name
+                    ? `Selected: ${selectedProduct.name}`
+                    : "Select Product"}
+                </Text>
+              )}
+            </TouchableOpacity>
+            {errors.product && (
+              <Text style={styles.errorText}>{errors.product}</Text>
+            )}
+          </View>
+        )}
 
         {/* Description */}
         <Text style={styles.label}>Description *</Text>
@@ -413,17 +497,107 @@ const SendNotifications = ({ navigation }: any) => {
       <Loading visible={isLoading} />
 
       {/* DateTime Picker Modal */}
-      <DateTimePickerModal
-        isVisible={isDateTimePickerVisible}
-        mode="datetime"
-        onConfirm={handleDateTimeConfirm}
-        onCancel={() => {
-          setDateTimePickerVisible(false);
-          setPickerType(null);
-        }}
-        date={getPickerDate()}
-        minimumDate={new Date()}
-      />
+      {isDateTimePickerVisible && (
+        <DateTimePicker
+          value={getPickerDate()}
+          mode="datetime"
+          onChange={handleDateTimeConfirm}
+          minimumDate={new Date()}
+        />
+      )}
+
+      {/* Product Picker Modal */}
+      <Modal visible={showProductModal} animationType="slide" transparent>
+        <View
+          style={{
+            flex: 1,
+            backgroundColor: "rgba(0,0,0,0.5)",
+            justifyContent: "center",
+            alignItems: "center",
+          }}
+        >
+          <View
+            style={{
+              backgroundColor: "#fff",
+              width: "92%",
+              borderRadius: 12,
+              padding: 12,
+              maxHeight: "80%",
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 8,
+              }}
+            >
+              <Text style={{ fontSize: 16, fontWeight: "700", color: "#000" }}>
+                Select Product
+              </Text>
+              <TouchableOpacity onPress={() => setShowProductModal(false)}>
+                <Text style={{ color: "#006EB2", fontWeight: "700" }}>
+                  Close
+                </Text>
+              </TouchableOpacity>
+            </View>
+            {loadingProducts ? (
+              <View style={{ paddingVertical: 20, alignItems: "center" }}>
+                <Text style={{ color: "#666" }}>Loading...</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={products}
+                keyExtractor={(it: any) =>
+                  it.id?.toString() || Math.random().toString()
+                }
+                numColumns={2}
+                columnWrapperStyle={{
+                  justifyContent: "space-between",
+                  marginBottom: 10,
+                }}
+                renderItem={({ item }: { item: any }) => (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setSelectedProduct(item);
+                      setShowProductModal(false);
+                      // Clear product error when product is selected
+                      if (errors.product) {
+                        setErrors((prev: any) => ({ ...prev, product: "" }));
+                      }
+                    }}
+                    style={{
+                      width: "48%",
+                      backgroundColor: "#fff",
+                      borderWidth: 1,
+                      borderColor: "#eee",
+                      borderRadius: 10,
+                      overflow: "hidden",
+                    }}
+                  >
+                    <Image
+                      source={
+                        item.image
+                          ? { uri: item.image }
+                          : require("../assets/product.png")
+                      }
+                      style={{ width: "100%", height: 110 }}
+                      resizeMode="cover"
+                    />
+                    <Text
+                      style={{ padding: 8, color: "#000" }}
+                      numberOfLines={1}
+                    >
+                      {item.name || "Unnamed"}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -558,5 +732,19 @@ const styles = StyleSheet.create({
   },
   placeholderText: {
     color: "#FCA311",
+  },
+  productButton: {
+    backgroundColor: "#006EB2",
+    paddingVertical: 10,
+    borderRadius: 8,
+    alignItems: "center",
+    marginTop: 8,
+    borderWidth: 1,
+    borderColor: "#006EB2",
+  },
+  productButtonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 14,
   },
 });

@@ -77,26 +77,12 @@ class FirebaseMessagingService {
       });
 
       // Handle foreground messages
-      messaging().onMessage(async (remoteMessage) => {
-        console.log("A new FCM message arrived!", remoteMessage);
-
-        // Show local notification for foreground messages
-        if (Platform.OS === "android") {
-          Alert.alert(
-            remoteMessage.notification?.title || "New Message",
-            remoteMessage.notification?.body || "You have a new message",
-            [
-              {
-                text: "OK",
-                onPress: () => {
-                  // Handle notification tap
-                  this.handleNotificationPress(remoteMessage);
-                },
-              },
-            ]
-          );
-        }
-      });
+      // NOTE: This handler is disabled to prevent duplicate notifications
+      // NotificationService handles all foreground notifications
+      // messaging().onMessage(async (remoteMessage) => {
+      //   console.log("A new FCM message arrived!", remoteMessage);
+      //   // NotificationService handles all foreground notifications
+      // });
 
       // Handle notification press when app is in background/closed
       messaging().onNotificationOpenedApp((remoteMessage) => {
@@ -116,7 +102,7 @@ class FirebaseMessagingService {
               "Notification caused app to open from quit state:",
               remoteMessage
             );
-            this.handleNotificationPress(remoteMessage);
+            // this.handleNotificationPress(remoteMessage);
           }
         });
     } catch (error) {
@@ -152,6 +138,14 @@ class FirebaseMessagingService {
   // Send token to server
   async sendTokenToServer(): Promise<void> {
     try {
+      // Only send token if user is authenticated
+      if (!StorageUtils.isAuthenticated()) {
+        console.log(
+          "User not authenticated, skipping device token registration"
+        );
+        return;
+      }
+
       const token = this.fcmToken || (await this.getToken());
       if (!token) {
         console.log("No FCM token available");

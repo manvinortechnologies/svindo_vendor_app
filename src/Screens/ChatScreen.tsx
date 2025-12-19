@@ -1,12 +1,5 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
-import {
-  StyleSheet,
-  TouchableOpacity,
-  Text,
-  View,
-  RefreshControl,
-  ScrollView,
-} from "react-native";
+import { StyleSheet, TouchableOpacity, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";

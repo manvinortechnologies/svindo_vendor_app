@@ -1,24 +1,43 @@
 export const convertTo24Hour = (timeStr: string): string => {
   if (!timeStr) return "00:00";
 
-  // Normalize string: remove unicode space (e.g. ` `) and trim
+  // Normalize
   timeStr = timeStr
     .replace(/\u202f/g, " ")
     .trim()
     .toLowerCase();
 
-  const match = timeStr.match(/^(\d{1,2}):(\d{2})\s?(am|pm)$/i);
-  if (!match) return "00:00";
+  // Case 1: 12-hour format with am/pm
+  const ampmMatch = timeStr.match(
+    /^(\d{1,2}):(\d{2})(?::(\d{2}))?\s?(am|pm)$/i
+  );
+  if (ampmMatch) {
+    let [, hourStr, minuteStr, secondStr, period] = ampmMatch;
+    let hours = parseInt(hourStr, 10);
+    const minutes = parseInt(minuteStr, 10);
 
-  let [_, hourStr, minuteStr, period] = match;
-  let hours = parseInt(hourStr, 10);
-  const minutes = parseInt(minuteStr, 10);
+    if (period === "pm" && hours < 12) hours += 12;
+    if (period === "am" && hours === 12) hours = 0;
 
-  if (period === "pm" && hours < 12) hours += 12;
-  if (period === "am" && hours === 12) hours = 0;
-  return `${hours.toString().padStart(2, "0")}:${minutes
-    .toString()
-    .padStart(2, "0")}`;
+    return `${hours.toString().padStart(2, "0")}:${minuteStr}`;
+  }
+
+  // Case 2: 24-hour with seconds: 10:00:00
+  const secMatch = timeStr.match(/^(\d{1,2}):(\d{2}):(\d{2})$/);
+  if (secMatch) {
+    const [, h, m] = secMatch;
+    return `${h.padStart(2, "0")}:${m}`;
+  }
+
+  // Case 3: 24-hour without seconds: 10:00
+  const simpleMatch = timeStr.match(/^(\d{1,2}):(\d{2})$/);
+  if (simpleMatch) {
+    const [, h, m] = simpleMatch;
+    return `${h.padStart(2, "0")}:${m}`;
+  }
+
+  // Invalid format fallback
+  return "00:00";
 };
 export const getParsedTime = (timeStr: string): Date => {
   console.log("time-->,", timeStr);
@@ -80,16 +99,12 @@ export function formatToISOString(dateStr: string, timeStr: string): string {
   if (meridian === "pm" && hour !== 12) hour += 12;
   if (meridian === "am" && hour === 12) hour = 0;
 
-  // Construct UTC ISO string manually
-  const isoString = new Date(
-    `${dateStr}T${String(hour).padStart(2, "0")}:${String(minute).padStart(
-      2,
-      "0"
-    )}:00Z`
-  ).toISOString();
+  // Format: 2025-12-09T22:44:00+05:30
+  const formattedDate = `${dateStr}T${String(hour).padStart(2, "0")}:${String(
+    minute
+  ).padStart(2, "0")}:00+05:30`;
 
-  // Return ISO format without milliseconds
-  return isoString.replace(".000", "");
+  return formattedDate;
 }
 
 export function formatOrderDate(dateString: string): string {

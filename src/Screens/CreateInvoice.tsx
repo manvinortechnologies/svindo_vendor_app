@@ -6,13 +6,11 @@ import {
   StyleSheet,
   TextInput,
   ScrollView,
-  Platform,
-  StatusBar,
-  SafeAreaView,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Feather from "react-native-vector-icons/Feather";
 import Headerwithback from "./Headerwithback";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const CreateInvoice = () => {
   const handleSearch = () => {

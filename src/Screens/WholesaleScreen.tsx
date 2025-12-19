@@ -13,7 +13,7 @@ import {
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Headerwithback from "./Headerwithback"; // Use your actual path
 import OptionInput from "../CommonComponent/OptionalInputs";
-import { useNavigation, useRoute } from "@react-navigation/native";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
@@ -42,9 +42,16 @@ type FormDataKeys =
 
 type FormData = Record<FormDataKeys, string>;
 
+type WholesaleScreenRouteProp = RouteProp<{
+  params: {
+    customer_details: any;
+  };
+}>;
 export default function WholesaleScreen() {
   const navigation: any = useNavigation();
-  const { params } = useRoute();
+  const { params } = useRoute<WholesaleScreenRouteProp>();
+
+  console.log("params", params);
   const insets = useSafeAreaInsets();
 
   const [selectedType, setSelectedType] = useState({
@@ -54,7 +61,16 @@ export default function WholesaleScreen() {
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormData>({
-    dispatchAddress: "",
+    dispatchAddress:
+      params?.customer_details?.dispatch_address_line1 +
+        " " +
+        params?.customer_details?.dispatch_address_line2 +
+        " " +
+        params?.customer_details?.dispatch_city +
+        " " +
+        params?.customer_details?.dispatch_state +
+        " " +
+        params?.customer_details?.dispatch_pincode || "",
     signature: "",
     references: "",
     notes: "",
@@ -64,8 +80,8 @@ export default function WholesaleScreen() {
     ewayBill: "",
     lrNumber: "",
     vehicleNumber: "",
-    transportName: "",
-    deliveryCity: "",
+    transportName: params?.customer_details?.transport_name || "",
+    deliveryCity: params?.customer_details?.dispatch_city || "",
     reverseCharge: "",
     parcels: "",
   });

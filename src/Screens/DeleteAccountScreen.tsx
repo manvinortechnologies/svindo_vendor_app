@@ -4,8 +4,6 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Platform,
-  StatusBar,
   Alert,
   ActivityIndicator,
 } from "react-native";
@@ -78,10 +76,7 @@ const DeleteAccountScreen = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
       <Headerwithback title="Delete Account" />
-
-      {/* Content */}
       <View style={styles.content}>
         <Text style={styles.title}>
           Are You Sure You Want to Delete Your Account?

@@ -1,4 +1,4 @@
-import { Platform, Alert, Linking } from "react-native";
+import { Platform, Alert, Linking, PermissionsAndroid } from "react-native";
 import messaging from "@react-native-firebase/messaging";
 // @ts-ignore
 import PushNotification from "react-native-push-notification";
@@ -26,6 +26,8 @@ export interface NotificationData {
 
 class NotificationService {
   private navigationRef: NavigationContainerRef<any> | null = null;
+  private notificationIds: Set<string> = new Set(); // Track shown notifications to prevent duplicates
+  private processingMessages: Set<string> = new Set(); // Track messages currently being processed
 
   // Set navigation reference
   setNavigationRef(ref: NavigationContainerRef<any>) {
@@ -35,28 +37,49 @@ class NotificationService {
   // Initialize push notifications
   async initialize(): Promise<void> {
     try {
+      // Wait a bit to ensure Firebase is fully initialized
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
       // Configure push notifications
       this.configurePushNotifications();
 
-      // Request permission
-      const hasPermission = await this.requestPermission();
-      if (!hasPermission) {
-        console.log("Notification permission denied");
+      // Request permission with error handling
+      try {
+        const hasPermission = await this.requestPermission();
+        if (!hasPermission) {
+          console.log("Notification permission denied or not available");
+          // Continue without permission - don't crash
+          return;
+        }
+      } catch (permissionError: any) {
+        console.error("Error during permission request:", permissionError);
+        // Continue without permission - don't crash the app
         return;
       }
 
       // Get FCM token
-      const token = await this.getToken();
-      if (token) {
-        console.log("FCM Token:", token);
-        // Send token to server
-        await this.sendTokenToServer(token);
+      try {
+        const token = await this.getToken();
+        if (token) {
+          console.log("FCM Token:", token);
+          // Send token to server
+          await this.sendTokenToServer(token);
+        }
+      } catch (tokenError: any) {
+        console.error("Error getting FCM token:", tokenError);
+        // Continue without token - don't crash
       }
 
       // Set up message handlers
-      this.setupMessageHandlers();
-    } catch (error) {
+      try {
+        this.setupMessageHandlers();
+      } catch (handlerError: any) {
+        console.error("Error setting up message handlers:", handlerError);
+        // Continue without handlers - don't crash
+      }
+    } catch (error: any) {
       console.error("Error initializing notifications:", error);
+      // Don't throw - just log the error to prevent app crash
     }
   }
 
@@ -69,27 +92,32 @@ class NotificationService {
       },
 
       // Called when a remote or local notification is opened or received
-      onNotification: function (notification: any) {
-        console.log("NOTIFICATION:", notification);
+      onNotification: (notification: any) => {
+        console.log("Notification received:", notification);
 
-        // Handle notification based on platform
-        if (Platform.OS === "ios") {
-          // iOS specific handling
-          if (notification.userInteraction) {
-            // User tapped the notification
-            console.log("User tapped notification on iOS");
+        // Only handle notification press if it's a user-initiated tap
+        // Skip if this is triggered by our own local notification creation
+        if (notification.userInfo?.isLocalNotification) {
+          // This is a local notification we created, handle the press
+          if (notification.userInfo?.remoteMessage) {
+            this.handleNotificationPress(notification.userInfo.remoteMessage);
           }
-        } else {
-          // Android specific handling
-          if (notification.foreground) {
-            // Show local notification for foreground messages
-            // PushNotification.localNotification({
-            //   title: notification.title,
-            //   message: notification.message,
-            //   playSound: true,
-            //   soundName: "default",
-            // });
-          }
+          return;
+        }
+
+        // Handle notification press for remote notifications
+        if (notification.userInfo?.remoteMessage) {
+          this.handleNotificationPress(notification.userInfo.remoteMessage);
+        } else if (notification.data) {
+          // Handle local notification with data
+          const remoteMessage = {
+            notification: {
+              title: notification.title,
+              body: notification.message,
+            },
+            data: notification.userInfo?.data || notification.data,
+          };
+          this.handleNotificationPress(remoteMessage);
         }
       },
 
@@ -120,6 +148,65 @@ class NotificationService {
   // Request notification permission
   private async requestPermission(): Promise<boolean> {
     try {
+      // Check if Firebase messaging is available
+      if (!messaging || !messaging().requestPermission) {
+        console.log("Firebase messaging not available");
+        return false;
+      }
+
+      // On Android 13+ (API level 33+), request POST_NOTIFICATIONS permission first
+      if (Platform.OS === "android" && Platform.Version >= 33) {
+        try {
+          const hasPermission = await PermissionsAndroid.check(
+            PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+          );
+
+          if (!hasPermission) {
+            const granted = await PermissionsAndroid.request(
+              PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS,
+              {
+                title: "Notification Permission",
+                message:
+                  "This app needs notification permission to send you important updates.",
+                buttonNeutral: "Ask Me Later",
+                buttonNegative: "Cancel",
+                buttonPositive: "OK",
+              }
+            );
+
+            if (granted !== PermissionsAndroid.RESULTS.GRANTED) {
+              console.log("Android POST_NOTIFICATIONS permission denied");
+              return false;
+            }
+          }
+        } catch (androidError: any) {
+          console.error(
+            "Error requesting Android notification permission:",
+            androidError
+          );
+          // Continue to try Firebase permission even if Android permission fails
+        }
+      }
+
+      // On Android, check if Firebase permission is already granted first
+      if (Platform.OS === "android") {
+        try {
+          const hasPermission = await messaging().hasPermission();
+          if (hasPermission === messaging.AuthorizationStatus.AUTHORIZED) {
+            console.log("Notification permission already granted");
+            return true;
+          }
+        } catch (checkError: any) {
+          console.log(
+            "Could not check existing permission, will request:",
+            checkError
+          );
+        }
+      }
+
+      // Request permission with a small delay to ensure Firebase is initialized
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
       const authStatus = await messaging().requestPermission();
       const enabled =
         authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
@@ -132,8 +219,16 @@ class NotificationService {
         console.log("Permission denied");
         return false;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error requesting permission:", error);
+      // Don't crash the app if permission request fails
+      // Just log and return false
+      if (error?.code) {
+        console.error("Permission error code:", error.code);
+      }
+      if (error?.message) {
+        console.error("Permission error message:", error.message);
+      }
       return false;
     }
   }
@@ -141,10 +236,17 @@ class NotificationService {
   // Get FCM token
   private async getToken(): Promise<string | null> {
     try {
+      // Check if Firebase messaging is available
+      if (!messaging || !messaging().getToken) {
+        console.log("Firebase messaging not available for token");
+        return null;
+      }
+
       const token = await messaging().getToken();
       return token;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error getting FCM token:", error);
+      // Don't throw - just return null
       return null;
     }
   }
@@ -152,9 +254,18 @@ class NotificationService {
   // Send token to server
   private async sendTokenToServer(token: string): Promise<void> {
     try {
-      // Import API here to avoid circular dependency
+      // Import dependencies here to avoid circular dependency
       const { default: api } = await import("./api/api");
       const { API_ROUTES } = await import("../constants/api-routes.constants");
+      const { StorageUtils } = await import("../utils/storage");
+
+      // Only send token if user is authenticated
+      if (!StorageUtils.isAuthenticated()) {
+        console.log(
+          "User not authenticated, skipping device token registration"
+        );
+        return;
+      }
 
       await api.post(API_ROUTES.registerDeviceToken, {
         token: token,
@@ -170,39 +281,57 @@ class NotificationService {
 
   // Set up message handlers
   private setupMessageHandlers(): void {
-    // Handle background messages
-    messaging().setBackgroundMessageHandler(async (remoteMessage) => {
-      console.log("Message handled in the background!", remoteMessage);
-      // Handle background message processing here
-    });
+    try {
+      // Check if Firebase messaging is available
+      if (!messaging || !messaging().setBackgroundMessageHandler) {
+        console.log("Firebase messaging not available for handlers");
+        return;
+      }
 
-    // Handle foreground messages
-    messaging().onMessage(async (remoteMessage) => {
-      console.log("A new FCM message arrived!", remoteMessage);
-      this.handleForegroundMessage(remoteMessage);
-    });
-
-    // Handle notification press when app is in background/closed
-    messaging().onNotificationOpenedApp((remoteMessage) => {
-      console.log(
-        "Notification caused app to open from background state:",
-        remoteMessage
-      );
-      this.handleNotificationPress(remoteMessage);
-    });
-
-    // Check if app was opened from a notification
-    messaging()
-      .getInitialNotification()
-      .then((remoteMessage) => {
-        if (remoteMessage) {
-          console.log(
-            "Notification caused app to open from quit state:",
-            remoteMessage
-          );
-          this.handleNotificationPress(remoteMessage);
-        }
+      // Handle background messages
+      messaging().setBackgroundMessageHandler(async (remoteMessage) => {
+        console.log("Message handled in the background!", remoteMessage);
+        // Handle background message processing here
       });
+
+      // Handle foreground messages
+      // Note: onMessage is only called when app is in foreground
+      // Firebase automatically shows notifications when app is in background/closed
+      messaging().onMessage(async (remoteMessage) => {
+        console.log("A new FCM message arrived (foreground)!", remoteMessage);
+        // Only show notification manually in foreground
+        // Firebase handles background notifications automatically
+        this.handleForegroundMessage(remoteMessage);
+      });
+
+      // Handle notification press when app is in background/closed
+      messaging().onNotificationOpenedApp((remoteMessage) => {
+        console.log(
+          "Notification caused app to open from background state:",
+          remoteMessage
+        );
+        this.handleNotificationPress(remoteMessage);
+      });
+
+      // Check if app was opened from a notification
+      messaging()
+        .getInitialNotification()
+        .then((remoteMessage) => {
+          if (remoteMessage) {
+            console.log(
+              "Notification caused app to open from quit state:",
+              remoteMessage
+            );
+            this.handleNotificationPress(remoteMessage);
+          }
+        })
+        .catch((error: any) => {
+          console.error("Error getting initial notification:", error);
+        });
+    } catch (error: any) {
+      console.error("Error setting up message handlers:", error);
+      // Don't throw - just log
+    }
   }
 
   // Handle foreground messages
@@ -210,30 +339,119 @@ class NotificationService {
     const notification = remoteMessage.notification;
     const data = remoteMessage.data;
 
+    // Generate a unique notification ID to prevent duplicates
+    // Use a combination of messageId, timestamp, and data to ensure uniqueness
+    const messageId =
+      remoteMessage.messageId ||
+      data?.messageId ||
+      data?.id ||
+      `${remoteMessage.sentTime || Date.now()}_${JSON.stringify(data || {})}`;
+
+    // Create a more unique key by combining messageId with title/body hash
+    const title = notification?.title || data?.title || "";
+    const body = notification?.body || data?.body || data?.message || "";
+    const uniqueKey = `${messageId}_${title}_${body}`.substring(0, 200); // Limit length
+
+    // Check if we're already processing this message
+    if (this.processingMessages.has(uniqueKey)) {
+      console.log(
+        "Notification already being processed, skipping duplicate:",
+        uniqueKey
+      );
+      return;
+    }
+
+    // Check if we've already shown this notification
+    if (this.notificationIds.has(uniqueKey)) {
+      console.log("Notification already shown, skipping duplicate:", uniqueKey);
+      return;
+    }
+
+    // Mark as processing
+    this.processingMessages.add(uniqueKey);
+
+    // Mark this notification as shown
+    this.notificationIds.add(uniqueKey);
+
+    // Clean up old IDs (keep only last 100)
+    if (this.notificationIds.size > 100) {
+      const idsArray = Array.from(this.notificationIds);
+      idsArray
+        .slice(0, idsArray.length - 100)
+        .forEach((id) => this.notificationIds.delete(id));
+    }
+
     if (Platform.OS === "android") {
-      // Show local notification for Android
-      // PushNotification.localNotification({
-      //   title: notification?.title || "New Notification",
-      //   message: notification?.body || "You have a new message",
-      //   channelId: "default-channel-id",
-      //   playSound: true,
-      //   soundName: "default",
-      //   actions: ["View", "Dismiss"],
-      //   userInfo: data,
-      // });
+      // Show local notification for Android in foreground
+      const notificationData: NotificationData = {
+        type: (data?.type as NotificationType) || NotificationType.GENERAL,
+        title: notification?.title || data?.title || "New Notification",
+        body:
+          notification?.body ||
+          data?.body ||
+          data?.message ||
+          "You have a new message",
+        data: data,
+        imageUrl: notification?.android?.imageUrl || data?.imageUrl,
+        actionUrl: data?.actionUrl,
+      };
+
+      // Show local notification
+      PushNotification.localNotification({
+        id: uniqueKey.substring(0, 50), // Use unique key as notification ID to prevent duplicates
+        title: notificationData.title,
+        message: notificationData.body,
+        channelId: "default-channel-id",
+        playSound: true,
+        soundName: "default",
+        smallIcon: "ic_notification",
+        largeIcon: "ic_notification_large",
+        color: "#FCA311",
+        priority: "high",
+        visibility: "public",
+        importance: "high",
+        vibrate: true,
+        userInfo: {
+          type: notificationData.type,
+          data: notificationData.data,
+          messageId: messageId,
+          remoteMessage: remoteMessage,
+          isLocalNotification: true, // Flag to identify our local notifications
+        },
+      });
+
+      // Remove from processing set after a short delay
+      setTimeout(() => {
+        this.processingMessages.delete(uniqueKey);
+      }, 1000);
     } else {
       // Show alert for iOS
       Alert.alert(
-        notification?.title || "New Notification",
-        notification?.body || "You have a new message",
+        notification?.title || data?.title || "New Notification",
+        notification?.body ||
+          data?.body ||
+          data?.message ||
+          "You have a new message",
         [
           {
             text: "Dismiss",
             style: "cancel",
+            onPress: () => {
+              // Remove from processing set
+              setTimeout(() => {
+                this.processingMessages.delete(uniqueKey);
+              }, 100);
+            },
           },
           {
             text: "View",
-            onPress: () => this.handleNotificationPress(remoteMessage),
+            onPress: () => {
+              this.handleNotificationPress(remoteMessage);
+              // Remove from processing set
+              setTimeout(() => {
+                this.processingMessages.delete(uniqueKey);
+              }, 100);
+            },
           },
         ]
       );
@@ -245,11 +463,49 @@ class NotificationService {
     const data = remoteMessage.data;
     const notification = remoteMessage.notification;
 
-    if (data?.type) {
-      this.navigateToScreen(data.type, data);
-    } else if (notification?.clickAction) {
-      // Handle click action from notification
-      this.handleClickAction(notification.clickAction, data);
+    if (!this.navigationRef) {
+      console.log("Navigation ref not set");
+      return;
+    }
+
+    try {
+      // Check for store_id in data
+      if (data?.store_id && data.store_id.trim() !== "") {
+        // Navigate to store screen
+        // StoreScreen is in a nested navigator (StoreStackNavigator) inside BottomTabNavigator
+        // Navigate to BottomNavigation tab, then to StoreStack
+        this.navigationRef.navigate("BottomNavigation" as any, {
+          screen: "Storescreen",
+          params: {
+            screen: "Storescreen",
+            params: { storeId: data.store_id },
+          },
+        });
+        return;
+      }
+
+      // Check for product_id in data
+      if (data?.product_id && data.product_id.trim() !== "") {
+        // Navigate to product screen (AddProductScreen for editing/viewing)
+        this.navigationRef.navigate("AddProductScreen" as any, {
+          productId: data.product_id,
+          isEdit: false, // Set to true if you want edit mode
+        });
+        return;
+      }
+
+      // Fallback to type-based navigation
+      if (data?.type) {
+        this.navigateToScreen(data.type, data);
+      } else if (notification?.clickAction) {
+        // Handle click action from notification
+        this.handleClickAction(notification.clickAction, data);
+      } else {
+        // Default navigation to home
+        this.navigationRef.navigate("BottomNavigation");
+      }
+    } catch (error) {
+      console.error("Error handling notification press:", error);
     }
   }
 
@@ -319,10 +575,19 @@ class NotificationService {
       channelId: "default-channel-id",
       playSound: true,
       soundName: "default",
+      smallIcon: "ic_notification", // Small icon (drawable resource)
+      largeIcon: "ic_notification_large", // Large icon (drawable resource) - shows app logo
+      color: "#FCA311", // Notification color
       userInfo: {
         type: notification.type,
         data: notification.data,
       },
+      ...(Platform.OS === "android" && {
+        // Android specific options
+        priority: "high",
+        visibility: "public",
+        importance: "high",
+      }),
     });
   }
 
@@ -338,10 +603,19 @@ class NotificationService {
       channelId: "default-channel-id",
       playSound: true,
       soundName: "default",
+      smallIcon: "ic_notification", // Small icon (drawable resource)
+      largeIcon: "ic_notification_large", // Large icon (drawable resource) - shows app logo
+      color: "#FCA311", // Notification color
       userInfo: {
         type: notification.type,
         data: notification.data,
       },
+      ...(Platform.OS === "android" && {
+        // Android specific options
+        priority: "high",
+        visibility: "public",
+        importance: "high",
+      }),
     });
   }
 

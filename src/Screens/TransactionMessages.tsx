@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  SafeAreaView,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { ScaledSheet } from "react-native-size-matters";
@@ -14,12 +13,42 @@ import Loading from "../CommonComponent/Loading";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Toast from "react-native-toast-message";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const TransactionMessages = () => {
   const navigation = useNavigation();
   const [message, setMessage] = useState("");
   const [sendPaymentLink, setSendPaymentLink] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+
+  // Fetch current message on component mount
+  useEffect(() => {
+    fetchCurrentMessage();
+  }, []);
+
+  const fetchCurrentMessage = async () => {
+    try {
+      setIsFetching(true);
+      const response = await api.get(API_ROUTES.automateNotificationOnOrder);
+
+      // Response is an array, get the first item
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        const messageData = response.data[0];
+        if (messageData.message) {
+          setMessage(messageData.message);
+        }
+        if (messageData.send_payment_link !== undefined) {
+          setSendPaymentLink(messageData.send_payment_link);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching current message:", error);
+      // Don't show error toast on initial load if no message exists
+    } finally {
+      setIsFetching(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!message.trim()) {
@@ -37,11 +66,14 @@ const TransactionMessages = () => {
       // API call to save transaction message settings
       const payload = {
         message: message.trim(),
-        send_payment_link: sendPaymentLink,
+        // send_payment_link: sendPaymentLink,
       };
 
       // You can replace this with the actual API endpoint for transaction messages
-      const response = await api.post(API_ROUTES.storeOnlineSetting, payload);
+      const response = await api.post(
+        API_ROUTES.automateNotificationOnOrder,
+        payload
+      );
 
       Toast.show({
         type: "success",
@@ -64,7 +96,7 @@ const TransactionMessages = () => {
   return (
     <SafeAreaView style={styles.container}>
       <CustomHeader title="Enter Details" />
-      <Loading visible={isLoading} />
+      <Loading visible={isLoading || isFetching} />
 
       <View style={styles.content}>
         {/* Note Section */}

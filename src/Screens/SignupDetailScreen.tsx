@@ -17,12 +17,14 @@ import { StorageUtils } from "../utils/storage";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScaledSheet } from "react-native-size-matters";
 import Loading from "../CommonComponent/Loading";
+import Toast from "react-native-toast-message";
 
 type FormData = {
   company_name: string;
   brand_name: string;
   email: string;
-  address: string;
+  // address: string;
+  gst: string;
 };
 const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({
   navigation,
@@ -36,7 +38,8 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({
       company_name: "",
       brand_name: "",
       email: "",
-      address: "",
+      // address: "",
+      gst: "",
     },
     mode: "onChange",
   });
@@ -68,8 +71,13 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({
       }
 
       // Validate file size (max 10MB)
-      const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
       if (result.size && result.size > maxSize) {
+        Toast.show({
+          type: "error",
+          text1: "Error",
+          text2: "Logo size should be less than 5MB",
+        });
         console.error("File size too large");
         return;
       }
@@ -107,7 +115,8 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({
       formData.append("company_name", data.company_name);
       formData.append("brand_name", data.brand_name);
       formData.append("email", data.email);
-      formData.append("address", data.address);
+      // formData.append("address", data.address);
+      formData.append("gstin", data.gst || "");
 
       if (profileImage) {
         formData.append("profile_image", {
@@ -122,10 +131,7 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({
       StorageUtils.removeSignupStatus();
       StorageUtils.removeAdminProfile();
       StorageUtils.setBusinessProfile(JSON.stringify(res));
-      navigation.reset({
-        index: 0,
-        routes: [{ name: HomeNavigation.BOTTOM_NAVIGATION }],
-      });
+      navigation.navigate(HomeNavigation.SELECT_LOCATION_SCREEN as never);
     } catch (error) {
       console.log("Comapny Error:", error);
     } finally {
@@ -162,15 +168,26 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({
             <Text style={styles.label}>Company Name</Text>
             <Controller
               control={control}
+              rules={{ required: "Company name is required" }}
               name="company_name"
               render={({ field: { onChange, value } }) => (
-                <TextInput
-                  style={styles.input}
-                  placeholder="Company Name"
-                  value={value}
-                  onChangeText={onChange}
-                  placeholderTextColor="#999"
-                />
+                <>
+                  <TextInput
+                    style={[
+                      styles.input,
+                      errors.company_name && styles.inputError,
+                    ]}
+                    placeholder="Company Name"
+                    value={value}
+                    onChangeText={onChange}
+                    placeholderTextColor="#999"
+                  />
+                  {errors.company_name && (
+                    <Text style={styles.errorText}>
+                      {errors.company_name.message}
+                    </Text>
+                  )}
+                </>
               )}
             />
           </View>
@@ -179,15 +196,26 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({
 
             <Controller
               control={control}
+              rules={{ required: "Brand name is required" }}
               name="brand_name"
               render={({ field: { onChange, value } }) => (
-                <TextInput
-                  placeholder="Brand Name"
-                  style={styles.input}
-                  value={value}
-                  onChangeText={onChange}
-                  placeholderTextColor="#999"
-                />
+                <>
+                  <TextInput
+                    placeholder="Brand Name"
+                    style={[
+                      styles.input,
+                      errors.brand_name && styles.inputError,
+                    ]}
+                    value={value}
+                    onChangeText={onChange}
+                    placeholderTextColor="#999"
+                  />
+                  {errors.brand_name && (
+                    <Text style={styles.errorText}>
+                      {errors.brand_name.message}
+                    </Text>
+                  )}
+                </>
               )}
             />
           </View>
@@ -207,19 +235,24 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({
             }}
             name="email"
             render={({ field: { onChange, value } }) => (
-              <TextInput
-                style={styles.inputFull}
-                placeholder="Enter your email"
-                placeholderTextColor="#999"
-                keyboardType="email-address"
-                onChangeText={onChange}
-                value={value}
-              />
+              <>
+                <TextInput
+                  style={[styles.inputFull, errors.email && styles.inputError]}
+                  placeholder="Enter your email"
+                  placeholderTextColor="#999"
+                  keyboardType="email-address"
+                  onChangeText={onChange}
+                  value={value}
+                />
+                {errors.email && (
+                  <Text style={styles.errorText}>{errors.email.message}</Text>
+                )}
+              </>
             )}
           />
         </View>
         {/* Address */}
-        <View style={{ width: "95%" }}>
+        {/* <View style={{ width: "95%" }}>
           <Text style={styles.label}>Address</Text>
 
           <Controller
@@ -227,16 +260,68 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({
             rules={{ required: "Address is required" }}
             name="address"
             render={({ field: { onChange, value } }) => (
-              <TextInput
-                style={styles.inputFull}
-                placeholder="Enter your address"
-                placeholderTextColor="#999"
-                onChangeText={onChange}
-                value={value}
-              />
+              <>
+                <TextInput
+                  style={[
+                    styles.inputFull,
+                    errors.address && styles.inputError,
+                  ]}
+                  placeholder="Enter your address"
+                  placeholderTextColor="#999"
+                  onChangeText={onChange}
+                  value={value}
+                />
+                {errors.address && (
+                  <Text style={styles.errorText}>{errors.address.message}</Text>
+                )}
+              </>
             )}
           />
+        </View> */}
+
+        {/* GST */}
+        <View style={{ width: "95%" }}>
+          <Text style={styles.label}>GST</Text>
+          <Controller
+            control={control}
+            rules={{
+              validate: (value) => {
+                if (value && value.trim()) {
+                  const gstRegex =
+                    /^\d{2}[A-Z]{5}\d{4}[A-Z]{1}[A-Z\d]{1}[Z]{1}[A-Z\d]{1}$/;
+                  if (!gstRegex.test(value.toUpperCase())) {
+                    return "Please enter a valid GSTIN";
+                  }
+                }
+                return true;
+              },
+            }}
+            name="gst"
+            render={({ field: { onChange, value } }) => (
+              <>
+                <TextInput
+                  style={[styles.inputFull, errors.gst && styles.inputError]}
+                  placeholder="Enter GST number"
+                  placeholderTextColor="#999"
+                  onChangeText={onChange}
+                  value={value}
+                  keyboardType="default"
+                  autoCapitalize="characters"
+                />
+                {errors.gst && (
+                  <Text style={styles.errorText}>{errors.gst.message}</Text>
+                )}
+              </>
+            )}
+          />
+          <View style={styles.noteContainer}>
+            <Text style={styles.noteText}>
+              GST is not a required field. If registered please enter GST number
+              to Enable GST settings in app.
+            </Text>
+          </View>
         </View>
+
         {/* Profile Picture Upload */}
         <TouchableOpacity
           onPress={selectProfilePicture}
@@ -416,5 +501,29 @@ const styles = ScaledSheet.create({
     marginBottom: "20@s",
     width: "100%",
     alignItems: "center",
+  },
+  inputError: {
+    borderColor: "#FF0000",
+  },
+  errorText: {
+    color: "#FF0000",
+    fontSize: 12,
+    marginTop: -15,
+    marginBottom: 10,
+    marginLeft: 4,
+  },
+  noteContainer: {
+    marginTop: -15,
+    marginBottom: 10,
+    padding: 12,
+    backgroundColor: "#FFF3CD",
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: "#FFC107",
+  },
+  noteText: {
+    fontSize: 12,
+    color: "#856404",
+    lineHeight: 18,
   },
 });

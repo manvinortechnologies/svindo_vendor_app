@@ -1,4 +1,11 @@
 {
   "name": "Svindovender",
-  "displayName": "Svindo Bussiness"
+  "displayName": "S Business",
+  "plugins": [
+    "react-native-maps",
+    {
+      "iosGoogleMapsApiKey": "AIzaSyDgVW59s3RZB9aTgLgXG5m7Kt2r7K4j-Y",
+      "androidGoogleMapsApiKey": "AIzaSyDgVW59s3RZB9aTgLgXG5m7Kt2r7K4j-Y"
+    }
+  ]
 }

@@ -10,6 +10,7 @@ import {
 import Header from "./Header";
 import Bottomnavigation from "./Bottomnavigation";
 import SearchHeader from "./SearchHeader";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const emailData = [
   {
@@ -50,7 +51,7 @@ const Emails = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Header
         title="Emails Message"
         backgroundColor="#FCA311"
@@ -68,7 +69,7 @@ const Emails = () => {
           contentContainerStyle={styles.listContent}
         />
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

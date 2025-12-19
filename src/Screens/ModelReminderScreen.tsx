@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import CustomHeader from "../CommonComponent/CustomHeader";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const ModelReminderScreen = () => {
   const reminderData = {
@@ -40,7 +41,7 @@ const ModelReminderScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
       <CustomHeader title="Reminder" />
 
@@ -136,7 +137,7 @@ const ModelReminderScreen = () => {
         <Icon name="logo-whatsapp" size={22} color="#25D366" />
         <Text style={styles.shareText}>Share Reminder</Text>
       </TouchableOpacity>
-    </View>
+    </SafeAreaView>
   );
 };
 

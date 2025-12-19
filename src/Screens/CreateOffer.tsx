@@ -5,11 +5,11 @@ import {
   TextInput,
   TouchableOpacity,
   FlatList,
-  Dimensions,
-  Alert,
   Image,
+  Modal,
+  ActivityIndicator,
 } from "react-native";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Headerwithback from "./Headerwithback";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -21,15 +21,59 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { RouteProp } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
 
-const { width } = Dimensions.get("window");
+interface ProductOption {
+  id: number;
+  name: string;
+  image?: string;
+  is_active?: boolean;
+}
 
 interface RootStackParamList {
-  CreateOffer: { requestId: string };
+  CreateOffer: { requestId: string; selectedTab: string };
 }
 const CreateOffer = () => {
   const route = useRoute<RouteProp<any, any>>();
   const requestId = route.params?.requestId;
+  const selectedTab = route.params?.selectedTab;
   const navigation = useNavigation();
+  const fetchProducts = async () => {
+    try {
+      setProductsLoading(true);
+      const response = await api.get(API_ROUTES.vendorProduct);
+      const activeProducts = (response?.data || []).filter(
+        (product: ProductOption) => product?.is_active
+      );
+      setProducts(activeProducts);
+      if (formData.connected_product) {
+        const alreadySelected = activeProducts.find(
+          (item: ProductOption) =>
+            item.id?.toString() === formData.connected_product
+        );
+        if (alreadySelected) {
+          setSelectedProduct(alreadySelected);
+        }
+      }
+    } catch (error) {
+      console.log("Failed to fetch products for CreateOffer:", error);
+    } finally {
+      setProductsLoading(false);
+    }
+  };
+
+  const openProductModal = () => {
+    if (!products.length) {
+      fetchProducts().finally(() => setProductModalVisible(true));
+      return;
+    }
+    setProductModalVisible(true);
+  };
+
+  const handleProductSelect = (product: ProductOption) => {
+    setSelectedProduct(product);
+    handleInputChange("connected_product", product.id.toString());
+    setProductModalVisible(false);
+  };
+
   // Form state
   const [formData, setFormData] = useState({
     heading: "",
@@ -46,6 +90,16 @@ const CreateOffer = () => {
     description: "",
     image: "",
   });
+  const [products, setProducts] = useState<ProductOption[]>([]);
+  const [productsLoading, setProductsLoading] = useState(false);
+  const [productModalVisible, setProductModalVisible] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<ProductOption | null>(
+    null
+  );
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   // Handle input changes
   const handleInputChange = (field: string, value: string) => {
@@ -197,6 +251,7 @@ const CreateOffer = () => {
         description: "",
       });
       setSelectedImage(null);
+      setSelectedProduct(null);
       setErrors({
         heading: "",
         selling_price: "",
@@ -259,14 +314,28 @@ const CreateOffer = () => {
       <Text style={styles.label}>
         Select Product to connect (Optional - for retail only)
       </Text>
-      <TextInput
-        placeholder="Select product"
-        placeholderTextColor="#ccc"
-        style={styles.input}
-        value={formData.connected_product}
-        onChangeText={(text) => handleInputChange("connected_product", text)}
-        // keyboardType="numeric"
-      />
+      <TouchableOpacity
+        style={[
+          styles.dropdownButton,
+          selectedTab === "Wholesale" && {
+            backgroundColor: "#F4F4F4",
+            borderColor: "#F4F4F4",
+          },
+        ]}
+        onPress={openProductModal}
+        disabled={selectedTab === "Wholesale"}
+        activeOpacity={0.8}
+      >
+        <Text
+          style={[
+            styles.dropdownButtonText,
+            !selectedProduct && { color: "#8b8b8b" },
+          ]}
+        >
+          {selectedProduct?.name || "Select product"}
+        </Text>
+        <Icon name="arrow-drop-down" size={24} color="#333" />
+      </TouchableOpacity>
 
       {/* Selling Price */}
       <Text style={styles.label}>Selling Price</Text>
@@ -319,6 +388,69 @@ const CreateOffer = () => {
         renderItem={renderForm}
         contentContainerStyle={styles.listContainer}
       />
+      <Modal
+        visible={productModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setProductModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Select Product</Text>
+              <TouchableOpacity onPress={() => setProductModalVisible(false)}>
+                <Text style={styles.modalCloseText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+            {productsLoading ? (
+              <View style={styles.modalLoadingContainer}>
+                <ActivityIndicator size="small" color="#FCA311" />
+              </View>
+            ) : products.length === 0 ? (
+              <View style={styles.modalLoadingContainer}>
+                <Text style={styles.emptyStateText}>
+                  No active products found
+                </Text>
+              </View>
+            ) : (
+              <FlatList
+                data={products}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.productOption}
+                    onPress={() => handleProductSelect(item)}
+                  >
+                    <Image
+                      source={
+                        item.image
+                          ? { uri: item.image }
+                          : require("../assets/product.png")
+                      }
+                      style={styles.productOptionImage}
+                    />
+                    <View style={styles.productOptionDetails}>
+                      <Text style={styles.productOptionName} numberOfLines={1}>
+                        {item.name || "Unnamed product"}
+                      </Text>
+                      <Text style={styles.productOptionId}>
+                        #{item.id.toString()}
+                      </Text>
+                    </View>
+                    {selectedProduct?.id === item.id && (
+                      <Icon name="check-circle" size={20} color="#FCA311" />
+                    )}
+                  </TouchableOpacity>
+                )}
+                ItemSeparatorComponent={() => (
+                  <View style={styles.productOptionSeparator} />
+                )}
+                contentContainerStyle={styles.productListContainer}
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 };
@@ -405,6 +537,24 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontSize: 16,
   },
+  dropdownButton: {
+    borderWidth: 1,
+    borderColor: "#FCA311",
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 14,
+    marginBottom: 12,
+    backgroundColor: "#FFF3E1",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  dropdownButtonText: {
+    color: "#000",
+    fontSize: 14,
+    flex: 1,
+    marginRight: 8,
+  },
   selectedImage: {
     width: 100,
     height: 100,
@@ -419,5 +569,80 @@ const styles = StyleSheet.create({
   },
   inputError: {
     borderColor: "#FF0000",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    maxHeight: "70%",
+    paddingBottom: 20,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000",
+  },
+  modalCloseText: {
+    color: "#FCA311",
+    fontWeight: "600",
+    fontSize: 14,
+  },
+  modalLoadingContainer: {
+    paddingVertical: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyStateText: {
+    color: "#8b8b8b",
+    fontSize: 14,
+  },
+  productOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+  },
+  productOptionImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    marginRight: 12,
+    backgroundColor: "#F4F4F4",
+  },
+  productOptionDetails: {
+    flex: 1,
+    marginRight: 12,
+  },
+  productOptionName: {
+    color: "#000",
+    fontWeight: "600",
+    fontSize: 14,
+    marginBottom: 2,
+  },
+  productOptionId: {
+    color: "#8b8b8b",
+    fontSize: 12,
+  },
+  productOptionSeparator: {
+    height: 1,
+    backgroundColor: "#f1f1f1",
+  },
+  productListContainer: {
+    paddingBottom: 24,
   },
 });

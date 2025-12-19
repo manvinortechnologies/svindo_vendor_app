@@ -9,6 +9,7 @@ import {
   StatusBar,
   ScrollView,
   Image,
+  Linking,
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/MaterialCommunityIcons";
@@ -25,6 +26,7 @@ import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { HomeNavigation } from "../constants/app-routes.constants";
+import moment from "moment";
 
 const Expenses = ({ navigation }: any) => {
   const route = useRoute();
@@ -35,8 +37,12 @@ const Expenses = ({ navigation }: any) => {
   const [expense, setExpense] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [openCallenderModel, setOpenCallenderModel] = useState<boolean>(false);
-  const [expenseDate, setExpenseDate] = useState<string>("");
-  const [paymentData, setPaymentDate] = useState<string>("");
+  const [expenseDate, setExpenseDate] = useState<string>(
+    moment().format("YYYY-MM-DD")
+  );
+  const [paymentData, setPaymentDate] = useState<string>(
+    moment().format("YYYY-MM-DD")
+  );
   const [paymentCalModel, setPaymentCalModel] = useState<boolean>(false);
   const [allCategoryData, setAllCategoryData] = useState<CategoryType[]>([]);
   const [bankList, setBankList] = useState<DropDownOption[]>([]);
@@ -47,7 +53,7 @@ const Expenses = ({ navigation }: any) => {
   const [imageUrl, setImageUrl] = useState("");
   const [imagePickerModel, setImagePickerModel] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
-  const types = ["UPI", "Card", "Cash"];
+  const types = ["UPI", "Cheque", "Cash"];
 
   useEffect(() => {
     getAllCategory();
@@ -70,7 +76,7 @@ const Expenses = ({ navigation }: any) => {
       setExpenseDate(expenseData.expense_date ? expenseData.expense_date : "");
       setPaymentDate(expenseData.payment_date ? expenseData.payment_date : "");
       setDescription(expenseData.description || "");
-      setIsPaid(expenseData.is_paid || false);
+      // setIsPaid(expenseData.is_paid || false);
       setSelectedType(expenseData.payment_method || "cash");
       setImageUrl(expenseData.attachment || "");
 
@@ -79,7 +85,6 @@ const Expenses = ({ navigation }: any) => {
         const matchingCategory = allCategoryData.find(
           (cat) => cat.id === expenseData.category
         );
-        console.log("matchingCategory--->", matchingCategory);
 
         if (matchingCategory) {
           setCategory(matchingCategory);
@@ -199,7 +204,11 @@ const Expenses = ({ navigation }: any) => {
           },
         });
       }
-      navigation.navigate(HomeNavigation.EXPENESES_SCREEN as never);
+      if (editMode) {
+        navigation.popTo(HomeNavigation.EXPENESES_SCREEN as never);
+      } else {
+        navigation.navigate(HomeNavigation.EXPENESES_SCREEN as never);
+      }
     } catch (error) {
       console.log("error-->", error);
     } finally {
@@ -267,8 +276,16 @@ const Expenses = ({ navigation }: any) => {
             {errors?.category}
           </Text>
         )}
-        <View style={styles.markpain}>
-          {/* Mark as Paid */}
+        <Text style={styles.categoryText}>
+          For create category{" "}
+          <Text
+            style={{ textDecorationLine: "underline", color: "blue" }}
+            onPress={() => Linking.openURL("https://vendor.svindo.com/")}
+          >
+            visit website
+          </Text>
+        </Text>
+        {/* <View style={styles.markpain}>
           <Text style={styles.label}>Mark as Paid</Text>
           <TouchableOpacity
             onPress={() => setIsPaid(!isPaid)}
@@ -279,7 +296,7 @@ const Expenses = ({ navigation }: any) => {
           >
             <Text style={{ color: "#fff" }}>{isPaid ? "Yes" : "No"}</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
         {isPaid && (
           <>
             {/* Select Type */}
@@ -410,16 +427,14 @@ const Expenses = ({ navigation }: any) => {
           visible={openCallenderModel}
           initialDate={expenseDate}
           onClose={() => setOpenCallenderModel(false)}
-          onSelect={(e) => {
-            console.log(e);
-            setExpenseDate(e);
-          }}
+          onSelect={setExpenseDate}
         />
         <CalendarModal
           visible={paymentCalModel}
           initialDate={paymentData}
           onClose={() => setPaymentCalModel(false)}
           onSelect={setPaymentDate}
+          maxDate={moment().format("YYYY-MM-DD")}
         />
         <ModalUpdatePhoto
           isVisible={imagePickerModel}
@@ -483,6 +498,12 @@ const styles = StyleSheet.create({
   iconRight: {
     position: "absolute",
     right: 12,
+  },
+  categoryText: {
+    fontSize: 12,
+    color: "#FCA311",
+    marginTop: 4,
+    marginBottom: 10,
   },
   markpain: {
     flexDirection: "row",

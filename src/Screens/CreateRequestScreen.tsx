@@ -7,6 +7,7 @@ import {
   ScrollView,
   Image,
   Alert,
+  Linking,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import Headerwithback from "./Headerwithback";
@@ -409,7 +410,15 @@ const CreateRequestScreen = () => {
                 styles.typeButton,
                 selectedType === "Personal" && styles.typeButtonSelected,
               ]}
-              onPress={() => setSelectedType("Personal")}
+              onPress={async () => {
+                const url = "https://svindo.com/store/";
+                const supported = await Linking.canOpenURL(url);
+                if (supported) {
+                  await Linking.openURL(url);
+                } else {
+                  Alert.alert("Error", "Unable to open the link");
+                }
+              }}
             >
               <Text
                 style={[

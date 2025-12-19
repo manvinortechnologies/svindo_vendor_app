@@ -244,6 +244,8 @@ const Orders = ({ navigation }: any) => {
                   onPress={() => {
                     setSelectedFilter("None");
                     setFilterModalVisible(false);
+                    setStartDate("");
+                    setEndDate("");
                   }}
                   style={styles.clearButton}
                 >
@@ -253,7 +255,7 @@ const Orders = ({ navigation }: any) => {
                   onPress={() => setFilterModalVisible(false)}
                   style={styles.closeButton}
                 >
-                  <Text style={styles.closeButtonText}>Close</Text>
+                  <Text style={styles.closeButtonText}>Apply</Text>
                 </TouchableOpacity>
               </View>
             </View>

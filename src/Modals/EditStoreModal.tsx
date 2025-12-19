@@ -97,13 +97,13 @@ const EditStoreModal: React.FC<EditStoreModalProps> = ({
       formData.append("banner_image", {
         uri: imageUri,
         type: "image/jpeg",
-        name: "banner.jpg",
+        name: `banner_${Date.now()}.jpg`,
       } as any);
     } else if (editType === "logo" && imageUri) {
       formData.append("profile_image", {
         uri: imageUri,
         type: "image/jpeg",
-        name: "logo.jpg",
+        name: `logo_${Date.now()}.jpg`,
       } as any);
     } else if (editType === "about" && aboutText) {
       formData.append("about", aboutText);
@@ -137,18 +137,15 @@ const EditStoreModal: React.FC<EditStoreModalProps> = ({
               style={styles.imageSelector}
               onPress={selectImage}
             >
-              {imageUri ? (
+              {selectedImage ? (
                 <Image
                   source={{
-                    uri: imageUri.includes("http")
+                    uri: imageUri
                       ? imageUri
-                      : APP_CONSTANTS.API_BASE_URL + imageUri,
+                      : selectedImage.includes("http")
+                      ? selectedImage
+                      : APP_CONSTANTS.API_BASE_URL + selectedImage,
                   }}
-                  style={styles.selectedImage}
-                />
-              ) : selectedImage ? (
-                <Image
-                  source={{ uri: selectedImage }}
                   style={styles.selectedImage}
                 />
               ) : (

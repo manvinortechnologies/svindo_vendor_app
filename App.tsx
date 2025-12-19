@@ -7,29 +7,48 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import NotificationService from "./src/services/notification-service";
 import { NotificationProvider } from "./src/contexts/NotificationContext";
 import { NavigationContainerRef } from "@react-navigation/native";
+import Toast from "react-native-toast-message";
 
 const App = () => {
   const navigationRef = useRef<NavigationContainerRef<any> | null>(null);
 
   useEffect(() => {
-    // Initialize push notifications
+    // Initialize push notifications with delay to ensure app is ready
     const initializeNotifications = async () => {
       try {
+        // Wait a bit to ensure the app is fully mounted
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
         // Set navigation reference
-        NotificationService.setNavigationRef(
-          navigationRef.current as NavigationContainerRef<any>
-        );
+        if (navigationRef.current) {
+          NotificationService.setNavigationRef(
+            navigationRef.current as NavigationContainerRef<any>
+          );
+        }
 
-        // Initialize notification service
-        await NotificationService.initialize();
-
-        console.log("Push notifications initialized successfully");
-      } catch (error) {
-        console.error("Error initializing push notifications:", error);
+        // Initialize notification service with error handling
+        try {
+          await NotificationService.initialize();
+          console.log("Push notifications initialized successfully");
+        } catch (initError: any) {
+          console.error("Error initializing push notifications:", initError);
+          // Don't crash the app - just log the error
+        }
+      } catch (error: any) {
+        console.error("Error in notification initialization setup:", error);
+        // Don't crash the app - just log the error
       }
     };
 
-    initializeNotifications();
+    // Use a timeout to ensure React Native is fully initialized
+    const timeoutId = setTimeout(() => {
+      initializeNotifications();
+    }, 2000);
+
+    // Cleanup timeout on unmount
+    return () => {
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   return (
@@ -38,6 +57,7 @@ const App = () => {
         <NotificationProvider>
           <AppNavigation />
         </NotificationProvider>
+        <Toast />
       </GestureHandlerRootView>
     </Provider>
   );

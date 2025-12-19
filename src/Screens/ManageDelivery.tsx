@@ -91,7 +91,7 @@ const menuItems: MenuItemType[] = [
   // { title: 'Average Order Packing Time', screen: 'OrderPackingTime' },
   // { title: 'Average General Delivery time', screen: 'GeneralDeliveryTime' },
   { title: "Delivery settings", screen: "DeliverySettingsScreen" },
-  { title: "Instant Delivery Area", screen: HomeNavigation.DELIVERY_AREA },
+  // { title: "Instant Delivery Area", screen: HomeNavigation.DELIVERY_AREA },
 ];
 
 const styles = StyleSheet.create({

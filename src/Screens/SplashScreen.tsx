@@ -105,11 +105,11 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <LinearGradient colors={["#F9C313", "#FCA511"]} style={styles.container}>
-        <StatusBar
+        {/* <StatusBar
           translucent={true}
           backgroundColor="transparent"
           barStyle="dark-content"
-        />
+        /> */}
         <Image source={require("../assets/logo.png")} style={styles.logo} />
         <Text style={styles.logoTitle}>Svindo</Text>
         <Text style={styles.logoTitle}>Business</Text>

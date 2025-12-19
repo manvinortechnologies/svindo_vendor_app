@@ -31,6 +31,7 @@ export const API_ROUTES = {
   product: "/products",
   productBaseData: "/products/base-data",
   vendorProduct: "/vendor/product/",
+  superCatalogue: "/vendor/super-catalogue",
   deleteProduct: "/vendor/product/",
   updateProductSetting: "/vendor/productsetting/update/",
 
@@ -42,10 +43,11 @@ export const API_ROUTES = {
   customerLedger: "/vendor/customer/:id/ledger/",
   vendorLedger: "/vendor/vendor/:id/ledger/",
   vendorBank: "/vendor/get-bank/",
+  vendorBankDetail: "/vendor/vendor-bank/",
   bankLedger: "/vendor/bank/:id/ledger/",
   vendorCash: "vendor/cash-balance/",
-  vendorCashLedger: "/vendor/cash-adjust-history/",
-  // vendorCashLedger: "/vendor/cash/ledger/",
+  // vendorCashLedger: "/vendor/cash-adjust-history/",
+  vendorCashLedger: "/vendor/cash/ledger/",
   adjustCash: "vendor/cash-balance/adjust/",
   cashTransfer: "/vendor/cash-transfers/",
   bankToBankTransfer: "/vendor/bank-to-bank-transfers/",
@@ -54,9 +56,11 @@ export const API_ROUTES = {
 
   getProductSettings: "/vendor/productsetting/",
   productSettings: "/vendor/productsetting/update/",
+  smsSettings: "/vendor/sms-settings/",
 
   // Reminder settings
   reminderSettings: "/vendor/reminder-settings/",
+  reminders: "vendor/reminders/",
 
   customer: "/customers",
   customerBaseData: "/customers/base-data",
@@ -68,6 +72,7 @@ export const API_ROUTES = {
   getOffersById: "/customer/request-offer/",
 
   storeOnlineSetting: "/vendor/onlineStoreSetting/",
+  automateNotificationOnOrder: "vendor/automate-notification-on-order/",
   storeWorkingHour: "/vendor/store-working-hour/",
   storeWorkingHourBulk: "/vendor/store-working-hour/bulk/",
 
@@ -99,4 +104,6 @@ export const API_ROUTES = {
   reel: "/vendor/reel/",
   returnExchange: "/vendor/return-exchange/",
   storeReviews: "/vendor/store-reviews/",
+  deliveryDiscount: "/vendor/delivery-discount/",
+  purchase: "/vendor/purchase/",
 };

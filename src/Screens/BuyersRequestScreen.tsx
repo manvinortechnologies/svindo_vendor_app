@@ -8,6 +8,7 @@ import {
   Dimensions,
   Modal,
   Alert,
+  Linking,
 } from "react-native";
 import React, { useRef, useState, useEffect } from "react";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -15,7 +16,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import Headerwithback from "./Headerwithback";
 import { s, ScaledSheet } from "react-native-size-matters";
-import Carousel from "react-native-reanimated-carousel";
+import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
 import CustomDropdown from "../CommonComponent/CustomDropdown";
 import { vs } from "react-native-size-matters";
 import { HomeNavigation } from "../constants/app-routes.constants";
@@ -27,86 +28,16 @@ import Loading from "../CommonComponent/Loading";
 import { APP_CONSTANTS } from "../constants/app.constants";
 import ImagePreviewModal from "../Modals/ImagePreviewModal";
 import Toast from "react-native-toast-message";
+import ReadMoreText from "../CommonComponent/ReadMoreText";
 
 const { width } = Dimensions.get("window");
 
 const tabs = ["Wholesale", "Retail", "Requested"];
 
-const offersForYou = [
-  {
-    id: "1",
-    productName: "iPhone 14 Pro",
-    category: "Electronics",
-    subCategory: "Mobile Phones",
-    vendorId: "vendor_12345",
-    vendorName: "TechStore Mumbai",
-    city: "Mumbai",
-    description:
-      "Brand new iPhone 14 Pro with 256GB storage. Still under warranty. Perfect condition.",
-    offerPrice: "85000",
-    originalPrice: "95000",
-    discount: "10%",
-    image: require("../assets/product/product1.png"),
-    rating: 4.8,
-    reviews: 156,
-  },
-  {
-    id: "2",
-    productName: "MacBook Pro M2",
-    category: "Electronics",
-    subCategory: "Computers",
-    vendorId: "vendor_67890",
-    vendorName: "Apple Store Delhi",
-    city: "Delhi",
-    description:
-      "Latest MacBook Pro with M2 chip, 16GB RAM, 512GB SSD. Excellent for professional work.",
-    offerPrice: "120000",
-    originalPrice: "140000",
-    discount: "14%",
-    image: require("../assets/product/product2.png"),
-    rating: 4.9,
-    reviews: 89,
-  },
-  {
-    id: "3",
-    productName: "Rolex Submariner",
-    category: "Fashion",
-    subCategory: "Accessories",
-    vendorId: "vendor_11111",
-    vendorName: "Luxury Watches Bangalore",
-    city: "Bangalore",
-    description:
-      "Authentic Rolex Submariner with original box and papers. Serviced recently.",
-    offerPrice: "450000",
-    originalPrice: "500000",
-    discount: "10%",
-    image: require("../assets/product/product3.png"),
-    rating: 4.7,
-    reviews: 23,
-  },
-  {
-    id: "4",
-    productName: "Sony WH-1000XM4",
-    category: "Electronics",
-    subCategory: "Audio",
-    vendorId: "vendor_22222",
-    vendorName: "Audio World Chennai",
-    city: "Chennai",
-    description:
-      "Premium noise-cancelling headphones with excellent sound quality and comfort.",
-    offerPrice: "18000",
-    originalPrice: "22000",
-    discount: "18%",
-    image: require("../assets/product/product5.png"),
-    rating: 4.6,
-    reviews: 203,
-  },
-];
-
 type RootStackParamList = {
   BuyersRequest: undefined;
   CreateRequest: undefined;
-  CreateOffer: { requestId: string };
+  CreateOffer: { requestId: string; selectedTab: string };
   RequestOffers: { requestId?: string };
   ChatScreenStream: {
     userId: string;
@@ -115,7 +46,7 @@ type RootStackParamList = {
     otherUserId: string;
   };
   AllChatUserScreen: undefined;
-  CreateCoupon: { customerId: string };
+  CreateCoupon: { customer: any };
 };
 
 type BuyersRequestScreenNavigationProp = NativeStackNavigationProp<
@@ -126,6 +57,7 @@ type BuyersRequestScreenNavigationProp = NativeStackNavigationProp<
 
 const BuyersRequestScreen: React.FC = () => {
   const insets = useSafeAreaInsets();
+  const carouselRef = useRef<ICarouselInstance>(null);
 
   const [selectedTab, setSelectedTab] = useState("Wholesale");
   const [selectedToggle, setSelectedToggle] = useState("Your Request");
@@ -147,6 +79,11 @@ const BuyersRequestScreen: React.FC = () => {
   const [loadingWholesale, setLoadingWholesale] = useState(false);
   const [loadingRetail, setLoadingRetail] = useState(false);
   const [loadingOffers, setLoadingOffers] = useState(false);
+
+  // Categories and subcategories state
+  const [categories, setCategories] = useState<any[]>([]);
+  const [subCategories, setSubCategories] = useState<any[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
 
   // Handle image press to show fullscreen modal
   const handleImagePress = (item: any) => {
@@ -300,9 +237,33 @@ const BuyersRequestScreen: React.FC = () => {
     setRefreshing(false);
   };
 
+  // Fetch categories and subcategories from API
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const [categoryRes, subCategoryRes] = await Promise.all([
+        api.get(API_ROUTES.productCategory),
+        api.get(API_ROUTES.productSubCategory),
+      ]);
+
+      setCategories(categoryRes.data || []);
+      setSubCategories(subCategoryRes.data || []);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to load categories. Please try again.",
+      });
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
+
   // Load data on component mount
   useEffect(() => {
     fetchAllData();
+    fetchCategories();
   }, []);
 
   // Handle show offers button click
@@ -341,9 +302,11 @@ const BuyersRequestScreen: React.FC = () => {
       productName: request.product_name,
       category: request.category_details?.name || "Unknown",
       subCategory: request.sub_category_details?.name || "Unknown",
-      userId: "VNDR" + request.user_details?.id || "Unknown User",
+      userName: "USR" + request.user_details?.id,
+      storeName: request.store?.name || `SVNDO${request.store?.user}`,
+      storeId: request.store?.user,
       // store: request?.store_details,
-      city: request.user_details?.pincode?.toString() || "Unknown",
+      city: request?.city || "Unknown",
       description: request.description,
       budget: request.budget,
       image: request.photo
@@ -393,41 +356,108 @@ const BuyersRequestScreen: React.FC = () => {
     };
   };
 
+  // Apply filters to requests
+  const applyFilters = (requests: any[]) => {
+    let filtered = requests;
+
+    // Filter by category
+    if (selectedCategory) {
+      filtered = filtered.filter((request: any) => {
+        const requestCategoryId =
+          request.category_details?.id || request.category;
+        return (
+          requestCategoryId?.toString() === selectedCategory.id?.toString()
+        );
+      });
+    }
+
+    // Filter by subcategory
+    if (selectedSubCategory) {
+      filtered = filtered.filter((request: any) => {
+        const requestSubCategoryId =
+          request.sub_category_details?.id || request.sub_category;
+        return (
+          requestSubCategoryId?.toString() ===
+          selectedSubCategory.id?.toString()
+        );
+      });
+    }
+
+    return filtered;
+  };
+
+  // Apply filters to offers (offers have request_details nested)
+  const applyFiltersToOffers = (offersList: any[]) => {
+    let filtered = offersList;
+
+    // Filter by category (check request_details.category_details)
+    if (selectedCategory) {
+      filtered = filtered.filter((offer: any) => {
+        const requestCategoryId =
+          offer.request_details?.category_details?.id ||
+          offer.request_details?.category;
+        return (
+          requestCategoryId?.toString() === selectedCategory.id?.toString()
+        );
+      });
+    }
+
+    // Filter by subcategory (check request_details.sub_category_details)
+    if (selectedSubCategory) {
+      filtered = filtered.filter((offer: any) => {
+        const requestSubCategoryId =
+          offer.request_details?.sub_category_details?.id ||
+          offer.request_details?.sub_category;
+        return (
+          requestSubCategoryId?.toString() ===
+          selectedSubCategory.id?.toString()
+        );
+      });
+    }
+
+    return filtered;
+  };
+
   // Get filtered requests based on selected tab and toggle
   const getFilteredRequests = () => {
+    let requests: any[] = [];
+
     if (selectedTab === "Requested" && selectedToggle === "Your Request") {
-      return customerRequests.map(transformRequestData);
+      requests = customerRequests;
     } else if (
       selectedTab === "Requested" &&
       selectedToggle === "Offers for you"
     ) {
-      // Show offers from API
-      return offers.map(transformOfferData);
+      // For offers, we need to check the request_details
+      requests = offers;
     } else if (selectedTab === "Retail") {
-      // Show retail requests from API
-      return retailRequests.map(transformRequestData);
+      requests = retailRequests;
     } else if (selectedTab === "Wholesale") {
-      // Show wholesale requests from API
-      return wholesaleRequests.map(transformRequestData);
+      requests = wholesaleRequests;
+    }
+
+    // Apply filters
+    let filtered: any[];
+    if (selectedTab === "Requested" && selectedToggle === "Offers for you") {
+      // Use special filter for offers (they have nested request_details)
+      filtered = applyFiltersToOffers(requests);
+      return filtered.map(transformOfferData);
+    } else {
+      // Use regular filter for requests
+      filtered = applyFilters(requests);
+      return filtered.map(transformRequestData);
     }
   };
 
-  // Sample data for dropdowns
-  const categories = [
-    { id: 1, name: "Electronics" },
-    { id: 2, name: "Fashion" },
-    { id: 3, name: "Home & Garden" },
-    { id: 4, name: "Sports" },
-    { id: 5, name: "Books" },
-  ];
-
-  const subCategories = [
-    { id: 1, name: "Mobile Phones" },
-    { id: 2, name: "Computers" },
-    { id: 3, name: "Audio" },
-    { id: 4, name: "Accessories" },
-    { id: 5, name: "Clothing" },
-  ];
+  // Filter subcategories based on selected category
+  const getFilteredSubCategories = () => {
+    if (!selectedCategory) {
+      return subCategories;
+    }
+    return subCategories.filter(
+      (sub: any) => sub.category?.toString() === selectedCategory.id?.toString()
+    );
+  };
 
   const nearbyOptions = [
     { id: 1, name: "Within 5km" },
@@ -439,7 +469,7 @@ const BuyersRequestScreen: React.FC = () => {
 
   const handleOfferCoupon = (item: any) => {
     navigation.navigate(HomeNavigation.CREATECOUPON, {
-      customerId: item.userId,
+      customer: item.user_details,
     });
   };
 
@@ -485,7 +515,10 @@ const BuyersRequestScreen: React.FC = () => {
           <TouchableOpacity
             key={tab}
             style={[styles.tab, selectedTab === tab && styles.tabSelected]}
-            onPress={() => setSelectedTab(tab)}
+            onPress={() => {
+              setSelectedTab(tab);
+              carouselRef?.current?.scrollTo({ index: 0 });
+            }}
           >
             <Text
               style={[
@@ -538,8 +571,13 @@ const BuyersRequestScreen: React.FC = () => {
               <CustomDropdown
                 placeholder="Select Category"
                 options={categories}
-                onSelect={setSelectedCategory}
+                onSelect={(category) => {
+                  setSelectedCategory(category);
+                  // Reset subcategory when category changes
+                  setSelectedSubCategory(null);
+                }}
                 selectedValue={selectedCategory?.id || null}
+                disabled={loadingCategories}
               />
             </View>
 
@@ -548,9 +586,10 @@ const BuyersRequestScreen: React.FC = () => {
               <Text style={styles.dropdownLabel}>Sub Category</Text>
               <CustomDropdown
                 placeholder="Select Sub Category"
-                options={subCategories}
+                options={getFilteredSubCategories()}
                 onSelect={setSelectedSubCategory}
                 selectedValue={selectedSubCategory?.id || null}
+                disabled={!selectedCategory || loadingCategories}
               />
             </View>
 
@@ -580,13 +619,12 @@ const BuyersRequestScreen: React.FC = () => {
               <TouchableOpacity
                 style={styles.applyButton}
                 onPress={() => {
-                  // Apply filters logic here
-                  console.log("Applied filters:", {
-                    category: selectedCategory?.name,
-                    subCategory: selectedSubCategory?.name,
-                    nearby: selectedNearby?.name,
-                  });
+                  // Filters are applied automatically via getFilteredRequests
+                  // Just close the modal and reset carousel to first item
                   setFilterModalVisible(false);
+                  if (carouselRef.current) {
+                    carouselRef.current.scrollTo({ index: 0 });
+                  }
                 }}
               >
                 <Text style={styles.applyButtonText}>Apply Filters</Text>
@@ -598,6 +636,7 @@ const BuyersRequestScreen: React.FC = () => {
 
       {/* Buyer Requests - Full Screen Paging */}
       <Carousel
+        ref={carouselRef}
         vertical={true}
         pagingEnabled={true}
         loop={false}
@@ -605,54 +644,56 @@ const BuyersRequestScreen: React.FC = () => {
         height={Dimensions.get("window").height}
         data={getFilteredRequests() || []}
         onProgressChange={() => {}}
-        renderItem={({ item }: { item: any }) => (
-          <View style={styles.fullScreenCard}>
-            {/* Product Image */}
-            <View style={styles.imageContainer}>
-              <TouchableOpacity
-                onPress={() =>
-                  handleImagePress({
-                    ...item,
-                    budget:
-                      selectedTab === "Requested" &&
-                      selectedToggle === "Offers for you"
-                        ? item.offerPrice
-                        : item.budget,
-                  })
-                }
-                activeOpacity={0.8}
-              >
-                <Image
-                  source={item.image}
-                  style={styles.fullScreenProductImage}
-                  resizeMode="cover"
-                />
-              </TouchableOpacity>
-              {selectedTab === "Requested" &&
-                selectedToggle === "Your Request" && (
-                  <TouchableOpacity
-                    style={styles.deleteButton}
-                    onPress={() => {
-                      // Handle delete functionality
-                      confirmDeleteRequest(item.id, item.productName);
-                    }}
-                  >
-                    <Icon name="delete" size={20} color="#fff" />
-                  </TouchableOpacity>
-                )}
-            </View>
+        renderItem={({ item }: { item: any }) => {
+          console.log("item", item);
+          return (
+            <View style={styles.fullScreenCard}>
+              {/* Product Image */}
+              <View style={styles.imageContainer}>
+                <TouchableOpacity
+                  onPress={() =>
+                    handleImagePress({
+                      ...item,
+                      budget:
+                        selectedTab === "Requested" &&
+                        selectedToggle === "Offers for you"
+                          ? item.offerPrice
+                          : item.budget,
+                    })
+                  }
+                  activeOpacity={0.8}
+                >
+                  <Image
+                    source={item.image}
+                    style={styles.fullScreenProductImage}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
+                {selectedTab === "Requested" &&
+                  selectedToggle === "Your Request" && (
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => {
+                        // Handle delete functionality
+                        confirmDeleteRequest(item.id, item.productName);
+                      }}
+                    >
+                      <Icon name="delete" size={20} color="#fff" />
+                    </TouchableOpacity>
+                  )}
+              </View>
 
-            {/* Customer wants to buy */}
-            <View style={styles.rowBetween}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.customerText}>
-                  {selectedTab === "Requested"
-                    ? selectedToggle === "Your Request"
-                      ? "You want to buy"
-                      : "Store : " + item.store_details?.name
-                    : "Customer wants to buy"}
-                </Text>
-                {/* {item.type && (
+              {/* Customer wants to buy */}
+              <View style={styles.rowBetween}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.customerText}>
+                    {selectedTab === "Requested"
+                      ? selectedToggle === "Your Request"
+                        ? "You want to buy"
+                        : "Store : " + item.store_details?.name
+                      : "Customer wants to buy"}
+                  </Text>
+                  {/* {item.type && (
                   <View
                     style={[
                       styles.requestTypeBadge,
@@ -667,45 +708,46 @@ const BuyersRequestScreen: React.FC = () => {
                     </Text>
                   </View>
                 )} */}
-              </View>
-              <TouchableOpacity
-                style={styles.sellButton}
-                onPress={() => {
-                  if (
-                    selectedTab === "Requested" &&
-                    selectedToggle === "Your Request"
-                  ) {
-                    // Show offers for your request
-                    handleShowOffers(item.id);
-                  } else if (
-                    selectedTab === "Requested" &&
-                    selectedToggle === "Offers for you"
-                  ) {
-                    // Buy now for offers
-                    // navigation.navigate(HomeNavigation.ALL_CHAT_USER_SCREEN);
-                    navigation.navigate(HomeNavigation.CHAT_SCREEN_STREAM, {
-                      userId: item.userId,
-                      otherUserId: item.seller_user_details.id,
-                    });
-                    console.log("Buy now:", item.id);
-                  } else if (selectedTab !== "Requested") {
-                    // Sell now for other tabs
-                    navigation.navigate(HomeNavigation.CREATEOFFER, {
-                      requestId: item.id,
-                    });
-                  }
-                }}
-              >
-                <Text style={styles.sellButtonText}>
-                  {selectedTab === "Requested"
-                    ? selectedToggle === "Your Request"
-                      ? "Show offers"
-                      : "Chat"
-                    : selectedTab === "Retail"
-                    ? "Offer now"
-                    : "Sell now"}
-                </Text>
-                {/* <Text style={styles.sellButtonText}>
+                </View>
+                <TouchableOpacity
+                  style={styles.sellButton}
+                  onPress={() => {
+                    if (
+                      selectedTab === "Requested" &&
+                      selectedToggle === "Your Request"
+                    ) {
+                      // Show offers for your request
+                      handleShowOffers(item.id);
+                    } else if (
+                      selectedTab === "Requested" &&
+                      selectedToggle === "Offers for you"
+                    ) {
+                      // Buy now for offers
+                      // navigation.navigate(HomeNavigation.ALL_CHAT_USER_SCREEN);
+                      navigation.navigate(HomeNavigation.CHAT_SCREEN_STREAM, {
+                        userId: item.userId,
+                        otherUserId: item.seller_user_details.id,
+                      });
+                      console.log("Buy now:", item.id);
+                    } else if (selectedTab !== "Requested") {
+                      // Sell now for other tabs
+                      navigation.navigate(HomeNavigation.CREATEOFFER, {
+                        requestId: item.id,
+                        selectedTab,
+                      });
+                    }
+                  }}
+                >
+                  <Text style={styles.sellButtonText}>
+                    {selectedTab === "Requested"
+                      ? selectedToggle === "Your Request"
+                        ? "Show offers"
+                        : "Chat"
+                      : selectedTab === "Retail"
+                      ? "Offer now"
+                      : "Sell now"}
+                  </Text>
+                  {/* <Text style={styles.sellButtonText}>
                   {selectedTab === "Requested" &&
                   selectedToggle === "Your Request"
                     ? "Show offers"
@@ -714,76 +756,105 @@ const BuyersRequestScreen: React.FC = () => {
                     ? "Chat"
                     : "Sell now"}
                 </Text> */}
-              </TouchableOpacity>
-            </View>
+                </TouchableOpacity>
+              </View>
 
-            {/* Product Name */}
-            {<Text style={styles.productName}>{item.productName}</Text>}
+              {/* Product Name */}
+              {<Text style={styles.productName}>{item.productName}</Text>}
 
-            {/* Details */}
-            <View style={styles.detailsRow}>
-              {/* {selectedTab === "Requested" && ( */}
-              {/* // Your request or other tabs details */}
-              <>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    marginBottom: s(10),
-                  }}
-                >
-                  <View>
-                    <Text style={styles.label}>
-                      Category{"\n"}
-                      <Text style={styles.subLabel}>{item.category}</Text>
+              {/* Details */}
+              <View style={styles.detailsRow}>
+                {/* {selectedTab === "Requested" && ( */}
+                {/* // Your request or other tabs details */}
+                <>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginBottom: s(10),
+                    }}
+                  >
+                    <View>
+                      <Text style={styles.label}>
+                        Category{"\n"}
+                        <Text style={styles.subLabel}>{item.category}</Text>
+                      </Text>
+                    </View>
+                    <Text style={styles.budgetText}>
+                      ₹
+                      {selectedTab === "Requested" &&
+                      selectedToggle === "Offers for you"
+                        ? item.offerPrice
+                        : item.budget}
                     </Text>
                   </View>
-                  <Text style={styles.budgetText}>
-                    ₹
-                    {selectedTab === "Requested" &&
-                    selectedToggle === "Offers for you"
-                      ? item.offerPrice
-                      : item.budget}
-                  </Text>
-                </View>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: s(10),
-                  }}
-                >
-                  <View>
-                    <Text style={styles.label}>Sub Category</Text>
-                    <Text style={styles.subLabel}>{item.subCategory}</Text>
-                  </View>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: s(10),
+                    }}
+                  >
+                    <View>
+                      <Text style={styles.label}>Sub Category</Text>
+                      <Text style={styles.subLabel}>{item.subCategory}</Text>
+                    </View>
 
-                  {/* Show Offer Coupon button only for non-Requested tabs */}
-                  {selectedTab === "Retail" && (
-                    <TouchableOpacity
-                      style={styles.couponButton}
-                      onPress={() => handleOfferCoupon(item)}
-                    >
-                      <Text style={styles.couponButtonText}>Offer Coupon</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-                {selectedTab === "Wholesale" && (
-                  <View style={{ marginBottom: s(10) }}>
-                    <Text style={styles.label}>User</Text>
-                    <Text style={styles.subLabel}>{item.userId}</Text>
+                    {/* Show Offer Coupon button only for non-Requested tabs */}
+                    {selectedTab === "Retail" && (
+                      <TouchableOpacity
+                        style={styles.couponButton}
+                        onPress={() => handleOfferCoupon(item)}
+                      >
+                        <Text style={styles.couponButtonText}>
+                          Offer Coupon
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
-                )}
-                <View>
-                  <Text style={[styles.label]}>Description</Text>
-                  <Text style={styles.descriptionText}>{item.description}</Text>
-                </View>
-              </>
-              {/* )} */}
+                  {selectedTab !== "Requested" && (
+                    <View style={{ marginBottom: s(10) }}>
+                      <Text style={styles.label}>User</Text>
+                      <TouchableOpacity
+                        onPress={() =>
+                          Linking.openURL(
+                            `https://svindo.com/store/${item.storeId}`
+                          )
+                        }
+                        disabled={selectedTab === "Retail"}
+                      >
+                        <Text style={styles.subLabel}>
+                          {selectedTab === "Wholesale"
+                            ? item.storeName
+                            : item.userName}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                  {selectedTab == "Retail" && (
+                    <View style={{ marginBottom: s(10) }}>
+                      <Text style={styles.label}>City</Text>
+                      <Text style={styles.subLabel}>{item.city}</Text>
+                    </View>
+                  )}
+                  <View>
+                    <Text style={[styles.label]}>Description</Text>
+                    <ReadMoreText
+                      text={item.description || "No description provided"}
+                      numberOfLines={3}
+                      title="Description"
+                      triggerLabel="Show full description"
+                      textStyle={styles.descriptionText}
+                      triggerTextStyle={styles.readMoreTrigger}
+                    />
+                  </View>
+                </>
+                {/* )} */}
+              </View>
             </View>
-          </View>
-        )}
+          );
+        }}
       />
 
       {/* Toggle buttons for Your Request & Offers for you */}
@@ -1055,6 +1126,12 @@ const styles = ScaledSheet.create({
     fontSize: "12@s",
     fontWeight: "500",
     color: "#000",
+  },
+  readMoreTrigger: {
+    color: "#F59E0B",
+    fontSize: "12@s",
+    fontWeight: "600",
+    marginTop: "4@s",
   },
   detailsRight: {
     alignItems: "flex-end",

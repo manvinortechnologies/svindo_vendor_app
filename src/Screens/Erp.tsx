@@ -6,15 +6,14 @@ import {
   ScrollView,
   StyleSheet,
   Linking,
-  Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import Header from "./Header";
-import Bottomnavigation from "./Bottomnavigation";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import Toast from "react-native-toast-message";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type RootStackParamList = {
   SalePOS: undefined;
@@ -65,7 +64,7 @@ const Erp = () => {
     {
       label: "Purchases",
       icon: "cart-arrow-down",
-      screen: HomeNavigation.CREATE_PURCHASE,
+      screen: HomeNavigation.PURCHASE_LEDGER,
     },
     {
       label: "Expenses",
@@ -234,9 +233,9 @@ const Erp = () => {
       screen: HomeNavigation.RATE_US_SCREEN,
     },
     {
-      title: "Privacy Policy",
+      title: "Security & Policy",
       icon: "shield-lock-outline",
-      screen: HomeNavigation.PRIVACY_POLICY_SCREEN,
+      screen: HomeNavigation.SECURITY_SCREEN,
     },
     // {
     //   title: "Svindo Business Premium",
@@ -323,7 +322,7 @@ const Erp = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Header
         title="ERP"
         backgroundColor="#FFF"
@@ -407,6 +406,7 @@ const Erp = () => {
               borderBottomWidth: 1,
               borderColor: "#ECECEC",
             }}
+            onPress={() => Linking.openURL("https://vendor.svindo.com/")}
           >
             <Text style={styles.sectionTitle}>
               Login to Svindo Business Web
@@ -473,7 +473,7 @@ const Erp = () => {
             />
           </TouchableOpacity>
           <View style={styles.helpContainer}>
-            {helpItems.map((item) => (
+            {helpItems.map((item: any) => (
               <TouchableOpacity
                 key={item.title}
                 style={styles.helpItem}
@@ -520,7 +520,7 @@ const Erp = () => {
           ))}
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

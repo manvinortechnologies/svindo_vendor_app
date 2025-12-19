@@ -188,6 +188,8 @@ const OrderProductDetails = ({ navigation }: any) => {
     // Determine next status based on current status
     let newStatus: string;
     if (currentStatus === "pending" || !currentStatus) {
+      newStatus = "ready_to_deliver";
+    } else if (currentStatus === "ready_to_deliver") {
       newStatus = "intransit";
     } else if (currentStatus === "intransit") {
       newStatus = "delivered";
@@ -521,9 +523,11 @@ const OrderProductDetails = ({ navigation }: any) => {
                 <Text style={styles.statusButtonText}>
                   {item.status === "intransit"
                     ? "Mark as Delivered"
+                    : item.status === "ready_to_deliver"
+                    ? "Mark as In Transit"
                     : item.status === "returned/replaced_approved"
                     ? "Complete Return/Exchange"
-                    : "Mark as In Transit"}
+                    : "Mark as Ready to Deliver"}
                 </Text>
               )}
             </TouchableOpacity>
@@ -709,25 +713,25 @@ const OrderProductDetails = ({ navigation }: any) => {
           <View style={styles.paymentRow}>
             <Text style={styles.paymentLabel}>Shipping Fee</Text>
             <Text style={styles.paymentValue}>
-              Rs {Number(order.shipping_fee).toFixed(2)}
+              Rs {Number(order.shipping_fee || 0).toFixed(2)}
             </Text>
           </View>
-          <View style={styles.paymentRow}>
+          {/* <View style={styles.paymentRow}>
             <Text style={styles.paymentLabel}>Wallet Amount</Text>
             <Text style={styles.paymentValue}>
               Rs {Number(order.wallet_amount).toFixed(2)}
             </Text>
-          </View>
+          </View> */}
           <View style={styles.paymentRow}>
             <Text style={styles.paymentLabel}>Cashback</Text>
             <Text style={styles.paymentValue}>
-              Rs {Number(order.cashback).toFixed(2)}
+              Rs {Number(order.cashback || 0).toFixed(2)}
             </Text>
           </View>
           <View style={styles.paymentRow}>
             <Text style={styles.paymentLabel}>Coupon</Text>
             <Text style={styles.paymentValue}>
-              Rs {Number(order.coupon).toFixed(2)}
+              Rs {Number(order.coupon || 0).toFixed(2)}
             </Text>
           </View>
 
@@ -854,7 +858,9 @@ const OrderProductDetails = ({ navigation }: any) => {
             <Text style={styles.modalTitle}>Confirm Status Update</Text>
             <Text style={styles.modalMessage}>
               Are you sure you want to change the status to{" "}
-              {pendingStatusUpdate?.newStatus === "intransit"
+              {pendingStatusUpdate?.newStatus === "ready_to_deliver"
+                ? "Ready to Deliver"
+                : pendingStatusUpdate?.newStatus === "intransit"
                 ? "In Transit"
                 : "Delivered"}
               ?
@@ -1023,6 +1029,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 10,
     fontSize: 14,
+    color: "#000",
   },
   noItemsText: {
     textAlign: "center",

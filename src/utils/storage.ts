@@ -14,6 +14,7 @@ export const STORAGE_KEYS = {
   IS_LOGGED_IN: "isLoggedIn",
   ONBOARDING_COMPLETED: "onboardingCompleted",
   FCM_TOKEN: "fcmToken",
+  COMPANY_PROFILE: "companyProfile",
 } as const;
 
 // Storage utility functions
@@ -37,6 +38,8 @@ export const StorageUtils = {
     storage.set(STORAGE_KEYS.IS_LOGGED_IN, status),
   setOnboardingCompleted: (completed: boolean) =>
     storage.set(STORAGE_KEYS.ONBOARDING_COMPLETED, completed),
+  setCompanyProfile: (profile: any) =>
+    storage.set(STORAGE_KEYS.COMPANY_PROFILE, JSON.stringify(profile)),
 
   // Get methods
   getAccessToken: () => storage.getString(STORAGE_KEYS.ACCESS_TOKEN),
@@ -58,6 +61,10 @@ export const StorageUtils = {
   getIsLoggedIn: () => storage.getBoolean(STORAGE_KEYS.IS_LOGGED_IN) || false,
   getOnboardingCompleted: () =>
     storage.getBoolean(STORAGE_KEYS.ONBOARDING_COMPLETED) || false,
+  getCompanyProfile: () => {
+    const profile = storage.getString(STORAGE_KEYS.COMPANY_PROFILE);
+    return profile ? JSON.parse(profile) : null;
+  },
 
   // Remove methods
   removeAccessToken: () => storage.delete(STORAGE_KEYS.ACCESS_TOKEN),
@@ -70,6 +77,7 @@ export const StorageUtils = {
   removeIsLoggedIn: () => storage.delete(STORAGE_KEYS.IS_LOGGED_IN),
   removeOnboardingCompleted: () =>
     storage.delete(STORAGE_KEYS.ONBOARDING_COMPLETED),
+  removeCompanyProfile: () => storage.delete(STORAGE_KEYS.COMPANY_PROFILE),
 
   // Clear all
   clearAll: () => storage.clearAll(),
@@ -109,4 +117,10 @@ export const StorageUtils = {
   setFCMToken: (token: string) => storage.set(STORAGE_KEYS.FCM_TOKEN, token),
   getFCMToken: () => storage.getString(STORAGE_KEYS.FCM_TOKEN),
   removeFCMToken: () => storage.delete(STORAGE_KEYS.FCM_TOKEN),
+
+  // Company Profile methods
+  hasCompanyProfile: () => {
+    const profile = storage.getString(STORAGE_KEYS.COMPANY_PROFILE);
+    return !!profile;
+  },
 };

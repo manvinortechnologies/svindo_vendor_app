@@ -12,10 +12,11 @@ import {
   TextInput,
   FlatList,
   ActivityIndicator,
+  ViewStyle,
+  TextStyle,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import NavigationButton from "./NavigationButton";
-import Bottomnavigation from "./Bottomnavigation";
 import { useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,6 +24,7 @@ import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import { s, ScaledSheet } from "react-native-size-matters";
+import { HomeNavigation } from "../constants/app-routes.constants";
 
 const CreateProduct = () => {
   const navigation = useNavigation();
@@ -52,7 +54,7 @@ const CreateProduct = () => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const response = await api.get(API_ROUTES.vendorProduct);
+      const response = await api.get(API_ROUTES.superCatalogue);
       setProducts(response.data);
       setFilteredProducts(response.data);
     } catch (error) {
@@ -62,8 +64,17 @@ const CreateProduct = () => {
     }
   };
 
+  const handleProductPress = (product: any) => {
+    (navigation as any).navigate(HomeNavigation.ADD_PRODUCT_SCREEN, {
+      product: product, // Pass product data to prefill form
+    });
+  };
+
   const renderProductItem = ({ item }: { item: any }) => (
-    <TouchableOpacity style={styles.productCard}>
+    <TouchableOpacity
+      style={styles.productCard}
+      onPress={() => handleProductPress(item)}
+    >
       <View style={styles.productImageContainer}>
         {item.image ? (
           <Image source={{ uri: item.image }} style={styles.productImage} />
@@ -203,8 +214,8 @@ const CreateProduct = () => {
           color="#000"
           fontSize={16}
           fontWeight="bold"
-          buttonStyle={styles.addButtonGreen}
-          textStyle={styles.buttongreen}
+          buttonStyle={styles.addButtonGreen as ViewStyle}
+          textStyle={styles.buttongreen as TextStyle}
         />
       </View>
     </SafeAreaView>

@@ -1,45 +1,79 @@
 {
   "project_info": {
-    "project_number": "426376936208",
-    "project_id": "svindo-69fe7",
-    "storage_bucket": "svindo-69fe7.firebasestorage.app"
+    "project_number": "330403096037",
+    "project_id": "svindo",
+    "storage_bucket": "svindo.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:426376936208:android:ba80b21668e057e9a78395",
+        "mobilesdk_app_id": "1:330403096037:android:13ad1f574fe6c20340bb0c",
         "android_client_info": {
-          "package_name": "com.svindocustomerapp"
+          "package_name": "com.svindovender"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "330403096037-gnh5269unjlb5596oqgkgrc80ljet904.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyBoAFm8ZF90cTZVr8Ek5il4bT8IvwwzL0c"
+          "current_key": "AIzaSyDoORoUV_DAGUilsqvjtPOvQ47nlETTNhU"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "330403096037-gnh5269unjlb5596oqgkgrc80ljet904.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "330403096037-2dfk5ru4kjcusjd2dvdlghl0lvb6ojof.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.svindo"
+              }
+            }
+          ]
         }
       }
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:426376936208:android:fd478a33c2aab794a78395",
+        "mobilesdk_app_id": "1:330403096037:android:d5d9619addac2bc840bb0c",
         "android_client_info": {
-          "package_name": "com.svindovender"
+          "package_name": "in.webgrid.svindo"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "330403096037-gnh5269unjlb5596oqgkgrc80ljet904.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyBoAFm8ZF90cTZVr8Ek5il4bT8IvwwzL0c"
+          "current_key": "AIzaSyDoORoUV_DAGUilsqvjtPOvQ47nlETTNhU"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "330403096037-gnh5269unjlb5596oqgkgrc80ljet904.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "330403096037-2dfk5ru4kjcusjd2dvdlghl0lvb6ojof.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.svindo"
+              }
+            }
+          ]
         }
       }
     }

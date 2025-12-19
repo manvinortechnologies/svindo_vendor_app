@@ -5,11 +5,8 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
-  Platform,
-  StatusBar,
 } from "react-native";
 import Headerwithback from "./Headerwithback";
-import Bottomnavigation from "./Bottomnavigation";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
 

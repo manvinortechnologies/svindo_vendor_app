@@ -26,6 +26,7 @@ import CustomModal from "../Modals/CustomModal";
 import DeleteModal from "./DeleteModal";
 import CalendarModal from "../Modals/CalendarModal";
 import Toast from "react-native-toast-message";
+import { s } from "react-native-size-matters";
 
 interface CustomerDetails {
   id: number;
@@ -387,6 +388,7 @@ const PaymentsList = () => {
           keyExtractor={(date) => date}
           style={styles.list}
           showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: s(60) }}
           refreshControl={
             <RefreshControl
               refreshing={isRefreshing}

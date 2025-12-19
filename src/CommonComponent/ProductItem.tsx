@@ -6,15 +6,18 @@ import {
   Image,
   StyleSheet,
   ActivityIndicator,
+  Dimensions,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { s, ScaledSheet } from "react-native-size-matters";
 import CustomSwitch from "./CustomSwitch";
-
-interface Product {
+import BlastedImage from "react-native-blasted-image";
+const { width } = Dimensions.get("window");
+export interface ProductType {
   id: string;
   name: string;
   stock: number;
+  track_stock?: boolean;
   description: string;
   image?: string;
   price: number;
@@ -25,17 +28,17 @@ interface Product {
   sale_type?: string;
   is_active?: boolean;
   parent?: string | null;
-  variants?: Product[];
+  variants?: ProductType[];
+  product_type?: string;
 }
 
 interface ProductItemProps {
-  product: Product;
+  product: ProductType;
   selectedType: string;
-  onPress: (product: Product) => void;
+  onPress: (product: ProductType) => void;
   onEdit: (productId: string) => void;
   onDelete: (productId: string) => void;
   onActiveChange: (productId: string, value: boolean) => void;
-  showStock?: boolean;
   showActions?: boolean;
   showSwitch?: boolean;
   isActiveLoading?: boolean;
@@ -48,20 +51,22 @@ const ProductItem: React.FC<ProductItemProps> = ({
   onEdit,
   onDelete,
   onActiveChange,
-  showStock = true,
   showActions = true,
   showSwitch = true,
   isActiveLoading = false,
 }) => {
   const hasVariants = product.variants && product.variants.length > 0;
-
+  const showStock =
+    selectedType === "Product/Service" &&
+    product.track_stock &&
+    product.product_type === "product";
   return (
     <TouchableOpacity
       style={styles.productCard}
       onPress={() => onPress(product)}
       activeOpacity={0.7}
     >
-      {selectedType === "Product/Service" && showStock && (
+      {showStock && (
         <View style={styles.stockBadgeAbove}>
           <Text style={styles.stockText}>{product.stock} Pieces Left</Text>
         </View>
@@ -84,14 +89,18 @@ const ProductItem: React.FC<ProductItemProps> = ({
         </>
       )}
 
-      <Image
-        source={
-          product.image && typeof product.image === "string"
-            ? { uri: product.image }
-            : product.image || require("../assets/product.png")
-        }
-        style={styles.productImage}
-      />
+      {product.image && typeof product.image === "string" ? (
+        <BlastedImage
+          source={{ uri: product.image }}
+          style={styles.productImage}
+          resizeMode="cover"
+          // isBackground={true}
+        />
+      ) : (
+        <View style={styles.placeholderImage}>
+          <Icon name="image" size={s(100)} color="#ccc" />
+        </View>
+      )}
 
       <View style={styles.bottomRow}>
         <View style={styles.productdetails}>
@@ -186,10 +195,18 @@ const styles = ScaledSheet.create({
     fontWeight: "bold",
   },
   productImage: {
-    width: "100%",
+    width: "140@s",
     height: "135@s",
     borderRadius: 10,
-    resizeMode: "cover",
+    // resizeMode: "cover",
+  },
+  placeholderImage: {
+    width: "140@s",
+    height: "135@s",
+    borderRadius: 10,
+    backgroundColor: "#f5f5f5",
+    justifyContent: "center",
+    alignItems: "center",
   },
   productName: {
     fontSize: 14,

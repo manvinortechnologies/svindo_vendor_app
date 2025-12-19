@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   ScrollView,
   TextInput,
   TouchableOpacity,
@@ -20,7 +19,10 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp } from "@react-navigation/native";
 import { ScaledSheet } from "react-native-size-matters";
 import { HomeNavigation } from "../constants/app-routes.constants";
+import { API_ROUTES } from "../constants/api-routes.constants";
 import Icon from "react-native-vector-icons/Ionicons";
+import Toast from "react-native-toast-message";
+import moment from "moment";
 
 const { width } = Dimensions.get("window");
 
@@ -45,10 +47,37 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
   const [minOrderValue, setMinOrderValue] = useState("");
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [errors, setErrors] = useState({
+    percentage: "",
+    minOrderValue: "",
+  });
 
-  useEffect(() => {
-    getAllCoupons();
-  }, []);
+  const fetchDeliveryDiscount = async () => {
+    try {
+      const response = await api.get(API_ROUTES.deliveryDiscount);
+
+      // Response might be an array or object
+      const discountData = Array.isArray(response.data)
+        ? response.data[0]
+        : response.data;
+
+      if (discountData) {
+        if (discountData.discount_percent !== undefined) {
+          setPercentage(discountData.discount_percent.toString());
+        }
+        if (discountData.min_cart_value !== undefined) {
+          setMinOrderValue(discountData.min_cart_value.toString());
+        }
+        if (discountData.is_enabled !== undefined) {
+          setDeliveryDiscountEnabled(discountData.is_enabled);
+        }
+      }
+    } catch (error) {
+      console.log("Error fetching delivery discount:", error);
+      // Don't show error toast on initial load if no data exists
+    }
+  };
 
   const getAllCoupons = async () => {
     try {
@@ -64,6 +93,11 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
     }
   };
 
+  useEffect(() => {
+    getAllCoupons();
+    fetchDeliveryDiscount();
+  }, []);
+
   const deleteCoupon = async (id: string) => {
     try {
       const response = await api.delete(`vendor/coupon/${id}/`);
@@ -76,6 +110,88 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
     return date.toLocaleString();
+  };
+
+  const saveDeliveryDiscount = async () => {
+    // Clear previous errors
+    setErrors({
+      percentage: "",
+      minOrderValue: "",
+    });
+
+    // Validate inputs
+    let hasErrors = false;
+    const newErrors = {
+      percentage: "",
+      minOrderValue: "",
+    };
+
+    if (!percentage.trim()) {
+      newErrors.percentage = "Please enter discount percentage";
+      hasErrors = true;
+    } else {
+      const discountPercent = parseFloat(percentage);
+      if (isNaN(discountPercent) || discountPercent <= 0) {
+        newErrors.percentage = "Please enter a valid discount percentage";
+        hasErrors = true;
+      }
+    }
+
+    if (!minOrderValue.trim()) {
+      newErrors.minOrderValue = "Please enter minimum order value";
+      hasErrors = true;
+    } else {
+      const minCartValue = parseFloat(minOrderValue);
+      if (isNaN(minCartValue) || minCartValue <= 0) {
+        newErrors.minOrderValue = "Please enter a valid minimum order value";
+        hasErrors = true;
+      }
+    }
+
+    if (hasErrors) {
+      setErrors(newErrors);
+      return;
+    }
+
+    const discountPercent = parseFloat(percentage);
+    const minCartValue = parseFloat(minOrderValue);
+
+    try {
+      setIsSaving(true);
+      const payload = {
+        discount_percent: discountPercent.toFixed(2),
+        min_cart_value: minCartValue.toFixed(2),
+        is_enabled: deliveryDiscountEnabled,
+      };
+
+      const response = await api.post(API_ROUTES.deliveryDiscount, payload);
+
+      if (response.status === 200 || response.status === 201) {
+        Toast.show({
+          type: "success",
+          text1: "Success",
+          text2: "Delivery discount settings saved successfully",
+        });
+        // Clear errors on success
+        setErrors({
+          percentage: "",
+          minOrderValue: "",
+        });
+      } else {
+        throw new Error("Failed to save delivery discount");
+      }
+    } catch (error: any) {
+      console.error("Error saving delivery discount:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2:
+          error?.response?.data?.message ||
+          "Failed to save delivery discount. Please try again.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const renderCoupon = ({ item }: { item: Coupon }) => {
@@ -165,29 +281,70 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
           </Text>
 
           <View style={styles.inputRow}>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={{ color: "#727272" }}>Pecentage</Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  deliveryDiscountEnabled &&
+                    errors.percentage &&
+                    styles.inputError,
+                ]}
                 placeholder="Ex: 5"
                 value={percentage}
-                onChangeText={setPercentage}
+                onChangeText={(text) => {
+                  setPercentage(text);
+                  // Clear error when user starts typing
+                  if (errors.percentage) {
+                    setErrors((prev) => ({ ...prev, percentage: "" }));
+                  }
+                }}
                 keyboardType="numeric"
                 placeholderTextColor="#aaa"
               />
+              {deliveryDiscountEnabled && errors.percentage && (
+                <Text style={styles.errorText}>{errors.percentage}</Text>
+              )}
             </View>
-            <View>
+            <View style={{ flex: 1, marginLeft: 10 }}>
               <Text style={{ color: "#727272" }}>Minimum Order Value</Text>
               <TextInput
-                style={styles.input}
+                style={[
+                  styles.input,
+                  deliveryDiscountEnabled &&
+                    errors.minOrderValue &&
+                    styles.inputError,
+                ]}
                 placeholder="Ex: 100"
                 value={minOrderValue}
-                onChangeText={setMinOrderValue}
+                onChangeText={(text) => {
+                  setMinOrderValue(text);
+                  // Clear error when user starts typing
+                  if (errors.minOrderValue) {
+                    setErrors((prev) => ({ ...prev, minOrderValue: "" }));
+                  }
+                }}
                 keyboardType="numeric"
                 placeholderTextColor="#aaa"
               />
+              {deliveryDiscountEnabled && errors.minOrderValue && (
+                <Text style={styles.errorText}>{errors.minOrderValue}</Text>
+              )}
             </View>
           </View>
+
+          {/* Save Button */}
+          <TouchableOpacity
+            style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+            onPress={saveDeliveryDiscount}
+            disabled={isSaving}
+          >
+            {isSaving ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.saveButtonText}>Save</Text>
+            )}
+          </TouchableOpacity>
         </View>
 
         {/* Coupons */}
@@ -199,7 +356,7 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
             data={coupons}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderCoupon}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
           />
         )}
       </ScrollView>
@@ -254,9 +411,18 @@ const styles = ScaledSheet.create({
     borderRadius: 8,
     padding: 10,
     marginTop: 6,
-    width: width / 2 - 30,
     borderColor: "#FCA311",
     borderWidth: 1,
+    color: "#000",
+  },
+  inputError: {
+    borderColor: "#FF0000",
+  },
+  errorText: {
+    color: "#FF0000",
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
   },
   sectionTitle: {
     fontSize: 15,
@@ -280,6 +446,7 @@ const styles = ScaledSheet.create({
   },
   brandSection: {
     width: "40%",
+    height: "100@s",
     backgroundColor: "#fff",
     borderRadius: 8,
     padding: 12,
@@ -396,5 +563,24 @@ const styles = ScaledSheet.create({
   addBtnText: {
     color: "#fff",
     fontWeight: "bold",
+  },
+  saveButton: {
+    backgroundColor: "#FCA311",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 16,
+    // alignSelf: "center",
+    // minWidth: 120,
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
+  },
+  saveButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });

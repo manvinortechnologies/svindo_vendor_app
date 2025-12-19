@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  Modal,
 } from "react-native";
 import Headerwithback from "./Headerwithback";
 import Loading from "../CommonComponent/Loading";
@@ -25,6 +26,7 @@ const UserProfile = ({ navigation }: any) => {
   const [contact, setContact] = useState<string>("");
   const [isFormModified, setIsFormModified] = useState<boolean>(false);
   const [originalData, setOriginalData] = useState<any>({});
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     getUserData();
@@ -117,21 +119,14 @@ const UserProfile = ({ navigation }: any) => {
   };
 
   const handleLogout = () => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to logout? This will clear all your data and you'll need to sign in again.",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Logout",
-          style: "destructive",
-          onPress: performLogout,
-        },
-      ]
-    );
+    setShowLogoutModal(true);
+  };
+
+  const closeLogoutModal = () => setShowLogoutModal(false);
+
+  const confirmLogout = () => {
+    closeLogoutModal();
+    performLogout();
   };
 
   const performLogout = async () => {
@@ -169,23 +164,29 @@ const UserProfile = ({ navigation }: any) => {
               {(firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || "T"}
             </Text>
           </View>
-          <Text style={styles.updateProfileText}>Update profile picture</Text>
+          <Text style={styles.updateProfileText}>Profile</Text>
         </View>
 
         {/* User Information Fields */}
         <View style={styles.inputSection}>
           <View style={styles.inputContainer}>
-            <Text style={styles.inputLabel}>User Name</Text>
+            <Text style={styles.inputLabel}>First Name</Text>
             <TextInput
               style={styles.input}
-              value={`${firstName} ${lastName}`.trim() || "Your name"}
-              placeholder="Your name"
+              value={firstName}
+              placeholder="Your first name"
               placeholderTextColor="#999"
-              onChangeText={(text) => {
-                const names = text.split(" ");
-                setFirstName(names[0] || "");
-                setLasttName(names.slice(1).join(" ") || "");
-              }}
+              onChangeText={setFirstName}
+            />
+          </View>
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Last Name</Text>
+            <TextInput
+              style={styles.input}
+              value={lastName}
+              placeholder="Your last name"
+              placeholderTextColor="#999"
+              onChangeText={setLasttName}
             />
           </View>
 
@@ -257,6 +258,36 @@ const UserProfile = ({ navigation }: any) => {
           <Text style={styles.logoutButtonText}>Logout of all devices</Text>
         </TouchableOpacity>
       </ScrollView>
+      <Modal
+        transparent
+        animationType="fade"
+        visible={showLogoutModal}
+        onRequestClose={closeLogoutModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Logout</Text>
+            <Text style={styles.modalMessage}>
+              Are you sure you want to logout? This will clear all your data and
+              you'll need to sign in again.
+            </Text>
+            <View style={styles.modalButtonRow}>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalCancelButton]}
+                onPress={closeLogoutModal}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modalButton, styles.modalConfirmButton]}
+                onPress={confirmLogout}
+              >
+                <Text style={styles.modalConfirmText}>Logout</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
       <Loading visible={isLoading} />
     </SafeAreaView>
   );
@@ -404,6 +435,58 @@ const styles = StyleSheet.create({
   notificationButtonText: {
     color: "#2196F3",
     fontSize: 16,
+    fontWeight: "600",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    width: "100%",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#000",
+    marginBottom: 10,
+  },
+  modalMessage: {
+    fontSize: 14,
+    color: "#4A4A4A",
+    marginBottom: 20,
+    lineHeight: 20,
+  },
+  modalButtonRow: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: 12,
+  },
+  modalButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 18,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  modalCancelButton: {
+    borderColor: "#C4C4C4",
+    backgroundColor: "#F6F6F6",
+  },
+  modalConfirmButton: {
+    borderColor: "#FCA311",
+    backgroundColor: "#FCA311",
+  },
+  modalCancelText: {
+    color: "#4A4A4A",
+    fontWeight: "600",
+  },
+  modalConfirmText: {
+    color: "#fff",
     fontWeight: "600",
   },
 });

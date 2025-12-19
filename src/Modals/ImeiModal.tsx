@@ -14,9 +14,20 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import { useNavigation } from "@react-navigation/native";
+import { StackNavigationProp } from "@react-navigation/stack";
 
 const { width } = Dimensions.get("window");
 
+type ScannedItem = {
+  value: string;
+  type: string;
+};
+
+type RootStackParamList = {
+  ScanBarcode: {
+    onScanComplete: (scannedItems: ScannedItem[]) => void;
+  };
+};
 interface ImeiModalProps {
   visible: boolean;
   onClose: () => void;
@@ -30,7 +41,7 @@ const ImeiModal: React.FC<ImeiModalProps> = ({
   imeiList,
   setImeiList,
 }) => {
-  const navigation = useNavigation();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [inputValue, setInputValue] = useState("");
 
   const handleAdd = () => {
@@ -48,14 +59,21 @@ const ImeiModal: React.FC<ImeiModalProps> = ({
 
   const handleScanBarcode = () => {
     // Navigate to barcode scanner with callback function
-    navigation.navigate(
-      HomeNavigation.SCAN_BARCODE as never,
-      {
-        onScanComplete: (scannedData: string, scannedType: string) => {
-          setInputValue(scannedData);
-        },
-      } as never
-    );
+    navigation.navigate(HomeNavigation.SCAN_BARCODE, {
+      onScanComplete: (
+        scannedItems: Array<{ value: string; type: string }>
+      ) => {
+        if (scannedItems && scannedItems.length > 0) {
+          // Add all scanned values to IMEI list
+          const newImeis = scannedItems
+            .map((item) => item.value.trim())
+            .filter(Boolean);
+          if (newImeis.length > 0) {
+            setImeiList([...imeiList, ...newImeis]);
+          }
+        }
+      },
+    });
   };
 
   return (
@@ -73,6 +91,7 @@ const ImeiModal: React.FC<ImeiModalProps> = ({
               onChangeText={setInputValue}
               style={styles.textInput}
               autoCapitalize="characters"
+              autoFocus
             />
             <TouchableOpacity
               style={styles.scanButton}

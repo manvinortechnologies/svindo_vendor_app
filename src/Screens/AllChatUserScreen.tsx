@@ -2,13 +2,12 @@ import React, { useEffect, useState, useMemo } from "react";
 import { View, Text, StyleSheet, StatusBar } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
-import { StreamChat } from "stream-chat";
 import {
   Chat,
   ChannelList,
   ChannelPreviewMessenger,
+  OverlayProvider,
 } from "stream-chat-react-native";
-import { OverlayProvider } from "stream-chat-react-native-core";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import { HomeNavigation } from "../constants/app-routes.constants";
@@ -48,12 +47,18 @@ const AllChatUserScreen = () => {
       setIsLoading(true);
       const response = await StorageUtils.getUserData();
       const initResponse = await api.post("/customer/stream/chatinit/");
-      const token = initResponse.data.token;
-      console.log("Token response:", response);
-      setUserData({ token: token, vendor_user_id: response.id.toString() });
+      const token = initResponse?.data?.token;
+      // console.log("Token response:", response);
+      setUserData({
+        token: token,
+        vendor_user_id: initResponse?.data?.user?.id.toString(),
+      });
 
       // Connect user to Stream Chat
-      await client.connectUser({ id: response.id.toString() }, token);
+      await client.connectUser(
+        { id: initResponse?.data?.user?.id.toString() },
+        token
+      );
       setIsClientReady(true);
     } catch (error) {
       console.error("Token fetch failed", error);
@@ -98,7 +103,7 @@ const AllChatUserScreen = () => {
   if (!isClientReady || !filters) {
     return (
       <SafeAreaView style={styles.safe}>
-        <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+        {/* <StatusBar barStyle="dark-content" backgroundColor="#fff" /> */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Chats</Text>
         </View>
@@ -109,7 +114,7 @@ const AllChatUserScreen = () => {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="dark-content" backgroundColor="#fff" />
+      {/* <StatusBar barStyle="dark-content" backgroundColor="#fff" /> */}
       <CustomHeader title="Chats" />
       <OverlayProvider>
         <Chat client={client}>

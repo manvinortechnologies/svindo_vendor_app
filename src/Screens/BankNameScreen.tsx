@@ -16,6 +16,7 @@ import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import CalendarModal from "../Modals/CalendarModal";
 import moment from "moment";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface BankTransaction {
   id: number;
@@ -284,15 +285,15 @@ const BankNameScreen = ({ navigation, route }: any) => {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <CustomHeader title={bankName} />
         <Loading visible={isLoading} />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
       <CustomHeader
         title={bankInfo.name}
@@ -440,7 +441,7 @@ const BankNameScreen = ({ navigation, route }: any) => {
           </View>
         </View>
       </Modal>
-    </View>
+    </SafeAreaView>
   );
 };
 

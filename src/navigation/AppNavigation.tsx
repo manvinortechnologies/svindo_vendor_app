@@ -125,12 +125,18 @@ import AddonSuccessScreen from "../Screens/AddonSuccessScreen";
 import SelectAddonsScreen from "../Screens/SelectAddonsScreen";
 import CreateAddons from "../Screens/CreateAddons";
 import ScanBarcode from "../Screens/ScanBarcode";
+import ScanProductScreen from "../Screens/ScanProductScreen";
 import Support from "../Screens/Support";
 import ChatScreen from "../Screens/ChatScreen";
 import RequestOffers from "../Screens/RequestOffers";
 import AllChatUserScreen from "../Screens/AllChatUserScreen";
 import ChatScreenStream from "../Screens/ChatScreenStream";
 import DeliveryArea from "../Screens/DeliveryArea";
+import SecurityScreen from "../Screens/SecurityScreen";
+import ReturnExchangeScreen from "../Screens/ReturnExchangeScreen";
+import ShippingDeliveryScreen from "../Screens/ShippingDeliveryScreen";
+import TermsScreen from "../Screens/TermsScreen";
+import PurchaseLedger from "../Screens/PurchaseLedger";
 
 const Stack = createNativeStackNavigator<THomeNavigation>();
 
@@ -212,6 +218,10 @@ const AppNavigation = () => {
         <Stack.Screen
           name={HomeNavigation.SCAN_BARCODE}
           component={ScanBarcode}
+        />
+        <Stack.Screen
+          name={HomeNavigation.SCAN_PRODUCT}
+          component={ScanProductScreen}
         />
         <Stack.Screen
           name={HomeNavigation.CREATE_ADDONS}
@@ -297,6 +307,10 @@ const AppNavigation = () => {
         <Stack.Screen
           name={HomeNavigation.CREATE_PURCHASE}
           component={CreatePurchase}
+        />
+        <Stack.Screen
+          name={HomeNavigation.PURCHASE_LEDGER}
+          component={PurchaseLedger}
         />
         <Stack.Screen name={HomeNavigation.BARCODE} component={Barcode} />
         <Stack.Screen name={HomeNavigation.EXPENSES} component={Expenses} />
@@ -423,6 +437,22 @@ const AppNavigation = () => {
         <Stack.Screen
           name={HomeNavigation.PRIVACY_POLICY_SCREEN}
           component={PrivacyPolicyScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.SECURITY_SCREEN}
+          component={SecurityScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.RETURN_EXCHANGE}
+          component={ReturnExchangeScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.SHIPPING_DELIVERY}
+          component={ShippingDeliveryScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.TERMS_SCREEN}
+          component={TermsScreen}
         />
         <Stack.Screen
           name={HomeNavigation.DELETE_ACCOUNT_SCREEN}

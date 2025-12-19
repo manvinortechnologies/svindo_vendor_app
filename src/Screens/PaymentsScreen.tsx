@@ -29,6 +29,7 @@ type RootStackParamList = {
   PaymentsScreen: {
     editMode?: boolean;
     paymentData?: any;
+    customerId?: number;
   };
 };
 
@@ -52,8 +53,9 @@ const PaymentsScreen = () => {
   const [selectedBank, setSelectedBank] = useState<DropDownOption | null>(null);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
-  const [paymentDate, setPaymentDate] = useState<string>("");
-  const [partyName, setPartyName] = useState<string>("");
+  const [paymentDate, setPaymentDate] = useState<string>(
+    moment().format("YYYY-MM-DD")
+  );
   const [selectedPartyId, setSelectedPartyId] = useState<number | null>(null);
   const [partyList, setPartyList] = useState<DropDownOption[]>([]);
   const [bankList, setBankList] = useState<DropDownOption[]>([]);
@@ -63,7 +65,7 @@ const PaymentsScreen = () => {
   const [paymentId, setPaymentId] = useState<number | null>(null);
   const [showImageModal, setShowImageModal] = useState<boolean>(false);
 
-  const paymentMethods = ["UPI", "Card", "Cash"];
+  const paymentMethods = ["UPI", "Cheque", "Cash"];
 
   useEffect(() => {
     getAllCategory();
@@ -87,10 +89,8 @@ const PaymentsScreen = () => {
       // Set party ID and name
       if (isCustomer && paymentData.customer_details) {
         setSelectedPartyId(paymentData.customer_details.id);
-        setPartyName(paymentData.customer_details.name);
       } else if (!isCustomer && paymentData.vendor_details) {
         setSelectedPartyId(paymentData.vendor_details.id);
-        setPartyName(paymentData.vendor_details.name);
       }
 
       // Set amount
@@ -161,6 +161,14 @@ const PaymentsScreen = () => {
           })
         );
         setPartyList(transformedParties);
+        if (route.params?.customerId) {
+          const customer = transformedParties.find(
+            (party) => party.id === Number(route.params?.customerId)
+          );
+          if (customer) {
+            setSelectedPartyId(Number(customer.id));
+          }
+        }
       }
     } catch (error) {
       console.log("Error loading party data:", error);
@@ -172,7 +180,6 @@ const PaymentsScreen = () => {
   const handlePartyTypeChange = (partyType: "Customer" | "Vendor") => {
     setSelectedParty(partyType);
     setSelectedPartyId(null);
-    setPartyName("");
   };
 
   const validateForm = () => {
@@ -209,12 +216,7 @@ const PaymentsScreen = () => {
       );
       formData.append("amount", Number(amount).toFixed(2));
       formData.append("payment_date", paymentDate);
-      formData.append(
-        "payment_type",
-        selectedPaymentMethod !== "Cash"
-          ? "credit"
-          : selectedPaymentMethod.toLowerCase()
-      );
+      formData.append("payment_type", selectedPaymentMethod.toLowerCase());
 
       // Optional fields
       if (description) {
@@ -346,7 +348,6 @@ const PaymentsScreen = () => {
             options={partyList}
             onSelect={(option) => {
               setSelectedPartyId(option.id);
-              setPartyName(option.name);
             }}
             selectedValue={selectedPartyId}
           />

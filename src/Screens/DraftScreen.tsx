@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -6,12 +6,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
-  Platform,
-  StatusBar,
   Image,
   TextInput,
 } from "react-native";
-import Icon from "react-native-vector-icons/MaterialIcons";
 import NavigationButton from "./NavigationButton";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -155,7 +152,6 @@ const getFilteredProducts = (type: string) => {
 const DraftScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
-      {/* Custom Header */}
       <CustomHeader
         title="Draft"
         rightIcon={

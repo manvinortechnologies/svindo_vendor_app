@@ -107,6 +107,8 @@ const ModalUpdatePhoto: React.FC<ModalUpdatePhotoProps> = ({
         const image = await ImageCropPicker.openCamera({
           mediaType: "photo",
           useFrontCamera: false,
+          compressImageQuality: 0.5,
+          cropping: true,
         });
         const file = {
           uri: image.path,
@@ -121,6 +123,7 @@ const ModalUpdatePhoto: React.FC<ModalUpdatePhotoProps> = ({
         const image = await ImageCropPicker.openPicker({
           mediaType: "photo",
           cropping: true,
+          compressImageQuality: 0.5,
         });
         // const result = await launchImageLibrary({ mediaType: 'photo', quality: 0.5 });
         const file = {

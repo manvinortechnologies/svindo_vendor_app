@@ -4,17 +4,12 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  Platform,
-  StatusBar,
   ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-
 import moment from "moment";
-
-import Bottomnavigation from "./Bottomnavigation";
 import Headerwithback from "./Headerwithback";
 
 const CloseYearScreen = () => {

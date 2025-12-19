@@ -22,6 +22,7 @@ import { ScaledSheet } from "react-native-size-matters";
 import CalendarModal from "../Modals/CalendarModal";
 import moment from "moment";
 import Toast from "react-native-toast-message";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface LedgerTransaction {
   type: "invoice" | "payment";
@@ -150,15 +151,12 @@ const VendorLedger = ({ navigation, route }: any) => {
           type = "invoice";
         }
 
-        // Calculate balance (this might need adjustment based on business logic)
-        const balance = txn.amount;
-
         groupedByDate[date].push({
           type: type,
           id: txn.reference_id?.toString() || txn.id.toString(),
           amount: type === "invoice" ? Math.abs(txn.amount) : undefined,
           paid: type === "payment" ? Math.abs(txn.amount) : 0,
-          balance: balance,
+          balance: txn.balance_after,
           medium: txn.transaction_type,
         });
       });
@@ -300,7 +298,7 @@ const VendorLedger = ({ navigation, route }: any) => {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <CustomHeader
           title=""
           rightIcon={
@@ -315,11 +313,11 @@ const VendorLedger = ({ navigation, route }: any) => {
           }
         />
         <Loading visible={isLoading} />
-      </View>
+      </SafeAreaView>
     );
   }
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
       <CustomHeader
         title=""
@@ -372,7 +370,7 @@ const VendorLedger = ({ navigation, route }: any) => {
       {/* Summary Cards */}
       <View style={styles.summaryContainer}>
         <View style={styles.summaryCard}>
-          <Text style={styles.summaryLabel}>Total Sale</Text>
+          <Text style={styles.summaryLabel}>Total Purchase</Text>
           <Text style={styles.summaryValue}>
             Rs.{(vendorInfo.totalSale || 0).toFixed(2)}
           </Text>
@@ -595,7 +593,7 @@ const VendorLedger = ({ navigation, route }: any) => {
         buttonText="Cancel"
         buttonText2="Delete"
       />
-    </View>
+    </SafeAreaView>
   );
 };
 

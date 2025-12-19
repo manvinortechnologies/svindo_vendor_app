@@ -147,9 +147,8 @@ const DeliveryArea = () => {
   const handleSave = async () => {
     if (selectedPincodes.length === 0) {
       Toast.show({
-        type: "warning",
-        text1: "Warning",
-        text2: "Please select at least one pincode.",
+        type: "info",
+        text1: "Please select at least one pincode.",
       });
       return;
     }
@@ -223,17 +222,17 @@ const DeliveryArea = () => {
     <MainContainer>
       <SafeAreaView style={styles.container}>
         <CustomHeader
-          title="Instant Delivery Areas"
-          rightIcon={
-            <CheckBox
-              value={
-                selectedPincodes.length === filteredPincodes.length &&
-                filteredPincodes.length > 0
-              }
-              onValueChange={handleSelectAll}
-              tintColors={{ true: "#FCA311", false: "#ccc" }}
-            />
-          }
+          title="Visibility & Instant Delivery Areas"
+          // rightIcon={
+          //   <CheckBox
+          //     value={
+          //       selectedPincodes.length === filteredPincodes.length &&
+          //       filteredPincodes.length > 0
+          //     }
+          //     onValueChange={handleSelectAll}
+          //     tintColors={{ true: "#FCA311", false: "#ccc" }}
+          //   />
+          // }
         />
 
         {/* Search Bar */}
@@ -251,6 +250,16 @@ const DeliveryArea = () => {
               <Icon name="close-circle" size={20} color="#999" />
             </TouchableOpacity>
           )}
+        </View>
+
+        {/* Note */}
+        <View style={styles.noteContainer}>
+          <Text style={styles.noteText}>
+            For All India visibility of store please verify your business and
+            contact supports. {"\n"}For unregistered Stores please add pincodes
+            only from the same state, Selling outside the state online without
+            GST is illegal, If found your account will be banned permanently.
+          </Text>
         </View>
 
         {/* Pincode List */}
@@ -316,7 +325,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginVertical: 12,
     paddingHorizontal: 12,
-    paddingVertical: 10,
+    // paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#e0e0e0",
@@ -326,6 +335,20 @@ const styles = StyleSheet.create({
     marginLeft: 8,
     fontSize: 14,
     color: "#000",
+  },
+  noteContainer: {
+    marginHorizontal: 16,
+    marginBottom: 12,
+    padding: 12,
+    backgroundColor: "#FFF3CD",
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: "#FFC107",
+  },
+  noteText: {
+    fontSize: 12,
+    color: "#856404",
+    lineHeight: 18,
   },
   selectAllBtn: {
     paddingHorizontal: 8,

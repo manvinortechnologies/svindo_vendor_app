@@ -18,33 +18,33 @@ const WelcomeScreen: FC<WelcomeScreenProps> = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<THomeNavigation>>();
 
-  const requestSmsPermission = async () => {
-    if (Platform.OS === "android") {
-      try {
-        const granted = await PermissionsAndroid.requestMultiple([
-          PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
-          PermissionsAndroid.PERMISSIONS.READ_SMS,
-        ]);
-        // console.log('SMS permissions:', granted);
-        if (
-          granted["android.permission.RECEIVE_SMS"] ===
-            PermissionsAndroid.RESULTS.GRANTED &&
-          granted["android.permission.READ_SMS"] ===
-            PermissionsAndroid.RESULTS.GRANTED
-        ) {
-          // console.log('SMS permissions granted');
-        } else {
-          // console.log('SMS permissions denied');
-        }
-      } catch (err) {
-        console.warn(err);
-      }
-    }
-  };
+  // const requestSmsPermission = async () => {
+  //   if (Platform.OS === "android") {
+  //     try {
+  //       const granted = await PermissionsAndroid.requestMultiple([
+  //         PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
+  //         PermissionsAndroid.PERMISSIONS.READ_SMS,
+  //       ]);
+  //       // console.log('SMS permissions:', granted);
+  //       if (
+  //         granted["android.permission.RECEIVE_SMS"] ===
+  //           PermissionsAndroid.RESULTS.GRANTED &&
+  //         granted["android.permission.READ_SMS"] ===
+  //           PermissionsAndroid.RESULTS.GRANTED
+  //       ) {
+  //         // console.log('SMS permissions granted');
+  //       } else {
+  //         // console.log('SMS permissions denied');
+  //       }
+  //     } catch (err) {
+  //       console.warn(err);
+  //     }
+  //   }
+  // };
 
-  useEffect(() => {
-    requestSmsPermission();
-  }, []);
+  // useEffect(() => {
+  //   requestSmsPermission();
+  // }, []);
 
   return (
     <View style={styles.container}>

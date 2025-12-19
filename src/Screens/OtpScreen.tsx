@@ -1,16 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
-  StyleSheet,
   Text,
   View,
-  TextInput,
   TouchableOpacity,
   Image,
-  Alert,
-  ActivityIndicator,
+  ScrollView,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { OtpScreenProps, THomeNavigation } from "../type";
@@ -27,8 +23,10 @@ import {
 import { StorageUtils } from "../utils/storage";
 import Loading from "../CommonComponent/Loading";
 import Icon from "react-native-vector-icons/Ionicons";
-import { ScaledSheet } from "react-native-size-matters";
+import { s, ScaledSheet } from "react-native-size-matters";
 import Toast from "react-native-toast-message";
+import NotificationService from "../services/notification-service";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const OtpScreen: React.FC<OtpScreenProps> = () => {
   const navigation =
@@ -123,7 +121,6 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
         idToken: idToken,
         user_type: "vendor",
       }).unwrap();
-      console.log(response);
       if (
         response.status === DEFAULT_STATUS_CODE_SUCCESS ||
         response.status === DEFAULT_STATUS_CODE_CREATED
@@ -132,15 +129,25 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
         StorageUtils.setAccessToken(response.access);
         StorageUtils.setRefreshToken(response.refresh);
         StorageUtils.setIsLoggedIn(true);
+        await NotificationService.initialize();
         if (response.user.created) {
-          navigation.replace(HomeNavigation.ADMINPROFILE);
+          navigation.reset({
+            index: 0,
+            routes: [{ name: HomeNavigation.ADMINPROFILE }],
+          });
           return;
         } else {
-          navigation.replace(HomeNavigation.BOTTOM_NAVIGATION);
+          navigation.reset({
+            index: 0,
+            routes: [{ name: HomeNavigation.BOTTOM_NAVIGATION }],
+          });
           return;
         }
       }
-      navigation.replace(HomeNavigation.SIGNUP_DETAIL_SCREEN);
+      navigation.reset({
+        index: 0,
+        routes: [{ name: HomeNavigation.SIGNUP_DETAIL_SCREEN }],
+      });
       // }
     } catch (error) {
       console.log("error-->", error);
@@ -170,76 +177,99 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
       setError(error.message);
     }
   };
+
   return (
-    <ScrollView
+    <KeyboardAwareScrollView
+      contentContainerStyle={{ flex: 1 }}
       style={styles.container}
-      contentContainerStyle={{ alignItems: "center" }}
     >
-      {/* Back Button */}
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={{ alignItems: "center" }}
       >
-        <Icon name="chevron-back" size={24} color="#fff" />
-      </TouchableOpacity>
-
-      {/* Header with Logo */}
-      <LinearGradient colors={["#F9C313", "#FCA511"]} style={styles.header}>
-        <Image source={require("../assets/logo.png")} style={styles.logo} />
-        <Text style={styles.title}>Svindo</Text>
-        <Text style={styles.title}>Business</Text>
-        <Text style={styles.subtitle}>Window to Real Growth</Text>
-      </LinearGradient>
-
-      {/* OTP Verification Section */}
-      <Text style={styles.otpText}>OTP Verification</Text>
-
-      {/* OTP Input Fields */}
-      <View style={styles.otpContainer}>
-        <OtpInput
-          numberOfDigits={6}
-          focusColor="#FCA511"
-          focusStickBlinkingDuration={500}
-          onTextChange={handleChange}
-          onFilled={(otp) => handleConfirmCode(otp)}
-          textInputProps={{
-            accessibilityLabel: "One-Time Password",
-          }}
-          theme={{
-            containerStyle: styles.otpFieldcontainer,
-            pinCodeContainerStyle: styles.pinCodeContainer,
-            pinCodeTextStyle: styles.pinCodeText,
-            focusStickStyle: styles.focusStick,
-          }}
-        />
-      </View>
-
-      {/* Timer & Resend Option */}
-      <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
-      <Text style={styles.resendText}>Didn’t receive it?</Text>
-
-      <TouchableOpacity onPress={resetTimer} style={styles.resendButtonWrapper}>
-        <LinearGradient
-          colors={["#F9C313", "#FCA511"]}
-          style={styles.resendButtonGradient}
-          start={{ x: 0, y: 0 }} // Optional - Direction for the gradient
-          end={{ x: 1, y: 1 }} // Optional - Diagonal gradient
+        {/* Back Button */}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
         >
-          <Text style={styles.resendButtonText}>Resend SMS</Text>
-        </LinearGradient>
-      </TouchableOpacity>
+          <Icon name="chevron-back" size={24} color="#fff" />
+        </TouchableOpacity>
 
-      <Loading visible={loading} />
-      {error ? <Text style={styles.errorText}>{error}</Text> : null}
-      {/* Terms and Privacy */}
-      <View style={styles.footer}>
-        <Text style={styles.termsText}>
-          By continuing, you agree to our {"\n"}
-          <Text style={styles.linkText}>Terms of Service</Text> and{" "}
-          <Text style={styles.linkText}>Privacy Policy</Text>.
-        </Text>
-      </View>
-    </ScrollView>
+        {/* Header with Logo */}
+        <LinearGradient colors={["#F9C313", "#FCA511"]} style={styles.header}>
+          <Image source={require("../assets/logo.png")} style={styles.logo} />
+          <Text style={styles.title}>Svindo</Text>
+          <Text style={styles.title}>Business</Text>
+          <Text style={styles.subtitle}>Window to Real Growth</Text>
+        </LinearGradient>
+
+        {/* OTP Verification Section */}
+        <Text style={styles.otpText}>OTP Verification</Text>
+
+        {/* OTP Input Fields */}
+        <View style={styles.otpContainer}>
+          <OtpInput
+            numberOfDigits={6}
+            focusColor="#FCA511"
+            focusStickBlinkingDuration={500}
+            onTextChange={handleChange}
+            onFilled={(otp) => handleConfirmCode(otp)}
+            textInputProps={{
+              accessibilityLabel: "One-Time Password",
+            }}
+            theme={{
+              containerStyle: { paddingHorizontal: s(30) },
+              pinCodeContainerStyle: {
+                width: s(45),
+                height: s(45),
+                borderWidth: 1,
+                borderColor: "#FCA511",
+                backgroundColor: "#FFF7DD",
+                alignItems: "center",
+                justifyContent: "center",
+                marginHorizontal: s(3),
+                borderRadius: s(16),
+              },
+              pinCodeTextStyle: {
+                fontSize: s(18),
+                textAlign: "center",
+                color: "#000",
+              },
+              focusStickStyle: { height: s(25), backgroundColor: "#FCA511" },
+            }}
+          />
+        </View>
+
+        {/* Timer & Resend Option */}
+        <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
+        <Text style={styles.resendText}>Didn’t receive it?</Text>
+
+        <TouchableOpacity
+          onPress={resetTimer}
+          style={styles.resendButtonWrapper}
+        >
+          <LinearGradient
+            colors={["#F9C313", "#FCA511"]}
+            style={styles.resendButtonGradient}
+            start={{ x: 0, y: 0 }} // Optional - Direction for the gradient
+            end={{ x: 1, y: 1 }} // Optional - Diagonal gradient
+          >
+            <Text style={styles.resendButtonText}>Resend SMS</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        <Loading visible={loading} />
+        {error ? <Text style={styles.errorText}>{error}</Text> : null}
+        {/* Terms and Privacy */}
+        <View style={styles.footer}>
+          <Text style={styles.termsText}>
+            By continuing, you agree to our {"\n"}
+            <Text style={styles.linkText}>Terms of Service</Text> and{" "}
+            <Text style={styles.linkText}>Privacy Policy</Text>.
+          </Text>
+        </View>
+      </ScrollView>
+    </KeyboardAwareScrollView>
   );
 };
 

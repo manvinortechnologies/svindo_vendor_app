@@ -5,8 +5,6 @@ import {
   Text,
   TouchableOpacity,
   StyleSheet,
-  TouchableWithoutFeedback,
-  Keyboard,
   ScrollView,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
@@ -18,7 +16,8 @@ export interface BankDetails {
   account_number: string;
   ifsc_code: string;
   branch: string;
-  opening_balance: string;
+  opening_balance: string | number | undefined;
+  id?: string;
 }
 
 interface AddBankDetailsModalProps {
@@ -38,7 +37,7 @@ const AddBankDetailsModal: React.FC<AddBankDetailsModalProps> = ({
     account_number: "",
     ifsc_code: "",
     branch: "",
-    opening_balance: "",
+    opening_balance: 0,
   };
 
   const [bankDetails, setBankDetails] = useState<BankDetails>(initialState);
@@ -95,96 +94,94 @@ const AddBankDetailsModal: React.FC<AddBankDetailsModalProps> = ({
 
   const handleSave = () => {
     if (validate()) {
-      onSubmit(bankDetails);
+      onSubmit({
+        ...bankDetails,
+        opening_balance: Number(bankDetails.opening_balance) || 0,
+      });
       onClose();
     }
   };
 
   return (
     <Modal visible={visible} animationType="slide" transparent>
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContainer}>
-            <ScrollView keyboardShouldPersistTaps="handled">
-              <View style={styles.header}>
-                <Text style={styles.title}>Add Bank Details</Text>
-                <TouchableOpacity onPress={onClose}>
-                  <Icon name="close" size={24} color="#333" />
-                </TouchableOpacity>
-              </View>
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          <ScrollView keyboardShouldPersistTaps="handled">
+            <View style={styles.header}>
+              <Text style={styles.title}>Add Bank Details</Text>
+              <TouchableOpacity onPress={onClose}>
+                <Icon name="close" size={24} color="#333" />
+              </TouchableOpacity>
+            </View>
 
-              {[
-                {
-                  key: "name",
-                  label: "Bank Name",
-                  placeholder: "Bank Name",
-                },
-                {
-                  key: "account_holder",
-                  label: "Account Holder Name",
-                  placeholder: "Account Holder Name",
-                },
-                {
-                  key: "account_number",
-                  label: "Account Number",
-                  placeholder: "e.g. 123456789012",
-                },
-                {
-                  key: "ifsc_code",
-                  label: "IFSC Code",
-                  placeholder: "e.g. ABCD0001234",
-                },
-                {
-                  key: "branch",
-                  label: "Branch",
-                  placeholder: "Branch Name",
-                },
-                {
-                  key: "opening_balance",
-                  label: "Opening Balance",
-                  placeholder: "Opening Balance",
-                },
-              ].map(({ key, label, placeholder }) => (
-                <View key={key} style={{ marginBottom: 10 }}>
-                  <InputBox
-                    label={label}
-                    value={bankDetails[key as keyof BankDetails]}
-                    placeholder={placeholder}
-                    onChangeText={(text) =>
-                      handleChange(key as keyof BankDetails, text)
-                    }
-                    keyboardType={
-                      key === "account_number" ? "numeric" : "default"
-                    }
-                    autoCapitalize={
-                      key === "ifsc_code" ? "characters" : "words"
-                    }
-                    background="#fff"
-                    styless={{ marginBottom: 0 }}
-                  />
-                  {errors[key as keyof BankDetails] && (
-                    <Text style={styles.errorText}>
-                      {errors[key as keyof BankDetails]}
-                    </Text>
-                  )}
-                </View>
-              ))}
-
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-                  <Text style={styles.cancelText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.saveButton}
-                  onPress={handleSave}
-                >
-                  <Text style={styles.buttonText}>Save</Text>
-                </TouchableOpacity>
+            {[
+              {
+                key: "name",
+                label: "Bank Name",
+                placeholder: "Bank Name",
+              },
+              {
+                key: "account_holder",
+                label: "Account Holder Name",
+                placeholder: "Account Holder Name",
+              },
+              {
+                key: "account_number",
+                label: "Account Number",
+                placeholder: "e.g. 123456789012",
+              },
+              {
+                key: "ifsc_code",
+                label: "IFSC Code",
+                placeholder: "e.g. ABCD0001234",
+              },
+              {
+                key: "branch",
+                label: "Branch",
+                placeholder: "Branch Name",
+              },
+              {
+                key: "opening_balance",
+                label: "Opening Balance",
+                placeholder: "Opening Balance",
+              },
+            ].map(({ key, label, placeholder }) => (
+              <View key={key} style={{ marginBottom: 10 }}>
+                <InputBox
+                  label={label}
+                  value={
+                    bankDetails[key as keyof BankDetails]?.toString() || ""
+                  }
+                  placeholder={placeholder}
+                  onChangeText={(text) =>
+                    handleChange(key as keyof BankDetails, text)
+                  }
+                  keyboardType={
+                    key === "account_number" ? "numeric" : "default"
+                  }
+                  autoCapitalize={key === "ifsc_code" ? "characters" : "words"}
+                  background="#fff"
+                  styless={{ marginBottom: 0 }}
+                />
+                {errors[key as keyof BankDetails] && (
+                  <Text style={styles.errorText}>
+                    {errors[key as keyof BankDetails]}
+                  </Text>
+                )}
               </View>
-            </ScrollView>
-          </View>
+            ))}
+
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                <Text style={styles.buttonText}>Save</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
         </View>
-      </TouchableWithoutFeedback>
+      </View>
     </Modal>
   );
 };

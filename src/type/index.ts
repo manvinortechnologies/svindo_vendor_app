@@ -48,6 +48,7 @@ export type THomeNavigation = {
   [HomeNavigation.POSSCREEN]: undefined;
   [HomeNavigation.SALE_POS]: undefined;
   [HomeNavigation.CREATE_PURCHASE]: undefined;
+  [HomeNavigation.PURCHASE_LEDGER]: undefined;
   [HomeNavigation.BARCODE]: undefined;
   [HomeNavigation.EXPENSES]: undefined;
   [HomeNavigation.REPORTS]: undefined;
@@ -84,6 +85,10 @@ export type THomeNavigation = {
   [HomeNavigation.REMINDERSETTINGS]: undefined;
   [HomeNavigation.RATE_US_SCREEN]: undefined;
   [HomeNavigation.PRIVACY_POLICY_SCREEN]: undefined;
+  [HomeNavigation.SECURITY_SCREEN]: undefined;
+  [HomeNavigation.RETURN_EXCHANGE]: undefined;
+  [HomeNavigation.SHIPPING_DELIVERY]: undefined;
+  [HomeNavigation.TERMS_SCREEN]: undefined;
   [HomeNavigation.DELETE_ACCOUNT_SCREEN]: undefined;
   [HomeNavigation.RESET_DATA_SCREEN]: undefined;
   [HomeNavigation.CREATE_INVOICE]: undefined;
@@ -138,6 +143,23 @@ export type THomeNavigation = {
     otherUserId: string;
   };
   [HomeNavigation.DELIVERY_AREA]: undefined;
+  [HomeNavigation.SCAN_PRODUCT]: {
+    onProductsScanned?: (
+      products: Array<{
+        id: string;
+        barcode: string;
+        productId: number;
+        name: string;
+        price: number;
+        image?: string;
+        stock?: number;
+        product_type?: string;
+        track_stock?: boolean;
+        timestamp: number;
+        verified: boolean;
+      }>
+    ) => void;
+  };
 };
 
 // export type TTabNavigation = {

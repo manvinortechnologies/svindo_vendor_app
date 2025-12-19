@@ -7,9 +7,9 @@ import {
   TextInput,
   Dimensions,
   ScrollView,
-  SafeAreaView,
 } from "react-native";
 import CustomHeader from "../CommonComponent/CustomHeader";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 

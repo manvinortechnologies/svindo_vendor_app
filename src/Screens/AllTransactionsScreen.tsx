@@ -17,8 +17,8 @@ import Bottomnavigation from "./Bottomnavigation";
 
 const AllTransactionsScreen = () => {
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
-  const [startDate, setStartDate] = useState(new Date("2025-02-01"));
-  const [endDate, setEndDate] = useState(new Date("2025-02-28"));
+  const [startDate, setStartDate] = useState(new Date());
+  const [endDate, setEndDate] = useState(new Date());
   const [selectingStart, setSelectingStart] = useState(true);
   const [monthModalVisible, setMonthModalVisible] = useState(false);
 

@@ -3,13 +3,10 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  StatusBar,
-  Platform,
   TouchableOpacity,
   FlatList,
 } from "react-native";
 import Header from "./Header";
-import Bottomnavigation from "./Bottomnavigation";
 import { Text } from "react-native-gesture-handler";
 import SearchHeader from "./SearchHeader";
 

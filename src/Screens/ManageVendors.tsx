@@ -6,13 +6,11 @@ import {
   TouchableOpacity,
   TextInput,
   FlatList,
-  Image,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import Headerwithback from "./Headerwithback";
-import Bottomnavigation from "./Bottomnavigation";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import api from "../services/api/api";
@@ -36,17 +34,11 @@ const ManageVendors = ({ navigation }: any) => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filteredVendors, setFilteredVendors] = useState<Vendor[]>([]);
   const [totalPendingAmount, setTotalPendingAmount] = useState<number>(0);
-  useFocusEffect(
-    useCallback(() => {
-      // Your API call function
-      getVendeorData();
-
-      // Optional: clean-up function
-      return () => {
-        // cleanup logic if needed
-      };
-    }, []) // empty dependency so it triggers every time the screen is focused
-  );
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     getVendeorData();
+  //   }, [])
+  // );
   const getVendeorData = async () => {
     try {
       setIsLoading(true);
@@ -77,95 +69,87 @@ const ManageVendors = ({ navigation }: any) => {
   }, [searchTerm, vendorList]);
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <Headerwithback title="Manage Venders" />
+    <SafeAreaView style={styles.container}>
+      <Headerwithback title="Manage Venders" />
 
-        {/* Search and Add */}
-        <View style={styles.searchContainer}>
-          <View style={styles.searchBox}>
-            <Icon name="search" size={20} color="#aaa" />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search customer by name or phone"
-              placeholderTextColor="#888"
-              value={searchTerm}
-              onChangeText={setSearchTerm}
-            />
-          </View>
-          {/* <TouchableOpacity onPress={() => navigation.navigate("AddVendor")}>
+      {/* Search and Add */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBox}>
+          <Icon name="search" size={20} color="#aaa" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search customer by name or phone"
+            placeholderTextColor="#888"
+            value={searchTerm}
+            onChangeText={setSearchTerm}
+          />
+        </View>
+        {/* <TouchableOpacity onPress={() => navigation.navigate("AddVendor")}>
             <Text style={styles.addText}>+ Add New Vendors</Text>
           </TouchableOpacity> */}
-        </View>
+      </View>
 
-        {/* You Collect & Pay */}
-        <View style={styles.summaryContainer}>
-          <TouchableOpacity style={styles.summaryBox}>
-            <Text style={styles.summaryText}>
-              You Give: ₹{totalPendingAmount}
-            </Text>
-          </TouchableOpacity>
-          {/* <TouchableOpacity style={styles.summaryBox}>
+      {/* You Collect & Pay */}
+      <View style={styles.summaryContainer}>
+        <TouchableOpacity style={styles.summaryBox}>
+          <Text style={styles.summaryText}>
+            You Give: ₹{totalPendingAmount}
+          </Text>
+        </TouchableOpacity>
+        {/* <TouchableOpacity style={styles.summaryBox}>
             <Text style={styles.summaryText}>You Pay: ₹0</Text>
           </TouchableOpacity> */}
-        </View>
+      </View>
 
-        {/* Table Headers */}
-        <View style={styles.tableHeader}>
-          <Text style={styles.headerText}>Name</Text>
-          <Text style={styles.headerText}>Contact Info</Text>
-          <Text style={styles.headerText}>Closing Balance</Text>
-        </View>
+      {/* Table Headers */}
+      <View style={styles.tableHeader}>
+        <Text style={styles.headerText}>Details</Text>
+        <Text style={styles.headerText}>Closing Balance</Text>
+      </View>
 
-        {/* Customer List */}
-        <FlatList
-          data={filteredVendors}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.customerRow}
-              onPress={() =>
-                navigation.navigate("VendorLedger", { vendor: item })
-              }
-            >
-              <View style={styles.nameColumn}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>{item.name.slice(0, 2)}</Text>
-                </View>
-                <Text numberOfLines={2} style={styles.nameText}>
-                  {item.name}
-                </Text>
-              </View>
-              <View style={styles.contactColumn}>
+      {/* Customer List */}
+      <FlatList
+        data={filteredVendors}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.customerRow}
+            onPress={() =>
+              navigation.navigate("VendorLedger", { vendor: item })
+            }
+          >
+            <View style={styles.detailsColumn}>
+              <View style={styles.detailsTextContainer}>
+                <Text style={styles.nameText}>{item.name}</Text>
                 <Text style={styles.contactText}>{item.contact}</Text>
-                <Text style={styles.contactText}>{item.email}</Text>
+                <Text style={styles.emailText}>{item.email}</Text>
               </View>
-              <View style={{ width: "30%", alignItems: "center" }}>
-                <Text style={styles.balanceText}>{item.balance}</Text>
-              </View>
-            </TouchableOpacity>
-          )}
-          ListEmptyComponent={
-            !isLoading ? (
-              <View style={{ alignItems: "center", marginTop: 40 }}>
-                <Text style={{ fontSize: 16, color: "#888" }}>
-                  No Vendor found.
-                </Text>
-              </View>
-            ) : null
-          }
-        />
-        {/* FAB: Add New Vendor */}
-        <TouchableOpacity
-          style={styles.fab}
-          activeOpacity={0.9}
-          onPress={() => navigation.navigate("AddVendor")}
-        >
-          <Ionicons name="add" size={26} color="#fff" />
-        </TouchableOpacity>
-        <Loading visible={isLoading} />
-      </SafeAreaView>
-    </View>
+            </View>
+            <View style={styles.balanceColumn}>
+              <Text style={styles.balanceText}>{item.balance}</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+        ListEmptyComponent={
+          !isLoading ? (
+            <View style={{ alignItems: "center", marginTop: 40 }}>
+              <Text style={{ fontSize: 16, color: "#888" }}>
+                No Vendor found.
+              </Text>
+            </View>
+          ) : null
+        }
+      />
+      {/* FAB: Add New Vendor */}
+      <TouchableOpacity
+        style={styles.fab}
+        activeOpacity={0.9}
+        onPress={() => navigation.navigate("AddVendor")}
+      >
+        <Ionicons name="add" size={26} color="#fff" />
+      </TouchableOpacity>
+      <Loading visible={isLoading} />
+    </SafeAreaView>
   );
 };
 const styles = StyleSheet.create({
@@ -242,7 +226,6 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   headerText: {
-    flex: 1,
     fontWeight: "700",
     fontSize: 13,
     color: "#000",
@@ -255,44 +238,36 @@ const styles = StyleSheet.create({
     borderColor: "#eee",
     gap: 10,
     justifyContent: "space-between",
+    alignItems: "center",
   },
-  nameColumn: {
+  detailsColumn: {
+    flex: 1,
     flexDirection: "row",
-    alignItems: "center",
-    width: "30%",
   },
-  avatar: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#FCA311",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 8,
-  },
-  avatarText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 12,
+  detailsTextContainer: {
+    flex: 1,
   },
   nameText: {
     fontSize: 13,
     fontWeight: "600",
     color: "#000",
-    width: "80%",
-  },
-  contactColumn: {
-    flex: 1,
-    textAlign: "right",
-    width: "30%",
+    marginBottom: 2,
   },
   contactText: {
     fontSize: 12,
     color: "#333",
+    marginBottom: 2,
+  },
+  emailText: {
+    fontSize: 12,
+    color: "#666",
+  },
+  balanceColumn: {
+    width: "30%",
+    alignItems: "center",
   },
   balanceText: {
-    flex: 1,
-    textAlign: "right",
+    textAlign: "center",
     fontWeight: "600",
     fontSize: 13,
     color: "green",

@@ -39,6 +39,8 @@ interface Product {
   wholesale_price?: number;
   quantity: number;
   image: string;
+  gst?: number | null;
+  tax_inclusive?: boolean;
 }
 
 interface FormErrors {
@@ -70,15 +72,15 @@ const SalePOS = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [companyList, setCompanyList] = useState<DropDownOption[]>();
   const [companySelected, setCompanySelected] = useState<DropDownOption>();
-  const [selectedPartyType, setSelectedPartyType] = useState<
-    "None" | "Customer" | "Vendor"
-  >("None");
+  // const [selectedPartyType, setSelectedPartyType] = useState<
+  //   "None" | "Customer" | "Vendor"
+  // >("None");
   const [customerList, setCustomerList] = useState<DropDownOption[]>([]);
   const [bankList, setBankList] = useState<DropDownOption[]>([]);
   const [selectedBank, setSelectedBank] = useState<DropDownOption>();
-  const [vendorList, setVendorList] = useState<DropDownOption[]>([]);
+  // const [vendorList, setVendorList] = useState<DropDownOption[]>([]);
   const [selectedCustomer, setSelectedCustomer] = useState<DropDownOption>();
-  const [selectedVendor, setSelectedVendor] = useState<DropDownOption>();
+  // const [selectedVendor, setSelectedVendor] = useState<DropDownOption>();
   const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [wholesale, setWholesale] = useState<boolean>(false);
@@ -115,21 +117,93 @@ const SalePOS = () => {
     handlePercentChange(discount?.pr);
   }, [wholesale, products]);
 
-  // Total amount for current product list (before discount)
-  const totalAmount = useMemo(() => {
+  // Calculate subtotal before discount (for discount calculation base)
+  const subtotalAmount = useMemo(() => {
     if (!products?.length) return 0;
     return products.reduce((sum, item) => {
-      const price = wholesale ? item.wholesale_price || item.price : item.price;
+      const price = wholesale ? item.wholesale_price || 0 : item.price || 0;
       return sum + price * (item.quantity || 0);
     }, 0);
   }, [products, wholesale]);
 
-  // After-discount total and due values
+  // Calculate discount per item (proportional distribution)
+  const getItemDiscount = (item: Product): number => {
+    if (!products?.length || subtotalAmount === 0) {
+      return 0;
+    }
+    const totalDiscount = Number(discount.amount) || 0;
+    const discountPercent = Number(discount.pr) || 0;
+    const price = wholesale ? item.wholesale_price || 0 : item.price || 0;
+    const itemTotal = price * (item.quantity || 0);
+
+    if (discountPercent > 0) {
+      // Apply percentage discount per item
+      return (itemTotal * discountPercent) / 100;
+    } else if (totalDiscount > 0) {
+      // Distribute total discount proportionally
+      return (itemTotal * totalDiscount) / subtotalAmount;
+    }
+    return 0;
+  };
+
+  // Calculate GST amount on discounted amount per item
+  const gstAmount = useMemo(() => {
+    if (!products?.length) return 0;
+
+    return products.reduce((sum, item) => {
+      const price = wholesale ? item.wholesale_price || 0 : item.price || 0;
+      const gstRate = Number(item.gst) || 0;
+      const quantity = item.quantity || 0;
+      const itemTotal = price * quantity;
+      const itemDiscount = getItemDiscount(item);
+      const itemTotalAfterDiscount = itemTotal - itemDiscount;
+
+      // GST is calculated on discounted amount
+      if (item.tax_inclusive) {
+        // GST is included in price, extract it from discounted amount
+        const gstValue = (itemTotalAfterDiscount * gstRate) / (100 + gstRate);
+        console.log(gstValue, "gstValue");
+        return sum + gstValue;
+      } else {
+        // GST is exclusive, add it on top of discounted amount
+        const gstValue = (itemTotalAfterDiscount * gstRate) / 100;
+        return sum + gstValue;
+      }
+    }, 0);
+  }, [products, wholesale, discount.amount, discount.pr, subtotalAmount]);
+
+  // Subtotal after discount, without GST (for display purposes)
+  const subtotalWithoutGst = useMemo(() => {
+    if (!products?.length) return 0;
+
+    return products.reduce((sum, item) => {
+      const price = wholesale ? item.wholesale_price || 0 : item.price || 0;
+      const gstRate = Number(item.gst) || 0;
+      const quantity = item.quantity || 0;
+      const itemTotal = price * quantity;
+      const itemDiscount = getItemDiscount(item);
+      const itemTotalAfterDiscount = itemTotal;
+
+      if (item.tax_inclusive) {
+        // GST is included, so subtract it from discounted amount
+        const gstValue = (itemTotalAfterDiscount * gstRate) / (100 + gstRate);
+        return sum + (itemTotalAfterDiscount - gstValue);
+      } else {
+        // GST is exclusive, so discounted amount is already without GST
+        return sum + itemTotalAfterDiscount;
+      }
+    }, 0);
+  }, [products, wholesale, discount.amount, discount.pr, subtotalAmount]);
+
+  // Total amount after discount, including GST
+  const totalAmount = useMemo(() => {
+    return subtotalWithoutGst + gstAmount - Number(discount.amount);
+  }, [subtotalWithoutGst, gstAmount, discount]);
+
+  // After-discount total (same as totalAmount now, kept for compatibility)
   const discountedTotal = useMemo(() => {
-    const disc = Number(discount.amount) || 0;
-    const val = totalAmount - disc;
-    return val > 0 ? val : 0;
-  }, [totalAmount, discount.amount]);
+    return totalAmount;
+  }, [totalAmount]);
 
   const advanceNumeric = useMemo(
     () => Number(advanceAmount) || 0,
@@ -167,6 +241,8 @@ const SalePOS = () => {
         wholesale_price: item.product_details.wholesale_price,
         quantity: item.quantity,
         image: item.product_details.image || "",
+        gst: item.product_details.gst || null,
+        tax_inclusive: item.product_details.tax_inclusive || false,
       }));
 
       !route.params?.selectedProducts && setProducts(mappedProducts);
@@ -216,10 +292,10 @@ const SalePOS = () => {
       setIsLoading(true);
 
       // Parallel fetching
-      const [companyRes, customerRes, vendorRes, banks] = await Promise.all([
+      const [companyRes, customerRes, banks] = await Promise.all([
         api.get(API_ROUTES.companyProfle),
         api.get(API_ROUTES.vendorCustomer),
-        api.get(API_ROUTES.vendorList),
+        // api.get(API_ROUTES.vendorList),
         api.get(API_ROUTES.vendorBank),
       ]);
 
@@ -242,14 +318,14 @@ const SalePOS = () => {
       setCustomerList(transformedCustomer);
       setSelectedCustomer(transformedCustomer[0]);
 
-      const transformedVendor: DropDownOption[] = vendorRes.data?.map(
-        (item: any) => ({
-          id: item.id,
-          name: item.name || item.vendor_name,
-          ...item,
-        })
-      );
-      setVendorList(transformedVendor);
+      // const transformedVendor: DropDownOption[] = vendorRes.data?.map(
+      //   (item: any) => ({
+      //     id: item.id,
+      //     name: item.name || item.vendor_name,
+      //     ...item,
+      //   })
+      // );
+      // setVendorList(transformedVendor);
 
       const transformedBank: DropDownOption[] = banks.data?.map(
         (item: any) => ({
@@ -339,23 +415,16 @@ const SalePOS = () => {
   const handleSubmit = async () => {
     if (validateForm()) return;
     try {
-      const totalAmount = products.reduce(
-        (sum, item) =>
-          sum +
-          (wholesale ? item.wholesale_price || item.price : item.price) *
-            item.quantity,
-        0
-      );
-      const totalDiscountedAmount = totalAmount - Number(discount.amount);
+      // Use the memoized totalAmount which includes GST when wholesale is selected
+      const totalDiscountedAmount = discountedTotal;
 
-      const data = {
+      const baseData = {
         payment_method: paymentMode.toLocaleLowerCase(),
         company_profile: companySelected?.id,
         // //   "party": 2,
         customer: selectedCustomer?.id,
+        customer_details: selectedCustomer,
         discount_percentage: Number(discount?.pr),
-        credit_date:
-          paymentMode === "credit" ? new Date(dueDate).toISOString() : "",
         is_wholesale_rate: wholesale,
         items: products.map((p) => ({
           product: p.id,
@@ -365,21 +434,26 @@ const SalePOS = () => {
             (wholesale ? p.wholesale_price || p.price : p.price) * p.quantity,
         })),
         total_items: products.reduce((sum, p) => sum + p.quantity, 0),
-        total_amount_before_discount: totalAmount,
+        total_amount_before_discount: subtotalAmount,
         discount_amount: discount.amount,
         total_amount: totalDiscountedAmount,
+        gst_amount: wholesale ? gstAmount.toFixed(2) : 0,
         balance_amount:
           paymentMode === "credit"
             ? totalDiscountedAmount - Number(advanceAmount)
             : 0,
         wholesale_invoice_details: null,
         advance_bank: selectedBank?.id || "",
-        advance_amount: advanceAmount || 0,
+        advance_amount: paymentMode === "credit" ? advanceAmount || 0 : 0,
       };
-      if (paymentMode !== "credit") {
-        delete data.credit_date;
-        data.advance_amount = 0;
-      }
+
+      const data =
+        paymentMode === "credit"
+          ? {
+              ...baseData,
+              credit_date: new Date(dueDate).toISOString(),
+            }
+          : baseData;
       console.log(data, "data");
       if (wholesale) {
         navigation.navigate(HomeNavigation.WHOLESALE, data);
@@ -619,17 +693,31 @@ const SalePOS = () => {
               />
               <Text style={styles.tableText}>
                 {formatNumber(
-                  (wholesale
-                    ? item?.wholesale_price ?? item?.price
-                    : item?.price) ?? 0
+                  (wholesale ? item?.wholesale_price ?? 0 : item?.price) ?? 0
                 )}
               </Text>
               <Text style={styles.tableText}>
-                {formatNumber(
-                  ((wholesale
-                    ? item?.wholesale_price ?? item?.price
-                    : item?.price) ?? 0) * (item?.quantity || 0)
-                )}
+                {(() => {
+                  const price = wholesale
+                    ? item?.wholesale_price ?? 0
+                    : item?.price ?? 0;
+                  const quantity = item?.quantity || 0;
+                  const itemTotal = price * quantity;
+                  const itemDiscount = getItemDiscount(item);
+                  const itemTotalAfterDiscount = itemTotal;
+
+                  // If tax_inclusive, show amount without GST
+                  if (item.tax_inclusive) {
+                    const gstRate = Number(item.gst) || 0;
+                    const gstValue =
+                      (itemTotalAfterDiscount * gstRate) / (100 + gstRate);
+                    return formatNumber(
+                      Number(itemTotalAfterDiscount - gstValue).toFixed(2)
+                    );
+                  }
+                  // Otherwise show amount after discount
+                  return formatNumber(itemTotalAfterDiscount.toFixed(2));
+                })()}
               </Text>
               <TouchableOpacity
                 style={{ marginEnd: 5 }}
@@ -645,6 +733,47 @@ const SalePOS = () => {
         ))}
 
         {/* Advance and Due (only when advance entered) */}
+
+        {/* Item Total without GST (when wholesale is selected) */}
+        <View style={styles.totalBar}>
+          <Text style={styles.totalLabel}>Item Total</Text>
+          <Text style={styles.totalValue}>
+            {formatNumber(Number(subtotalWithoutGst.toFixed(2)))}
+          </Text>
+        </View>
+
+        {/* Discount (above total when discount is applied) */}
+        {Number(discount.amount) > 0 && (
+          <View style={styles.totalBar}>
+            <Text style={styles.totalLabel}>Discount</Text>
+            <Text style={styles.totalValue}>
+              -{formatNumber(Number(discount.amount))}
+            </Text>
+          </View>
+        )}
+
+        {/* GST (above total when wholesale is selected) */}
+        {gstAmount > 0 && (
+          <View style={styles.totalBar}>
+            <Text style={styles.totalLabel}>GST</Text>
+            <Text style={styles.totalValue}>
+              +{formatNumber(Number(gstAmount.toFixed(2)))}
+            </Text>
+          </View>
+        )}
+
+        {/* Total Amount (below product list) */}
+        <View
+          style={[
+            styles.totalBar,
+            { borderTopWidth: 1, borderColor: "#FCA311", paddingTop: s(5) },
+          ]}
+        >
+          <Text style={styles.totalLabel}>Total</Text>
+          <Text style={styles.totalValue}>
+            {formatNumber(Number(discountedTotal.toFixed(2)))}
+          </Text>
+        </View>
         {advanceNumeric > 0 && (
           <View style={styles.advanceDueBar}>
             <View style={styles.advanceDueRow}>
@@ -659,13 +788,6 @@ const SalePOS = () => {
             </View>
           </View>
         )}
-
-        {/* Total Amount (below product list) */}
-        <View style={styles.totalBar}>
-          <Text style={styles.totalLabel}>Total</Text>
-          <Text style={styles.totalValue}>{formatNumber(totalAmount)}</Text>
-        </View>
-
         {/* Discount */}
         <View style={styles.bottomBox}>
           <View style={styles.discountRow}>
@@ -995,9 +1117,6 @@ const styles = ScaledSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     // backgroundColor: "#FFF7EB",
-    // borderWidth: 1,
-    // borderColor: "#FCA311",
-    borderRadius: 8,
     paddingHorizontal: 12,
     // paddingVertical: 10,
     marginHorizontal: 10,
@@ -1018,12 +1137,12 @@ const styles = ScaledSheet.create({
     // borderWidth: 1,
     // borderColor: "#FCA311",
     // borderRadius: "8@s",
-    paddingHorizontal: "12@s",
+    paddingHorizontal: "8@s",
     paddingTop: "6@s",
     marginHorizontal: "10@s",
     marginTop: "8@s",
-    borderBottomWidth: 1,
-    borderBottomColor: "#FCA311",
+    borderTopWidth: 1,
+    borderTopColor: "#FCA311",
   },
   advanceDueRow: {
     flexDirection: "row",

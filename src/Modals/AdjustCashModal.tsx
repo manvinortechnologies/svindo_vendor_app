@@ -28,7 +28,7 @@ const AdjustCashModal: React.FC<AdjustCashModalProps> = ({
 }) => {
   const [amount, setAmount] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
+  const [note, setNote] = useState("");
   const handleConfirm = async () => {
     if (!amount.trim()) {
       Toast.show({
@@ -51,6 +51,7 @@ const AdjustCashModal: React.FC<AdjustCashModalProps> = ({
       setIsLoading(true);
       const payload = {
         amount: numericAmount.toFixed(2),
+        note: note,
       };
 
       const response = await api.post(API_ROUTES.adjustCash, payload);
@@ -99,9 +100,17 @@ const AdjustCashModal: React.FC<AdjustCashModalProps> = ({
               editable={!isLoading}
               placeholderTextColor="#999"
             />
-            <Text style={styles.helperText}>
-              Enter the amount to adjust your cash balance
-            </Text>
+
+            <Text style={styles.label}>Enter Note</Text>
+            <TextInput
+              style={styles.input}
+              value={note}
+              onChangeText={setNote}
+              placeholder="Enter note"
+              keyboardType="default"
+              editable={!isLoading}
+              placeholderTextColor="#999"
+            />
           </View>
 
           <View style={styles.buttonContainer}>
@@ -175,7 +184,7 @@ const styles = ScaledSheet.create({
     padding: "20@s",
   },
   label: {
-    fontSize: "16@s",
+    fontSize: "14@s",
     fontWeight: "600",
     color: "#333",
     marginBottom: "8@s",
@@ -185,15 +194,15 @@ const styles = ScaledSheet.create({
     borderColor: "#ddd",
     borderRadius: "8@s",
     paddingHorizontal: "15@s",
-    paddingVertical: "12@s",
-    fontSize: "16@s",
+    paddingVertical: "8@s",
+    fontSize: "14@s",
     color: "#333",
     backgroundColor: "#f9f9f9",
   },
   helperText: {
     fontSize: "12@s",
     color: "#666",
-    marginTop: "8@s",
+    marginVertical: "8@s",
   },
   buttonContainer: {
     flexDirection: "row",

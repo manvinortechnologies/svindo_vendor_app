@@ -5,7 +5,6 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Alert,
 } from "react-native";
@@ -16,6 +15,7 @@ import CustomHeader from "../CommonComponent/CustomHeader";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import Toast from "react-native-toast-message";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const DeliverySettingsScreen = () => {
   const [settings, setSettings] = useState({
@@ -33,18 +33,15 @@ const DeliverySettingsScreen = () => {
     try {
       setIsLoading(true);
       const res = await api.get("vendor/deliverysettings/");
-      console.log("res-->", res);
       if (res.data) {
         const data = res.data;
-        console.log("data-->", data);
 
-        // Populate state
         setSettings({
           prepTime: data?.instant_order_prep_time?.toString() || "",
           deliveryTime: data?.general_delivery_days?.toString() || "",
-          deliveryCharge: data?.delivery_charge_per_km?.toString() || "",
-          perKmCharge: data?.delivery_charge_per_km?.toString() || "",
-          baseFare: data?.minimum_base_fare?.toString() || "",
+          deliveryCharge: data?.general_delivery_charge?.toString() || "",
+          perKmCharge: data?.instant_per_km_charge?.toString() || "",
+          baseFare: data?.instant_min_base_fare?.toString() || "",
         });
       }
     } catch (error) {
@@ -65,10 +62,13 @@ const DeliverySettingsScreen = () => {
       const payload = {
         instant_order_prep_time: parseInt(settings.prepTime) || 0,
         general_delivery_days: parseInt(settings.deliveryTime) || 0,
-        delivery_charge_per_km: parseFloat(settings.perKmCharge || "0").toFixed(
+        general_delivery_charge: parseFloat(
+          settings.deliveryCharge || "0"
+        ).toFixed(2),
+        instant_per_km_charge: parseFloat(settings.perKmCharge || "0").toFixed(
           2
         ),
-        minimum_base_fare: parseFloat(settings.baseFare || "0").toFixed(2),
+        instant_min_base_fare: parseFloat(settings.baseFare || "0").toFixed(2),
       };
       const res = await api.post("vendor/deliverysettings/", payload);
       console.log(res);

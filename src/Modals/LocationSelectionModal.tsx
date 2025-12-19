@@ -47,6 +47,7 @@ interface LocationSelectionModalProps {
   onClose: () => void;
   onLocationSelect: (location: Location) => void;
   initialLocation?: Location | null;
+  nonSkippable?: boolean;
 }
 
 const { width, height } = Dimensions.get("window");
@@ -61,6 +62,7 @@ const LocationSelectionModal: React.FC<LocationSelectionModalProps> = ({
   onClose,
   onLocationSelect,
   initialLocation,
+  nonSkippable = false,
 }) => {
   const mapRef = useRef<MapView>(null);
 
@@ -392,14 +394,17 @@ const LocationSelectionModal: React.FC<LocationSelectionModalProps> = ({
       visible={visible}
       animationType="slide"
       presentationStyle="pageSheet"
-      onRequestClose={onClose}
+      onRequestClose={nonSkippable ? undefined : onClose}
     >
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={onClose} style={styles.closeButton}>
-            <Icon name="close" size={24} color="#333" />
-          </TouchableOpacity>
+          {!nonSkippable && (
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <Icon name="close" size={24} color="#333" />
+            </TouchableOpacity>
+          )}
+          {nonSkippable && <View style={styles.closeButton} />}
           <Text style={styles.headerTitle}>Select Location</Text>
           <View style={styles.placeholder} />
         </View>

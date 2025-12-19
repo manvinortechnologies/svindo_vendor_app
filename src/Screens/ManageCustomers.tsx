@@ -18,6 +18,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import Loading from "../CommonComponent/Loading";
 import { Customer } from "../type/Customers";
 import api from "../services/api/api";
+import { ScaledSheet } from "react-native-size-matters";
 
 type RootStackParamList = {
   ManageCustomer: undefined;
@@ -46,11 +47,11 @@ const ManageCustomers = ({ navigation }: any) => {
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [totalPendingAmount, setTotalPendingAmount] = useState<number>(0);
-  useFocusEffect(
-    useCallback(() => {
-      getCustomerData();
-    }, [])
-  );
+  // useFocusEffect(
+  //   useCallback(() => {
+  //     getCustomerData();
+  //   }, [])
+  // );
 
   const getCustomerData = async () => {
     try {
@@ -115,8 +116,7 @@ const ManageCustomers = ({ navigation }: any) => {
 
         {/* Table Headers */}
         <View style={styles.tableHeader}>
-          <Text style={styles.headerText}>Name</Text>
-          <Text style={styles.headerText}>Contact Info</Text>
+          <Text style={styles.headerText}>Details</Text>
           <Text style={styles.headerText}>Credit Balance</Text>
         </View>
 
@@ -131,19 +131,21 @@ const ManageCustomers = ({ navigation }: any) => {
                 navigation.navigate("CustomerLedger", { customer: item })
               }
             >
-              <View style={styles.nameColumn}>
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>
-                    {item.name?.slice(0, 2)}
-                  </Text>
+              <View style={styles.detailsColumn}>
+                {/* <View style={styles.detailsRow}>
+                  <View style={styles.avatar}>
+                    <Text style={styles.avatarText}>
+                      {item.name?.slice(0, 2)}
+                    </Text>
+                    </View>
+                </View> */}
+                <View style={styles.detailsTextContainer}>
+                  <Text style={styles.nameText}>{item.name}</Text>
+                  <Text style={styles.contactText}>{item.contact}</Text>
+                  <Text style={styles.emailText}>{item.email}</Text>
                 </View>
-                <Text style={styles.nameText}>{item.name}</Text>
               </View>
-              <View style={styles.contactColumn}>
-                <Text style={styles.contactText}>{item.contact}</Text>
-                <Text style={styles.contactText}>{item.email}</Text>
-              </View>
-              <View style={styles.nameColumn}>
+              <View style={styles.balanceColumn}>
                 <Text style={styles.balanceText}>{item.balance}</Text>
               </View>
             </TouchableOpacity>
@@ -176,7 +178,7 @@ const ManageCustomers = ({ navigation }: any) => {
 
 export default ManageCustomers;
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
@@ -245,12 +247,12 @@ const styles = StyleSheet.create({
   tableHeader: {
     flexDirection: "row",
     backgroundColor: "#f3f3f3",
-    paddingHorizontal: 16,
+    paddingHorizontal: "10@s",
     paddingVertical: 8,
     justifyContent: "space-between",
   },
   headerText: {
-    flex: 1,
+    // flex: 1,
     fontWeight: "700",
     fontSize: 13,
     color: "#000",
@@ -258,17 +260,26 @@ const styles = StyleSheet.create({
   },
   customerRow: {
     flexDirection: "row",
-    paddingHorizontal: 16,
+    paddingHorizontal: "10@s",
     paddingVertical: 10,
     borderBottomWidth: 1,
     borderColor: "#eee",
     gap: 10,
     justifyContent: "space-between",
+    alignItems: "center",
   },
-  nameColumn: {
+  detailsColumn: {
+    flex: 1,
+    flexDirection: "row",
+  },
+  detailsRow: {
     flexDirection: "row",
     alignItems: "center",
-    width: "30%",
+    flex: 1,
+  },
+  detailsTextContainer: {
+    flex: 1,
+    // marginLeft: 8,
   },
   avatar: {
     width: 28,
@@ -277,7 +288,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#FCA311",
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 8,
   },
   avatarText: {
     color: "#fff",
@@ -288,23 +298,25 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "600",
     color: "#000",
-    width: "80%",
-  },
-  contactColumn: {
-    flex: 1,
-    textAlign: "right",
-    width: "35%",
+    marginBottom: 2,
   },
   contactText: {
     fontSize: 12,
     color: "#333",
+    marginBottom: 2,
+  },
+  emailText: {
+    fontSize: 12,
+    color: "#666",
+  },
+  balanceColumn: {
+    width: "30%",
+    alignItems: "center",
   },
   balanceText: {
-    flex: 1,
-    textAlign: "center",
+    textAlign: "right",
     fontWeight: "600",
     fontSize: 13,
     color: "green",
-    width: "auto",
   },
 });

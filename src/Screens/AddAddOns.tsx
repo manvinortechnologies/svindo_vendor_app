@@ -166,7 +166,7 @@ const AddAddOns = () => {
       );
 
       // Navigate to success screen with product details
-      (navigation as any).navigate(HomeNavigation.ADDON_SUCCESS, {
+      (navigation as any).replace(HomeNavigation.ADDON_SUCCESS, {
         productName: formData.name,
         productDescription: formData.description,
         productImage: formData.image?.uri,

@@ -68,7 +68,9 @@ const CustomerFeedback = () => {
   const [reviewCount, setReviewCount] = useState(0);
 
   // Filter states
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(
+    moment().format("YYYY-MM-DD")
+  );
   const [selectedRatingFilter, setSelectedRatingFilter] = useState<
     string | null
   >("highToLow");

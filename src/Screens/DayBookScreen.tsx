@@ -4,10 +4,8 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Platform,
   FlatList,
   Dimensions,
-  Modal,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -17,7 +15,7 @@ import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 
 import ReportHeader from "./ReportHeader";
-import Bottomnavigation from "./Bottomnavigation";
+import CalendarModal from "../Modals/CalendarModal";
 
 const { width } = Dimensions.get("window");
 
@@ -44,7 +42,11 @@ const DayBookScreen = () => {
   const [daybookData, setDaybookData] = useState<DayBookData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-
+  const [calendarModel, setCalendarModel] = useState<string>("");
+  const [startDate, setStartDate] = useState<string>(
+    moment().format("YYYY-MM-DD")
+  );
+  const [endDate, setEndDate] = useState<string>(moment().format("YYYY-MM-DD"));
   useEffect(() => {
     fetchDaybookData();
   }, [selectedDate]);
@@ -165,103 +167,101 @@ const DayBookScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <ReportHeader
-          title="Day Book "
-          onBack={() => console.log("Back pressed")}
-          // onPdfPress={() => console.log('Download PDF')}
-          // onXlsPress={() => console.log('Download XLS')}
-        />
+    <SafeAreaView style={styles.container}>
+      <ReportHeader
+        title="Day Book "
+        onBack={() => console.log("Back pressed")}
+        // onPdfPress={() => console.log('Download PDF')}
+        // onXlsPress={() => console.log('Download XLS')}
+      />
 
-        {/* Date Selector */}
-        <View style={styles.dateContainer}>
-          <TouchableOpacity style={styles.dateButton} onPress={showDatePicker}>
-            <Text style={styles.dateText}>
-              {moment(selectedDate).format("DD/MM/YYYY")}
-            </Text>
-            <Icon
-              name="calendar"
-              size={18}
-              color="#F59E0B"
-              style={{ marginLeft: 4 }}
-            />
+      {/* Date Selector */}
+      <View style={styles.dateContainer}>
+        <TouchableOpacity style={styles.dateButton} onPress={showDatePicker}>
+          <Text style={styles.dateText}>
+            {moment(selectedDate).format("DD/MM/YYYY")}
+          </Text>
+          <Icon
+            name="calendar"
+            size={18}
+            color="#F59E0B"
+            style={{ marginLeft: 4 }}
+          />
+        </TouchableOpacity>
+      </View>
+
+      {/* All Content */}
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <Loading visible={isLoading} />
+        </View>
+      ) : error ? (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>{error}</Text>
+          <TouchableOpacity
+            style={styles.retryButton}
+            onPress={fetchDaybookData}
+          >
+            <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
-
-        {/* All Content */}
-        {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <Loading visible={isLoading} />
-          </View>
-        ) : error ? (
-          <View style={styles.errorContainer}>
-            <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity
-              style={styles.retryButton}
-              onPress={fetchDaybookData}
-            >
-              <Text style={styles.retryButtonText}>Retry</Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <FlatList
-            data={getTransactions()}
-            keyExtractor={(item, index) => index.toString()}
-            ListHeaderComponent={
-              <>
-                {/* Summary Cards */}
-                <View style={styles.summaryContainer}>
-                  {getSummaryData().map((item) => (
-                    <View
-                      key={item.label}
-                      style={[
-                        styles.summaryCard,
-                        {
-                          backgroundColor: item.color,
-                          borderWidth: 1,
-                          borderColor: item.borderColor,
-                        },
-                      ]}
+      ) : (
+        <FlatList
+          data={getTransactions()}
+          keyExtractor={(item, index) => index.toString()}
+          ListHeaderComponent={
+            <>
+              {/* Summary Cards */}
+              <View style={styles.summaryContainer}>
+                {getSummaryData().map((item) => (
+                  <View
+                    key={item.label}
+                    style={[
+                      styles.summaryCard,
+                      {
+                        backgroundColor: item.color,
+                        borderWidth: 1,
+                        borderColor: item.borderColor,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[styles.summaryLabel, { color: item.borderColor }]}
                     >
-                      <Text
-                        style={[
-                          styles.summaryLabel,
-                          { color: item.borderColor },
-                        ]}
-                      >
-                        {item.label}
-                      </Text>
-                      <Text style={styles.summaryValue}>{item.value}</Text>
-                    </View>
-                  ))}
-                </View>
-
-                {/* Balances */}
-                <View style={styles.balanceContainer}>
-                  <View style={styles.balanceRow}>
-                    <Text style={styles.balanceHeader}>Account</Text>
-                    <Text style={styles.balanceHeader}>Opening</Text>
-                    <Text style={styles.balanceHeader}>Closing</Text>
+                      {item.label}
+                    </Text>
+                    <Text style={styles.summaryValue}>{item.value}</Text>
                   </View>
-                  {getBalances().map((bal) => (
-                    <View style={styles.balanceRow} key={bal.label}>
-                      <Text style={styles.balanceLabel}>{bal.label}</Text>
-                      <Text style={styles.balanceValue}>₹{bal.opening}</Text>
-                      <Text style={styles.balanceValue}>₹{bal.closing}</Text>
-                    </View>
-                  ))}
+                ))}
+              </View>
+
+              {/* Balances */}
+              <View style={styles.balanceContainer}>
+                <View style={styles.balanceRow}>
+                  <Text style={styles.balanceHeader}>Account</Text>
+                  <Text style={styles.balanceHeader}>Opening</Text>
+                  <Text style={styles.balanceHeader}>Closing</Text>
                 </View>
-                {/* Transaction Header */}
-                <View style={styles.transHeader}>
-                  <Text style={styles.transHeaderText}>Type</Text>
-                  <Text style={styles.transHeaderText}>Medium</Text>
-                  <Text style={styles.transHeaderText}>Debit</Text>
-                  <Text style={styles.transHeaderText}>Credit</Text>
-                </View>
-              </>
-            }
-            renderItem={({ item }) => (
+                {getBalances().map((bal) => (
+                  <View style={styles.balanceRow} key={bal.label}>
+                    <Text style={styles.balanceLabel}>{bal.label}</Text>
+                    <Text style={styles.balanceValue}>₹{bal.opening}</Text>
+                    <Text style={styles.balanceValue}>₹{bal.closing}</Text>
+                  </View>
+                ))}
+              </View>
+              {/* Transaction Header */}
+              {/* <View style={styles.transHeader}>
+                <Text style={styles.transHeaderText}>Type</Text>
+                <Text style={styles.transHeaderText}>Medium</Text>
+                <Text style={styles.transHeaderText}>Amount</Text>
+              </View> */}
+            </>
+          }
+          renderItem={({ item }) => {
+            const amount = Number(item.debit) > 0 ? item.debit : item.credit;
+
+            return (
               <View style={styles.transItem}>
                 {item.time && (
                   <Text style={styles.transTime}>
@@ -271,35 +271,32 @@ const DayBookScreen = () => {
                 <View style={{ padding: 6, backgroundColor: "#FFF8ED" }}>
                   <View style={styles.transTopRow}>
                     <Text style={styles.transType}>{item.type}</Text>
+                    <Text style={styles.transAmount}>₹{amount}</Text>
                   </View>
                   <View style={styles.transBottomRow}>
                     <Text style={styles.transDetail}>{item.detail}</Text>
                     <Text style={styles.transMedium}>{item.medium}</Text>
-                    <Text style={styles.transAmount}>₹{item.debit}</Text>
-                    <Text style={styles.transAmount}>₹{item.credit}</Text>
                   </View>
                 </View>
               </View>
-            )}
-            ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No transactions found</Text>
-              </View>
-            }
-            contentContainerStyle={{ paddingBottom: 100 }}
-          />
-        )}
-      </SafeAreaView>
-
-      <DateTimePickerModal
-        isVisible={isDatePickerVisible}
-        mode="date"
-        onConfirm={handleConfirm}
-        onCancel={() => setDatePickerVisible(false)}
-        date={selectedDate}
-        maximumDate={new Date()}
+            );
+          }}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No transactions found</Text>
+            </View>
+          }
+          contentContainerStyle={{ paddingBottom: 100 }}
+        />
+      )}
+      <CalendarModal
+        visible={isDatePickerVisible}
+        onClose={() => setDatePickerVisible(false)}
+        onSelect={(e) => setSelectedDate(new Date(e))}
+        maxDate={moment().format("YYYY-MM-DD")}
+        initialDate={moment(selectedDate).format("YYYY-MM-DD")}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 

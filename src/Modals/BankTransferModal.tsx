@@ -129,7 +129,7 @@ const BankTransferModal: React.FC<BankTransferModalProps> = ({
       <View style={styles.overlay}>
         <View style={styles.modalContainer}>
           <View style={styles.header}>
-            <Text style={styles.title}>Bank Transfer</Text>
+            <Text style={styles.title}>Cash to Bank Transfer</Text>
             <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
               <Icon name="close" size={24} color="#666" />
             </TouchableOpacity>

@@ -10,6 +10,7 @@ import {
   Platform,
   PermissionsAndroid,
   ScrollView,
+  KeyboardAvoidingView,
 } from "react-native";
 import LinearGradient from "react-native-linear-gradient";
 import { useNavigation } from "@react-navigation/native";
@@ -21,6 +22,7 @@ import Loading from "../CommonComponent/Loading";
 import Icon from "react-native-vector-icons/Ionicons";
 import { ScaledSheet } from "react-native-size-matters";
 import { MaskedTextInput } from "react-native-mask-text";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 const SignupScreen: FC<SignUpScreenProps> = () => {
   const navigation =
@@ -60,72 +62,76 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
     }
   };
 
-  const requestSmsPermission = async () => {
-    if (Platform.OS === "android") {
-      try {
-        const granted = await PermissionsAndroid.requestMultiple([
-          PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
-          PermissionsAndroid.PERMISSIONS.READ_SMS,
-        ]);
-        // console.log('SMS permissions:', granted);
-        if (
-          granted["android.permission.RECEIVE_SMS"] ===
-            PermissionsAndroid.RESULTS.GRANTED &&
-          granted["android.permission.READ_SMS"] ===
-            PermissionsAndroid.RESULTS.GRANTED
-        ) {
-          // console.log('SMS permissions granted');
-        } else {
-          // console.log('SMS permissions denied');
-        }
-      } catch (err) {
-        console.warn(err);
-      }
-    }
-  };
+  // const requestSmsPermission = async () => {
+  //   if (Platform.OS === "android") {
+  //     try {
+  //       const granted = await PermissionsAndroid.requestMultiple([
+  //         PermissionsAndroid.PERMISSIONS.RECEIVE_SMS,
+  //         PermissionsAndroid.PERMISSIONS.READ_SMS,
+  //       ]);
+  //       // console.log('SMS permissions:', granted);
+  //       if (
+  //         granted["android.permission.RECEIVE_SMS"] ===
+  //           PermissionsAndroid.RESULTS.GRANTED &&
+  //         granted["android.permission.READ_SMS"] ===
+  //           PermissionsAndroid.RESULTS.GRANTED
+  //       ) {
+  //         // console.log('SMS permissions granted');
+  //       } else {
+  //         // console.log('SMS permissions denied');
+  //       }
+  //     } catch (err) {
+  //       console.warn(err);
+  //     }
+  //   }
+  // };
 
-  useEffect(() => {
-    requestSmsPermission();
-  }, []);
+  // useEffect(() => {
+  //   requestSmsPermission();
+  // }, []);
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Back Button */}
-      <TouchableOpacity
-        style={styles.backButton}
-        onPress={() => navigation.goBack()}
-      >
-        <Icon name="chevron-back" size={24} color="#fff" />
-      </TouchableOpacity>
+    <KeyboardAwareScrollView
+      style={styles.container}
+      contentContainerStyle={{ flex: 1 }}
+    >
+      <ScrollView style={styles.container}>
+        {/* Back Button */}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Icon name="chevron-back" size={24} color="#fff" />
+        </TouchableOpacity>
 
-      {/* Logo & Title */}
-      <LinearGradient colors={["#F9C313", "#FCA511"]} style={styles.header}>
-        <Image
-          source={require("../assets/logo.png")} // Replace with your logo
-          style={styles.logo}
-        />
-        <Text style={styles.title}> Svindo</Text>
-        <Text style={styles.title}>Business</Text>
-        <Text style={styles.subtitle}>Window to Real Growth</Text>
-      </LinearGradient>
-
-      {/* Content Wrapper - Input & Button Centered */}
-      <View style={styles.contentWrapper}>
-        {/* Phone Number Input */}
-        <Text style={styles.headerText}>Login / Signup</Text>
-        <View style={styles.inputContainer}>
-          {/* <Text style={styles.countryCode}>+91</Text> */}
-          <Text style={styles.countryCode}>+91</Text>
-          <MaskedTextInput
-            mask="999-999-9999"
-            placeholder="999-999-9999"
-            placeholderTextColor="#ccc"
-            keyboardType="phone-pad"
-            onChangeText={setPhoneNumber}
-            value={phoneNumber}
-            style={styles.input}
+        {/* Logo & Title */}
+        <LinearGradient colors={["#F9C313", "#FCA511"]} style={styles.header}>
+          <Image
+            source={require("../assets/logo.png")} // Replace with your logo
+            style={styles.logo}
           />
-          {/* <TextInput
+          <Text style={styles.title}> Svindo</Text>
+          <Text style={styles.title}>Business</Text>
+          <Text style={styles.subtitle}>Window to Real Growth</Text>
+        </LinearGradient>
+
+        {/* Content Wrapper - Input & Button Centered */}
+        <View style={styles.contentWrapper}>
+          {/* Phone Number Input */}
+          <Text style={styles.headerText}>Login / Signup</Text>
+          <View style={styles.inputContainer}>
+            {/* <Text style={styles.countryCode}>+91</Text> */}
+            <Text style={styles.countryCode}>+91</Text>
+            <MaskedTextInput
+              mask="999-999-9999"
+              placeholder="999-999-9999"
+              placeholderTextColor="#ccc"
+              keyboardType="phone-pad"
+              onChangeText={setPhoneNumber}
+              value={phoneNumber}
+              style={styles.input}
+            />
+            {/* <TextInput
             placeholder="Enter Phone Number"
             keyboardType="phone-pad"
             style={styles.input}
@@ -134,33 +140,34 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
             onChangeText={(text) => setPhoneNumber(text)}
             maxLength={10}
           /> */}
+          </View>
+
+          {/* Continue Button */}
+          <TouchableOpacity
+            onPress={handleContinue}
+            style={styles.continueButtonWrapper}
+            disabled={!phoneNumber}
+          >
+            <LinearGradient
+              colors={["#F9C313", "#FCA511"]}
+              style={styles.continueButtonGradient}
+            >
+              <Text style={styles.continueText}>Continue</Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
 
-        {/* Continue Button */}
-        <TouchableOpacity
-          onPress={handleContinue}
-          style={styles.continueButtonWrapper}
-          disabled={!phoneNumber}
-        >
-          <LinearGradient
-            colors={["#F9C313", "#FCA511"]}
-            style={styles.continueButtonGradient}
-          >
-            <Text style={styles.continueText}>Continue</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
-
-      {/* Terms & Privacy - Pinned to Bottom */}
-      <View style={styles.footer}>
-        <Text style={styles.termsText}>
-          By continuing, you agree to our {"\n"}
-          <Text style={styles.linkText}>Terms of Service</Text> and{" "}
-          <Text style={styles.linkText}>Privacy Policy</Text>.
-        </Text>
-      </View>
-      <Loading visible={loading} />
-    </ScrollView>
+        {/* Terms & Privacy - Pinned to Bottom */}
+        <View style={styles.footer}>
+          <Text style={styles.termsText}>
+            By continuing, you agree to our {"\n"}
+            <Text style={styles.linkText}>Terms of Service</Text> and{" "}
+            <Text style={styles.linkText}>Privacy Policy</Text>.
+          </Text>
+        </View>
+        <Loading visible={loading} />
+      </ScrollView>
+    </KeyboardAwareScrollView>
   );
 };
 

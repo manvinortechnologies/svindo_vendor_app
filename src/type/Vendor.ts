@@ -15,6 +15,10 @@ export interface Vendor {
   state: string | null;
   country: string | null;
   user: number;
+  is_online: boolean;
+  is_location: boolean;
+  display_as_catalog: boolean;
+  private_catalog: boolean;
 }
 
 export interface VendorStore {
@@ -35,4 +39,5 @@ export interface VendorStore {
   longitude: number;
   address: string;
   pincode: string;
+  is_offline: boolean;
 }

@@ -34,7 +34,10 @@ import { API_ROUTES } from "../constants/api-routes.constants";
 import { getLocationDetails } from "../utils/locationUtils";
 import Toast from "react-native-toast-message";
 import { useIsFocused } from "@react-navigation/native";
-const screenWidth = Dimensions.get("window").width - 20;
+import FastImage from "react-native-fast-image";
+import React from "react";
+import BlastedImage from "react-native-blasted-image";
+
 const { width, height } = Dimensions.get("window");
 
 const Storescreen = ({ navigation }: any) => {
@@ -380,14 +383,33 @@ const Storescreen = ({ navigation }: any) => {
         {/* Top Header */}
 
         {/* Store Banner */}
-        <Image
-          source={
-            storeData?.banner_image
-              ? { uri: APP_CONSTANTS.API_BASE_URL + storeData.banner_image }
-              : require("../assets/product/product2.png")
-          }
-          style={styles.banner}
-        />
+        {storeData?.banner_image ? (
+          <BlastedImage
+            source={
+              storeData?.banner_image
+                ? {
+                    uri: APP_CONSTANTS.API_BASE_URL + storeData.banner_image,
+                  }
+                : require("../assets/product/product2.png")
+            }
+            style={styles.banner}
+            resizeMode="cover"
+          />
+        ) : (
+          <TouchableOpacity
+            onPress={() => handleEditPress("banner")}
+            style={[
+              styles.banner,
+              {
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "#f0f0f0",
+              },
+            ]}
+          >
+            <Icon name="image-plus" size={s(60)} color="#999" />
+          </TouchableOpacity>
+        )}
 
         {/* Store Details Card */}
         <View style={styles.detailsCardContainer}>
@@ -400,18 +422,29 @@ const Storescreen = ({ navigation }: any) => {
                   alignSelf: "flex-start",
                 }}
               >
-                <Image
-                  source={
-                    storeData?.profile_image
-                      ? {
-                          uri:
-                            APP_CONSTANTS.API_BASE_URL +
-                            storeData.profile_image,
-                        }
-                      : require("../assets/product/storelogo.png")
-                  }
-                  style={styles.logo}
-                />
+                {storeData?.profile_image ? (
+                  <BlastedImage
+                    source={{
+                      uri: APP_CONSTANTS.API_BASE_URL + storeData.profile_image,
+                    }}
+                    resizeMode="cover"
+                    style={styles.logo}
+                  />
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => handleEditPress("logo")}
+                    style={[
+                      styles.logo,
+                      {
+                        justifyContent: "center",
+                        alignItems: "center",
+                        backgroundColor: "#f0f0f0",
+                      },
+                    ]}
+                  >
+                    <Icon name="image-plus" size={s(60)} color="#999" />
+                  </TouchableOpacity>
+                )}
                 <TouchableOpacity
                   onPress={() => handleEditPress("logo")}
                   style={styles.editLogoButton}
@@ -420,7 +453,11 @@ const Storescreen = ({ navigation }: any) => {
                 </TouchableOpacity>
               </View>
               <View style={styles.storeContainer}>
-                <Text style={styles.storetext}>
+                <Text
+                  style={styles.storetext}
+                  numberOfLines={2}
+                  ellipsizeMode="tail"
+                >
                   {storeData?.name || "Business Name"}
                 </Text>
                 <TouchableOpacity onPress={() => handleEditPress("name")}>
@@ -448,19 +485,36 @@ const Storescreen = ({ navigation }: any) => {
               <View style={styles.ratingContainer}>
                 <TouchableOpacity
                   style={{
-                    flexDirection: "row",
-                    alignItems: "center",
                     alignSelf: "flex-end",
                     justifyContent: "flex-end",
+                    width: "40%",
                   }}
                   onPress={() => setLocationModalVisible(true)}
                 >
-                  <MaterialIcon name="location-on" size={25} color="#006EB2" />
-                  <Text
-                    style={{ color: "#000", width: "40%" }}
-                    numberOfLines={2}
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      // alignSelf: "flex-end",
+                    }}
                   >
-                    {location?.address || "Location"}
+                    <MaterialIcon
+                      name="location-on"
+                      size={s(20)}
+                      color="#006EB2"
+                    />
+                    <Text
+                      style={{
+                        fontSize: 16,
+                        // fontWeight: "bold",
+                        color: "#000",
+                      }}
+                    >
+                      Location
+                    </Text>
+                  </View>
+                  <Text style={{ color: "#000" }} numberOfLines={2}>
+                    {location?.address || "Press to add location"}
                   </Text>
                 </TouchableOpacity>
                 {/* Follow Button and Icons */}
@@ -528,7 +582,7 @@ const Storescreen = ({ navigation }: any) => {
           <Text style={styles.sectionTitleRight}>Max - 3</Text>
         </View>
         {/* Scrollable Banner */}
-        {storeData?.banners && storeData?.banners?.length > 0 && (
+        {storeData?.banners && storeData?.banners?.length > 0 ? (
           <Carousel
             data={storeData?.banners || []}
             loop={false}
@@ -562,6 +616,24 @@ const Storescreen = ({ navigation }: any) => {
             width={width}
             height={s(150)}
           />
+        ) : (
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate(HomeNavigation.ADD_BANNER_SCREEN, {
+                store: storeData?.id,
+              })
+            }
+            style={[
+              styles.scrollBanner,
+              {
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "#f0f0f0",
+              },
+            ]}
+          >
+            <Icon name="image-plus" size={s(60)} color="#999" />
+          </TouchableOpacity>
         )}
 
         <View style={styles.spotlightSection}>
@@ -602,14 +674,14 @@ const Storescreen = ({ navigation }: any) => {
             contentContainerStyle={styles.productcontainer}
           >
             {storeData?.spotlight_products &&
-              storeData.spotlight_products.length > 0 &&
+            storeData.spotlight_products.length > 0 ? (
               storeData.spotlight_products.map((product) => (
                 <View key={product.id} style={styles.productCard}>
                   <View style={{ position: "relative" }}>
                     {product.discount_tag && (
                       <View style={styles.stockBadgeAbove}>
                         <Text style={styles.stockText}>
-                          {product.discount_tag} % OFF
+                          {product.discount_tag}
                         </Text>
                       </View>
                     )}
@@ -622,10 +694,7 @@ const Storescreen = ({ navigation }: any) => {
                       style={styles.productImage}
                     />
                     <TouchableOpacity
-                      style={[
-                        styles.editBannerButton,
-                        { right: s(5), top: s(5) },
-                      ]}
+                      style={styles.editSpotlightButton}
                       onPress={() =>
                         navigation.navigate("AddSpotlightScreen", {
                           item: product,
@@ -673,7 +742,22 @@ const Storescreen = ({ navigation }: any) => {
                     </View>
                   </View>
                 </View>
-              ))}
+              ))
+            ) : (
+              <TouchableOpacity
+                onPress={() => navigation.navigate("AddSpotlightScreen")}
+                style={[
+                  styles.productCard,
+                  {
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: "#f0f0f0",
+                  },
+                ]}
+              >
+                <Icon name="image-plus" size={s(60)} color="#999" />
+              </TouchableOpacity>
+            )}
           </ScrollView>
         </View>
 
@@ -710,41 +794,65 @@ const Storescreen = ({ navigation }: any) => {
 
             <Text style={styles.sectionTitleRight}>Max - 4</Text>
           </View>
-          {storeData?.posts?.map((post: any) => (
-            <View style={[styles.highlightCard, { position: "relative" }]}>
-              <Image
-                source={
-                  post.media
-                    ? { uri: APP_CONSTANTS.API_BASE_URL + post.media }
-                    : require("../assets/product/product2.png")
-                }
-                style={styles.highlightImage}
-              />
-              <TouchableOpacity
-                style={[styles.editBannerButton, { right: s(10), top: s(10) }]}
-                onPress={() =>
-                  navigation.navigate(HomeNavigation.ADD_POST_SCREEN, {
-                    item: post,
-                    type: "post",
-                  })
-                }
-              >
-                <Icon name="pencil-outline" size={s(25)} color="#000" />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.deleteBannerButton,
-                  { bottom: s(5), right: s(5) },
-                ]}
-                onPress={() => handleDeletePost(post.id)}
-              >
-                <Icon name="delete-outline" size={s(25)} color="#FF0000" />
-              </TouchableOpacity>
-              <Text style={styles.highlightDescription}>
-                {post.description}
-              </Text>
-            </View>
-          ))}
+          {storeData?.posts?.length > 0 ? (
+            storeData?.posts?.map((post: any) => (
+              <View style={[styles.highlightCard, { position: "relative" }]}>
+                <Image
+                  source={
+                    post.media
+                      ? { uri: APP_CONSTANTS.API_BASE_URL + post.media }
+                      : require("../assets/product/product2.png")
+                  }
+                  style={styles.highlightImage}
+                />
+                <TouchableOpacity
+                  style={[
+                    styles.editBannerButton,
+                    { right: s(10), top: s(10) },
+                  ]}
+                  onPress={() =>
+                    navigation.navigate(HomeNavigation.ADD_POST_SCREEN, {
+                      item: post,
+                      type: "post",
+                    })
+                  }
+                >
+                  <Icon name="pencil-outline" size={s(25)} color="#000" />
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.deleteBannerButton,
+                    { bottom: s(5), right: s(5) },
+                  ]}
+                  onPress={() => handleDeletePost(post.id)}
+                >
+                  <Icon name="delete-outline" size={s(25)} color="#FF0000" />
+                </TouchableOpacity>
+                <Text style={styles.highlightDescription}>
+                  {post.description}
+                </Text>
+              </View>
+            ))
+          ) : (
+            <TouchableOpacity
+              style={[
+                styles.highlightCard,
+                {
+                  justifyContent: "center",
+                  alignItems: "center",
+                  alignSelf: "flex-start",
+                  backgroundColor: "#f0f0f0",
+                },
+              ]}
+              onPress={() =>
+                navigation.navigate(HomeNavigation.ADD_POST_SCREEN, {
+                  type: "post",
+                })
+              }
+            >
+              <Icon name="image-plus" size={s(60)} color="#999" />
+            </TouchableOpacity>
+          )}
           {/* <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -952,8 +1060,9 @@ const Storescreen = ({ navigation }: any) => {
         }
         currentData={{
           name: storeData?.name,
-          banner_image: storeData?.banner_image,
-          profile_image: storeData?.profile_image,
+          banner_image: storeData?.banner_image + "?t=" + new Date().getTime(),
+          profile_image:
+            storeData?.profile_image + "?t=" + new Date().getTime(),
           about_text: storeData?.about,
           storetag: storeData?.storetag,
         }}
@@ -1099,7 +1208,7 @@ const styles = ScaledSheet.create({
     textAlign: "center",
   },
   banner: {
-    width: "100%",
+    width: width,
     height: "500@s",
   },
   header: {
@@ -1169,21 +1278,21 @@ const styles = ScaledSheet.create({
     borderColor: "#CDECFF",
   },
   detailsCard: {
-    width: "95%",
+    // width: "95%",
     flexDirection: "row",
     alignItems: "center",
     paddingTop: "25@s",
   },
   logoContainer: {
-    width: 200,
-    height: 90,
-    borderRadius: 45,
+    width: "200@s",
+    height: "90@s",
+    borderRadius: "45@s",
 
     justifyContent: "flex-start",
 
     position: "absolute",
-    top: "-50@s",
-    left: 15,
+    top: "-60@s",
+    left: "6@s",
   },
   editLogoButton: {
     position: "absolute",
@@ -1212,12 +1321,15 @@ const styles = ScaledSheet.create({
   },
   storeContainer: {
     flexDirection: "row",
+    maxWidth: "80%",
   },
 
   logo: {
-    width: 100,
-    height: 100,
-    borderRadius: 35,
+    width: "100@s",
+    height: "100@s",
+    borderRadius: 100,
+    borderWidth: 1,
+    borderColor: "#505050",
   },
   infoContainer: {
     flex: 1,
@@ -1299,8 +1411,9 @@ const styles = ScaledSheet.create({
   },
   textContainer: {
     position: "relative",
-    marginTop: -50,
-    padding: 20,
+    marginTop: "-50@s",
+    paddingTop: "10@s",
+    paddingHorizontal: "6@s",
   },
   textheaderContainer: {
     flexDirection: "row",
@@ -1382,6 +1495,15 @@ const styles = ScaledSheet.create({
     position: "absolute",
     top: "5@s",
     right: "15@s",
+    backgroundColor: "#fff",
+    borderRadius: 50,
+    padding: "2@s",
+    elevation: 5,
+  },
+  editSpotlightButton: {
+    position: "absolute",
+    bottom: "5@s",
+    left: "5@s",
     backgroundColor: "#fff",
     borderRadius: 50,
     padding: "2@s",

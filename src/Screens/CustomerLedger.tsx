@@ -23,6 +23,8 @@ import moment from "moment";
 import DeleteModal from "./DeleteModal";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import Toast from "react-native-toast-message";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useIsFocused } from "@react-navigation/native";
 
 interface LedgerTransaction {
   type: "invoice" | "payment";
@@ -47,6 +49,7 @@ interface CustomerInfo {
 }
 
 const CustomerLedger = ({ navigation, route }: any) => {
+  const isFocused = useIsFocused();
   const [ledgerData, setLedgerData] = useState<LedgerSection[]>([]);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     name: route?.params?.customer?.name,
@@ -72,10 +75,10 @@ const CustomerLedger = ({ navigation, route }: any) => {
   const customerId = route?.params?.customer?.id;
 
   useEffect(() => {
-    if (customerId) {
+    if (customerId && isFocused) {
       fetchLedgerData();
     }
-  }, [customerId]);
+  }, [customerId, isFocused]);
 
   const fetchLedgerData = async () => {
     try {
@@ -93,7 +96,10 @@ const CustomerLedger = ({ navigation, route }: any) => {
 
         // Calculate total sale from ledger transactions
         const totalSale = calculateTotalSale(response.data.ledger || []);
-        const creditBalance = response.data.balance || 0;
+        const creditBalance =
+          response.data.balance ||
+          route?.params?.customer?.opening_balance ||
+          0;
 
         // Update customer info from API response
         setCustomerInfo({
@@ -314,7 +320,7 @@ const CustomerLedger = ({ navigation, route }: any) => {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <CustomHeader
           title=""
           rightIcon={
@@ -332,12 +338,12 @@ const CustomerLedger = ({ navigation, route }: any) => {
           }
         />
         <Loading visible={isLoading} />
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
       <CustomHeader
         title=""
@@ -451,7 +457,7 @@ const CustomerLedger = ({ navigation, route }: any) => {
                     { backgroundColor: i % 2 === 0 ? "#fff8f0" : "#fff" },
                   ]}
                 >
-                  {txn.type === "invoice" ? (
+                  {/* {txn.type === "invoice" ? (
                     <>
                       <Text style={styles.txnText}>Invoice</Text>
                       <Text style={styles.txnValue}>{txn.id}</Text>
@@ -471,32 +477,33 @@ const CustomerLedger = ({ navigation, route }: any) => {
                         {txn.balance.toFixed(2)}
                       </Text>
                     </>
-                  ) : (
-                    <>
-                      <Text style={styles.txnText}>Transaction</Text>
-                      <Text style={styles.txnValue}>{txn.id}</Text>
-                      <Text style={styles.txnText}>Type</Text>
-                      <Text style={styles.txnValue}>{txn.medium}</Text>
-                      <Text style={styles.txnText}>Amount</Text>
-                      <Text
-                        style={[
-                          styles.txnValue,
-                          { color: txn.balance < 0 ? "red" : "green" },
-                        ]}
-                      >
-                        {Math.abs(txn.balance).toFixed(2)}
-                      </Text>
-                      <Text style={styles.txnText}>Balance</Text>
-                      <Text
-                        style={[
-                          styles.txnValue,
-                          { color: (txn.amount || 0) < 0 ? "red" : "green" },
-                        ]}
-                      >
-                        {(txn.amount || 0).toFixed(2)}
-                      </Text>
-                    </>
-                  )}
+                  ) : 
+                  ( */}
+                  <>
+                    <Text style={styles.txnText}>Transaction</Text>
+                    <Text style={styles.txnValue}>{txn.id}</Text>
+                    <Text style={styles.txnText}>Type</Text>
+                    <Text style={styles.txnValue}>{txn.medium}</Text>
+                    <Text style={styles.txnText}>Amount</Text>
+                    <Text
+                      style={[
+                        styles.txnValue,
+                        { color: txn.balance < 0 ? "red" : "green" },
+                      ]}
+                    >
+                      {Math.abs(txn.balance).toFixed(2)}
+                    </Text>
+                    <Text style={styles.txnText}>Balance</Text>
+                    <Text
+                      style={[
+                        styles.txnValue,
+                        { color: (txn.amount || 0) < 0 ? "red" : "green" },
+                      ]}
+                    >
+                      {(txn.amount || 0).toFixed(2)}
+                    </Text>
+                  </>
+                  {/* )} */}
                 </View>
               ))}
             </View>
@@ -508,7 +515,9 @@ const CustomerLedger = ({ navigation, route }: any) => {
       <TouchableOpacity
         style={styles.addButton}
         onPress={() =>
-          navigation.navigate(HomeNavigation.PAYMENTSCREEN as never)
+          navigation.navigate(HomeNavigation.PAYMENTSCREEN, {
+            customerId: customerId,
+          })
         }
       >
         <Text style={styles.addButtonText}>Add Transaction</Text>
@@ -616,7 +625,7 @@ const CustomerLedger = ({ navigation, route }: any) => {
         buttonText="Cancel"
         buttonText2="Delete"
       />
-    </View>
+    </SafeAreaView>
   );
 };
 

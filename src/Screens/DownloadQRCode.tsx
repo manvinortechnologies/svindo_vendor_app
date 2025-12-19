@@ -9,7 +9,6 @@ import {
   Platform,
 } from "react-native";
 import Header from "./Header";
-import Bottomnavigation from "./Bottomnavigation";
 import { Text } from "react-native";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import QRCode from "react-native-qrcode-svg";
@@ -21,6 +20,7 @@ import RNFS from "react-native-fs";
 import { CameraRoll } from "@react-native-camera-roll/camera-roll";
 import { PERMISSIONS, request, RESULTS, check } from "react-native-permissions";
 import Toast from "react-native-toast-message";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 const DownloadQRCode = () => {
   const [storeId, setStoreId] = useState<string>("0"); // Default value
@@ -130,16 +130,16 @@ const DownloadQRCode = () => {
       setIsDownloading(true);
 
       // Check permissions
-      const hasPermission = await requestStoragePermission();
-      if (!hasPermission) {
-        Toast.show({
-          type: "error",
-          text1: "Error",
-          text2: "Storage permission is required to save QR code",
-        });
+      // const hasPermission = await requestStoragePermission();
+      // if (!hasPermission) {
+      //   Toast.show({
+      //     type: "error",
+      //     text1: "Error",
+      //     text2: "Storage permission is required to save QR code",
+      //   });
 
-        return;
-      }
+      //   return;
+      // }
 
       // Get QR code as base64
       if (qrRef.current) {
@@ -207,7 +207,7 @@ const DownloadQRCode = () => {
   const logo = require("../assets/svindo_qr_logo.jpeg");
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <CustomHeader title="Store QR Code" />
 
       {error && (
@@ -250,7 +250,7 @@ const DownloadQRCode = () => {
       </ScrollView>
 
       <Loading visible={isLoading} />
-    </View>
+    </SafeAreaView>
   );
 };
 

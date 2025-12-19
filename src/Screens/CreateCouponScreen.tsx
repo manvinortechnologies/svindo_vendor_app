@@ -26,29 +26,34 @@ import api from "../services/api/api";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import { useRoute, RouteProp, ParamListBase } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
+import moment from "moment";
 
 const { width } = Dimensions.get("window");
 
 interface RootStackParamList extends ParamListBase {
-  CreateCoupon: { requestId: string };
+  CreateCoupon: { customer: any };
 }
 
 const CreateCouponScreen = ({ navigation }: any) => {
   const route = useRoute<RouteProp<RootStackParamList, "CreateCoupon">>();
-  const requestId = route.params?.requestId;
+  const customer = route.params?.customer;
   const [selectedType, setSelectedType] = useState<string>("discount");
-  const [customerIdEnabled, setCustomerIdEnabled] = useState(!!requestId);
-  const [customerId, setCustomerIdValue] = useState(requestId || "");
+  const [customerIdEnabled, setCustomerIdEnabled] = useState(!!customer?.id);
+  const [customerId, setCustomerIdValue] = useState("USR" + customer?.id || "");
   const [onlyFollowers, setOnlyFollowers] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [discountAmount, setDiscountAmount] = useState<string>("");
   const [discountPercentage, setDiscountPercentage] = useState<string>("");
   const [minOrderAmmount, setMinOrderAmount] = useState<string>("");
   const [maxOrderAmmount, setMaxOrderAmount] = useState<string>("");
-  const [valiDate, setValidDate] = useState<string>("");
-  const [valiTime, setValidTime] = useState<string>("");
-  const [startDate, setstartdDate] = useState<string>("");
-  const [startTime, setstartdTime] = useState<string>("");
+  const [valiDate, setValidDate] = useState<string>(
+    moment().format("YYYY-MM-DD")
+  );
+  const [valiTime, setValidTime] = useState<string>(moment().format("HH:mm"));
+  const [startDate, setstartdDate] = useState<string>(
+    moment().format("YYYY-MM-DD")
+  );
+  const [startTime, setstartdTime] = useState<string>(moment().format("HH:mm"));
   const [code, setCode] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [tittle, setTittle] = useState<string>("");
@@ -352,6 +357,7 @@ const CreateCouponScreen = ({ navigation }: any) => {
             placeholderTextColor="#727272"
             style={styles.inputFull}
             value={customerId}
+            editable={!customer?.id}
             onChangeText={setCustomerIdValue}
           />
         )}

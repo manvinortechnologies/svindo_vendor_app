@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, Text, View, StyleSheet, Alert } from "react-native";
+import {
+  ScrollView,
+  Text,
+  View,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 import MainContainer from "../CommonComponent/MainContainer";
 import Headerwithback from "./Headerwithback";
 import SettingItem from "../CommonComponent/SettingItem";
-import CustomButton from "../CommonComponent/CustomeButton";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import { API_ROUTES } from "../constants/api-routes.constants";
@@ -11,12 +16,12 @@ import Toast from "react-native-toast-message";
 
 // UI Display Arrays
 const productSettings = [
-  "Wholesale price",
+  // "Wholesale price",
   "Stock",
   "IMEI / Serial Number",
   "Low Stock Alert",
-  "Category",
-  "Sub category",
+  // "Category",
+  // "Sub category",
   "Brand Name",
   "Color",
   "Size",
@@ -24,7 +29,7 @@ const productSettings = [
   "Expiry Date",
   "Description",
   "Image",
-  "Tax",
+  // "Tax",
   "Food",
 ];
 
@@ -43,12 +48,12 @@ const policies = [
 // UI Label to API Key Map
 const settingKeyMap: { [key: string]: string } = {
   // Product Fields
-  "Wholesale price": "wholesale_price",
+  // "Wholesale price": "wholesale_price",
   Stock: "stock",
   "IMEI / Serial Number": "imei",
   "Low Stock Alert": "low_stock_alert",
-  Category: "category",
-  "Sub category": "sub_category",
+  // Category: "category",
+  // "Sub category": "sub_category",
   "Brand Name": "brand_name",
   Color: "color",
   Size: "size",
@@ -56,7 +61,7 @@ const settingKeyMap: { [key: string]: string } = {
   "Expiry Date": "expiry_date",
   Description: "description",
   Image: "image",
-  Tax: "tax",
+  // Tax: "tax",
   Food: "food",
 
   // Delivery
@@ -74,7 +79,7 @@ const settingKeyMap: { [key: string]: string } = {
   "On shop orders": "shop_orders",
 
   // Catalog
-  "Online Catalog only": "online_catalog_only",
+  // "Online Catalog only": "online_catalog_only",
 };
 
 // Combine all labels for initializing state
@@ -82,7 +87,7 @@ const allSettingsLabels = [
   ...productSettings,
   ...deliveryDetails,
   ...policies,
-  "Online Catalog only",
+  // "Online Catalog only",
 ];
 
 const ProductSetting = ({ navigation }: any) => {
@@ -95,22 +100,26 @@ const ProductSetting = ({ navigation }: any) => {
     });
     return initial;
   });
+  const [originalSettings, setOriginalSettings] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   const loadProductSettings = async () => {
     try {
       setIsLoading(true);
       const res = await api.get(API_ROUTES.getProductSettings);
       const data = res?.data || {};
-      setSettings((prev) => {
-        const next: { [key: string]: boolean } = { ...prev };
-        allSettingsLabels.forEach((label) => {
-          const apiKey = settingKeyMap[label];
-          if (apiKey in data) {
-            next[label] = Boolean(data[apiKey]);
-          }
-        });
-        return next;
+      const loadedSettings: { [key: string]: boolean } = {};
+      allSettingsLabels.forEach((label) => {
+        const apiKey = settingKeyMap[label];
+        if (apiKey in data) {
+          loadedSettings[label] = Boolean(data[apiKey]);
+        } else {
+          loadedSettings[label] = true; // Default to true if not in API response
+        }
       });
+      setSettings(loadedSettings);
+      setOriginalSettings(loadedSettings);
     } catch (error) {
       console.error("Failed to load product settings:", error);
     } finally {
@@ -124,6 +133,10 @@ const ProductSetting = ({ navigation }: any) => {
 
   const handleToggle = (key: string) => {
     setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const hasChanges = () => {
+    return JSON.stringify(settings) !== JSON.stringify(originalSettings);
   };
 
   const buildPayload = () => {
@@ -175,6 +188,7 @@ const ProductSetting = ({ navigation }: any) => {
       // }
       const res = await api.post(API_ROUTES.productSettings, payload);
       if (res.status === 200 || res.status === 201) {
+        setOriginalSettings({ ...settings });
         Toast.show({
           type: "success",
           text1: "Success",
@@ -214,13 +228,29 @@ const ProductSetting = ({ navigation }: any) => {
   return (
     <MainContainer>
       <View style={styles.container}>
-        <Headerwithback title="Product Settings" />
+        <Headerwithback
+          title="Product Settings"
+          rightIcons={
+            hasChanges()
+              ? [
+                  <TouchableOpacity
+                    key="save"
+                    onPress={saveProductSettings}
+                    style={styles.saveButton}
+                    disabled={isLoading}
+                  >
+                    <Text style={styles.saveButtonText}>Save</Text>
+                  </TouchableOpacity>,
+                ]
+              : []
+          }
+        />
         <ScrollView showsVerticalScrollIndicator={false}>
           {renderSection("", productSettings)}
           {renderSection("Delivery Details", deliveryDetails)}
           {renderSection("Policies", policies)}
 
-          <View style={styles.section}>
+          {/* <View style={styles.section}>
             <SettingItem
               title="Online Catalog only"
               value={settings["Online Catalog only"]}
@@ -231,11 +261,7 @@ const ProductSetting = ({ navigation }: any) => {
               your svindo web page, where only images and product description is
               shown to the users.
             </Text>
-          </View>
-
-          <View style={styles.section}>
-            <CustomButton title="Save Settings" onPress={saveProductSettings} />
-          </View>
+          </View> */}
           <Loading visible={isLoading} />
         </ScrollView>
       </View>
@@ -264,5 +290,16 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#555",
     marginTop: 8,
+  },
+  saveButton: {
+    backgroundColor: "#FCA311",
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+  saveButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

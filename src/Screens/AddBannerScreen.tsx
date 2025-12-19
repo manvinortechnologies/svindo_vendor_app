@@ -8,8 +8,6 @@ import {
   Image,
   Switch,
   SafeAreaView,
-  TouchableWithoutFeedback,
-  Keyboard,
   KeyboardAvoidingView,
   Platform,
   Alert,
@@ -190,121 +188,120 @@ const AddBannerScreen = ({ navigation }: any) => {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Add Banner</Text>
       </View> */}
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <KeyboardAvoidingView
-            style={{ flex: 1 }}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 100}
-          >
-            <ScrollView keyboardShouldPersistTaps="handled">
-              {/* Upload Banner Box */}
-              <TouchableOpacity
-                style={styles.uploadBox}
-                onPress={() => {
-                  setImageModel(true);
-                }}
-              >
-                {imageFile?.uri ? (
-                  <Image
-                    source={{ uri: imageFile.uri }}
-                    style={styles.uploadedMedia}
-                    resizeMode="cover"
-                  />
-                ) : (
-                  <>
-                    <Text style={styles.uploadText}>+</Text>
-                    <Text style={styles.uploadSubtext}>
-                      Upload banner{"\n"}Size - less than 1 MB{"\n"}Ratio : 1:3
-                    </Text>
-                  </>
-                )}
-              </TouchableOpacity>
-
-              {/* Campaign Name */}
-              <Text style={styles.label}>Campaign name</Text>
-              <TextInput
-                placeholder="Enter here"
-                value={campaignName}
-                onChangeText={setCampaignName}
-                style={styles.input}
-                placeholderTextColor="#888"
-              />
-
-              {/* Redirect Dropdown */}
-              <Text style={styles.label}>On click redirect to</Text>
-              <CustomDropdown
-                placeholder="Select Option"
-                options={items}
-                selectedValue={redirectTo}
-                onSelect={(option) => setRedirectTo(option.id)}
-                dropDownBoxStyle={styles.dropdown}
-              />
-
-              {redirectTo === "product" && (
-                <View style={{ marginBottom: 12 }}>
-                  <TouchableOpacity
-                    onPress={openProductPicker}
-                    style={{
-                      backgroundColor: "#006EB2",
-                      paddingVertical: 10,
-                      borderRadius: 8,
-                      alignItems: "center",
-                      marginTop: 8,
-                    }}
-                  >
-                    {loadingProducts ? (
-                      <Text style={{ color: "#fff", fontWeight: "700" }}>
-                        Loading...
-                      </Text>
-                    ) : (
-                      <Text style={{ color: "#fff", fontWeight: "700" }}>
-                        {selectedProduct?.name
-                          ? `Selected: ${selectedProduct.name}`
-                          : "Select Product"}
-                      </Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 100}
+        >
+          <ScrollView keyboardShouldPersistTaps="handled">
+            {/* Upload Banner Box */}
+            <TouchableOpacity
+              style={styles.uploadBox}
+              onPress={() => {
+                setImageModel(true);
+              }}
+            >
+              {imageFile?.uri ? (
+                <Image
+                  source={{ uri: imageFile.uri }}
+                  style={styles.uploadedMedia}
+                  resizeMode="cover"
+                />
+              ) : (
+                <>
+                  <Text style={styles.uploadText}>+</Text>
+                  <Text style={styles.uploadSubtext}>
+                    Upload banner{"\n"}Size - less than 1 MB{"\n"}Ratio : 1:3
+                  </Text>
+                </>
               )}
+            </TouchableOpacity>
 
-              {/* Boost Post Switch */}
-              <View style={styles.switchRow}>
-                <Text style={styles.label}>Boost Post</Text>
-                {/* <Switch
+            {/* Campaign Name */}
+            <Text style={styles.label}>Campaign name</Text>
+            <TextInput
+              placeholder="Enter here"
+              value={campaignName}
+              onChangeText={setCampaignName}
+              style={styles.input}
+              placeholderTextColor="#888"
+            />
+
+            {/* Redirect Dropdown */}
+            <Text style={styles.label}>On click redirect to</Text>
+            <CustomDropdown
+              placeholder="Select Option"
+              options={items}
+              selectedValue={redirectTo}
+              onSelect={(option) => setRedirectTo(option.id)}
+              dropDownBoxStyle={styles.dropdown}
+            />
+
+            {redirectTo === "product" && (
+              <View style={{ marginBottom: 12 }}>
+                <TouchableOpacity
+                  onPress={openProductPicker}
+                  style={{
+                    backgroundColor: "#006EB2",
+                    paddingVertical: 10,
+                    borderRadius: 8,
+                    alignItems: "center",
+                    marginTop: 8,
+                  }}
+                >
+                  {loadingProducts ? (
+                    <Text style={{ color: "#fff", fontWeight: "700" }}>
+                      Loading...
+                    </Text>
+                  ) : (
+                    <Text style={{ color: "#fff", fontWeight: "700" }}>
+                      {selectedProduct?.name
+                        ? `Selected: ${selectedProduct.name}`
+                        : "Select Product"}
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              </View>
+            )}
+
+            {/* Boost Post Switch */}
+            <View style={styles.switchRow}>
+              <Text style={styles.label}>Boost Post</Text>
+              {/* <Switch
           value={boost}
           onValueChange={setBoost}
           trackColor={{ false: '#ccc', true: '#ffb300' }}
           thumbColor={boost ? '#ffa000' : '#f4f3f4'}
         /> */}
-                <CustomSwitch
-                  value={boost}
-                  onValueChange={setBoost}
-                  disabled={true}
+              <CustomSwitch
+                value={boost}
+                onValueChange={setBoost}
+                disabled={true}
+              />
+            </View>
+
+            {/* Budget Input */}
+            {boost && (
+              <>
+                <Text style={styles.label}>Budget (Minimum - 0 Rupees)</Text>
+                <TextInput
+                  placeholder="Boosted by default"
+                  value={amount}
+                  onChangeText={setAmount}
+                  keyboardType="numeric"
+                  style={styles.input}
+                  placeholderTextColor="#000"
+                  editable={false}
                 />
-              </View>
+              </>
+            )}
 
-              {/* Budget Input */}
-              {boost && (
-                <>
-                  <Text style={styles.label}>Budget (Minimum - 0 Rupees)</Text>
-                  <TextInput
-                    placeholder="Boosted by default"
-                    value={amount}
-                    onChangeText={setAmount}
-                    keyboardType="numeric"
-                    style={styles.input}
-                    placeholderTextColor="#000"
-                    editable={false}
-                  />
-                </>
-              )}
-
-              {/* Approx Cost Section */}
-              <View style={styles.costBox}>
-                <Text style={{ color: "#ff9800" }}>
-                  We are offering free boost post for limited time!
-                </Text>
-                {/* <Text style={styles.costText}>
+            {/* Approx Cost Section */}
+            <View style={styles.costBox}>
+              <Text style={{ color: "#ff9800" }}>
+                We are offering free boost post for limited time!
+              </Text>
+              {/* <Text style={styles.costText}>
                   <Text style={{ color: "#ff9800" }}>Approximate Costing</Text>
                   {"\n"}
                   per view cost: <Text style={styles.bold}>10 paisa</Text> per
@@ -318,31 +315,30 @@ const AddBannerScreen = ({ navigation }: any) => {
                   <Text style={styles.terms}>terms & conditions</Text> for
                   speedy approval of campaigns
                 </Text> */}
-              </View>
+            </View>
 
-              {/* Submit Button */}
-              <TouchableOpacity
-                onPress={() => {
-                  handelSaveBtn();
-                }}
-                style={styles.submitButton}
-              >
-                <Text style={styles.submitText}>Submit for approval</Text>
-              </TouchableOpacity>
+            {/* Submit Button */}
+            <TouchableOpacity
+              onPress={() => {
+                handelSaveBtn();
+              }}
+              style={styles.submitButton}
+            >
+              <Text style={styles.submitText}>Submit for approval</Text>
+            </TouchableOpacity>
 
-              <ModalUpdatePhoto
-                isVisible={imageModel}
-                onClose={() => {
-                  setImageModel(false);
-                }}
-                onSelectedFile={(e) => {
-                  setImageFile(e);
-                }}
-              />
-              <Loading visible={isLoading} />
-            </ScrollView>
-          </KeyboardAvoidingView>
-        </TouchableWithoutFeedback>
+            <ModalUpdatePhoto
+              isVisible={imageModel}
+              onClose={() => {
+                setImageModel(false);
+              }}
+              onSelectedFile={(e) => {
+                setImageFile(e);
+              }}
+            />
+            <Loading visible={isLoading} />
+          </ScrollView>
+        </KeyboardAvoidingView>
 
         {/* Product Picker Modal */}
         <Modal visible={showProductModal} animationType="slide" transparent>

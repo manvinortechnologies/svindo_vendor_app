@@ -140,7 +140,7 @@ const VariantsScreen = () => {
     // Navigate to add product screen
     (navigation as any).navigate(HomeNavigation.ADD_PRODUCT_SCREEN, {
       productId: product.id,
-      product: product,
+      // product: product,
     });
   };
 
@@ -165,7 +165,6 @@ const VariantsScreen = () => {
       onEdit={handleEditVariant}
       onDelete={handleDeleteVariant}
       onActiveChange={handleToggleActive}
-      showStock={true}
       showActions={true}
       showSwitch={true}
     />

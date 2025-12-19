@@ -8,8 +8,6 @@ import {
   ScrollView,
   Platform,
   StatusBar,
-  Keyboard,
-  TouchableWithoutFeedback,
   KeyboardAvoidingView,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -86,7 +84,9 @@ const CreatePurchase = ({ navigation }: any) => {
   const [serialNo, setSerialNo] = useState<string>("");
   const [advanceAmount, setAdvanceAmount] = useState<string>("");
   const [selectedBank, setSelectedBank] = useState<DropDownOption>();
-  const [supplierDate, setSupplierDate] = useState<string>("");
+  const [supplierDate, setSupplierDate] = useState<string>(
+    moment().format("YYYY-MM-DD")
+  );
   const [supplierDateCallModel, setSupplierDateCallModel] =
     useState<boolean>(false);
   const [packingCharges, setPackingCharges] = useState<string>("");
@@ -246,10 +246,11 @@ const CreatePurchase = ({ navigation }: any) => {
     try {
       setIsLoading(true);
 
-      const [vendorRes, purchaseRes, banks] = await Promise.all([
+      const [vendorRes, purchaseRes, banks, purchaseList] = await Promise.all([
         api.get(API_ROUTES.vendorList),
         api.get(API_ROUTES.purchaseNo),
         api.get(API_ROUTES.vendorBank),
+        api.get(API_ROUTES.purchase),
       ]);
 
       if (vendorRes.data) {
@@ -297,6 +298,12 @@ const CreatePurchase = ({ navigation }: any) => {
 
     try {
       setIsLoading(true);
+      const totalAmount = selectedProducts.reduce(
+        (sum, item) => sum + item.price * item.quantity,
+        0
+      );
+
+      const totalDiscountedAmount = totalAmount - Number(discount.amount);
 
       const data = {
         purchase_date: purchaseDate,
@@ -315,6 +322,10 @@ const CreatePurchase = ({ navigation }: any) => {
         discount_amount: Number(extraDiscount) || 0,
         advance_amount: Number(advanceAmount) || 0,
         advance_mode: selectedAdvanceType.toLowerCase(), // bank / cash
+        balance_amount:
+          selectedPayment === "In Credit"
+            ? Number(totalDiscountedAmount) - Number(advanceAmount)
+            : 0,
         due_date: dueDate,
         advance_bank: selectedBank?.id,
         dispatch_address: formData.dispatchAddress,
@@ -395,765 +406,753 @@ const CreatePurchase = ({ navigation }: any) => {
             </TouchableOpacity>,
           ]}
         />
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <KeyboardAvoidingView
-            style={{ flex: 1 }}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
-            keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 20}
+        <KeyboardAvoidingView
+          style={{ flex: 1 }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 20}
+        >
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.content}
           >
-            <ScrollView
-              keyboardShouldPersistTaps="handled"
-              contentContainerStyle={styles.content}
-            >
-              {/* Purchase Info */}
-              <View style={styles.section}>
-                <View style={styles.rowBetween}>
-                  <View>
-                    <Text style={{ color: "#777777" }}>Purchase</Text>
-                    <Text style={styles.value}>{purchasecode}</Text>
-                    <Text style={{ color: "#777777", marginTop: 2 }}>
-                      {purchaseDate}
-                    </Text>
-                  </View>
-                  <TouchableOpacity onPress={() => setIsEditModalVisible(true)}>
-                    <Text style={styles.editText}>Edit</Text>
-                  </TouchableOpacity>
-                </View>
-                {errors?.purchasecode && (
-                  <Text style={{ color: "red" }}>{errors?.purchasecode}</Text>
-                )}
-              </View>
-
-              {/* Vendor Selection */}
-
-              <View style={{ marginBottom: 12 }}>
-                <Text style={styles.label}>
-                  Vendor <Icon name="information" size={14} />
-                </Text>
-                <TouchableOpacity
-                  style={styles.selector}
-                  onPress={() => setIsVendorModalVisible(true)}
-                >
-                  <Text style={styles.selectorText}>
-                    {selectedVendor ? selectedVendor.name : "+ Select Vendor"}
-                  </Text>
-                </TouchableOpacity>
-                {errors?.vendor && (
-                  <Text style={{ color: "red", marginBottom: 12 }}>
-                    {errors?.vendor}
-                  </Text>
-                )}
-                <Text style={styles.label}>
-                  Product <Icon name="information" size={14} />
-                </Text>
-                <TouchableOpacity
-                  style={styles.selector}
-                  onPress={() => {
-                    navigation.navigate(
-                      HomeNavigation.PRODUCT_SELECTION as any,
-                      {
-                        selectedProducts: selectedProducts,
-                        navigateScreen: HomeNavigation.CREATE_PURCHASE,
-                        formData: getCurrentFormData(), // Pass current form data
-                      }
-                    );
-                  }}
-                >
-                  <Text style={styles.selectorText}>
-                    {selectedProducts.length ? "Add +" : "+ Select Products"}
-                  </Text>
-                </TouchableOpacity>
-                {errors?.products && (
-                  <Text style={{ color: "red" }}>{errors?.products}</Text>
-                )}
-              </View>
-
-              {!!selectedProducts.length && (
-                <View style={{ marginBottom: 12 }}>
-                  {/* Table Header */}
-                  <View style={styles.tableHeader}>
-                    <Text
-                      style={[
-                        styles.tableText,
-                        { color: "#fff", fontWeight: "500" },
-                      ]}
-                    >
-                      S.No.
-                    </Text>
-                    <Text
-                      style={[
-                        styles.tableText,
-                        { flex: 2, color: "#fff", fontWeight: "500" },
-                      ]}
-                    >
-                      Item
-                    </Text>
-                    <Text
-                      style={[
-                        styles.tableText,
-                        { color: "#fff", fontWeight: "500" },
-                      ]}
-                    >
-                      Quantity
-                    </Text>
-                    <Text
-                      style={[
-                        styles.tableText,
-                        { color: "#fff", fontWeight: "500" },
-                      ]}
-                    >
-                      Purchase Price
-                    </Text>
-                    <Text
-                      style={[
-                        styles.tableText,
-                        { color: "#fff", fontWeight: "500" },
-                      ]}
-                    >
-                      Amount
-                    </Text>
-                  </View>
-
-                  {/* Product List */}
-                  {selectedProducts.map((item, index) => (
-                    <View key={index} style={styles.tableRow}>
-                      <Text style={styles.tableText}>{index + 1}</Text>
-                      <Text
-                        style={[styles.tableText, { flex: 2 }]}
-                        numberOfLines={2}
-                      >
-                        {item.name}
-                      </Text>
-                      <TextInput
-                        style={[styles.tableText, styles.quantityInput]}
-                        value={item.quantity.toString()}
-                        onChangeText={(text) => {
-                          const newQuantity = parseInt(text) || 0;
-                          if (newQuantity >= 0) {
-                            const updatedProducts = [...selectedProducts];
-                            if (newQuantity === 0) {
-                              // Remove item if quantity is 0
-                              updatedProducts.splice(index, 1);
-                            } else {
-                              // Update quantity
-                              updatedProducts[index] = {
-                                ...item,
-                                quantity: newQuantity,
-                              };
-                            }
-                            setSelectedProducts(updatedProducts);
-                          }
-                        }}
-                        keyboardType="numeric"
-                        selectTextOnFocus
-                      />
-                      <TouchableOpacity
-                        style={{
-                          flex: 1,
-                          flexDirection: "row",
-                        }}
-                        onPress={() => setIsPurchasePlanModalVisible(true)}
-                      >
-                        <Text style={styles.tableText}>
-                          {formatNumber(Number(item?.purchase_price || 0))}
-                        </Text>
-                      </TouchableOpacity>
-                      <Text style={styles.tableText}>
-                        {formatNumber(
-                          (item?.purchase_price || 0) * item?.quantity
-                        )}
-                      </Text>
-
-                      <TouchableOpacity
-                        onPress={() => {
-                          const updated = selectedProducts.filter(
-                            (_, i) => i !== index
-                          );
-                          setSelectedProducts(updated);
-                        }}
-                      >
-                        <Icon name="delete" size={16} color="red" />
-                      </TouchableOpacity>
-                    </View>
-                  ))}
-                </View>
-              )}
-
-              {/* Supplier Invoice */}
-              <View style={styles.section}>
-                <Text style={styles.label}>Supplier Invoice</Text>
-                <Text style={styles.inputLabel}>Supplier Invoice Date</Text>
-                <TouchableOpacity
-                  style={styles.inputField}
-                  onPress={() => setSupplierDateCallModel(true)}
-                >
-                  <Text style={{ color: supplierDate ? "#000" : "#777" }}>
-                    {supplierDate || "Select Supplier Invoice Date"}
-                  </Text>
-                  <Feather name="calendar" size={18} color="#FCA311" />
-                </TouchableOpacity>
-                {errors?.supplierDate && (
-                  <Text style={{ color: "red" }}>{errors?.supplierDate}</Text>
-                )}
-                <Text style={styles.inputLabel}>Serial Number</Text>
-                <TextInput
-                  style={styles.textInput}
-                  value={serialNo}
-                  onChangeText={setSerialNo}
-                  placeholder="Supplier Invoice Serial Number"
-                  placeholderTextColor={"#777"}
-                />
-                {errors?.serialNo && (
-                  <Text style={{ color: "red" }}>{errors?.serialNo}</Text>
-                )}
-              </View>
-
-              {/* Optional Section */}
+            {/* Purchase Info */}
+            <View style={styles.section}>
               <View style={styles.rowBetween}>
-                <Text style={styles.label}>Optional</Text>
-                {/* <TouchableOpacity>
-                  <Text style={styles.linkText}>+ Additional Charges</Text>
-                </TouchableOpacity> */}
-              </View>
-
-              <View style={styles.section}>
-                {[
-                  {
-                    icon: "file-document-outline",
-                    label: "Add References",
-                    state: "references",
-                  },
-                  {
-                    icon: "note",
-                    label: "Add Notes",
-                    state: "notes",
-                  },
-                  {
-                    icon: "file-certificate-outline",
-                    label: "Add Terms",
-                    state: "terms",
-                  },
-                  // {
-                  //   icon: "truck",
-                  //   label: "Select Dispatch Address",
-                  //   state: "dispatchAddress",
-                  // },
-                  // {
-                  //   icon: "bank",
-                  //   label: "Bank",
-                  //   sub: "Cash",
-                  //   action: "Change",
-                  // },
-                  // {
-                  //   icon: "pen",
-                  //   label: "Select Signature",
-                  // },
-                  {
-                    icon: "currency-inr",
-                    label: "Delivery/ Shipping Charges",
-                    state: "shippingCharges",
-                    keyboardType: "numeric",
-                  },
-                  {
-                    icon: "currency-inr",
-                    label: "Packaging Charges",
-                    state: "packagingCharges",
-                    keyboardType: "numeric",
-                  },
-                  {
-                    icon: "file-multiple",
-                    label: "E-way Bill Number",
-                    state: "ewayBill",
-                  },
-                  {
-                    icon: null,
-                    label: "LR Number",
-                    state: "lrNumber",
-                    boldLabelPrefix: "LR",
-                  },
-                  {
-                    icon: "truck-fast",
-                    label: "Vehicle Number",
-                    state: "vehicleNumber",
-                  },
-                  {
-                    icon: "truck-delivery",
-                    label: "Transport Name",
-                    state: "transportName",
-                  },
-                  {
-                    icon: "cube-outline",
-                    label: "No. of Parcels",
-                    state: "parcels",
-                    keyboardType: "numeric",
-                  },
-
-                  // {
-                  //   icon: "percent-outline",
-                  //   label: "Add Extra Discount",
-                  // },
-                ].map((item, index) => (
-                  <OptionInput
-                    key={item.state}
-                    icon={item.icon || undefined}
-                    label={item.label}
-                    value={formData[item.state] || ""}
-                    onChangeText={(text) => handleChange(item.state, text)}
-                    keyboardType={item.keyboardType as any}
-                    boldLabelPrefix={item.boldLabelPrefix}
-                  />
-                ))}
-              </View>
-
-              {/* Last Box Container */}
-              <View
-                style={{
-                  padding: 10,
-                  borderWidth: 1,
-                  borderColor: "#D9D9D9",
-                  borderRadius: 15,
-                }}
-              >
-                {/* Discount Row */}
-                <View style={styles.row}>
-                  <Text style={[styles.label, { marginRight: 15 }]}>
-                    Discount
+                <View>
+                  <Text style={{ color: "#777777" }}>Purchase</Text>
+                  <Text style={styles.value}>{purchasecode}</Text>
+                  <Text style={{ color: "#777777", marginTop: 2 }}>
+                    {purchaseDate}
                   </Text>
-                  <TextInput
-                    value={discount?.pr}
-                    onChangeText={handlePercentChange}
-                    placeholder="0"
-                    placeholderTextColor="#ccc"
-                    style={styles.input}
-                    keyboardType="numeric"
-                  />
-                  <TextInput
-                    value={discount?.amount}
-                    onChangeText={handleAmountChange}
-                    placeholder="%"
-                    placeholderTextColor="#ccc"
-                    style={styles.input}
-                    keyboardType="numeric"
-                  />
                 </View>
-                {errors?.discount && (
-                  <Text style={{ color: "red" }}>{errors?.discount}</Text>
-                )}
-
-                {/* Payment Row */}
-                <View style={styles.row}>
-                  <Text style={[styles.label, { marginRight: 20 }]}>
-                    Payment
-                  </Text>
-                  <View style={styles.optionsRow}>
-                    {["UPI", "Cheques", "Cash", "In Credit"].map((method) => (
-                      <TouchableOpacity
-                        key={method}
-                        style={[
-                          styles.optionButton,
-                          selectedPayment === method && styles.selectedButton,
-                        ]}
-                        onPress={() => setSelectedPayment(method)}
-                      >
-                        <Text
-                          style={[
-                            styles.optionText,
-                            selectedPayment === method && styles.selectedText,
-                          ]}
-                        >
-                          {method}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
-                </View>
-                {selectedPayment === "In Credit" && (
-                  <>
-                    {/* Advance Row */}
-                    <View style={styles.row}>
-                      <Text style={[styles.label, { marginRight: 15 }]}>
-                        Advance
-                      </Text>
-                      <View style={styles.inputGroup}>
-                        <TextInput
-                          placeholder="Amount"
-                          style={styles.input}
-                          keyboardType="numeric"
-                          value={advanceAmount}
-                          onChangeText={setAdvanceAmount}
-                        />
-                        {["Bank", "Cash"].map((type) => (
-                          <TouchableOpacity
-                            key={type}
-                            style={[
-                              styles.optionButton,
-                              selectedAdvanceType === type &&
-                                styles.selectedButton,
-                            ]}
-                            onPress={() => setSelectedAdvanceType(type)}
-                          >
-                            <Text
-                              style={[
-                                styles.optionText,
-                                selectedAdvanceType === type &&
-                                  styles.selectedText,
-                              ]}
-                            >
-                              {type}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </View>
-                      {errors?.advanceAmount && (
-                        <Text style={{ color: "red" }}>
-                          {errors?.advanceAmount}
-                        </Text>
-                      )}
-                    </View>
-                    {selectedAdvanceType === "Bank" && (
-                      <>
-                        <CustomDropdown
-                          onSelect={setSelectedBank}
-                          placeholder="Select Bank"
-                          selectedValue={selectedBank?.name || ""}
-                          options={bankList}
-                          dropDownBoxStyle={{ marginTop: 10 }}
-                        />
-                        {errors?.advanceBank && (
-                          <Text style={{ color: "red" }}>
-                            {errors?.advanceBank}
-                          </Text>
-                        )}
-                      </>
-                    )}
-                    {/* Due Date Row */}
-                    <View style={styles.row}>
-                      <Text style={[styles.label, { marginRight: 15 }]}>
-                        Due Date
-                      </Text>
-                      <TouchableOpacity
-                        style={{ width: "30%" }}
-                        onPress={() => setDueDateCallModel(true)}
-                      >
-                        <TextInput
-                          placeholder="DD/MM/YYYY"
-                          value={dueDate}
-                          placeholderTextColor={"#777"}
-                          editable={false}
-                          style={[styles.inputFull, { width: "100%" }]}
-                          pointerEvents="none"
-                        />
-                      </TouchableOpacity>
-                    </View>
-                    {errors?.dueDate && (
-                      <Text style={{ color: "red" }}>{errors?.dueDate}</Text>
-                    )}
-                  </>
-                )}
+                <TouchableOpacity onPress={() => setIsEditModalVisible(true)}>
+                  <Text style={styles.editText}>Edit</Text>
+                </TouchableOpacity>
               </View>
+              {errors?.purchasecode && (
+                <Text style={{ color: "red" }}>{errors?.purchasecode}</Text>
+              )}
+            </View>
 
-              {selectedPayment !== "Cash" &&
-                selectedPayment !== "In Credit" && (
-                  <>
-                    <CustomDropdown
-                      onSelect={setSelectedBank}
-                      placeholder="Select Bank"
-                      selectedValue={selectedBank?.name || ""}
-                      options={bankList}
-                      dropDownBoxStyle={{ marginTop: 10 }}
-                    />
-                    {errors?.advanceBank && (
-                      <Text style={{ color: "red" }}>
-                        {errors?.advanceBank}
-                      </Text>
-                    )}
-                  </>
-                )}
+            {/* Vendor Selection */}
 
-              {/* Proceed Button */}
+            <View style={{ marginBottom: 12 }}>
+              <Text style={styles.label}>
+                Vendor <Icon name="information" size={14} />
+              </Text>
               <TouchableOpacity
-                onPress={submitAllData}
-                style={{
-                  width: "40%",
-                  alignSelf: "center",
-                  padding: 10,
-                  backgroundColor: "#FCA311",
-                  marginVertical: 15,
-                  alignItems: "center",
-                  borderRadius: 15,
-                }}
+                style={styles.selector}
+                onPress={() => setIsVendorModalVisible(true)}
               >
-                <Text style={{ color: "#fff", fontWeight: "600" }}>
-                  Proceed
+                <Text style={styles.selectorText}>
+                  {selectedVendor ? selectedVendor.name : "+ Select Vendor"}
                 </Text>
               </TouchableOpacity>
+              {errors?.vendor && (
+                <Text style={{ color: "red", marginBottom: 12 }}>
+                  {errors?.vendor}
+                </Text>
+              )}
+              <Text style={styles.label}>
+                Product <Icon name="information" size={14} />
+              </Text>
+              <TouchableOpacity
+                style={styles.selector}
+                onPress={() => {
+                  navigation.navigate(HomeNavigation.PRODUCT_SELECTION as any, {
+                    selectedProducts: selectedProducts,
+                    navigateScreen: HomeNavigation.CREATE_PURCHASE,
+                    formData: getCurrentFormData(), // Pass current form data
+                  });
+                }}
+              >
+                <Text style={styles.selectorText}>
+                  {selectedProducts.length ? "Add +" : "+ Select Products"}
+                </Text>
+              </TouchableOpacity>
+              {errors?.products && (
+                <Text style={{ color: "red" }}>{errors?.products}</Text>
+              )}
+            </View>
 
-              {/* Modals */}
-              <VendorModal
-                visible={isVendorModalVisible}
-                vendors={allVendorList}
-                selectedVendor={selectedVendor}
-                onSelect={handleSelectVendor}
-                onClose={() => setIsVendorModalVisible(false)}
-              />
-              <Loading visible={isLoading} />
-              {/* Purchase Data Modal */}
-              <CustomModal
-                visible={isEditModalVisible}
-                onClose={() => setIsEditModalVisible(false)}
-                children={
-                  <>
-                    <TouchableOpacity
-                      style={{ marginTop: 20 }}
-                      onPress={() => setOpenCalendarModel(true)}
+            {!!selectedProducts.length && (
+              <View style={{ marginBottom: 12 }}>
+                {/* Table Header */}
+                <View style={styles.tableHeader}>
+                  <Text
+                    style={[
+                      styles.tableText,
+                      { color: "#fff", fontWeight: "500" },
+                    ]}
+                  >
+                    S.No.
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableText,
+                      { flex: 2, color: "#fff", fontWeight: "500" },
+                    ]}
+                  >
+                    Item
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableText,
+                      { color: "#fff", fontWeight: "500" },
+                    ]}
+                  >
+                    Quantity
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableText,
+                      { color: "#fff", fontWeight: "500" },
+                    ]}
+                  >
+                    Purchase Price
+                  </Text>
+                  <Text
+                    style={[
+                      styles.tableText,
+                      { color: "#fff", fontWeight: "500" },
+                    ]}
+                  >
+                    Amount
+                  </Text>
+                </View>
+
+                {/* Product List */}
+                {selectedProducts.map((item, index) => (
+                  <View key={index} style={styles.tableRow}>
+                    <Text style={styles.tableText}>{index + 1}</Text>
+                    <Text
+                      style={[styles.tableText, { flex: 2 }]}
+                      numberOfLines={2}
                     >
-                      <Text style={{ marginBottom: 5 }}>Purchase Date</Text>
-                      <CustomTextInput
-                        value={purchaseDate}
-                        placeholder="Select Purchase Date"
+                      {item.name}
+                    </Text>
+                    <TextInput
+                      style={[styles.tableText, styles.quantityInput]}
+                      value={item.quantity.toString()}
+                      onChangeText={(text) => {
+                        const newQuantity = parseInt(text) || 0;
+                        if (newQuantity >= 0) {
+                          const updatedProducts = [...selectedProducts];
+                          if (newQuantity === 0) {
+                            // Remove item if quantity is 0
+                            updatedProducts.splice(index, 1);
+                          } else {
+                            // Update quantity
+                            updatedProducts[index] = {
+                              ...item,
+                              quantity: newQuantity,
+                            };
+                          }
+                          setSelectedProducts(updatedProducts);
+                        }
+                      }}
+                      keyboardType="numeric"
+                      selectTextOnFocus
+                    />
+                    <TouchableOpacity
+                      style={{
+                        flex: 1,
+                        flexDirection: "row",
+                      }}
+                      onPress={() => setIsPurchasePlanModalVisible(true)}
+                    >
+                      <Text style={styles.tableText}>
+                        {formatNumber(Number(item?.purchase_price || 0))}
+                      </Text>
+                    </TouchableOpacity>
+                    <Text style={styles.tableText}>
+                      {formatNumber(
+                        (item?.purchase_price || 0) * item?.quantity
+                      )}
+                    </Text>
+
+                    <TouchableOpacity
+                      onPress={() => {
+                        const updated = selectedProducts.filter(
+                          (_, i) => i !== index
+                        );
+                        setSelectedProducts(updated);
+                      }}
+                    >
+                      <Icon name="delete" size={16} color="red" />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Supplier Invoice */}
+            <View style={styles.section}>
+              <Text style={styles.label}>Supplier Invoice</Text>
+              <Text style={styles.inputLabel}>Supplier Invoice Date</Text>
+              <TouchableOpacity
+                style={styles.inputField}
+                onPress={() => setSupplierDateCallModel(true)}
+              >
+                <Text style={{ color: supplierDate ? "#000" : "#777" }}>
+                  {supplierDate || "Select Supplier Invoice Date"}
+                </Text>
+                <Feather name="calendar" size={18} color="#FCA311" />
+              </TouchableOpacity>
+              {errors?.supplierDate && (
+                <Text style={{ color: "red" }}>{errors?.supplierDate}</Text>
+              )}
+              <Text style={styles.inputLabel}>Serial Number</Text>
+              <TextInput
+                style={styles.textInput}
+                value={serialNo}
+                onChangeText={setSerialNo}
+                placeholder="Supplier Invoice Serial Number"
+                placeholderTextColor={"#777"}
+              />
+              {errors?.serialNo && (
+                <Text style={{ color: "red" }}>{errors?.serialNo}</Text>
+              )}
+            </View>
+
+            {/* Optional Section */}
+            <View style={styles.rowBetween}>
+              <Text style={styles.label}>Optional</Text>
+              {/* <TouchableOpacity>
+                  <Text style={styles.linkText}>+ Additional Charges</Text>
+                </TouchableOpacity> */}
+            </View>
+
+            <View style={styles.section}>
+              {[
+                {
+                  icon: "file-document-outline",
+                  label: "Add References",
+                  state: "references",
+                },
+                {
+                  icon: "note",
+                  label: "Add Notes",
+                  state: "notes",
+                },
+                {
+                  icon: "file-certificate-outline",
+                  label: "Add Terms",
+                  state: "terms",
+                },
+                // {
+                //   icon: "truck",
+                //   label: "Select Dispatch Address",
+                //   state: "dispatchAddress",
+                // },
+                // {
+                //   icon: "bank",
+                //   label: "Bank",
+                //   sub: "Cash",
+                //   action: "Change",
+                // },
+                // {
+                //   icon: "pen",
+                //   label: "Select Signature",
+                // },
+                {
+                  icon: "currency-inr",
+                  label: "Delivery/ Shipping Charges",
+                  state: "shippingCharges",
+                  keyboardType: "numeric",
+                },
+                {
+                  icon: "currency-inr",
+                  label: "Packaging Charges",
+                  state: "packagingCharges",
+                  keyboardType: "numeric",
+                },
+                {
+                  icon: "file-multiple",
+                  label: "E-way Bill Number",
+                  state: "ewayBill",
+                },
+                {
+                  icon: null,
+                  label: "LR Number",
+                  state: "lrNumber",
+                  boldLabelPrefix: "LR",
+                },
+                {
+                  icon: "truck-fast",
+                  label: "Vehicle Number",
+                  state: "vehicleNumber",
+                },
+                {
+                  icon: "truck-delivery",
+                  label: "Transport Name",
+                  state: "transportName",
+                },
+                {
+                  icon: "cube-outline",
+                  label: "No. of Parcels",
+                  state: "parcels",
+                  keyboardType: "numeric",
+                },
+
+                // {
+                //   icon: "percent-outline",
+                //   label: "Add Extra Discount",
+                // },
+              ].map((item, index) => (
+                <OptionInput
+                  key={item.state}
+                  icon={item.icon || undefined}
+                  label={item.label}
+                  value={formData[item.state] || ""}
+                  onChangeText={(text) => handleChange(item.state, text)}
+                  keyboardType={item.keyboardType as any}
+                  boldLabelPrefix={item.boldLabelPrefix}
+                />
+              ))}
+            </View>
+
+            {/* Last Box Container */}
+            <View
+              style={{
+                padding: 10,
+                borderWidth: 1,
+                borderColor: "#D9D9D9",
+                borderRadius: 15,
+              }}
+            >
+              {/* Discount Row */}
+              <View style={styles.row}>
+                <Text style={[styles.label, { marginRight: 15 }]}>
+                  Discount
+                </Text>
+                <TextInput
+                  value={discount?.pr}
+                  onChangeText={handlePercentChange}
+                  placeholder="0"
+                  placeholderTextColor="#ccc"
+                  style={styles.input}
+                  keyboardType="numeric"
+                />
+                <TextInput
+                  value={discount?.amount}
+                  onChangeText={handleAmountChange}
+                  placeholder="%"
+                  placeholderTextColor="#ccc"
+                  style={styles.input}
+                  keyboardType="numeric"
+                />
+              </View>
+              {errors?.discount && (
+                <Text style={{ color: "red" }}>{errors?.discount}</Text>
+              )}
+
+              {/* Payment Row */}
+              <View style={styles.row}>
+                <Text style={[styles.label, { marginRight: 20 }]}>Payment</Text>
+                <View style={styles.optionsRow}>
+                  {["UPI", "Cheques", "Cash", "In Credit"].map((method) => (
+                    <TouchableOpacity
+                      key={method}
+                      style={[
+                        styles.optionButton,
+                        selectedPayment === method && styles.selectedButton,
+                      ]}
+                      onPress={() => setSelectedPayment(method)}
+                    >
+                      <Text
+                        style={[
+                          styles.optionText,
+                          selectedPayment === method && styles.selectedText,
+                        ]}
+                      >
+                        {method}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+              {selectedPayment === "In Credit" && (
+                <>
+                  {/* Advance Row */}
+                  <View style={styles.row}>
+                    <Text style={[styles.label, { marginRight: 15 }]}>
+                      Advance
+                    </Text>
+                    <View style={styles.inputGroup}>
+                      <TextInput
+                        placeholder="Amount"
+                        style={styles.input}
+                        keyboardType="numeric"
+                        value={advanceAmount}
+                        onChangeText={setAdvanceAmount}
+                      />
+                      {["Bank", "Cash"].map((type) => (
+                        <TouchableOpacity
+                          key={type}
+                          style={[
+                            styles.optionButton,
+                            selectedAdvanceType === type &&
+                              styles.selectedButton,
+                          ]}
+                          onPress={() => setSelectedAdvanceType(type)}
+                        >
+                          <Text
+                            style={[
+                              styles.optionText,
+                              selectedAdvanceType === type &&
+                                styles.selectedText,
+                            ]}
+                          >
+                            {type}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                    {errors?.advanceAmount && (
+                      <Text style={{ color: "red" }}>
+                        {errors?.advanceAmount}
+                      </Text>
+                    )}
+                  </View>
+                  {selectedAdvanceType === "Bank" && (
+                    <>
+                      <CustomDropdown
+                        onSelect={setSelectedBank}
+                        placeholder="Select Bank"
+                        selectedValue={selectedBank?.name || ""}
+                        options={bankList}
+                        dropDownBoxStyle={{ marginTop: 10 }}
+                      />
+                      {errors?.advanceBank && (
+                        <Text style={{ color: "red" }}>
+                          {errors?.advanceBank}
+                        </Text>
+                      )}
+                    </>
+                  )}
+                  {/* Due Date Row */}
+                  <View style={styles.row}>
+                    <Text style={[styles.label, { marginRight: 15 }]}>
+                      Due Date
+                    </Text>
+                    <TouchableOpacity
+                      style={{ width: "30%" }}
+                      onPress={() => setDueDateCallModel(true)}
+                    >
+                      <TextInput
+                        placeholder="DD/MM/YYYY"
+                        value={dueDate}
+                        placeholderTextColor={"#777"}
                         editable={false}
+                        style={[styles.inputFull, { width: "100%" }]}
+                        pointerEvents="none"
                       />
                     </TouchableOpacity>
-                    <CalendarModal
-                      visible={openCalendarModel}
-                      initialDate={purchaseDate}
-                      onClose={() => setOpenCalendarModel(false)}
-                      onSelect={(e) => setPurchaseDate(e)}
-                    />
-                    <CustomButton
-                      containerStyle={{ marginTop: 20 }}
-                      title="Done"
-                      onPress={() => setIsEditModalVisible(false)}
-                    />
-                  </>
-                }
-              />
-              {/* Dispatch Address Modal */}
-              <CustomModal
-                visible={dispatchAddressModel}
-                onClose={() => setDispatchAddressModel(false)}
-                children={
-                  <>
-                    <Text style={{ marginBottom: 5 }}>Dispatch Address</Text>
-                    <CustomTextInput
-                      value={dispatchAddress}
-                      onChangeText={setDispatchAddress}
-                      placeholder="Enter Dispatch Address"
-                    />
-                    <CustomButton
-                      containerStyle={{ marginTop: 20 }}
-                      title="Done"
-                      onPress={() => setDispatchAddressModel(false)}
-                    />
-                  </>
-                }
-              />
-              {/* Bank Modal */}
-              <CustomModal
-                visible={bankModel}
-                onClose={() => setBankModel(false)}
-                children={
-                  <>
-                    <Text style={{ marginBottom: 5 }}>Bank</Text>
-                    <CustomTextInput
-                      value={bank}
-                      onChangeText={setBank}
-                      placeholder="Enter Bank Details"
-                    />
-                    <CustomButton
-                      containerStyle={{ marginTop: 20 }}
-                      title="Done"
-                      onPress={() => setBankModel(false)}
-                    />
-                  </>
-                }
-              />
-              {/* Signature Modal */}
-              <CustomModal
-                visible={signatureModel}
-                onClose={() => setSignatureModel(false)}
-                children={
-                  <>
-                    <Text style={{ marginBottom: 5 }}>Signature</Text>
-                    <CustomTextInput
-                      value={signature}
-                      onChangeText={setSignature}
-                      placeholder="Enter Signature"
-                    />
-                    <CustomButton
-                      containerStyle={{ marginTop: 20 }}
-                      title="Done"
-                      onPress={() => setSignatureModel(false)}
-                    />
-                  </>
-                }
-              />
-              {/* References Modal */}
-              <CustomModal
-                visible={referencesModel}
-                onClose={() => setReferencesModel(false)}
-                children={
-                  <>
-                    <Text style={{ marginBottom: 5 }}>References</Text>
-                    <CustomTextInput
-                      value={references}
-                      onChangeText={setReferences}
-                      placeholder="Enter References"
-                    />
-                    <CustomButton
-                      containerStyle={{ marginTop: 20 }}
-                      title="Done"
-                      onPress={() => setReferencesModel(false)}
-                    />
-                  </>
-                }
-              />
-              {/* Notes Modal */}
-              <CustomModal
-                visible={notesModel}
-                onClose={() => setNotesModel(false)}
-                children={
-                  <>
-                    <Text style={{ marginBottom: 5 }}>Notes</Text>
-                    <CustomTextInput
-                      value={notes}
-                      onChangeText={setNotes}
-                      placeholder="Enter Notes"
-                    />
-                    <CustomButton
-                      containerStyle={{ marginTop: 20 }}
-                      title="Done"
-                      onPress={() => setNotesModel(false)}
-                    />
-                  </>
-                }
-              />
-              {/* Terms Modal */}
-              <CustomModal
-                visible={termsModel}
-                onClose={() => setTermsModel(false)}
-                children={
-                  <>
-                    <Text style={{ marginBottom: 5 }}>Terms</Text>
-                    <CustomTextInput
-                      value={terms}
-                      onChangeText={setTerms}
-                      placeholder="Enter Terms"
-                    />
-                    <CustomButton
-                      containerStyle={{ marginTop: 20 }}
-                      title="Done"
-                      onPress={() => setTermsModel(false)}
-                    />
-                  </>
-                }
-              />
-              {/* Extra Discount Modal */}
-              <CustomModal
-                visible={extraDiscountModel}
-                onClose={() => setExtraDiscountModel(false)}
-                children={
-                  <>
-                    <Text style={{ marginBottom: 5 }}>Extra Discount</Text>
-                    <CustomTextInput
-                      value={extraDiscount}
-                      onChangeText={setExtraDiscount}
-                      placeholder="Enter Extra Discount"
-                      keyboardType="decimal-pad"
-                    />
-                    <CustomButton
-                      containerStyle={{ marginTop: 20 }}
-                      title="Done"
-                      onPress={() => setExtraDiscountModel(false)}
-                    />
-                  </>
-                }
-              />
-              {/* Delivery Charges Modal */}
-              <CustomModal
-                visible={deliveryChargesModel}
-                onClose={() => setDeliveryChargesModel(false)}
-                children={
-                  <>
-                    <Text style={{ marginBottom: 5 }}>
-                      Delivery/ Shipping Charges
-                    </Text>
-                    <CustomTextInput
-                      value={deliveryCharges}
-                      onChangeText={setDeliveryCharges}
-                      placeholder="Enter Delivery Charges"
-                      keyboardType="decimal-pad"
-                    />
-                    <CustomButton
-                      containerStyle={{ marginTop: 20 }}
-                      title="Done"
-                      onPress={() => setDeliveryChargesModel(false)}
-                    />
-                  </>
-                }
-              />
-              {/* Packing Charges Modal */}
-              <CustomModal
-                visible={packingChargesModel}
-                onClose={() => setPackingChargesModel(false)}
-                children={
-                  <>
-                    <Text style={{ marginBottom: 5 }}>Packaging Charges</Text>
-                    <CustomTextInput
-                      value={packingCharges}
-                      onChangeText={setPackingCharges}
-                      placeholder="Enter Packaging Charges"
-                      keyboardType="decimal-pad"
-                    />
-                    <CustomButton
-                      containerStyle={{ marginTop: 20 }}
-                      title="Done"
-                      onPress={() => setPackingChargesModel(false)}
-                    />
-                  </>
-                }
-              />
-              <CalendarModal
-                visible={dueDateCallModel}
-                initialDate={dueDate}
-                onClose={() => setDueDateCallModel(false)}
-                onSelect={(e) => setDueDate(e)}
-              />
-              <CalendarModal
-                visible={supplierDateCallModel}
-                initialDate={supplierDate}
-                onClose={() => setSupplierDateCallModel(false)}
-                onSelect={(e) => setSupplierDate(e)}
-              />
+                  </View>
+                  {errors?.dueDate && (
+                    <Text style={{ color: "red" }}>{errors?.dueDate}</Text>
+                  )}
+                </>
+              )}
+            </View>
 
-              {/* Purchase Plan Info Modal */}
-              <CustomModal
-                visible={isPurchasePlanModalVisible}
-                onClose={() => setIsPurchasePlanModalVisible(false)}
-              >
-                <View style={styles.infoModalContent}>
-                  <Icon
-                    name="information"
-                    size={48}
-                    color="#FCA311"
-                    style={styles.infoIcon}
-                  />
-                  <Text style={styles.infoModalTitle}>Purchase Plan</Text>
-                  <Text style={styles.infoModalMessage}>
-                    Please create a new to add a new stock with updated purchase
-                    price
-                  </Text>
+            {selectedPayment !== "Cash" && selectedPayment !== "In Credit" && (
+              <>
+                <CustomDropdown
+                  onSelect={setSelectedBank}
+                  placeholder="Select Bank"
+                  selectedValue={selectedBank?.name || ""}
+                  options={bankList}
+                  dropDownBoxStyle={{ marginTop: 10 }}
+                />
+                {errors?.advanceBank && (
+                  <Text style={{ color: "red" }}>{errors?.advanceBank}</Text>
+                )}
+              </>
+            )}
+
+            {/* Proceed Button */}
+            <TouchableOpacity
+              onPress={submitAllData}
+              style={{
+                width: "40%",
+                alignSelf: "center",
+                padding: 10,
+                backgroundColor: "#FCA311",
+                marginVertical: 15,
+                alignItems: "center",
+                borderRadius: 15,
+              }}
+            >
+              <Text style={{ color: "#fff", fontWeight: "600" }}>Proceed</Text>
+            </TouchableOpacity>
+
+            {/* Modals */}
+            <VendorModal
+              visible={isVendorModalVisible}
+              vendors={allVendorList}
+              selectedVendor={selectedVendor}
+              onSelect={handleSelectVendor}
+              onClose={() => setIsVendorModalVisible(false)}
+            />
+            <Loading visible={isLoading} />
+            {/* Purchase Data Modal */}
+            <CustomModal
+              visible={isEditModalVisible}
+              onClose={() => setIsEditModalVisible(false)}
+              children={
+                <>
                   <TouchableOpacity
-                    style={styles.infoModalButton}
-                    onPress={() => setIsPurchasePlanModalVisible(false)}
+                    style={{ marginTop: 20 }}
+                    onPress={() => setOpenCalendarModel(true)}
                   >
-                    <Text style={styles.infoModalButtonText}>OK</Text>
+                    <Text style={{ marginBottom: 5 }}>Purchase Date</Text>
+                    <CustomTextInput
+                      value={purchaseDate}
+                      placeholder="Select Purchase Date"
+                      editable={false}
+                    />
                   </TouchableOpacity>
-                </View>
-              </CustomModal>
-            </ScrollView>
-          </KeyboardAvoidingView>
-        </TouchableWithoutFeedback>
+                  <CalendarModal
+                    visible={openCalendarModel}
+                    initialDate={purchaseDate}
+                    onClose={() => setOpenCalendarModel(false)}
+                    onSelect={(e) => setPurchaseDate(e)}
+                  />
+                  <CustomButton
+                    containerStyle={{ marginTop: 20 }}
+                    title="Done"
+                    onPress={() => setIsEditModalVisible(false)}
+                  />
+                </>
+              }
+            />
+            {/* Dispatch Address Modal */}
+            <CustomModal
+              visible={dispatchAddressModel}
+              onClose={() => setDispatchAddressModel(false)}
+              children={
+                <>
+                  <Text style={{ marginBottom: 5 }}>Dispatch Address</Text>
+                  <CustomTextInput
+                    value={dispatchAddress}
+                    onChangeText={setDispatchAddress}
+                    placeholder="Enter Dispatch Address"
+                  />
+                  <CustomButton
+                    containerStyle={{ marginTop: 20 }}
+                    title="Done"
+                    onPress={() => setDispatchAddressModel(false)}
+                  />
+                </>
+              }
+            />
+            {/* Bank Modal */}
+            <CustomModal
+              visible={bankModel}
+              onClose={() => setBankModel(false)}
+              children={
+                <>
+                  <Text style={{ marginBottom: 5 }}>Bank</Text>
+                  <CustomTextInput
+                    value={bank}
+                    onChangeText={setBank}
+                    placeholder="Enter Bank Details"
+                  />
+                  <CustomButton
+                    containerStyle={{ marginTop: 20 }}
+                    title="Done"
+                    onPress={() => setBankModel(false)}
+                  />
+                </>
+              }
+            />
+            {/* Signature Modal */}
+            <CustomModal
+              visible={signatureModel}
+              onClose={() => setSignatureModel(false)}
+              children={
+                <>
+                  <Text style={{ marginBottom: 5 }}>Signature</Text>
+                  <CustomTextInput
+                    value={signature}
+                    onChangeText={setSignature}
+                    placeholder="Enter Signature"
+                  />
+                  <CustomButton
+                    containerStyle={{ marginTop: 20 }}
+                    title="Done"
+                    onPress={() => setSignatureModel(false)}
+                  />
+                </>
+              }
+            />
+            {/* References Modal */}
+            <CustomModal
+              visible={referencesModel}
+              onClose={() => setReferencesModel(false)}
+              children={
+                <>
+                  <Text style={{ marginBottom: 5 }}>References</Text>
+                  <CustomTextInput
+                    value={references}
+                    onChangeText={setReferences}
+                    placeholder="Enter References"
+                  />
+                  <CustomButton
+                    containerStyle={{ marginTop: 20 }}
+                    title="Done"
+                    onPress={() => setReferencesModel(false)}
+                  />
+                </>
+              }
+            />
+            {/* Notes Modal */}
+            <CustomModal
+              visible={notesModel}
+              onClose={() => setNotesModel(false)}
+              children={
+                <>
+                  <Text style={{ marginBottom: 5 }}>Notes</Text>
+                  <CustomTextInput
+                    value={notes}
+                    onChangeText={setNotes}
+                    placeholder="Enter Notes"
+                  />
+                  <CustomButton
+                    containerStyle={{ marginTop: 20 }}
+                    title="Done"
+                    onPress={() => setNotesModel(false)}
+                  />
+                </>
+              }
+            />
+            {/* Terms Modal */}
+            <CustomModal
+              visible={termsModel}
+              onClose={() => setTermsModel(false)}
+              children={
+                <>
+                  <Text style={{ marginBottom: 5 }}>Terms</Text>
+                  <CustomTextInput
+                    value={terms}
+                    onChangeText={setTerms}
+                    placeholder="Enter Terms"
+                  />
+                  <CustomButton
+                    containerStyle={{ marginTop: 20 }}
+                    title="Done"
+                    onPress={() => setTermsModel(false)}
+                  />
+                </>
+              }
+            />
+            {/* Extra Discount Modal */}
+            <CustomModal
+              visible={extraDiscountModel}
+              onClose={() => setExtraDiscountModel(false)}
+              children={
+                <>
+                  <Text style={{ marginBottom: 5 }}>Extra Discount</Text>
+                  <CustomTextInput
+                    value={extraDiscount}
+                    onChangeText={setExtraDiscount}
+                    placeholder="Enter Extra Discount"
+                    keyboardType="decimal-pad"
+                  />
+                  <CustomButton
+                    containerStyle={{ marginTop: 20 }}
+                    title="Done"
+                    onPress={() => setExtraDiscountModel(false)}
+                  />
+                </>
+              }
+            />
+            {/* Delivery Charges Modal */}
+            <CustomModal
+              visible={deliveryChargesModel}
+              onClose={() => setDeliveryChargesModel(false)}
+              children={
+                <>
+                  <Text style={{ marginBottom: 5 }}>
+                    Delivery/ Shipping Charges
+                  </Text>
+                  <CustomTextInput
+                    value={deliveryCharges}
+                    onChangeText={setDeliveryCharges}
+                    placeholder="Enter Delivery Charges"
+                    keyboardType="decimal-pad"
+                  />
+                  <CustomButton
+                    containerStyle={{ marginTop: 20 }}
+                    title="Done"
+                    onPress={() => setDeliveryChargesModel(false)}
+                  />
+                </>
+              }
+            />
+            {/* Packing Charges Modal */}
+            <CustomModal
+              visible={packingChargesModel}
+              onClose={() => setPackingChargesModel(false)}
+              children={
+                <>
+                  <Text style={{ marginBottom: 5 }}>Packaging Charges</Text>
+                  <CustomTextInput
+                    value={packingCharges}
+                    onChangeText={setPackingCharges}
+                    placeholder="Enter Packaging Charges"
+                    keyboardType="decimal-pad"
+                  />
+                  <CustomButton
+                    containerStyle={{ marginTop: 20 }}
+                    title="Done"
+                    onPress={() => setPackingChargesModel(false)}
+                  />
+                </>
+              }
+            />
+            <CalendarModal
+              visible={dueDateCallModel}
+              initialDate={dueDate}
+              onClose={() => setDueDateCallModel(false)}
+              onSelect={(e) => setDueDate(e)}
+            />
+            <CalendarModal
+              visible={supplierDateCallModel}
+              initialDate={supplierDate}
+              onClose={() => setSupplierDateCallModel(false)}
+              onSelect={setSupplierDate}
+            />
+
+            {/* Purchase Plan Info Modal */}
+            <CustomModal
+              visible={isPurchasePlanModalVisible}
+              onClose={() => setIsPurchasePlanModalVisible(false)}
+            >
+              <View style={styles.infoModalContent}>
+                <Icon
+                  name="information"
+                  size={48}
+                  color="#FCA311"
+                  style={styles.infoIcon}
+                />
+                <Text style={styles.infoModalTitle}>Purchase Plan</Text>
+                <Text style={styles.infoModalMessage}>
+                  Please create a new to add a new stock with updated purchase
+                  price
+                </Text>
+                <TouchableOpacity
+                  style={styles.infoModalButton}
+                  onPress={() => setIsPurchasePlanModalVisible(false)}
+                >
+                  <Text style={styles.infoModalButtonText}>OK</Text>
+                </TouchableOpacity>
+              </View>
+            </CustomModal>
+          </ScrollView>
+        </KeyboardAvoidingView>
       </View>
     </MainContainer>
   );

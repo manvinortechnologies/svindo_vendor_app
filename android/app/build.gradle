@@ -125,6 +125,24 @@ android {
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+
+    packaging {
+        pickFirst '**/libc++_shared.so'
+        pickFirst '**/libjsc.so'
+        resources {
+            excludes += [
+                'META-INF/DEPENDENCIES',
+                'META-INF/LICENSE',
+                'META-INF/LICENSE.txt',
+                'META-INF/license.txt',
+                'META-INF/NOTICE',
+                'META-INF/NOTICE.txt',
+                'META-INF/notice.txt',
+                'META-INF/ASL2.0',
+                'META-INF/*.kotlin_module'
+            ]
+        }
+    }
 }
 
 dependencies {
@@ -136,13 +154,16 @@ dependencies {
     // Google ML Kit Barcode Scanning
     implementation 'com.google.mlkit:barcode-scanning:17.2.0'
     implementation 'com.google.mlkit:vision-common:17.3.0'
+    implementation 'com.google.android.gms:play-services-base:18.0.1'
+    implementation 'com.google.android.gms:play-services-location:19.0.1'
+    implementation 'com.google.android.gms:play-services-maps:18.0.2'
 
-  implementation(project(':react-native-maps')){
+    implementation(project(':react-native-maps')){
       exclude group: 'com.google.android.gms'
-  }
-  implementation 'com.google.android.gms:play-services-base:18.0.1'
-  implementation 'com.google.android.gms:play-services-location:19.0.1'
-  implementation 'com.google.android.gms:play-services-maps:18.0.2'
+    }
+  
+    // Force AndroidX core library
+    implementation 'androidx.core:core:1.16.0'
 
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
@@ -167,3 +188,65 @@ configurations.all {
 
 
 apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
+
+// Fix for duplicate Glide classes between react-native-blasted-image and react-native-fast-image
+// This task removes all duplicate Glide-generated classes from react-native-blasted-image
+// before DEX merging and R8 minification, keeping only the ones from react-native-fast-image
+afterEvaluate {
+    // Remove duplicates before DEX merging
+    tasks.matching { it.name == 'mergeLibDexDebug' || it.name == 'mergeLibDexRelease' }.configureEach { task ->
+        task.doFirst {
+            // Find and remove all duplicate Glide-generated classes from react-native-blasted-image
+            def nodeModulesPath = file("${rootProject.projectDir}/../node_modules")
+            def blastedImageBuildPath = new File(nodeModulesPath, "react-native-blasted-image/android/build")
+            if (blastedImageBuildPath.exists()) {
+                // Remove all Glide-generated classes (GeneratedAppGlideModuleImpl, GeneratedRequestManagerFactory, etc.)
+                fileTree(dir: blastedImageBuildPath, include: '**/com/bumptech/glide/Generated*.dex').each { file ->
+                    try {
+                        delete file
+                        println "✓ Removed duplicate Glide class: ${file.name}"
+                    } catch (Exception e) {
+                        println "⚠ Could not remove ${file.path}: ${e.message}"
+                    }
+                }
+            }
+        }
+    }
+    
+    // Remove duplicates from JAR files before R8 minification
+    tasks.matching { it.name == 'minifyReleaseWithR8' || it.name == 'minifyDebugWithR8' }.configureEach { task ->
+        task.doFirst {
+            def nodeModulesPath = file("${rootProject.projectDir}/../node_modules")
+            def blastedImageBuildPath = new File(nodeModulesPath, "react-native-blasted-image/android/build")
+            if (blastedImageBuildPath.exists()) {
+                // Find and remove duplicate Glide classes from JAR files
+                def releaseJar = new File(blastedImageBuildPath, "intermediates/runtime_library_classes_jar/release/bundleLibRuntimeToJarRelease/classes.jar")
+                def debugJar = new File(blastedImageBuildPath, "intermediates/runtime_library_classes_jar/debug/bundleLibRuntimeToJarDebug/classes.jar")
+                
+                [releaseJar, debugJar].each { jarFile ->
+                    if (jarFile.exists()) {
+                        try {
+                            def tempDir = new File(jarFile.parentFile, "temp_${System.currentTimeMillis()}")
+                            tempDir.mkdirs()
+                            // Extract JAR
+                            project.copy {
+                                from project.zipTree(jarFile)
+                                into tempDir
+                                exclude 'com/bumptech/glide/GeneratedAppGlideModuleImpl.class'
+                                exclude 'com/bumptech/glide/GeneratedRequestManagerFactory.class'
+                            }
+                            // Recreate JAR without duplicates
+                            jarFile.delete()
+                            project.ant.zip(destfile: jarFile, basedir: tempDir, includes: '**/*')
+                            // Clean up
+                            delete tempDir
+                            println "✓ Removed duplicate Glide classes from JAR: ${jarFile.name}"
+                        } catch (Exception e) {
+                            println "⚠ Could not process JAR ${jarFile.path}: ${e.message}"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

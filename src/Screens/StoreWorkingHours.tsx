@@ -33,7 +33,7 @@ const StoreWorkingHours = () => {
   const [hours, setHours] = useState(
     daysOfWeek.reduce((acc, day) => {
       acc[day] = {
-        isOpen: true,
+        isOpen: false,
         openTime: "",
         closeTime: "",
       };
@@ -65,7 +65,6 @@ const StoreWorkingHours = () => {
       const res = await api.get(API_ROUTES.storeWorkingHour);
       if (res.data.length > 0) {
         const workingHours = transformWorkingHoursFromBE(res.data);
-        console.log("datttaaaa->", workingHours);
         setHours(workingHours);
       }
     } catch (error) {
@@ -157,8 +156,6 @@ const StoreWorkingHours = () => {
 
     // Add your API call here
   };
-
-  console.log(hours, "hours");
 
   return (
     <MainContainer>

@@ -7,6 +7,7 @@ import {
   ScrollView,
   Switch,
   Image,
+  SafeAreaView,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { ScaledSheet } from "react-native-size-matters";
@@ -58,7 +59,7 @@ const ExpensesDetailScreen = () => {
 
   if (error) {
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
@@ -96,12 +97,12 @@ const ExpensesDetailScreen = () => {
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -226,7 +227,7 @@ const ExpensesDetailScreen = () => {
         message="Are you sure you want to delete this expense? This action cannot be undone."
         isLoading={isDeleting}
       />
-    </View>
+    </SafeAreaView>
   );
 };
 
