@@ -8,10 +8,6 @@ import {
   StyleSheet,
   Alert,
 } from "react-native";
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from "react-native-responsive-screen";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import { ActivityIndicator } from "react-native";
 import MainContainer from "../CommonComponent/MainContainer";
@@ -22,6 +18,7 @@ import Loading from "../CommonComponent/Loading";
 import { BannerCampaign } from "../type/common";
 import api from "../services/api/api";
 import DeleteModal from "./DeleteModal";
+import { ScaledSheet, s } from "react-native-size-matters";
 
 const getStatusStyle = (status: string) => {
   switch (status) {
@@ -61,12 +58,12 @@ const BannerAds = ({ navigation }: any) => {
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
   const [deleteBannerData, setDeleteBannerData] =
     useState<BannerCampaign | null>(null);
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     getBannerData();
-  //     return () => {};
-  //   }, [])
-  // );
+  useFocusEffect(
+    useCallback(() => {
+      getBannerData();
+      return () => {};
+    }, [])
+  );
 
   const getBannerData = async () => {
     try {
@@ -219,7 +216,7 @@ const BannerAds = ({ navigation }: any) => {
               placeholder="Select Day"
               options={[{ id: "day", name: "Till Day" }]}
               selectedValue="day"
-              dropDownBoxStyle={{ height: hp(5), width: wp(30) }}
+              dropDownBoxStyle={{ height: s(5), width: s(30) }}
             />
           </View>
 
@@ -274,44 +271,44 @@ const BannerAds = ({ navigation }: any) => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingHorizontal: wp(4),
+    paddingHorizontal: s(4),
   },
   summaryContainer: {
-    marginBottom: hp(2),
+    marginBottom: s(2),
     borderWidth: 0.5,
     borderRadius: 10,
     borderColor: "#C7C7C7",
     padding: 10,
-    marginTop: hp(1),
+    marginTop: s(1),
   },
   summaryTitle: {
     color: "#000",
     fontWeight: "600",
-    fontSize: wp(5),
+    fontSize: s(5),
   },
   summaryValue: {
-    paddingBottom: wp(2),
+    paddingBottom: s(2),
     borderRadius: 6,
     marginTop: 4,
     fontWeight: "bold",
   },
   listContainer: {
-    paddingBottom: hp(10),
+    paddingBottom: s(10),
   },
   card: {
     borderWidth: 1,
     borderRadius: 10,
-    padding: wp(4),
-    marginBottom: hp(2),
+    padding: s(4),
+    marginBottom: s(2),
   },
   cardHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: hp(1),
+    marginBottom: s(1),
   },
   statusBadge: {
     paddingHorizontal: 8,
@@ -322,15 +319,15 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   logo: {
-    height: hp(12),
+    height: s(12),
     width: "100%",
     borderRadius: 8,
-    marginVertical: hp(1),
+    marginVertical: s(1),
   },
   campaignTitle: {
     fontWeight: "600",
     fontSize: 12,
-    marginBottom: hp(1),
+    marginBottom: s(1),
     color: "#000",
   },
   detailsRow: {
@@ -339,15 +336,15 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   dateText: {
-    fontSize: wp(2.8),
+    fontSize: s(2.8),
     color: "#000",
   },
   addBannerBtn: {
     backgroundColor: "#4CAF50",
-    padding: wp(3),
+    padding: s(3),
     borderRadius: 50,
     position: "absolute",
-    bottom: hp(2),
+    bottom: s(2),
     alignSelf: "center",
     width: "40%",
     alignItems: "center",
@@ -356,7 +353,7 @@ const styles = StyleSheet.create({
   addBannerText: {
     color: "#fff",
     fontWeight: "bold",
-    fontSize: wp(4),
+    fontSize: s(4),
   },
   spentActiveView: {
     width: "48%",

@@ -114,7 +114,7 @@
     @android.webkit.JavascriptInterface <methods>;
 }
 
-# Fix duplicate Glide classes between react-native-blasted-image and react-native-fast-image
+# Fix duplicate Glide classes between react-native-blasted-image
 # Keep the classes but allow R8 to handle duplicates
 -keep class com.bumptech.glide.GeneratedAppGlideModuleImpl { *; }
 -keep class com.bumptech.glide.GeneratedRequestManagerFactory { *; }

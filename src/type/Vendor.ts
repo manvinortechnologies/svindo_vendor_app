@@ -1,3 +1,4 @@
+import { posts } from "./../../node_modules/@reduxjs/toolkit/src/query/tests/mocks/handlers";
 export interface Vendor {
   id: number;
   name: string;
@@ -40,4 +41,5 @@ export interface VendorStore {
   address: string;
   pincode: string;
   is_offline: boolean;
+  store_images: string[];
 }

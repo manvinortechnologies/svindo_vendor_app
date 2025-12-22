@@ -21,7 +21,7 @@ import Loading from "../CommonComponent/Loading";
 import ModalUpdatePhoto from "../Modals/ModalUpdatePhoto";
 import CalendarModal from "../Modals/CalendarModal";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { formatToISOString } from "../utils/dateandTime";
+import { formatToISOString, convert24To12Hour } from "../utils/dateandTime";
 import api from "../services/api/api";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import { useRoute, RouteProp, ParamListBase } from "@react-navigation/native";
@@ -78,7 +78,6 @@ const CreateCouponScreen = ({ navigation }: any) => {
     try {
       setIsLoading(true);
       const formData = new FormData();
-
       formData.append("code", code);
       formData.append("title", tittle);
       formData.append("description", description);
@@ -88,10 +87,17 @@ const CreateCouponScreen = ({ navigation }: any) => {
       formData.append("discount_amount", discountAmount);
       formData.append("min_purchase", minOrderAmmount);
       formData.append("max_discount", maxOrderAmmount);
-      formData.append("start_date", formatToISOString(startDate, startTime));
-      formData.append("end_date", formatToISOString(valiDate, valiTime));
+      formData.append(
+        "start_date",
+        formatToISOString(startDate, convert24To12Hour(startTime))
+      );
+      formData.append(
+        "end_date",
+        formatToISOString(valiDate, convert24To12Hour(valiTime))
+      );
       formData.append("only_followers", onlyFollowers); // Booleans must be strings
       formData.append("is_active", isActive); // Same here
+      formData.append("customer_id", customerId || "");
 
       // If you have an image file to include:
       if (imageFile) {
@@ -101,7 +107,6 @@ const CreateCouponScreen = ({ navigation }: any) => {
           type: imageFile.type || "image/jpeg",
         });
       }
-      console.log("formdata-->", formData);
       const res = await api.post("vendor/coupon/", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -147,6 +152,7 @@ const CreateCouponScreen = ({ navigation }: any) => {
       setValidTime(formatted);
     }
   };
+
   const renderForm = () => (
     <View style={styles.form}>
       {/* Discount Amount and Discount Percentage */}

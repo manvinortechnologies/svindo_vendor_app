@@ -1,4 +1,5 @@
 import React from "react";
+import { Text, View } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 
 import SignupScreen from "../Screens/SignupScreen";
@@ -138,7 +139,7 @@ import ShippingDeliveryScreen from "../Screens/ShippingDeliveryScreen";
 import TermsScreen from "../Screens/TermsScreen";
 import PurchaseLedger from "../Screens/PurchaseLedger";
 
-const Stack = createNativeStackNavigator<THomeNavigation>();
+const Stack = createNativeStackNavigator();
 
 const AppNavigation = () => {
   return (

@@ -1,3 +1,4 @@
+import React from "react";
 import { useEffect, useState } from "react";
 import {
   View,
@@ -34,8 +35,6 @@ import { API_ROUTES } from "../constants/api-routes.constants";
 import { getLocationDetails } from "../utils/locationUtils";
 import Toast from "react-native-toast-message";
 import { useIsFocused } from "@react-navigation/native";
-import FastImage from "react-native-fast-image";
-import React from "react";
 import BlastedImage from "react-native-blasted-image";
 
 const { width, height } = Dimensions.get("window");
@@ -794,8 +793,8 @@ const Storescreen = ({ navigation }: any) => {
 
             <Text style={styles.sectionTitleRight}>Max - 4</Text>
           </View>
-          {storeData?.posts?.length > 0 ? (
-            storeData?.posts?.map((post: any) => (
+          {Array.isArray(storeData?.posts) && storeData.posts.length > 0 ? (
+            storeData.posts.map((post: any) => (
               <View style={[styles.highlightCard, { position: "relative" }]}>
                 <Image
                   source={
@@ -936,14 +935,15 @@ const Storescreen = ({ navigation }: any) => {
                       onPress={() => handleVideoPress(video)}
                       activeOpacity={0.8}
                     >
-                      <Image
-                        source={require("../assets/product/product2.png")}
-                        style={styles.videoImage}
+                      <Icon
+                        name="video-outline"
+                        size={s(150)}
+                        color="#FCA311"
                       />
                       <Icon
                         name="play-circle-outline"
                         size={s(40)}
-                        color="#fff"
+                        color="#FCA311"
                         style={styles.playIcon}
                       />
                       <TouchableOpacity
@@ -1652,7 +1652,11 @@ const styles = ScaledSheet.create({
     width: "48%",
     height: "335@s",
     backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
     borderRadius: 10,
+    borderWidth: "2@s",
+    borderColor: "#FCA311",
     // padding: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
@@ -1667,8 +1671,8 @@ const styles = ScaledSheet.create({
   },
   playIcon: {
     position: "absolute",
-    top: "40%",
-    left: "40%",
+    // top: "40%",
+    left: "30%",
   },
   videoIcon: {
     position: "absolute",

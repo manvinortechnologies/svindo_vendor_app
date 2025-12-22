@@ -16,7 +16,7 @@ export interface BankDetails {
   account_number: string;
   ifsc_code: string;
   branch: string;
-  opening_balance: string | number | undefined;
+  opening_balance?: string | number | undefined;
   id?: string;
 }
 
@@ -24,12 +24,16 @@ interface AddBankDetailsModalProps {
   visible: boolean;
   onClose: () => void;
   onSubmit: (bankDetails: BankDetails) => void;
+  editBankDetails?: BankDetails | null; // Optional bank details for edit mode
+  onUpdate?: (bankDetails: BankDetails) => void; // Optional update handler for edit mode
 }
 
 const AddBankDetailsModal: React.FC<AddBankDetailsModalProps> = ({
   visible,
   onClose,
   onSubmit,
+  editBankDetails,
+  onUpdate,
 }) => {
   const initialState: BankDetails = {
     name: "",
@@ -40,17 +44,37 @@ const AddBankDetailsModal: React.FC<AddBankDetailsModalProps> = ({
     opening_balance: 0,
   };
 
+  const isEditMode = !!editBankDetails;
+
   const [bankDetails, setBankDetails] = useState<BankDetails>(initialState);
   const [errors, setErrors] = useState<
     Partial<Record<keyof BankDetails, string>>
   >({});
 
   useEffect(() => {
-    if (!visible) {
+    if (visible) {
+      if (editBankDetails) {
+        // Populate form with existing bank details for edit mode
+        setBankDetails({
+          name: editBankDetails.name || "",
+          account_holder: editBankDetails.account_holder || "",
+          account_number: editBankDetails.account_number?.toString() || "",
+          ifsc_code: editBankDetails.ifsc_code || "",
+          branch: editBankDetails.branch || "",
+          opening_balance: editBankDetails.opening_balance || 0,
+          id: editBankDetails.id,
+        });
+      } else {
+        // Reset to initial state for add mode
+        setBankDetails(initialState);
+      }
+      setErrors({});
+    } else {
+      // Clear form when modal closes
       setBankDetails(initialState);
       setErrors({});
     }
-  }, [visible]);
+  }, [visible, editBankDetails]);
 
   const validate = (): boolean => {
     let valid = true;
@@ -74,8 +98,8 @@ const AddBankDetailsModal: React.FC<AddBankDetailsModalProps> = ({
     if (!bankDetails.ifsc_code.trim()) {
       newErrors.ifsc_code = "IFSC code is required";
       valid = false;
-    } else if (!/^[A-Z]{4}[A-Z0-9]{6}$/.test(bankDetails.ifsc_code)) {
-      newErrors.ifsc_code = "Enter a valid IFSC code";
+    } else if (!/^[A-Za-z]{4}[a-zA-Z0-9]{7}$/.test(bankDetails.ifsc_code)) {
+      newErrors.ifsc_code = "Enter a valid IFSC BARB0ABCDEF / HDFC0000123";
       valid = false;
     }
     if (!bankDetails.branch.trim()) {
@@ -94,10 +118,18 @@ const AddBankDetailsModal: React.FC<AddBankDetailsModalProps> = ({
 
   const handleSave = () => {
     if (validate()) {
-      onSubmit({
-        ...bankDetails,
-        opening_balance: Number(bankDetails.opening_balance) || 0,
-      });
+      if (isEditMode && onUpdate) {
+        // For edit mode, exclude opening_balance from payload
+        const { opening_balance, ...editData } = bankDetails;
+        onUpdate(editData);
+      } else {
+        // For add mode, include opening_balance
+        const dataToSubmit = {
+          ...bankDetails,
+          opening_balance: Number(bankDetails.opening_balance) || 0,
+        };
+        onSubmit(dataToSubmit);
+      }
       onClose();
     }
   };
@@ -108,7 +140,9 @@ const AddBankDetailsModal: React.FC<AddBankDetailsModalProps> = ({
         <View style={styles.modalContainer}>
           <ScrollView keyboardShouldPersistTaps="handled">
             <View style={styles.header}>
-              <Text style={styles.title}>Add Bank Details</Text>
+              <Text style={styles.title}>
+                {isEditMode ? "Edit Bank Details" : "Add Bank Details"}
+              </Text>
               <TouchableOpacity onPress={onClose}>
                 <Icon name="close" size={24} color="#333" />
               </TouchableOpacity>
@@ -136,47 +170,53 @@ const AddBankDetailsModal: React.FC<AddBankDetailsModalProps> = ({
                 placeholder: "e.g. ABCD0001234",
               },
               {
-                key: "branch",
-                label: "Branch",
-                placeholder: "Branch Name",
-              },
-              {
                 key: "opening_balance",
                 label: "Opening Balance",
                 placeholder: "Opening Balance",
               },
-            ].map(({ key, label, placeholder }) => (
-              <View key={key} style={{ marginBottom: 10 }}>
-                <InputBox
-                  label={label}
-                  value={
-                    bankDetails[key as keyof BankDetails]?.toString() || ""
-                  }
-                  placeholder={placeholder}
-                  onChangeText={(text) =>
-                    handleChange(key as keyof BankDetails, text)
-                  }
-                  keyboardType={
-                    key === "account_number" ? "numeric" : "default"
-                  }
-                  autoCapitalize={key === "ifsc_code" ? "characters" : "words"}
-                  background="#fff"
-                  styless={{ marginBottom: 0 }}
-                />
-                {errors[key as keyof BankDetails] && (
-                  <Text style={styles.errorText}>
-                    {errors[key as keyof BankDetails]}
-                  </Text>
-                )}
-              </View>
-            ))}
+              {
+                key: "branch",
+                label: "Branch",
+                placeholder: "Branch Name",
+              },
+            ]
+              .filter((field) => !isEditMode || field.key !== "opening_balance")
+              .map(({ key, label, placeholder }) => (
+                <View key={key} style={{ marginBottom: 10 }}>
+                  <InputBox
+                    label={label}
+                    value={
+                      bankDetails[key as keyof BankDetails]?.toString() || ""
+                    }
+                    placeholder={placeholder}
+                    onChangeText={(text) =>
+                      handleChange(key as keyof BankDetails, text)
+                    }
+                    keyboardType={
+                      key === "account_number" ? "numeric" : "default"
+                    }
+                    autoCapitalize={
+                      key === "ifsc_code" ? "characters" : "words"
+                    }
+                    background="#fff"
+                    styless={{ marginBottom: 0 }}
+                  />
+                  {errors[key as keyof BankDetails] && (
+                    <Text style={styles.errorText}>
+                      {errors[key as keyof BankDetails]}
+                    </Text>
+                  )}
+                </View>
+              ))}
 
             <View style={styles.buttonContainer}>
               <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                <Text style={styles.buttonText}>Save</Text>
+                <Text style={styles.buttonText}>
+                  {isEditMode ? "Update" : "Save"}
+                </Text>
               </TouchableOpacity>
             </View>
           </ScrollView>
@@ -229,11 +269,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
   },
   cancelText: {
-    color: "#007bff",
+    color: "#FCA311",
     fontSize: 16,
   },
   saveButton: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#FCA311",
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 6,

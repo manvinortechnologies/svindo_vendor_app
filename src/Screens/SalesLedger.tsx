@@ -19,7 +19,7 @@ import CustomModal from "../Modals/CustomModal";
 import CalendarModal from "../Modals/CalendarModal";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
-import { useNavigation } from "@react-navigation/native";
+import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import Icon from "react-native-vector-icons/Ionicons";
 import CustomHeader from "../CommonComponent/CustomHeader";
@@ -108,9 +108,15 @@ interface SalesEntry {
   created_at?: string;
 }
 
+type RootStackParamList = {
+  SalesLedger: {
+    saleId?: number;
+  };
+};
+
 const SalesLedger = () => {
   const navigation = useNavigation();
-
+  const route = useRoute<RouteProp<RootStackParamList, "SalesLedger">>();
   const [salesData, setSalesData] = useState<SalesEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -256,6 +262,17 @@ const SalesLedger = () => {
     fetchSalesData();
   }, []);
 
+  useEffect(() => {
+    if (route.params?.saleId && salesData.length > 0) {
+      const sale = salesData.find((s) => s.id === route.params?.saleId);
+      if (sale) {
+        openModal(sale);
+      }
+      // Clear the param after opening modal
+      navigation.setParams({ saleId: undefined } as any);
+    }
+  }, [route.params?.saleId, salesData]);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-GB", {
@@ -304,14 +321,19 @@ const SalesLedger = () => {
           <View style={styles.tableCell}>
             <Text style={styles.tableValue}>
               ₹
-              {Number(item.total_amount - (item.balance_amount || 0)).toFixed(
-                2
-              )}
+              {item.payment_method === "credit"
+                ? Number(
+                    item.total_amount - (item.balance_amount || 0)
+                  ).toFixed(2)
+                : Number(item.total_amount).toFixed(2)}
             </Text>
           </View>
           <View style={styles.tableCell}>
             <Text style={styles.tableValue}>
-              ₹{Number(item?.balance_amount || 0).toFixed(2)}
+              ₹
+              {item.payment_method === "credit"
+                ? Number(item.balance_amount || 0).toFixed(2)
+                : "0.00"}
             </Text>
           </View>
         </View>

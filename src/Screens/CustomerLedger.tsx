@@ -171,10 +171,9 @@ const CustomerLedger = ({ navigation, route }: any) => {
           medium: txn.transaction_type,
         });
       });
-
       // Convert grouped data to sections
       return Object.keys(groupedByDate)
-        .sort((a, b) => new Date(b).getTime() - new Date(a).getTime()) // Sort by date descending
+        .sort((a, b) => moment(b, "DD-MM-YYYY").diff(moment(a, "DD-MM-YYYY"))) // Sort by date descending
         .map((date) => ({
           date: date,
           transactions: groupedByDate[date],

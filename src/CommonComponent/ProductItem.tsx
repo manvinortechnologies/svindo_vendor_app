@@ -65,6 +65,7 @@ const ProductItem: React.FC<ProductItemProps> = ({
       style={styles.productCard}
       onPress={() => onPress(product)}
       activeOpacity={0.7}
+      disabled={product.product_type === "print"}
     >
       {showStock && (
         <View style={styles.stockBadgeAbove}>

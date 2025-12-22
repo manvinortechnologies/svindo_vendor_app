@@ -274,8 +274,20 @@ const DayBookScreen = () => {
                     <Text style={styles.transAmount}>₹{amount}</Text>
                   </View>
                   <View style={styles.transBottomRow}>
-                    <Text style={styles.transDetail}>{item.detail}</Text>
-                    <Text style={styles.transMedium}>{item.medium}</Text>
+                    <Text
+                      style={styles.transDetail}
+                      numberOfLines={2}
+                      ellipsizeMode="tail"
+                    >
+                      {item.detail}
+                    </Text>
+                    <Text
+                      style={styles.transMedium}
+                      numberOfLines={2}
+                      ellipsizeMode="tail"
+                    >
+                      {item.medium}
+                    </Text>
                   </View>
                 </View>
               </View>
@@ -427,11 +439,13 @@ const styles = StyleSheet.create({
   transDetail: {
     fontSize: 13,
     color: "#000",
+    maxWidth: "49%",
   },
   transMedium: {
     fontSize: 12,
     color: "#000",
     fontWeight: "500",
+    maxWidth: "49%",
   },
   transRight: {
     alignItems: "flex-end",

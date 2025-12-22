@@ -49,7 +49,7 @@ const ChatScreenStream = () => {
 
           // First, check if channel already exists
           await client.connectUser({ id: userId.toString() }, token);
-          let existingChannel = await getChatChannel(userId, otherUserId);
+          let existingChannel: any = await getChatChannel(userId, otherUserId);
 
           // If channel doesn't exist, initialize it via API
           if (!existingChannel) {

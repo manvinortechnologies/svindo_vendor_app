@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   Linking,
+  Image,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
@@ -337,12 +338,24 @@ const Erp = () => {
           style={{
             borderWidth: 1,
             borderColor: "#CBCBCB",
-            width: "95%",
+            // width: "95%",
             height: 100,
             margin: 10,
             borderRadius: 12,
+            justifyContent: "center",
+            alignItems: "center",
+            overflow: "hidden",
           }}
-        ></View>
+        >
+          <Image
+            source={require("../assets/congratulations_erp.png")}
+            style={{
+              width: "100%",
+              height: "100%",
+              resizeMode: "contain",
+            }}
+          />
+        </View>
 
         {/* Top Tabs */}
         <View style={styles.topTabContainer}>

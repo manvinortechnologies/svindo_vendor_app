@@ -34,11 +34,11 @@ const ManageVendors = ({ navigation }: any) => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filteredVendors, setFilteredVendors] = useState<Vendor[]>([]);
   const [totalPendingAmount, setTotalPendingAmount] = useState<number>(0);
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     getVendeorData();
-  //   }, [])
-  // );
+  useFocusEffect(
+    useCallback(() => {
+      getVendeorData();
+    }, [])
+  );
   const getVendeorData = async () => {
     try {
       setIsLoading(true);
@@ -122,7 +122,7 @@ const ManageVendors = ({ navigation }: any) => {
               <View style={styles.detailsTextContainer}>
                 <Text style={styles.nameText}>{item.name}</Text>
                 <Text style={styles.contactText}>{item.contact}</Text>
-                <Text style={styles.emailText}>{item.email}</Text>
+                <Text style={styles.emailText}>{item.company_name}</Text>
               </View>
             </View>
             <View style={styles.balanceColumn}>

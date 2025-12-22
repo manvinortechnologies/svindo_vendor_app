@@ -60,7 +60,9 @@ const ProductAddedSuccess: React.FC<ProductAddedSuccessProps> = ({
         };
         const response = await api.post(API_ROUTES.spotlightProduct, payloads);
       }
-      navigation.replace(HomeNavigation.BOTTOM_NAVIGATION);
+      navigation.replace(HomeNavigation.BOTTOM_NAVIGATION, {
+        screen: HomeNavigation.STOCK_SCREEN,
+      });
     } catch (error) {
       console.log("error--->", error);
     } finally {

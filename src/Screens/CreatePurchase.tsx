@@ -32,6 +32,7 @@ import moment from "moment";
 import CustomDropdown, {
   DropDownOption,
 } from "../CommonComponent/CustomDropdown";
+import { s, ScaledSheet } from "react-native-size-matters";
 
 interface Product {
   id: number;
@@ -55,6 +56,8 @@ type RootStackParamList = {
   CreatePurchase: {
     selectedProducts?: Product[];
     formData?: any; // Add form data preservation
+    editMode?: boolean;
+    purchaseData?: any; // PurchaseEntry from PurchaseLedger
   };
 };
 
@@ -68,6 +71,10 @@ const CreatePurchase = ({ navigation }: any) => {
   const [isVendorModalVisible, setIsVendorModalVisible] = useState(false);
   const [isPurchasePlanModalVisible, setIsPurchasePlanModalVisible] =
     useState(false);
+  const [editingProductIndex, setEditingProductIndex] = useState<number | null>(
+    null
+  );
+  const [editProductPrice, setEditProductPrice] = useState<string>("");
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [allVendorList, setAllVendorList] = useState<Vendor[]>();
   const [allProductList, setAllProductList] = useState<Product[]>();
@@ -113,6 +120,8 @@ const CreatePurchase = ({ navigation }: any) => {
     useState<boolean>(false);
   const [showProductModal, setShowProductModal] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+  const [isEditMode, setIsEditMode] = useState<boolean>(false);
+  const [purchaseId, setPurchaseId] = useState<number | null>(null);
 
   const [formData, setFormData] = useState<{ [key: string]: string }>({
     dispatchAddress: "",
@@ -152,6 +161,12 @@ const CreatePurchase = ({ navigation }: any) => {
         tempErrors.advanceBank = "Please select bank";
       }
     }
+    if (
+      (selectedPayment === "Cheques" || selectedPayment === "UPI") &&
+      !selectedBank
+    ) {
+      tempErrors.selectedBank = "Please select bank for cheque or UPI payment";
+    }
 
     setErrors(tempErrors);
     console.log(tempErrors, "errors");
@@ -165,7 +180,8 @@ const CreatePurchase = ({ navigation }: any) => {
 
   const handlePercentChange = (value: string) => {
     const totalAmount = selectedProducts.reduce(
-      (sum, item) => sum + item.price * item.quantity,
+      (sum, item) =>
+        sum + (item.purchase_price || item.price || 0) * item.quantity,
       0
     );
     setDiscount((p) => ({ ...p, pr: value }));
@@ -180,7 +196,8 @@ const CreatePurchase = ({ navigation }: any) => {
 
   const handleAmountChange = (value: string) => {
     const totalAmount = selectedProducts.reduce(
-      (sum, item) => sum + item.price * item.quantity,
+      (sum, item) =>
+        sum + (item.purchase_price || item.price || 0) * item.quantity,
       0
     );
     setDiscount((p) => ({ ...p, amount: value }));
@@ -242,6 +259,123 @@ const CreatePurchase = ({ navigation }: any) => {
     }
   }, [route.params?.selectedProducts, route.params?.formData]);
 
+  // Handle edit mode - populate form with purchase data
+  useEffect(() => {
+    if (route.params?.editMode && route.params?.purchaseData) {
+      const purchaseData = route.params.purchaseData;
+      setIsEditMode(true);
+      setPurchaseId(purchaseData.id);
+
+      // Set vendor
+      if (purchaseData.vendor_details && allVendorList) {
+        const vendor = allVendorList.find(
+          (v) => v.id === purchaseData.vendor_details.id
+        );
+        if (vendor) setSelectedVendor(vendor);
+      }
+
+      // Set purchase date
+      if (purchaseData.purchase_date) {
+        setPurchaseDate(purchaseData.purchase_date);
+      }
+
+      // Set purchase code
+      if (purchaseData.purchase_code) {
+        setPurchasecode(purchaseData.purchase_code);
+      }
+
+      // Set supplier invoice date
+      if (purchaseData.supplier_invoice_date) {
+        setSupplierDate(purchaseData.supplier_invoice_date);
+      }
+
+      // Set serial number
+      if (purchaseData.serial_number) {
+        setSerialNo(purchaseData.serial_number);
+      }
+
+      // Set payment method
+      if (purchaseData.payment_method) {
+        const paymentMap: { [key: string]: string } = {
+          credit: "In Credit",
+          cheques: "Cheques",
+          upi: "UPI",
+          cash: "Cash",
+        };
+        setSelectedPayment(
+          paymentMap[purchaseData.payment_method] || purchaseData.payment_method
+        );
+      }
+
+      // Set discount
+      if (purchaseData.discount_percentage || purchaseData.discount_amount) {
+        setDiscount({
+          pr: purchaseData.discount_percentage || "",
+          amount: purchaseData.discount_amount || "",
+        });
+      }
+
+      // Set advance amount and mode
+      if (purchaseData.advance_amount) {
+        setAdvanceAmount(purchaseData.advance_amount);
+      }
+      if (purchaseData.advance_mode) {
+        const mode =
+          purchaseData.advance_mode.charAt(0).toUpperCase() +
+          purchaseData.advance_mode.slice(1);
+        setSelectedAdvanceType(mode);
+      }
+
+      // Set due date
+      if (purchaseData.due_date) {
+        setDueDate(purchaseData.due_date);
+      }
+
+      // Set bank
+      if (purchaseData.advance_bank && bankList) {
+        const bank = bankList.find((b) => b.id === purchaseData.advance_bank);
+        if (bank) setSelectedBank(bank);
+      }
+
+      // Set form data fields
+      setFormData((prev) => ({
+        ...prev,
+        dispatchAddress: purchaseData.dispatch_address || "",
+        references: purchaseData.references || "",
+        notes: purchaseData.notes || "",
+        terms: purchaseData.terms || "",
+        shippingCharges: purchaseData.delivery_shipping_charges || "",
+        packagingCharges: purchaseData.packaging_charges || "",
+        ewayBill: purchaseData.eway_bill_no || "",
+        lrNumber: purchaseData.lr_no || "",
+        vehicleNumber: purchaseData.vehicle_no || "",
+        transportName: purchaseData.transport_name || "",
+        parcels: purchaseData.no_of_parcels?.toString() || "",
+      }));
+
+      // Set products
+      if (purchaseData.items && purchaseData.items.length > 0) {
+        const mappedProducts: Product[] = purchaseData.items.map(
+          (item: any) => ({
+            id: item.product,
+            name: item.product_details?.name || `Product ${item.product}`,
+            desc: item.product_details?.desc || "",
+            price: item.price || 0,
+            purchase_price: item.price || 0,
+            quantity: item.quantity || 1,
+            image: item.product_details?.image || "",
+          })
+        );
+        setSelectedProducts(mappedProducts);
+      }
+    }
+  }, [
+    route.params?.editMode,
+    route.params?.purchaseData,
+    allVendorList,
+    bankList,
+  ]);
+
   const getInitialData = async () => {
     try {
       setIsLoading(true);
@@ -269,7 +403,7 @@ const CreatePurchase = ({ navigation }: any) => {
       //   setAllProductList(data);
       // }
 
-      if (purchaseRes.data) {
+      if (purchaseRes.data && !isEditMode) {
         setPurchasecode(purchaseRes.data.purchase_number); // or the correct key from API
       }
       if (banks.data) {
@@ -299,15 +433,18 @@ const CreatePurchase = ({ navigation }: any) => {
     try {
       setIsLoading(true);
       const totalAmount = selectedProducts.reduce(
-        (sum, item) => sum + item.price * item.quantity,
+        (sum, item) =>
+          sum + (item.purchase_price || item.price || 0) * item.quantity,
         0
       );
 
-      const totalDiscountedAmount = totalAmount - Number(discount.amount);
+      const totalDiscountedAmount = totalAmount - Number(discount.amount || 0);
 
       const data = {
         purchase_date: purchaseDate,
         vendor: selectedVendor?.id,
+        supplier_invoice_date: supplierDate,
+        serial_number: serialNo,
         payment_method:
           selectedPayment === "In Credit"
             ? "credit"
@@ -318,44 +455,51 @@ const CreatePurchase = ({ navigation }: any) => {
             : selectedPayment === "Cash"
             ? "cash"
             : "other",
-        discount_percent: Number(discount) || 0,
-        discount_amount: Number(extraDiscount) || 0,
+        discount_percentage: discount.pr || "0",
+        discount_amount: discount.amount || "0",
         advance_amount: Number(advanceAmount) || 0,
         advance_mode: selectedAdvanceType.toLowerCase(), // bank / cash
         balance_amount:
           selectedPayment === "In Credit"
-            ? Number(totalDiscountedAmount) - Number(advanceAmount)
+            ? Number(totalDiscountedAmount) - Number(advanceAmount || 0)
             : 0,
-        due_date: dueDate,
-        advance_bank: selectedBank?.id,
-        dispatch_address: formData.dispatchAddress,
-        references: formData.references,
-        notes: formData.notes,
-        terms: formData.terms,
+        due_date: dueDate || null,
+        advance_bank: selectedBank?.id || null,
+        dispatch_address: formData.dispatchAddress || "",
+        references: formData.references || "",
+        notes: formData.notes || "",
+        terms: formData.terms || "",
         delivery_shipping_charges: Number(formData.shippingCharges) || 0,
         packaging_charges: Number(formData.packagingCharges) || 0,
-        eway_bill_no: formData.ewayBill,
-        lr_no: formData.lrNumber,
-        vehicle_no: formData.vehicleNumber,
-        transport_name: formData.transportName,
+        eway_bill_no: formData.ewayBill || "",
+        lr_no: formData.lrNumber || "",
+        vehicle_no: formData.vehicleNumber || "",
+        transport_name: formData.transportName || "",
         no_of_parcels: Number(formData.parcels) || null,
         items: selectedProducts.map((p) => ({
           product: p.id,
           quantity: p.quantity,
-          price: p.price,
-          total: Number(p.quantity) * Number(p.price),
+          price: p.purchase_price || p.price || 0,
+          total: Number(p.quantity) * Number(p.purchase_price || p.price || 0),
         })),
       };
 
       if (selectedPayment !== "In Credit" && !dueDate) {
-        delete data.due_date;
+        (data as { due_date?: typeof dueDate }).due_date = undefined;
       }
 
       console.log("Sending purchase data:", data);
 
-      const res = await api.post("vendor/purchase/", data);
+      let res;
+      if (isEditMode && purchaseId) {
+        // Update existing purchase
+        res = await api.put(`vendor/purchase/${purchaseId}/`, data);
+      } else {
+        // Create new purchase
+        res = await api.post("vendor/purchase/", data);
+      }
 
-      if (res.status === 201) {
+      if (res.status === 200 || res.status === 201) {
         navigation.goBack();
       }
     } catch (error) {
@@ -365,8 +509,8 @@ const CreatePurchase = ({ navigation }: any) => {
     }
   };
 
-  const handleChange = (field: string, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+  const handleChange = (field: string, value: string | boolean) => {
+    setFormData((prev) => ({ ...prev, [field]: value as string }));
   };
 
   // Function to collect all current form data for preservation
@@ -399,7 +543,7 @@ const CreatePurchase = ({ navigation }: any) => {
     <MainContainer>
       <View style={styles.container}>
         <Headerwithback
-          title="Create Purchase"
+          title={isEditMode ? "Edit Purchase" : "Create Purchase"}
           rightIcons={[
             <TouchableOpacity onPress={handleSearch} key="search">
               <Icon name="file-document-outline" size={20} color="#FCA311" />
@@ -559,7 +703,13 @@ const CreatePurchase = ({ navigation }: any) => {
                         flex: 1,
                         flexDirection: "row",
                       }}
-                      onPress={() => setIsPurchasePlanModalVisible(true)}
+                      onPress={() => {
+                        setEditingProductIndex(index);
+                        setEditProductPrice(
+                          (item?.purchase_price || 0).toString()
+                        );
+                        setIsPurchasePlanModalVisible(true);
+                      }}
                     >
                       <Text style={styles.tableText}>
                         {formatNumber(Number(item?.purchase_price || 0))}
@@ -749,7 +899,14 @@ const CreatePurchase = ({ navigation }: any) => {
 
               {/* Payment Row */}
               <View style={styles.row}>
-                <Text style={[styles.label, { marginRight: 20 }]}>Payment</Text>
+                <Text
+                  style={[
+                    styles.label,
+                    { marginRight: s(12), marginBottom: 0 },
+                  ]}
+                >
+                  Payment
+                </Text>
                 <View style={styles.optionsRow}>
                   {["UPI", "Cheques", "Cash", "In Credit"].map((method) => (
                     <TouchableOpacity
@@ -866,8 +1023,8 @@ const CreatePurchase = ({ navigation }: any) => {
                   options={bankList}
                   dropDownBoxStyle={{ marginTop: 10 }}
                 />
-                {errors?.advanceBank && (
-                  <Text style={{ color: "red" }}>{errors?.advanceBank}</Text>
+                {errors?.selectedBank && (
+                  <Text style={{ color: "red" }}>{errors?.selectedBank}</Text>
                 )}
               </>
             )}
@@ -1126,29 +1283,69 @@ const CreatePurchase = ({ navigation }: any) => {
               onSelect={setSupplierDate}
             />
 
-            {/* Purchase Plan Info Modal */}
+            {/* Edit Product Price Modal */}
             <CustomModal
               visible={isPurchasePlanModalVisible}
-              onClose={() => setIsPurchasePlanModalVisible(false)}
+              onClose={() => {
+                setIsPurchasePlanModalVisible(false);
+                setEditingProductIndex(null);
+                setEditProductPrice("");
+              }}
+              title="Edit Product"
             >
-              <View style={styles.infoModalContent}>
-                <Icon
-                  name="information"
-                  size={48}
-                  color="#FCA311"
-                  style={styles.infoIcon}
-                />
-                <Text style={styles.infoModalTitle}>Purchase Plan</Text>
-                <Text style={styles.infoModalMessage}>
-                  Please create a new to add a new stock with updated purchase
-                  price
-                </Text>
-                <TouchableOpacity
-                  style={styles.infoModalButton}
-                  onPress={() => setIsPurchasePlanModalVisible(false)}
-                >
-                  <Text style={styles.infoModalButtonText}>OK</Text>
-                </TouchableOpacity>
+              <View style={styles.editProductModalContent}>
+                {editingProductIndex !== null &&
+                  selectedProducts[editingProductIndex] && (
+                    <>
+                      <Text style={styles.editProductLabel}>
+                        Product: {selectedProducts[editingProductIndex].name}
+                      </Text>
+                      <Text style={styles.editProductSubLabel}>
+                        Purchase Price
+                      </Text>
+                      <CustomTextInput
+                        value={editProductPrice}
+                        onChangeText={setEditProductPrice}
+                        placeholder="Enter Purchase Price"
+                        keyboardType="decimal-pad"
+                        containerStyle={{ marginTop: 10 }}
+                      />
+                      <View style={styles.editProductButtons}>
+                        <TouchableOpacity
+                          style={[
+                            styles.editProductButton,
+                            styles.cancelButton,
+                          ]}
+                          onPress={() => {
+                            setIsPurchasePlanModalVisible(false);
+                            setEditingProductIndex(null);
+                            setEditProductPrice("");
+                          }}
+                        >
+                          <Text style={styles.cancelButtonText}>Cancel</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={[styles.editProductButton, styles.saveButton]}
+                          onPress={() => {
+                            if (editingProductIndex !== null) {
+                              const price = parseFloat(editProductPrice) || 0;
+                              const updatedProducts = [...selectedProducts];
+                              updatedProducts[editingProductIndex] = {
+                                ...updatedProducts[editingProductIndex],
+                                purchase_price: price,
+                              };
+                              setSelectedProducts(updatedProducts);
+                              setIsPurchasePlanModalVisible(false);
+                              setEditingProductIndex(null);
+                              setEditProductPrice("");
+                            }
+                          }}
+                        >
+                          <Text style={styles.saveButtonText}>Save</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </>
+                  )}
               </View>
             </CustomModal>
           </ScrollView>
@@ -1160,7 +1357,7 @@ const CreatePurchase = ({ navigation }: any) => {
 
 export default CreatePurchase;
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
@@ -1343,6 +1540,7 @@ const styles = StyleSheet.create({
   },
   optionText: {
     color: "#000",
+    fontSize: "11@s",
     fontWeight: "500",
   },
   subOptionText: {
@@ -1370,15 +1568,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   optionButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: "6@s",
+    paddingVertical: "2@s",
     alignItems: "center",
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 6,
+    borderRadius: "6@s",
     backgroundColor: "#fff",
-    marginRight: 6,
-    marginTop: 6,
+    marginRight: "6@s",
+    // marginTop: "6@s",
     fontWeight: "500",
     justifyContent: "center",
   },
@@ -1402,6 +1600,52 @@ const styles = StyleSheet.create({
     width: 60,
     fontSize: 13,
     color: "#000",
+  },
+  editProductModalContent: {
+    padding: 20,
+  },
+  editProductLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#000",
+    marginBottom: 8,
+  },
+  editProductSubLabel: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#666",
+    marginTop: 10,
+  },
+  editProductButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+    gap: 10,
+  },
+  editProductButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  cancelButton: {
+    backgroundColor: "#F5F5F5",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  cancelButtonText: {
+    color: "#666",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  saveButton: {
+    backgroundColor: "#FCA311",
+  },
+  saveButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
   inputFull: {
     width: "30%",

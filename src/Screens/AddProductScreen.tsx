@@ -1223,7 +1223,9 @@ const AddProductScreen = ({
           payload: res.data,
         });
       } else {
-        navigation.replace(HomeNavigation.BOTTOM_NAVIGATION);
+        navigation.replace(HomeNavigation.BOTTOM_NAVIGATION, {
+          screen: HomeNavigation.STOCK_SCREEN,
+        });
       }
       // }
     } catch (error: any) {
@@ -1389,6 +1391,8 @@ const AddProductScreen = ({
       const companyData = StorageUtils.getCompanyProfile();
       if (companyData) {
         const isGstRegistered = companyData?.is_gst_registered === true;
+        console.log(isGstRegistered, "isGstRegistered");
+
         setHasCompanyGst(isGstRegistered);
         if (!isGstRegistered) {
           setIsWholesaleEnabled(false);
@@ -1466,9 +1470,9 @@ const AddProductScreen = ({
       }
       if (product.sub_category) {
         const subCategory = subCategoryList.find(
-          (sub) =>
+          (sub: any) =>
             sub.name.toLowerCase() === product.sub_category.toLowerCase() &&
-            sub.category.toString() === product.category.toString()
+            sub?.category?.toString() === product.category.toString()
         );
         if (subCategory)
           formikRef.current?.setFieldValue("sub_category", subCategory.id);
@@ -1866,7 +1870,7 @@ const AddProductScreen = ({
                         background="#FFF8EB"
                         value={values.hsn}
                         onChangeText={handleChange("hsn")}
-                        // editable={!!hasCompanyGst}
+                        editable={!!hasCompanyGst}
                       />
                     </FormField>
                   </View>
@@ -2160,13 +2164,13 @@ const AddProductScreen = ({
                               error={touched.expiry_date && errors.expiry_date}
                             >
                               <TouchableOpacity
-                                style={styles.inputBox}
                                 onPress={() => setCallenderModel(true)}
                               >
                                 <TextInput
                                   placeholder="Enter here"
                                   value={values.expiry_date}
                                   editable={false}
+                                  style={styles.inputBox}
                                 />
                               </TouchableOpacity>
                             </FormField>
@@ -2794,6 +2798,7 @@ const styles = ScaledSheet.create({
     padding: 12,
     backgroundColor: "#FFF8EB",
     marginBottom: 12,
+    color: "#000",
   },
   imageBox: {
     width: "80@s",

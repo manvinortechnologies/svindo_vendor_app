@@ -75,36 +75,41 @@ export const convert24To12Hour = (time: string): string => {
 };
 
 export function formatToISOString(dateStr: string, timeStr: string): string {
-  // Clean up any weird Unicode spaces (e.g. \u202F)
-  const cleanedTime = timeStr
-    .replace(/[\u202F\u00A0]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-    .toLowerCase();
+  try {
+    // Clean up any weird Unicode spaces (e.g. \u202F)
+    const cleanedTime = timeStr
+      .replace(/[\u202F\u00A0]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
 
-  const [hourMin, meridian] = cleanedTime.split(" ");
-  const [hourStr, minStr] = hourMin.split(":");
-  let hour = parseInt(hourStr, 10);
-  const minute = parseInt(minStr, 10);
+    const [hourMin, meridian] = cleanedTime.split(" ");
+    const [hourStr, minStr] = hourMin.split(":");
+    let hour = parseInt(hourStr, 10);
+    const minute = parseInt(minStr, 10);
 
-  if (
-    isNaN(hour) ||
-    isNaN(minute) ||
-    (meridian !== "am" && meridian !== "pm")
-  ) {
-    throw new Error("Invalid time format");
+    if (
+      isNaN(hour) ||
+      isNaN(minute) ||
+      (meridian !== "am" && meridian !== "pm")
+    ) {
+      throw new Error("Invalid time format");
+    }
+
+    // Convert to 24-hour time
+    if (meridian === "pm" && hour !== 12) hour += 12;
+    if (meridian === "am" && hour === 12) hour = 0;
+
+    // Format: 2025-12-09T22:44:00+05:30
+    const formattedDate = `${dateStr}T${String(hour).padStart(2, "0")}:${String(
+      minute
+    ).padStart(2, "0")}:00+05:30`;
+
+    return formattedDate;
+  } catch (error) {
+    console.log("error-->formatToISOString", error);
+    return "";
   }
-
-  // Convert to 24-hour time
-  if (meridian === "pm" && hour !== 12) hour += 12;
-  if (meridian === "am" && hour === 12) hour = 0;
-
-  // Format: 2025-12-09T22:44:00+05:30
-  const formattedDate = `${dateStr}T${String(hour).padStart(2, "0")}:${String(
-    minute
-  ).padStart(2, "0")}:00+05:30`;
-
-  return formattedDate;
 }
 
 export function formatOrderDate(dateString: string): string {

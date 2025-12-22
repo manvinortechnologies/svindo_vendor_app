@@ -130,7 +130,11 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
         StorageUtils.setRefreshToken(response.refresh);
         StorageUtils.setIsLoggedIn(true);
         await NotificationService.initialize();
-        if (response.user.created) {
+        if (
+          !response.user_details.first_name ||
+          !response.user_details.last_name ||
+          !response.user_details.email
+        ) {
           navigation.reset({
             index: 0,
             routes: [{ name: HomeNavigation.ADMINPROFILE }],

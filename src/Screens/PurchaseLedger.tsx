@@ -16,13 +16,14 @@ import CustomModal from "../Modals/CustomModal";
 import CalendarModal from "../Modals/CalendarModal";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import Icon from "react-native-vector-icons/Ionicons";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import moment from "moment";
 import { ScaledSheet } from "react-native-size-matters";
 import Toast from "react-native-toast-message";
+import DeleteConfirmationModal from "../Modals/DeleteConfirmationModal";
 
 interface PurchaseItem {
   product: number;
@@ -80,8 +81,15 @@ interface PurchaseEntry {
   created_at?: string;
 }
 
+type RootStackParamList = {
+  PurchaseLedger: {
+    purchaseId?: number;
+  };
+};
+
 const PurchaseLedger = () => {
   const navigation = useNavigation();
+  const route = useRoute<RouteProp<RootStackParamList, "PurchaseLedger">>();
 
   const [purchaseData, setPurchaseData] = useState<PurchaseEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -89,6 +97,8 @@ const PurchaseLedger = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedPurchase, setSelectedPurchase] =
     useState<PurchaseEntry | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
   // Date filter states
   const [showCalendarModal, setShowCalendarModal] = useState<boolean>(false);
   const [startDate, setStartDate] = useState<string>("");
@@ -153,6 +163,67 @@ const PurchaseLedger = () => {
     setSelectedPurchase(null);
   };
 
+  // Handle edit purchase
+  const handleEditPurchase = () => {
+    if (!selectedPurchase) return;
+    closeModal();
+    (navigation as any).navigate(HomeNavigation.CREATE_PURCHASE, {
+      editMode: true,
+      purchaseData: selectedPurchase,
+    });
+  };
+
+  // Handle delete purchase
+  const handleDeleteClick = () => {
+    setShowDeleteModal(true);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedPurchase) return;
+
+    try {
+      setIsDeleting(true);
+      await api.delete(`${API_ROUTES.purchase}${selectedPurchase.id}/`);
+
+      // Remove purchase from local state
+      setPurchaseData((prevPurchases) =>
+        prevPurchases.filter((purchase) => purchase.id !== selectedPurchase.id)
+      );
+
+      // Update filtered data if it exists
+      if (isFiltered) {
+        setFilteredPurchaseData((prevFiltered) =>
+          prevFiltered.filter((purchase) => purchase.id !== selectedPurchase.id)
+        );
+      }
+
+      // Close modals
+      setShowDeleteModal(false);
+      closeModal();
+
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Purchase deleted successfully",
+      });
+    } catch (error: any) {
+      console.error("Error deleting purchase:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2:
+          error?.response?.data?.message ||
+          "Failed to delete purchase. Please try again.",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   // Date filtering functions
   const filterPurchasesByDateRange = (start: string, end: string) => {
     if (!start || !end) return purchaseData;
@@ -188,6 +259,20 @@ const PurchaseLedger = () => {
   useEffect(() => {
     fetchPurchaseData();
   }, []);
+
+  // Handle navigation params - open purchase modal if purchaseId is provided
+  useEffect(() => {
+    if (route.params?.purchaseId && purchaseData.length > 0) {
+      const purchase = purchaseData.find(
+        (p) => p.id === route.params?.purchaseId
+      );
+      if (purchase) {
+        openModal(purchase);
+        // Clear the param after opening modal
+        navigation.setParams({ purchaseId: undefined });
+      }
+    }
+  }, [route.params?.purchaseId, purchaseData]);
 
   const formatDate = (dateString: string) => {
     if (!dateString) return "N/A";
@@ -379,6 +464,23 @@ const PurchaseLedger = () => {
                       selectedPurchase.payment_method.slice(1) +
                       " Purchase"}
                   </Text>
+                </View>
+                {/* Edit and Delete Buttons */}
+                <View style={styles.actionButtonsContainer}>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.editButton]}
+                    onPress={handleEditPurchase}
+                  >
+                    <Icon name="create-outline" size={18} color="#fff" />
+                    <Text style={styles.actionButtonText}>Edit</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.actionButton, styles.deleteButton]}
+                    onPress={handleDeleteClick}
+                  >
+                    <Icon name="trash-outline" size={18} color="#fff" />
+                    <Text style={styles.actionButtonText}>Delete</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
 
@@ -716,6 +818,16 @@ const PurchaseLedger = () => {
             </View>
           </View>
         </Modal>
+
+        {/* Delete Confirmation Modal */}
+        <DeleteConfirmationModal
+          visible={showDeleteModal}
+          onClose={handleCancelDelete}
+          onConfirm={handleConfirmDelete}
+          title="Delete Purchase"
+          message="Are you sure you want to delete this purchase? This action cannot be undone."
+          isLoading={isDeleting}
+        />
       </View>
     </MainContainer>
   );
@@ -1058,6 +1170,33 @@ const styles = ScaledSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 10,
+  },
+  actionButtonsContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 15,
+    gap: 10,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    gap: 6,
+  },
+  editButton: {
+    backgroundColor: "#FCA311",
+  },
+  deleteButton: {
+    backgroundColor: "#F44336",
+  },
+  actionButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
   fab: {
     position: "absolute",

@@ -140,7 +140,7 @@ const AddPostScreen = ({ navigation }: any) => {
       // console.log("ImageCropPicker response--->", result);
 
       // Validate file size (max 100MB)
-      const maxSize = 10 * 1024 * 1024; // 2MB in bytes
+      const maxSize = 10 * 1024 * 1024; // 10MB in bytes
       if (result.size && result.size > maxSize) {
         setErrors((prev) => ({
           ...prev,

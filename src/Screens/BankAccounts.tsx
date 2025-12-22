@@ -6,44 +6,24 @@ import {
   TouchableOpacity,
   Image,
   Modal,
-  ScrollView,
   FlatList,
   RefreshControl,
-  KeyboardTypeOptions,
   GestureResponderEvent,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Headerwithback from "./Headerwithback";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
-import AddBankDetailsModal from "../Modals/AddBankDetailsModal";
+import AddBankDetailsModal, {
+  BankDetails as ModalBankDetails,
+} from "../Modals/AddBankDetailsModal";
 import TransferFundsModal from "../Modals/TransferFundsModal";
 import { BankDetails } from "../type/common";
 import { API_ROUTES } from "../constants/api-routes.constants";
-import { ScaledSheet } from "react-native-size-matters";
+import { s, ScaledSheet } from "react-native-size-matters";
 import Icon from "react-native-vector-icons/Ionicons";
+import MaterialIcon from "react-native-vector-icons/MaterialIcons";
 import Toast from "react-native-toast-message";
-import { InputBox } from "../CommonComponent/InputBox";
-
-type BankEditFieldKey =
-  | "name"
-  | "account_holder"
-  | "account_number"
-  | "ifsc_code"
-  | "branch";
-
-const editFieldConfigs: Array<{
-  key: BankEditFieldKey;
-  label: string;
-  keyboardType?: KeyboardTypeOptions;
-  autoCapitalize?: "none" | "sentences" | "words" | "characters";
-}> = [
-  { key: "name", label: "Bank Name" },
-  { key: "account_holder", label: "Account Holder Name" },
-  { key: "account_number", label: "Account Number", keyboardType: "numeric" },
-  { key: "ifsc_code", label: "IFSC Code", autoCapitalize: "characters" },
-  { key: "branch", label: "Branch" },
-];
 
 const BankAccounts = ({ navigation }: any) => {
   const [cash, setCash] = useState<string>("00.00");
@@ -53,16 +33,7 @@ const BankAccounts = ({ navigation }: any) => {
   const [bankList, setBankList] = useState<any[]>([]);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [activeBank, setActiveBank] = useState<any | null>(null);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [editForm, setEditForm] = useState({
-    name: "",
-    account_holder: "",
-    account_number: "",
-    ifsc_code: "",
-    branch: "",
-  });
-  const [editErrors, setEditErrors] = useState<Partial<typeof editForm>>({});
   const [actionLoading, setActionLoading] = useState(false);
   useEffect(() => {
     getCash();
@@ -71,12 +42,15 @@ const BankAccounts = ({ navigation }: any) => {
   const getCash = async () => {
     try {
       setIsLoading(true);
-      const res = await api.get(API_ROUTES.vendorCash);
+      // const res = await api.get(API_ROUTES.vendorCash);
       const res2 = await api.get(API_ROUTES.vendorAddBank);
-      if (res.data) {
-        setCash(res.data.balance);
-      }
+
       if (res2.data) {
+        const totalBalance = res2.data.reduce(
+          (acc: number, item: any) => acc + item.balance,
+          0
+        );
+        setCash(totalBalance);
         setBankList(res2.data);
       }
     } catch (error) {
@@ -110,17 +84,6 @@ const BankAccounts = ({ navigation }: any) => {
     // Submit to API or save locally
   };
 
-  const populateEditForm = (bank: any) => {
-    setEditForm({
-      name: bank?.name || "",
-      account_holder: bank?.account_holder || "",
-      account_number: bank?.account_number?.toString() || "",
-      ifsc_code: bank?.ifsc_code || "",
-      branch: bank?.branch || "",
-    });
-    setEditErrors({});
-  };
-
   const ensureBankSelected = (bank?: any) => {
     if (bank) return bank;
     Toast.show({
@@ -135,8 +98,7 @@ const BankAccounts = ({ navigation }: any) => {
     const target = ensureBankSelected(bankArg);
     if (!target) return;
     setActiveBank(target);
-    populateEditForm(target);
-    setShowEditModal(true);
+    setIsModalVisible(true);
   };
 
   const handleOpenDelete = (bankArg?: any) => {
@@ -146,38 +108,22 @@ const BankAccounts = ({ navigation }: any) => {
     setShowDeleteModal(true);
   };
 
-  const validateEditForm = () => {
-    const errors: Partial<typeof editForm> = {};
-    if (!editForm.name.trim()) errors.name = "Bank name is required";
-    if (!editForm.account_holder.trim())
-      errors.account_holder = "Account holder is required";
-    if (!editForm.account_number.trim())
-      errors.account_number = "Account number is required";
-    if (!/^\d{9,18}$/.test(editForm.account_number.trim()))
-      errors.account_number = "Account number must be 9-18 digits";
-    if (!editForm.ifsc_code.trim()) errors.ifsc_code = "IFSC code is required";
-    if (!/^[A-Za-z]{4}[a-zA-Z0-9]{8}$/.test(editForm.ifsc_code.trim()))
-      errors.ifsc_code = "Enter a valid IFSC BARB0ABCDEF / HDFC0000123";
-    if (!editForm.branch.trim()) errors.branch = "Branch is required";
-    setEditErrors(errors);
-    return Object.keys(errors).length === 0;
-  };
-
-  const handleUpdateBank = async () => {
+  const handleUpdateBank = async (bankDetails: ModalBankDetails) => {
     if (!activeBank) return;
-    if (!validateEditForm()) return;
     try {
       setActionLoading(true);
+      const { id, opening_balance, ...updateData } = bankDetails;
       await api.put(
         `${API_ROUTES.vendorBankDetail}${activeBank.id}/`,
-        editForm
+        updateData
       );
       Toast.show({
         type: "success",
         text1: "Success",
         text2: "Bank details updated",
       });
-      setShowEditModal(false);
+      setIsModalVisible(false);
+      setActiveBank(null);
       getCash();
     } catch (error: any) {
       console.log("Update bank error", error);
@@ -294,7 +240,7 @@ const BankAccounts = ({ navigation }: any) => {
         ListHeaderComponent={() => (
           <View>
             {/* Add Bank Card */}
-            <View style={styles.card}>
+            {/* <View style={styles.card}>
               <View style={styles.row}>
                 <Image
                   source={require("../assets/bank.png")}
@@ -310,7 +256,7 @@ const BankAccounts = ({ navigation }: any) => {
                   </Text>
                 </View>
               </View>
-            </View>
+            </View> */}
 
             {/* Accounts Label */}
             <Text style={styles.sectionTitle}>Accounts</Text>
@@ -318,12 +264,15 @@ const BankAccounts = ({ navigation }: any) => {
             {/* Cash Card */}
             <View style={styles.card}>
               <View style={styles.row}>
-                <Image
-                  source={require("../assets/money.png")}
-                  style={styles.icon}
-                />
+                <View style={styles.iconContainer}>
+                  <MaterialIcon
+                    name="account-balance-wallet"
+                    size={s(25)}
+                    color="#FCA311"
+                  />
+                </View>
                 <View>
-                  <Text style={styles.title}>Cash</Text>
+                  <Text style={styles.title}>Total Bank Balance</Text>
                   <Text style={styles.amount}>Rs {cash}</Text>
                 </View>
               </View>
@@ -362,83 +311,19 @@ const BankAccounts = ({ navigation }: any) => {
       </TouchableOpacity>
       <AddBankDetailsModal
         visible={isModalVisible}
-        onClose={() => setIsModalVisible(false)}
+        onClose={() => {
+          setIsModalVisible(false);
+          setActiveBank(null);
+        }}
         onSubmit={handleSaveBankDetails}
+        editBankDetails={activeBank}
+        onUpdate={handleUpdateBank}
       />
       <TransferFundsModal
         visible={isTransferModalVisible}
         onClose={() => setIsTransferModalVisible(false)}
         onSuccess={handleTransferSuccess}
       />
-      <Modal
-        visible={showEditModal}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowEditModal(false)}
-      >
-        <View style={styles.actionModalOverlay}>
-          <View style={styles.editModalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Edit Bank Details</Text>
-              <TouchableOpacity
-                onPress={() => setShowEditModal(false)}
-                style={styles.closeButton}
-              >
-                <Icon name="close" size={22} color="#666" />
-              </TouchableOpacity>
-            </View>
-            <ScrollView style={styles.modalScrollContent}>
-              {editFieldConfigs.map((field) => (
-                <View key={field.key} style={{ marginBottom: 12 }}>
-                  <InputBox
-                    label={field.label}
-                    value={editForm[field.key]}
-                    placeholder={field.label}
-                    onChangeText={(text) =>
-                      setEditForm((prev) => ({
-                        ...prev,
-                        [field.key]:
-                          field.key === "ifsc_code" ? text.toUpperCase() : text,
-                      }))
-                    }
-                    keyboardType={field.keyboardType || "default"}
-                    autoCapitalize={field.autoCapitalize || "sentences"}
-                    background="#FFF8ED"
-                    styless={{ marginBottom: 0 }}
-                  />
-                  {editErrors[field.key] && (
-                    <Text style={styles.inlineErrorText}>
-                      {editErrors[field.key]}
-                    </Text>
-                  )}
-                </View>
-              ))}
-            </ScrollView>
-            <View style={styles.modalButtons}>
-              <TouchableOpacity
-                style={[styles.modalButton, styles.cancelButton]}
-                onPress={() => setShowEditModal(false)}
-                disabled={actionLoading}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[
-                  styles.modalButton,
-                  styles.applyButton,
-                  actionLoading && styles.disabledButton,
-                ]}
-                onPress={handleUpdateBank}
-                disabled={actionLoading}
-              >
-                <Text style={styles.applyButtonText}>
-                  {actionLoading ? "Saving..." : "Save"}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
       <Modal
         visible={showDeleteModal}
         transparent
@@ -526,6 +411,14 @@ const styles = ScaledSheet.create({
     marginRight: "8@s",
     resizeMode: "contain",
   },
+  iconContainer: {
+    // padding: 10,
+    height: "26@s",
+    width: "26@s",
+    marginRight: "8@s",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   title: {
     fontSize: "12@s",
     fontWeight: "600",
@@ -606,13 +499,6 @@ const styles = ScaledSheet.create({
     alignItems: "center",
     padding: 16,
   },
-  editModalContainer: {
-    width: "100%",
-    maxHeight: "80%",
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    overflow: "hidden",
-  },
   confirmModalContainer: {
     width: "100%",
     backgroundColor: "#fff",
@@ -626,23 +512,6 @@ const styles = ScaledSheet.create({
     color: "#fff",
     fontSize: 16,
     fontWeight: "600",
-  },
-  modalScrollContent: {
-    padding: 20,
-  },
-  inlineErrorText: {
-    color: "#f44336",
-    fontSize: 12,
-    marginTop: 4,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
   },
   modalTitle: {
     fontSize: 18,
@@ -672,14 +541,6 @@ const styles = ScaledSheet.create({
   },
   cancelButtonText: {
     color: "#666",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  applyButton: {
-    backgroundColor: "#FCA311",
-  },
-  applyButtonText: {
-    color: "#fff",
     fontSize: 16,
     fontWeight: "600",
   },

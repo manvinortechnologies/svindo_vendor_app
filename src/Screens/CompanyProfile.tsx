@@ -376,7 +376,7 @@ const CompanyProfile = ({ navigation, route }: any) => {
         });
       }
 
-      const apiEnd = `${API_ROUTES.companyProfle}/${profileId || form.id}/`;
+      const apiEnd = `${API_ROUTES.companyProfle}${profileId || form.id}/`;
 
       const response = await api[profileId || form.id ? "put" : "post"](
         apiEnd,

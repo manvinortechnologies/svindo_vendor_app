@@ -18,10 +18,14 @@ import Loading from "../CommonComponent/Loading";
 import { ScaledSheet } from "react-native-size-matters";
 
 interface BillItem {
-  id: string;
+  id: number;
   name: string;
   quantity: number;
   price: number;
+  product_details: {
+    id: number;
+    name: string;
+  };
 }
 interface InfoItem {
   id: string;
@@ -34,9 +38,9 @@ interface InfoItem {
 }
 
 const BillDetails: React.FC = () => {
-  const { params } = useRoute();
+  const { params }: any = useRoute();
 
-  const [billData, setBillData] = useState(null);
+  const [billData, setBillData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
@@ -56,10 +60,27 @@ const BillDetails: React.FC = () => {
 
   const saleType = billData?.is_wholesale_rate; // or "Wholesale" — you can make this dynamic
 
+  // Calculate charges: delivery + packaging charges
+  const deliveryCharges =
+    Number(billData?.wholesale_invoice_details?.delivery_charges) || 0;
+  const packagingCharges =
+    Number(billData?.wholesale_invoice_details?.packaging_charges) || 0;
+  const totalCharges = deliveryCharges + packagingCharges;
+
   const totals = {
-    charges: 0,
+    charges: totalCharges,
     tax: 0,
   };
+
+  // Calculate net total: total + charges - discount + tax
+  const baseTotal = Number(billData?.total_amount_before_discount) || 0;
+  const discount = Number(billData?.discount_amount) || 0;
+  const tax = totals.tax || 0;
+  const netTotal = baseTotal + totalCharges - discount + tax;
+
+  // Calculate balance: net total - advance paid (only for credit payments)
+  const advancePaid = Number(billData?.advance_amount) || 0;
+  const balance = netTotal - advancePaid;
 
   const [printOptions, setPrintOptions] = useState([
     { label: "Customer", checked: true },
@@ -185,7 +206,7 @@ const BillDetails: React.FC = () => {
         <Icon name={item.icon} size={18} color="#555" style={{ width: 24 }} />
         <View>
           <Text style={styles.infoLabel}>{item.label}</Text>
-          {item.mode && (
+          {!!item.mode && (
             <Text
               style={[styles.infoValue, { color: item.modeColor || "#000" }]}
             >
@@ -195,9 +216,18 @@ const BillDetails: React.FC = () => {
         </View>
       </View>
       <View>
-        {item.value && (
+        {!!item.value && (
           <Text
-            style={[styles.infoValue, { color: item.valueColor || "#000" }]}
+            numberOfLines={2}
+            ellipsizeMode="tail"
+            style={[
+              styles.infoValue,
+              {
+                color: item.valueColor || "#000",
+                marginLeft: "auto",
+              },
+              item.id === "1" && { maxWidth: "80%" },
+            ]}
           >
             {item.value}
           </Text>
@@ -259,7 +289,7 @@ const BillDetails: React.FC = () => {
           <FlatList
             data={billData?.items}
             renderItem={renderBillItem}
-            keyExtractor={(item) => item.id}
+            keyExtractor={(item) => item?.id?.toString()}
             ListFooterComponent={<View style={{ height: 10 }} />}
           />
         </View>
@@ -329,9 +359,7 @@ const BillDetails: React.FC = () => {
             <Text style={[styles.totalLabel, { fontWeight: "bold" }]}>
               Net Total
             </Text>
-            <Text style={styles.totalValue}>
-              Rs {Number(billData?.total_amount).toFixed(2)}
-            </Text>
+            <Text style={styles.totalValue}>Rs {netTotal.toFixed(2)}</Text>
           </View>
           {billData?.payment_method === "credit" && (
             <>
@@ -351,7 +379,7 @@ const BillDetails: React.FC = () => {
                     { color: "orange", fontWeight: "bold" },
                   ]}
                 >
-                  Rs {Number(billData?.balance_amount).toFixed(2)}
+                  Rs {balance.toFixed(2)}
                 </Text>
               </View>
             </>
@@ -359,7 +387,7 @@ const BillDetails: React.FC = () => {
         </View>
 
         {/* Checkbox Section - only for Wholesale */}
-        {saleType && (
+        {!!saleType && (
           <>
             <Text style={styles.checkTitle}>Bill copies to print</Text>
             <View style={styles.checkboxRow}>

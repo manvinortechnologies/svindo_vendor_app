@@ -16,12 +16,12 @@ export default function OptionInput({
   keyboardType,
   boldLabelPrefix,
 }: {
-  onChangeText: (text: string) => void;
+  onChangeText: (text: string | boolean) => void;
   keyboardType?: KeyboardTypeOptions;
   boldLabelPrefix?: string;
   icon?: string;
   label?: string;
-  value?: string;
+  value?: string | boolean;
 }) {
   return (
     <View style={styles.optionItem}>
@@ -46,12 +46,12 @@ export default function OptionInput({
           }}
         >
           <Text style={[styles.optionText]}>{label}</Text>
-          <CustomSwitch value={value} onValueChange={onChangeText} />
+          <CustomSwitch value={value as boolean} onValueChange={onChangeText} />
         </View>
       ) : (
         <TextInput
           style={styles.optionInput}
-          value={value}
+          value={value as string}
           onChangeText={onChangeText}
           keyboardType={keyboardType || "default"}
           placeholder={label}

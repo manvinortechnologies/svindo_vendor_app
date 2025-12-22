@@ -38,6 +38,7 @@ import {
 import { APP_CONSTANTS } from "../constants/app.constants";
 NavigationButton;
 import Toast from "react-native-toast-message";
+import moment from "moment";
 
 const screenWidth = Dimensions.get("window").width - 20;
 interface Product {
@@ -249,6 +250,10 @@ const StatisticsScreen = ({ navigation }: any) => {
   const [navigationError, setNavigationError] = useState<string | null>(null);
   const [showStoreStatusModal, setShowStoreStatusModal] = useState(false);
 
+  // Dashboard statistics state
+  const [dashboardData, setDashboardData] = useState<any>(null);
+  const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
+
   const {
     data: storeData,
     error,
@@ -257,6 +262,26 @@ const StatisticsScreen = ({ navigation }: any) => {
   } = useGetVendorStoresQuery();
   const [updateVendorStore, { isLoading: isUpdating }] =
     useUpdateVendorStoreMutation();
+
+  // Fetch dashboard statistics
+  const fetchDashboardData = async () => {
+    try {
+      setIsLoadingDashboard(true);
+      const response = await api.get(API_ROUTES.vendorDashboard);
+      if (response.data) {
+        setDashboardData(response.data);
+      }
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to load statistics. Please try again.",
+      });
+    } finally {
+      setIsLoadingDashboard(false);
+    }
+  };
 
   // Fetch company profile
   const fetchCompanyProfile = async () => {
@@ -510,22 +535,11 @@ const StatisticsScreen = ({ navigation }: any) => {
 
   const navigateToReports = () => {
     navigateWithCondition(
-      HomeNavigation.REPORTS,
+      HomeNavigation.PURCHASE_LEDGER,
       {},
       {
         // Add conditions here if needed
         // hasData: true,
-      }
-    );
-  };
-
-  const navigateToStoreScreen = () => {
-    navigateWithCondition(
-      HomeNavigation.STORE_SCREEN,
-      {},
-      {
-        // Add conditions here if needed
-        // hasStoreSetup: true,
       }
     );
   };
@@ -571,6 +585,131 @@ const StatisticsScreen = ({ navigation }: any) => {
     setShowStoreStatusModal(false);
   };
 
+  // Format number with commas
+  const formatNumber = (value: number | string | null | undefined): string => {
+    if (value === null || value === undefined) return "0";
+    const num = typeof value === "string" ? parseFloat(value) : value;
+    if (isNaN(num)) return "0";
+    return num.toLocaleString("en-IN", {
+      maximumFractionDigits: 0,
+    });
+  };
+
+  // Get statistics cards data from API
+  const getStatisticsCards = () => {
+    if (!dashboardData) {
+      // Return default values if data not loaded
+      return [
+        {
+          title: "Total Purchases",
+          value: "0",
+          icon: "shopping-outline",
+          change: "0",
+          changeColor: "green",
+          changeIcon: "arrow-up",
+        },
+        {
+          title: "Total Sales",
+          value: "0",
+          icon: "cart-outline",
+          change: "0",
+          changeColor: "green",
+          changeIcon: "arrow-up",
+        },
+        {
+          title: "Total Expense",
+          value: "0",
+          icon: "file-document-edit-outline",
+          change: "0",
+          changeColor: "green",
+          changeIcon: "arrow-up",
+        },
+        {
+          title: "Total Stock Value",
+          value: "0",
+          icon: "chart-line",
+          change: "0",
+          changeColor: "green",
+          changeIcon: "arrow-up",
+        },
+        {
+          title: "Total Cash in Hand",
+          value: "0",
+          icon: "cash",
+          change: "0",
+          changeColor: "green",
+          changeIcon: "arrow-up",
+        },
+        {
+          title: "Total Bank Balance",
+          value: "0",
+          icon: "bank",
+          change: "0",
+          changeColor: "green",
+          changeIcon: "arrow-up",
+        },
+      ];
+    }
+
+    // Map API response to statistics cards based on actual API structure
+    // API provides: total_sales, total_purchases, total_expenses
+    // Stock value, cash, and bank balance need to be fetched from other APIs or calculated
+    return [
+      {
+        title: "Total Purchases",
+        value: formatNumber(dashboardData.total_purchases || 0),
+        icon: "shopping-outline",
+        change: "0",
+        changeColor: "green",
+        changeIcon: "arrow-up",
+      },
+      {
+        title: "Total Sales",
+        value: formatNumber(dashboardData.total_sales || 0),
+        icon: "cart-outline",
+        change: "0",
+        changeColor: "green",
+        changeIcon: "arrow-up",
+      },
+      {
+        title: "Total Expense",
+        value: formatNumber(dashboardData.total_expenses || 0),
+        icon: "file-document-edit-outline",
+        change: "0",
+        changeColor: "green",
+        changeIcon: "arrow-up",
+      },
+      {
+        title: "Total Stock Value",
+        value: formatNumber(dashboardData.total_stock_value || 0),
+        icon: "chart-line",
+        change: "0",
+        changeColor: "green",
+        changeIcon: "arrow-up",
+      },
+      {
+        title: "Total Cash in Hand",
+        value: formatNumber(
+          dashboardData.total_cash || dashboardData.cash_in_hand || 0
+        ),
+        icon: "cash",
+        change: "0",
+        changeColor: "green",
+        changeIcon: "arrow-up",
+      },
+      {
+        title: "Total Bank Balance",
+        value: formatNumber(
+          dashboardData.total_bank_balance || dashboardData.bank_balance || 0
+        ),
+        icon: "bank",
+        change: "0",
+        changeColor: "green",
+        changeIcon: "arrow-up",
+      },
+    ];
+  };
+
   // Request all permissions when component mounts
   useEffect(() => {
     const requestAllPermissions = async () => {
@@ -590,10 +729,11 @@ const StatisticsScreen = ({ navigation }: any) => {
     requestAllPermissions();
   }, []);
 
-  // Fetch company profile when component mounts or screen comes into focus
+  // Fetch company profile and dashboard data when component mounts or screen comes into focus
   useEffect(() => {
     if (isFocused) {
       fetchCompanyProfile();
+      fetchDashboardData();
     }
   }, [isFocused]);
 
@@ -700,56 +840,7 @@ const StatisticsScreen = ({ navigation }: any) => {
         </View>
 
         <View style={styles.cardsContainer}>
-          {[
-            {
-              title: "Total Purchases",
-              value: "2,50,000",
-              icon: "shopping-outline",
-              change: "+0.50",
-              changeColor: "green",
-              changeIcon: "arrow-up",
-            },
-            {
-              title: "Total Sales",
-              value: "2,50,000",
-              icon: "cart-outline",
-              change: "-0.20",
-              changeColor: "red",
-              changeIcon: "arrow-down",
-            },
-            {
-              title: "Total Expense",
-              value: "2,50,000",
-              icon: "file-document-edit-outline",
-              change: "+0.50",
-              changeColor: "green",
-              changeIcon: "arrow-up",
-            },
-            {
-              title: "Total Stock Value",
-              value: "2,50,000",
-              icon: "chart-line",
-              change: "+0.50",
-              changeColor: "green",
-              changeIcon: "arrow-up",
-            },
-            {
-              title: "Total Cash in Hand",
-              value: "2,50,000",
-              icon: "cash",
-              change: "+0.50",
-              changeColor: "green",
-              changeIcon: "arrow-up",
-            },
-            {
-              title: "Total Bank Balance",
-              value: "2,50,000",
-              icon: "bank",
-              change: "+0.50",
-              changeColor: "green",
-              changeIcon: "arrow-up",
-            },
-          ].map((item, index) => (
+          {getStatisticsCards().map((item, index) => (
             <TouchableOpacity
               key={index}
               style={styles.card}
@@ -757,7 +848,7 @@ const StatisticsScreen = ({ navigation }: any) => {
                 // Navigate to appropriate screen based on card type
                 switch (item.title) {
                   case "Total Purchases":
-                    // navigateToReports();
+                    navigateToReports();
                     break;
                   case "Total Sales":
                     navigateWithCondition(HomeNavigation.SALES_LEDGER, {}, {});
@@ -841,10 +932,36 @@ const StatisticsScreen = ({ navigation }: any) => {
         </TouchableOpacity>
 
         <View style={styles.insightsContainer}>
-          <Text style={styles.insightsTitle}>Store Insights</Text>
+          <Text style={styles.insightLabel}>Store Insights</Text>
           <View style={styles.insightCard}>
             <View style={styles.chartPlaceholder}>
-              <LineCharts />
+              <LineCharts
+                color="#FCA311"
+                data={
+                  dashboardData?.store_insights?.recent_visitors
+                    ? (() => {
+                        // Group visitors by date
+                        const groupedByDate: { [key: string]: number } = {};
+                        dashboardData.store_insights.recent_visitors.forEach(
+                          (visitor: any) => {
+                            const date = moment(visitor.visited_at).format(
+                              "YYYY-MM-DD"
+                            );
+                            groupedByDate[date] =
+                              (groupedByDate[date] || 0) + 1;
+                          }
+                        );
+                        // Sort dates chronologically and convert to array format [{value: count}]
+                        const sortedDates = Object.keys(groupedByDate).sort(
+                          (a, b) => moment(a).diff(moment(b))
+                        );
+                        return sortedDates.map((date) => ({
+                          value: groupedByDate[date],
+                        }));
+                      })()
+                    : []
+                }
+              />
             </View>
             <View style={styles.categoryTitlesection}>
               <Text style={styles.insightLabel}>Followers</Text>
@@ -853,7 +970,12 @@ const StatisticsScreen = ({ navigation }: any) => {
           </View>
           <View style={styles.insightCard}>
             <View style={styles.chartPlaceholder}>
-              <LineCharts color="#FCA311" />
+              <LineCharts
+                color="#FCA311"
+                data={dashboardData.followers_chart.map((p: any) => ({
+                  value: p.value,
+                }))}
+              />
             </View>
             <View style={styles.categoryTitlesection}>
               <Text style={styles.insightLabel}>Shop Visits</Text>

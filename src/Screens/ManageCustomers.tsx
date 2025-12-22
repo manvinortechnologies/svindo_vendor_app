@@ -47,11 +47,11 @@ const ManageCustomers = ({ navigation }: any) => {
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [totalPendingAmount, setTotalPendingAmount] = useState<number>(0);
-  // useFocusEffect(
-  //   useCallback(() => {
-  //     getCustomerData();
-  //   }, [])
-  // );
+  useFocusEffect(
+    useCallback(() => {
+      getCustomerData();
+    }, [])
+  );
 
   const getCustomerData = async () => {
     try {
@@ -142,7 +142,7 @@ const ManageCustomers = ({ navigation }: any) => {
                 <View style={styles.detailsTextContainer}>
                   <Text style={styles.nameText}>{item.name}</Text>
                   <Text style={styles.contactText}>{item.contact}</Text>
-                  <Text style={styles.emailText}>{item.email}</Text>
+                  <Text style={styles.emailText}>{item.company_name}</Text>
                 </View>
               </View>
               <View style={styles.balanceColumn}>

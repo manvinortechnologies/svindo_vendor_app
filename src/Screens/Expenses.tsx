@@ -204,11 +204,7 @@ const Expenses = ({ navigation }: any) => {
           },
         });
       }
-      if (editMode) {
-        navigation.popTo(HomeNavigation.EXPENESES_SCREEN as never);
-      } else {
-        navigation.navigate(HomeNavigation.EXPENESES_SCREEN as never);
-      }
+      navigation.popTo(HomeNavigation.EXPENESES_SCREEN as never);
     } catch (error) {
       console.log("error-->", error);
     } finally {

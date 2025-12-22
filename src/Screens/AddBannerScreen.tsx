@@ -16,10 +16,7 @@ import {
 } from "react-native";
 
 import Icon from "react-native-vector-icons/MaterialIcons";
-import {
-  widthPercentageToDP as wp,
-  heightPercentageToDP as hp,
-} from "react-native-responsive-screen";
+import { ScaledSheet, s } from "react-native-size-matters";
 import CustomDropdown from "../CommonComponent/CustomDropdown";
 import CustomSwitch from "../CommonComponent/CustomSwitch";
 import MainContainer from "../CommonComponent/MainContainer";
@@ -437,45 +434,45 @@ const AddBannerScreen = ({ navigation }: any) => {
 
 export default AddBannerScreen;
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: wp(4),
+    paddingHorizontal: s(4),
     backgroundColor: "#fff",
-    paddingTop: hp(2),
+    paddingTop: s(2),
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: hp(2),
+    marginBottom: s(2),
   },
   headerTitle: {
-    fontSize: wp(5),
+    fontSize: s(5),
     fontWeight: "bold",
-    marginLeft: wp(2),
+    marginLeft: s(2),
   },
   uploadBox: {
-    height: hp(20),
+    height: s(20),
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#ccc",
     borderStyle: "dashed",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: hp(2),
+    marginBottom: s(2),
   },
   uploadText: {
-    fontSize: wp(8),
+    fontSize: s(8),
     color: "#888",
   },
   uploadSubtext: {
     textAlign: "center",
     color: "#888",
-    fontSize: wp(3),
+    fontSize: s(3),
   },
   label: {
     fontWeight: "600",
-    fontSize: wp(3.6),
+    fontSize: s(3.6),
     marginBottom: 4,
     color: "#444",
   },
@@ -483,10 +480,10 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ffcc80",
     borderRadius: 6,
-    padding: wp(3),
-    marginBottom: hp(2),
+    padding: s(3),
+    marginBottom: s(2),
     backgroundColor: "#fff3e0",
-    fontSize: wp(3.8),
+    fontSize: s(3.8),
     color: "#000",
   },
   dropdown: {
@@ -500,18 +497,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: hp(2),
+    marginBottom: s(2),
   },
   costBox: {
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 10,
-    padding: wp(4),
-    marginBottom: hp(3),
+    padding: s(4),
+    marginBottom: s(3),
   },
   costText: {
-    fontSize: wp(3.5),
-    marginBottom: hp(1),
+    fontSize: s(3.5),
+    marginBottom: s(1),
     color: "#000",
   },
   bold: {
@@ -519,7 +516,7 @@ const styles = StyleSheet.create({
     color: "#000",
   },
   caution: {
-    fontSize: wp(3.2),
+    fontSize: s(3.2),
     color: "#444",
   },
   terms: {
@@ -528,14 +525,14 @@ const styles = StyleSheet.create({
   },
   submitButton: {
     backgroundColor: "#4CAF50",
-    paddingVertical: hp(1.8),
+    paddingVertical: s(1.8),
     borderRadius: 10,
     alignItems: "center",
   },
   submitText: {
     color: "#fff",
     fontWeight: "bold",
-    fontSize: wp(4),
+    fontSize: s(4),
   },
   uploadedMedia: {
     width: "100%",

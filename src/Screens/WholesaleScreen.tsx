@@ -40,7 +40,7 @@ type FormDataKeys =
   | "deliveryCity"
   | "parcels";
 
-type FormData = Record<FormDataKeys, string>;
+type FormData = Record<FormDataKeys, string | boolean>;
 
 type WholesaleScreenRouteProp = RouteProp<{
   params: {
@@ -51,7 +51,6 @@ export default function WholesaleScreen() {
   const navigation: any = useNavigation();
   const { params } = useRoute<WholesaleScreenRouteProp>();
 
-  console.log("params", params);
   const insets = useSafeAreaInsets();
 
   const [selectedType, setSelectedType] = useState({
@@ -82,11 +81,11 @@ export default function WholesaleScreen() {
     vehicleNumber: "",
     transportName: params?.customer_details?.transport_name || "",
     deliveryCity: params?.customer_details?.dispatch_city || "",
-    reverseCharge: "",
+    reverseCharge: false,
     parcels: "",
   });
 
-  const handleChange = (field: FormDataKeys, value: string) => {
+  const handleChange = (field: FormDataKeys, value: string | boolean) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -120,7 +119,7 @@ export default function WholesaleScreen() {
       icon: "arrow-left-right",
       label: "Reverse Charge",
       state: "reverseCharge",
-      keyboardType: "numeric",
+      keyboardType: "default",
     },
     {
       icon: undefined,
@@ -158,7 +157,7 @@ export default function WholesaleScreen() {
           transport_name: formData?.transportName,
           number_of_parcels: Number(formData?.parcels),
           delivery_city: formData?.deliveryCity,
-          reverse_charges: formData?.reverseCharge,
+          reverse_charges: formData?.reverseCharge || false,
         },
       };
       {
@@ -166,8 +165,16 @@ export default function WholesaleScreen() {
 
         const res = await api.post(API_ROUTES.posSales, data);
         console.log(res);
-        navigation.navigate(HomeNavigation.BILLDETAILS, {
-          id: res.data?.id,
+        navigation.reset({
+          index: 0,
+          routes: [
+            {
+              name: HomeNavigation.BOTTOM_NAVIGATION,
+              state: { index: 0, routes: [{ name: HomeNavigation.ERP }] },
+            },
+            { name: HomeNavigation.SALES_LEDGER },
+            { name: HomeNavigation.BILLDETAILS, params: { id: res.data?.id } },
+          ],
         });
       }
     } catch (error) {

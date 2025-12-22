@@ -17,6 +17,7 @@ import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import { useNotificationContext } from "../contexts/NotificationContext";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { HomeNavigation } from "../constants/app-routes.constants";
 
 interface NotificationItem {
   id: string;
@@ -182,6 +183,36 @@ const NotificationScreen = ({ navigation }: any) => {
     }
   };
 
+  const handleReminderPress = (reminder: any) => {
+    // Mark as read if not already read
+    // if (!reminder.is_read) {
+    //   markReminderAsRead(reminder.id);
+    // }
+
+    // Navigate based on reminder type and associated IDs
+    if (reminder.purchase) {
+      // Navigate to Purchase Ledger with purchase ID
+      navigation.navigate(HomeNavigation.PURCHASE_LEDGER, {
+        purchaseId: reminder.purchase,
+      });
+    } else if (reminder.sale) {
+      // Navigate to Bill Details with sale ID
+      navigation.navigate(HomeNavigation.SALES_LEDGER, {
+        saleId: reminder.sale,
+      });
+    } else if (reminder.product) {
+      // Navigate to Product Details or Stock Screen
+      navigation.navigate(HomeNavigation.STOCK_SCREEN, {
+        productId: reminder.product,
+      });
+    } else {
+      // Default: show reminder details modal or stay on screen
+      navigation.navigate(HomeNavigation.MODEL_REMINDER_SCREEN, {
+        reminder: reminder,
+      });
+    }
+  };
+
   const handleNotificationPress = (notification: NotificationItem) => {
     // Mark as read if not already read
     if (!notification.isRead) {
@@ -283,11 +314,7 @@ const NotificationScreen = ({ navigation }: any) => {
               reminders.map((item) => (
                 <TouchableOpacity
                   key={item.id}
-                  // onPress={() =>
-                  //   navigation.navigate("ModelReminderScreen", {
-                  //     reminder: item,
-                  //   })
-                  // }
+                  onPress={() => handleReminderPress(item)}
                 >
                   <View style={styles.moreItem}>
                     {/* Left Side */}
@@ -297,7 +324,9 @@ const NotificationScreen = ({ navigation }: any) => {
 
                     {/* Middle */}
                     <View style={styles.moreMiddle}>
-                      <Text style={styles.moreTitle}>{item.reminder_type_display}</Text>
+                      <Text style={styles.moreTitle}>
+                        {item.reminder_type_display}
+                      </Text>
                       <Text style={styles.moreMsg}>
                         {item.title || item.message}
                       </Text>

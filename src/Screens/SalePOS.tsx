@@ -216,7 +216,7 @@ const SalePOS = () => {
 
   const getSaleData = async () => {
     const res = await api.get(
-      `${API_ROUTES.posSales}/${route.params?.saleData?.id}/`
+      `${API_ROUTES.posSales}${route.params?.saleData?.id}/`
     );
     return res.data;
   };
@@ -281,7 +281,11 @@ const SalePOS = () => {
         )?.key || "cash"
       );
       handlePercentChange(saleData.discount_percentage || "");
-      setDueDate(saleData.credit_date || "");
+      setDueDate(
+        saleData.credit_date
+          ? moment(saleData.credit_date).format("YYYY-MM-DD")
+          : ""
+      );
     } catch (error) {
       console.error("Error populating form with sale data:", error);
     }
@@ -712,11 +716,13 @@ const SalePOS = () => {
                     const gstValue =
                       (itemTotalAfterDiscount * gstRate) / (100 + gstRate);
                     return formatNumber(
-                      Number(itemTotalAfterDiscount - gstValue).toFixed(2)
+                      Number((itemTotalAfterDiscount - gstValue).toFixed(2))
                     );
                   }
                   // Otherwise show amount after discount
-                  return formatNumber(itemTotalAfterDiscount.toFixed(2));
+                  return formatNumber(
+                    Number(itemTotalAfterDiscount.toFixed(2))
+                  );
                 })()}
               </Text>
               <TouchableOpacity

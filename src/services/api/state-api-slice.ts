@@ -61,6 +61,11 @@ interface SignUpRes {
     user_type: string;
     created: boolean;
   };
+  user_details: {
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
   status: number;
 }
 

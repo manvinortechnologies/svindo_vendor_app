@@ -106,4 +106,6 @@ export const API_ROUTES = {
   storeReviews: "/vendor/store-reviews/",
   deliveryDiscount: "/vendor/delivery-discount/",
   purchase: "/vendor/purchase/",
+  vendorDashboard: "/vendor/vendor-dashboard/dashboard",
+  onlineOrderLedger: "/vendor/online-order-ledger/",
 };

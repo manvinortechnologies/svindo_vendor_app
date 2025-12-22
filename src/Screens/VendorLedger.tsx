@@ -51,7 +51,7 @@ const VendorLedger = ({ navigation, route }: any) => {
   const [vendorInfo, setVendorInfo] = useState<VendorInfo>({
     name: route?.params?.vendor?.name || "Vendor Name",
     phone: route?.params?.vendor?.contact || "+91 9999999999",
-    outstanding: 0,
+    outstanding: route?.params?.vendor?.balance || 0,
     totalSale: 0,
     creditBalance: 0,
   });
@@ -96,9 +96,9 @@ const VendorLedger = ({ navigation, route }: any) => {
         setVendorInfo({
           name: route?.params?.vendor?.name || "Vendor Name",
           phone: route?.params?.vendor?.contact || "+91 9999999999",
-          outstanding: creditBalance,
+          outstanding: creditBalance || route?.params?.vendor?.balance || 0,
           totalSale: totalSale,
-          creditBalance: creditBalance,
+          creditBalance: creditBalance || route?.params?.vendor?.balance || 0,
         });
       }
     } catch (error: any) {
@@ -163,7 +163,7 @@ const VendorLedger = ({ navigation, route }: any) => {
 
       // Convert grouped data to sections
       return Object.keys(groupedByDate)
-        .sort((a, b) => new Date(b).getTime() - new Date(a).getTime()) // Sort by date descending
+        .sort((a, b) => moment(b, "DD-MM-YYYY").diff(moment(a, "DD-MM-YYYY"))) // Sort by date descending
         .map((date) => ({
           date: date,
           transactions: groupedByDate[date],
@@ -352,7 +352,7 @@ const VendorLedger = ({ navigation, route }: any) => {
                 <Icon name="logo-whatsapp" size={20} color="green" />
               </TouchableOpacity>
             </View>
-            <Text
+            {/* <Text
               style={[
                 styles.outstanding,
                 {
@@ -362,7 +362,7 @@ const VendorLedger = ({ navigation, route }: any) => {
               ]}
             >
               {vendorInfo.outstanding.toFixed(2)}
-            </Text>
+            </Text> */}
           </View>
         </View>
       </View>

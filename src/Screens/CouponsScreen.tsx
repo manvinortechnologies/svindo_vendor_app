@@ -16,13 +16,14 @@ import CustomSwitch from "../CommonComponent/CustomSwitch";
 import api from "../services/api/api"; // Your API service
 import { Coupon } from "../type/Coupan";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
-import { RouteProp } from "@react-navigation/native";
+import { RouteProp, useIsFocused } from "@react-navigation/native";
 import { ScaledSheet } from "react-native-size-matters";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Icon from "react-native-vector-icons/Ionicons";
 import Toast from "react-native-toast-message";
 import moment from "moment";
+import DeleteConfirmationModal from "../Modals/DeleteConfirmationModal";
 
 const { width } = Dimensions.get("window");
 
@@ -42,12 +43,16 @@ type CouponsScreenProps = {
 };
 
 const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
+  const isFocused = useIsFocused();
   const [deliveryDiscountEnabled, setDeliveryDiscountEnabled] = useState(true);
   const [percentage, setPercentage] = useState("");
   const [minOrderValue, setMinOrderValue] = useState("");
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [couponToDelete, setCouponToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState<boolean>(false);
   const [errors, setErrors] = useState({
     percentage: "",
     minOrderValue: "",
@@ -94,16 +99,47 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
   };
 
   useEffect(() => {
-    getAllCoupons();
-    fetchDeliveryDiscount();
-  }, []);
-
-  const deleteCoupon = async (id: string) => {
-    try {
-      const response = await api.delete(`vendor/coupon/${id}/`);
+    if (isFocused) {
       getAllCoupons();
-    } catch (error) {
+      fetchDeliveryDiscount();
+    }
+  }, [isFocused]);
+
+  const handleDeleteClick = (id: string) => {
+    setCouponToDelete(id);
+    setShowDeleteModal(true);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setCouponToDelete(null);
+  };
+
+  const deleteCoupon = async () => {
+    if (!couponToDelete) return;
+
+    try {
+      setIsDeleting(true);
+      await api.delete(`vendor/coupon/${couponToDelete}/`);
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Coupon deleted successfully",
+      });
+      getAllCoupons();
+      setShowDeleteModal(false);
+      setCouponToDelete(null);
+    } catch (error: any) {
       console.log("Error deleting coupon:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2:
+          error?.response?.data?.message ||
+          "Failed to delete coupon. Please try again.",
+      });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -251,7 +287,7 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
             {/* Action Button */}
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => deleteCoupon(item.id.toString())}
+              onPress={() => handleDeleteClick(item.id.toString())}
             >
               <Icon name="trash" size={16} color="#fff" />
             </TouchableOpacity>
@@ -368,6 +404,16 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
       >
         <Text style={styles.addBtnText}>Add Coupon</Text>
       </TouchableOpacity>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        visible={showDeleteModal}
+        onClose={handleCancelDelete}
+        onConfirm={deleteCoupon}
+        title="Delete Coupon"
+        message="Are you sure you want to delete this coupon? This action cannot be undone."
+        isLoading={isDeleting}
+      />
     </MainContainer>
   );
 };

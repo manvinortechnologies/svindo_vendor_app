@@ -513,7 +513,6 @@ const styles = ScaledSheet.create({
     marginLeft: 4,
   },
   noteContainer: {
-    marginTop: -15,
     marginBottom: 10,
     padding: 12,
     backgroundColor: "#FFF3CD",
