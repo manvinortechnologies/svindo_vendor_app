@@ -316,6 +316,11 @@ const BuyersRequestScreen: React.FC = () => {
               : APP_CONSTANTS.API_BASE_URL + request.photo,
           }
         : require("../assets/product/product4.png"),
+      photos: request.photos.map((photo: any) => ({
+        uri: photo.includes("http")
+          ? photo
+          : APP_CONSTANTS.API_BASE_URL + photo,
+      })),
       type: request.type,
       created_at: request.created_at,
       user_details: request.user_details,
@@ -645,30 +650,41 @@ const BuyersRequestScreen: React.FC = () => {
         data={getFilteredRequests() || []}
         onProgressChange={() => {}}
         renderItem={({ item }: { item: any }) => {
-          console.log("item", item);
           return (
             <View style={styles.fullScreenCard}>
               {/* Product Image */}
-              <View style={styles.imageContainer}>
-                <TouchableOpacity
-                  onPress={() =>
-                    handleImagePress({
-                      ...item,
-                      budget:
-                        selectedTab === "Requested" &&
-                        selectedToggle === "Offers for you"
-                          ? item.offerPrice
-                          : item.budget,
-                    })
-                  }
-                  activeOpacity={0.8}
-                >
-                  <Image
-                    source={item.image}
-                    style={styles.fullScreenProductImage}
-                    resizeMode="cover"
-                  />
-                </TouchableOpacity>
+              <View
+                style={[
+                  styles.imageContainer,
+                  !item?.photos.length && {
+                    alignItems: "center",
+                    justifyContent: "center",
+                  },
+                ]}
+              >
+                {item?.photos.length > 0 ? (
+                  <TouchableOpacity
+                    onPress={() =>
+                      handleImagePress({
+                        ...item,
+                        budget:
+                          selectedTab === "Requested" &&
+                          selectedToggle === "Offers for you"
+                            ? item.offerPrice
+                            : item.budget,
+                      })
+                    }
+                    activeOpacity={0.8}
+                  >
+                    <Image
+                      source={item?.photos[0]}
+                      style={styles.fullScreenProductImage}
+                      resizeMode="cover"
+                    />
+                  </TouchableOpacity>
+                ) : (
+                  <Icon name="image" size={s(150)} color="#000" />
+                )}
                 {selectedTab === "Requested" &&
                   selectedToggle === "Your Request" && (
                     <TouchableOpacity
@@ -1032,13 +1048,17 @@ const styles = ScaledSheet.create({
     position: "relative",
     marginBottom: 12,
     height: "250@s",
+
+    borderWidth: 1,
+    borderColor: "#000",
+    borderRadius: "20@s",
+    overflow: "hidden",
     // backgroundColor: "red",
   },
   fullScreenProductImage: {
     width: "100%",
     height: "100%",
     // backgroundColor: "yellow",
-    borderRadius: 20,
   },
   deleteButton: {
     position: "absolute",

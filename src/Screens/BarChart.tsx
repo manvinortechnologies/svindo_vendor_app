@@ -1,73 +1,60 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
 import { s } from "react-native-size-matters";
 
-export default function GroupedBars() {
-  const barData = [
-    {
-      value: 40,
-      label: "Jan",
-      spacing: 2,
-      labelWidth: 30,
-      labelTextStyle: { color: "gray" },
-      frontColor: "#177AD5",
-    },
-    {
-      value: 60,
-      frontColor: "#ED6665",
-    },
+interface SalesExpenseData {
+  month: string;
+  month_label: string;
+  sales: number;
+  expenses: number;
+}
 
-    {
-      value: 50,
-      label: "Feb",
-      spacing: 2,
-      labelWidth: 30,
-      labelTextStyle: { color: "gray" },
-      frontColor: "#177AD5",
-    },
-    { value: 40, frontColor: "#ED6665" },
-    {
-      value: 75,
-      label: "Mar",
-      spacing: 2,
-      labelWidth: 30,
-      labelTextStyle: { color: "gray" },
-      frontColor: "#177AD5",
-    },
-    { value: 25, frontColor: "#ED6665" },
-    {
-      value: 30,
-      label: "Apr",
-      spacing: 2,
-      labelWidth: 30,
-      labelTextStyle: { color: "gray" },
-      frontColor: "#177AD5",
-    },
-    { value: 20, frontColor: "#ED6665" },
-    {
-      value: 60,
-      label: "May",
-      spacing: 2,
-      labelWidth: 30,
-      labelTextStyle: { color: "gray" },
-      frontColor: "#177AD5",
-    },
-    { value: 40, frontColor: "#ED6665" },
-    {
-      value: 65,
-      label: "Jun",
-      spacing: 2,
-      labelWidth: 30,
-      labelTextStyle: { color: "gray" },
-      frontColor: "#177AD5",
-    },
-    { value: 30, frontColor: "#ED6665" },
-  ];
-  const maxValue = barData.reduce(
-    (acc, curr) => (acc = acc > curr.value ? acc : curr.value),
-    0
-  );
+interface GroupedBarsProps {
+  data?: SalesExpenseData[];
+}
+
+export default function GroupedBars({ data }: GroupedBarsProps) {
+  // Transform API data to chart format
+  const barData = useMemo(() => {
+    if (!data || data.length === 0) {
+      // Return empty/default data if no data provided
+      return [];
+    }
+
+    // Flatten the data: for each month, create two bars (sales and expenses)
+    const flattened: any[] = [];
+    data.slice(7, data.length).forEach((item) => {
+      // Extract month abbreviation from month_label (e.g., "Dec 2025" -> "Dec")
+      // month_label format: "Dec 2025" or similar
+      const monthLabel = item.month_label.split(" ")[0].substring(0, 3);
+
+      // Sales bar (blue) - gets the label
+      flattened.push({
+        value: Number(item.sales) || 0,
+        label: monthLabel,
+        spacing: 2,
+        labelWidth: 30,
+        labelTextStyle: { color: "gray" },
+        frontColor: "#177AD5",
+      });
+      // Expenses bar (red) - no label
+      flattened.push({
+        value: Number(item.expenses) || 0,
+        frontColor: "#ED6665",
+      });
+    });
+
+    return flattened;
+  }, [data]);
+
+  const maxValue = useMemo(() => {
+    if (!data || data.length === 0) return 100;
+    return Math.max(
+      ...data.map((item) => Math.max(item.sales || 0, item.expenses || 0)),
+      100
+    );
+  }, [data]);
   const renderTitle = () => {
     return (
       <View
@@ -103,6 +90,22 @@ export default function GroupedBars() {
       </View>
     );
   };
+
+  // Don't render chart if no data
+  if (!data || data.length === 0 || barData.length === 0) {
+    return (
+      <View
+        style={{
+          height: s(130),
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Text style={{ color: "gray" }}>No data available</Text>
+        {renderTitle()}
+      </View>
+    );
+  }
 
   return (
     <>

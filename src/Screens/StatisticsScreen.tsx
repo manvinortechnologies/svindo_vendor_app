@@ -13,6 +13,7 @@ import {
   PermissionsAndroid,
   Modal,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Icons from "react-native-vector-icons/FontAwesome";
@@ -222,12 +223,6 @@ const products = [
   },
 ];
 
-const getFilteredProducts = (type: string) => {
-  return products
-    .filter((product) => product.type === type)
-    .slice(0, type === "Low Stock" ? 6 : 3);
-};
-
 const StatisticsScreen = ({ navigation }: any) => {
   const [deliveryDiscountEnabled, setDeliveryDiscountEnabled] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState({
@@ -253,6 +248,16 @@ const StatisticsScreen = ({ navigation }: any) => {
   // Dashboard statistics state
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [isLoadingDashboard, setIsLoadingDashboard] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Top products state
+  const [topProducts, setTopProducts] = useState<any>({
+    top_liked: [],
+    top_rated: [],
+    most_bought: [],
+    low_stock: [],
+  });
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
 
   const {
     data: storeData,
@@ -269,7 +274,13 @@ const StatisticsScreen = ({ navigation }: any) => {
       setIsLoadingDashboard(true);
       const response = await api.get(API_ROUTES.vendorDashboard);
       if (response.data) {
-        setDashboardData(response.data);
+        // Exclude top_liked_products and low_stock_products from API response
+        const {
+          top_liked_products,
+          low_stock_products,
+          ...dashboardDataWithoutProducts
+        } = response.data;
+        setDashboardData(dashboardDataWithoutProducts);
       }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
@@ -280,6 +291,31 @@ const StatisticsScreen = ({ navigation }: any) => {
       });
     } finally {
       setIsLoadingDashboard(false);
+    }
+  };
+
+  // Fetch top products (top liked, top rated, most bought, low stock)
+  const fetchTopProducts = async () => {
+    try {
+      setIsLoadingProducts(true);
+      const response = await api.get(API_ROUTES.topRatedProducts);
+      if (response.data) {
+        setTopProducts({
+          top_liked: response.data.top_liked?.results || [],
+          top_rated: response.data.top_rated?.results || [],
+          most_bought: response.data.most_bought?.results || [],
+          low_stock: response.data.low_stock?.results || [],
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching top products:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: "Failed to load products. Please try again.",
+      });
+    } finally {
+      setIsLoadingProducts(false);
     }
   };
 
@@ -595,6 +631,63 @@ const StatisticsScreen = ({ navigation }: any) => {
     });
   };
 
+  const groupedByDate = (data: any) =>
+    data?.reduce((acc: any, item: any) => {
+      const date = item.visited_at.split("T")[0]; // YYYY-MM-DD
+
+      if (!acc[date]) {
+        acc[date] = [];
+      }
+
+      acc[date].push(item);
+      return acc;
+    }, {});
+
+  // Get filtered products from API data
+  const getFilteredProducts = (type: string) => {
+    let productList: any[] = [];
+
+    switch (type) {
+      case "Top Liked":
+        productList = topProducts.top_liked || [];
+        break;
+      case "Top Rated":
+        productList = topProducts.top_rated || [];
+        break;
+      case "Most Bought":
+        productList = topProducts.most_bought || [];
+        break;
+      case "Low Stock":
+        productList = topProducts.low_stock || [];
+        break;
+      default:
+        productList = [];
+    }
+
+    // Transform API product data to display format
+    return productList
+      .slice(0, type === "Low Stock" ? 6 : 3)
+      .map((product: any) => {
+        // Handle product with variants - use first variant or main product data
+        const imageUrl = product.image;
+
+        return {
+          id: product.id,
+          name: product.name,
+          description: product.description || "",
+          price: product.sales_price || "0",
+          image: imageUrl
+            ? {
+                uri: imageUrl.startsWith("http")
+                  ? imageUrl
+                  : `https://vendor.svindo.com${imageUrl}`,
+              }
+            : require("../assets/product.png"),
+          type: type,
+        };
+      });
+  };
+
   // Get statistics cards data from API
   const getStatisticsCards = () => {
     if (!dashboardData) {
@@ -718,7 +811,7 @@ const StatisticsScreen = ({ navigation }: any) => {
           requestNotificationPermission(),
           requestLocationPermission(),
           requestCameraPermission(),
-          requestStoragePermission(),
+          // requestStoragePermission(),
           // requestSmsPermission(),
         ]);
       } catch (error) {
@@ -729,13 +822,55 @@ const StatisticsScreen = ({ navigation }: any) => {
     requestAllPermissions();
   }, []);
 
+  const handleReminderPress = (reminder: any) => {
+    if (reminder.purchase) {
+      // Navigate to Purchase Ledger with purchase ID
+      navigation.navigate(HomeNavigation.PURCHASE_LEDGER, {
+        purchaseId: reminder.purchase,
+      });
+    } else if (reminder.sale) {
+      // Navigate to Bill Details with sale ID
+      navigation.navigate(HomeNavigation.SALES_LEDGER, {
+        saleId: reminder.sale,
+      });
+    } else if (reminder.product) {
+      // Navigate to Product Details or Stock Screen
+      navigation.navigate(HomeNavigation.STOCK_SCREEN, {
+        productId: reminder.product,
+      });
+    } else {
+      // Default: show reminder details modal or stay on screen
+      navigation.navigate(HomeNavigation.MODEL_REMINDER_SCREEN, {
+        reminder: reminder,
+      });
+    }
+  };
+
   // Fetch company profile and dashboard data when component mounts or screen comes into focus
   useEffect(() => {
     if (isFocused) {
       fetchCompanyProfile();
       fetchDashboardData();
+      fetchTopProducts();
     }
   }, [isFocused]);
+
+  // Pull to refresh handler
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([
+        fetchCompanyProfile(),
+        fetchDashboardData(),
+        fetchTopProducts(),
+        refetch(),
+      ]);
+    } catch (error) {
+      console.error("Error refreshing data:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     if (storeData) {
@@ -819,8 +954,21 @@ const StatisticsScreen = ({ navigation }: any) => {
       </View>
       <ScrollView
         contentContainerStyle={{ paddingHorizontal: 10, paddingBottom: 60 }}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#FCA311"]}
+            tintColor="#FCA311"
+          />
+        }
       >
-        <RequestFromBuyers />
+        <RequestFromBuyers
+          requests={dashboardData?.activity?.top_product_requests || []}
+          totalCount={
+            dashboardData?.activity?.total_product_requests_count || 0
+          }
+        />
         <View style={styles.titleRow}>
           <Text style={styles.title}>Statistics</Text>
           <CustomDropdown
@@ -836,7 +984,9 @@ const StatisticsScreen = ({ navigation }: any) => {
           />
         </View>
         <View style={styles.chartPlaceholder}>
-          <GroupedBars />
+          <GroupedBars
+            data={dashboardData?.sales_expense_chart?.combined || []}
+          />
         </View>
 
         <View style={styles.cardsContainer}>
@@ -941,22 +1091,11 @@ const StatisticsScreen = ({ navigation }: any) => {
                   dashboardData?.store_insights?.recent_visitors
                     ? (() => {
                         // Group visitors by date
-                        const groupedByDate: { [key: string]: number } = {};
-                        dashboardData.store_insights.recent_visitors.forEach(
-                          (visitor: any) => {
-                            const date = moment(visitor.visited_at).format(
-                              "YYYY-MM-DD"
-                            );
-                            groupedByDate[date] =
-                              (groupedByDate[date] || 0) + 1;
-                          }
+                        const groupedData = groupedByDate(
+                          dashboardData?.store_insights?.recent_followers
                         );
-                        // Sort dates chronologically and convert to array format [{value: count}]
-                        const sortedDates = Object.keys(groupedByDate).sort(
-                          (a, b) => moment(a).diff(moment(b))
-                        );
-                        return sortedDates.map((date) => ({
-                          value: groupedByDate[date],
+                        return Object.keys(groupedData).map((date: string) => ({
+                          value: groupedData[date].length,
                         }));
                       })()
                     : []
@@ -972,9 +1111,18 @@ const StatisticsScreen = ({ navigation }: any) => {
             <View style={styles.chartPlaceholder}>
               <LineCharts
                 color="#FCA311"
-                data={dashboardData.followers_chart.map((p: any) => ({
-                  value: p.value,
-                }))}
+                data={
+                  dashboardData?.followers_chart
+                    ? (() => {
+                        const groupedData = groupedByDate(
+                          dashboardData?.store_insights?.recent_visitors || []
+                        );
+                        return Object.keys(groupedData).map((date: string) => ({
+                          value: groupedData[date].length,
+                        }));
+                      })()
+                    : []
+                }
               />
             </View>
             <View style={styles.categoryTitlesection}>
@@ -1055,22 +1203,39 @@ const StatisticsScreen = ({ navigation }: any) => {
         <View>
           <Text style={styles.title}>Reminders</Text>
           <View style={styles.recentActivityContainer}>
-            {notification.map((notifications) => (
-              <View key={notifications.id} style={styles.notificationcontain}>
-                <View style={styles.activityTextContainer}>
-                  <Image
-                    source={notifications.image}
-                    style={styles.activityImage}
-                  />
-                  <Text style={styles.notificationtext}>
-                    {notifications.notify}
-                  </Text>
-                </View>
-                <View style={styles.datesection}>
-                  <Text style={styles.datentext}>{notifications.date}</Text>
-                </View>
+            {dashboardData?.top_reminders &&
+            dashboardData.top_reminders.length > 0 ? (
+              dashboardData.top_reminders.map((reminder: any) => (
+                <TouchableOpacity
+                  key={reminder.id}
+                  style={styles.notificationcontain}
+                  onPress={() => handleReminderPress(reminder)}
+                >
+                  <View style={styles.activityTextContainer}>
+                    <Image
+                      source={require("../assets/notification.png")}
+                      style={styles.activityImage}
+                    />
+                    <Text style={styles.notificationtext} numberOfLines={2}>
+                      {reminder.message || reminder.title || "Reminder"}
+                    </Text>
+                  </View>
+                  <View style={styles.datesection}>
+                    <Text style={styles.datentext}>
+                      {reminder.created_at
+                        ? moment(reminder.created_at).format("DD MMM YYYY")
+                        : reminder.due_date
+                        ? moment(reminder.due_date).format("DD MMM YYYY")
+                        : "N/A"}
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              ))
+            ) : (
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>No reminders available</Text>
               </View>
-            ))}
+            )}
           </View>
         </View>
       </ScrollView>
@@ -1438,20 +1603,39 @@ const styles = ScaledSheet.create({
     borderRadius: 10,
     borderColor: "#C3C3C3",
   },
-  activityTextContainer: { flex: 1, flexDirection: "row" },
-  userid: { fontSize: 14, fontWeight: "bold", color: "#000" },
+  activityTextContainer: {
+    flex: 1,
+    flexDirection: "row",
+  },
+  userid: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#000",
+  },
   comment: {
     fontSize: 14,
     color: "#555",
     paddingHorizontal: 5,
     fontWeight: "bold",
   },
-  activityImage: { width: 40, height: 40, borderRadius: 20, marginLeft: 10 },
+  activityImage: {
+    width: "30@s",
+    height: "30@s",
+    marginLeft: "10@s",
+  },
   notificationtext: {
     fontSize: 12,
     paddingHorizontal: 10,
     marginRight: 10,
     color: "#000",
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 14,
+    color: "#999",
   },
   datesection: {
     alignItems: "flex-end",

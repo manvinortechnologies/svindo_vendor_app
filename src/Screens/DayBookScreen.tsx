@@ -156,14 +156,18 @@ const DayBookScreen = () => {
     if (!daybookData?.entries || !Array.isArray(daybookData.entries)) {
       return [];
     }
-    return daybookData.entries.map((entry: any) => ({
-      type: entry.type || entry.entry_type || "Transaction",
-      detail: entry.detail || entry.description || entry.reference || "-",
-      medium: entry.medium || entry.payment_mode || "Cash",
-      debit: formatValue(entry.debit || 0),
-      credit: formatValue(entry.credit || 0),
-      time: entry.time || entry.created_at || "",
-    }));
+    return daybookData.entries
+      .sort((a: any, b: any) => {
+        return new Date(b.time).getTime() - new Date(a.time).getTime();
+      })
+      .map((entry: any) => ({
+        type: entry.type || entry.entry_type || "Transaction",
+        detail: entry.detail || entry.description || entry.reference || "-",
+        medium: entry.medium || entry.payment_mode || "Cash",
+        debit: formatValue(entry.debit || 0),
+        credit: formatValue(entry.credit || 0),
+        time: entry.time || entry.created_at || "",
+      }));
   };
 
   return (

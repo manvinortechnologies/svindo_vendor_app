@@ -63,9 +63,7 @@ const VariantsScreen = () => {
         id: variant.id?.toString(),
         name: variant.name || "Unknown Variant",
         description: variant.description || "",
-        image:
-          variant.image ||
-          "https://via.placeholder.com/150x150/8B4513/FFFFFF?text=Variant",
+        image: variant.image,
         stock: variant.stock || 0,
         is_active: variant.is_active || false,
         price: parseFloat(variant.price || 0),

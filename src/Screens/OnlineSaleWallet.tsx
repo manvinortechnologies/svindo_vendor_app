@@ -48,23 +48,16 @@ const OnlineSaleWallet = () => {
 
       if (response.data) {
         // Extract balance, sales, and settled amounts
-        const balanceAmount =
-          response.data.balance || response.data.total_balance || 0;
-        const salesAmount =
-          response.data.total_sales || response.data.sales || 0;
-        const settledAmount =
-          response.data.total_settled || response.data.settled || 0;
+        const balanceAmount = response.data.total_sum || 0;
+        const salesAmount = response.data.total_sum || 0;
+        const settledAmount = response.data.total_settled || 0;
 
         setBalance(balanceAmount);
         setTotalSales(salesAmount);
         setTotalSettled(settledAmount);
 
         // Transform ledger entries to transaction format
-        const ledgerEntries =
-          response.data.ledger ||
-          response.data.transactions ||
-          response.data ||
-          [];
+        const ledgerEntries = response.data.results || [];
 
         const transformedTransactions: Transaction[] = ledgerEntries.map(
           (entry: any, index: number) => {

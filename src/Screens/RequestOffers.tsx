@@ -26,7 +26,7 @@ import ImagePreviewModal from "../Modals/ImagePreviewModal";
 import Loading from "../CommonComponent/Loading";
 import Toast from "react-native-toast-message";
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
 interface RootStackParamList extends ParamListBase {
   RequestOffers: { requestId: string };
@@ -71,6 +71,11 @@ export default function RequestOffers() {
               : APP_CONSTANTS.API_BASE_URL + offer.media,
           }
         : require("../assets/product/product1.png"),
+      photos: offer.photos.map((photo: any) => ({
+        uri: photo.includes("http")
+          ? photo
+          : APP_CONSTANTS.API_BASE_URL + photo,
+      })),
       rating: offer.rating || 4.5,
       reviews: offer.reviews_count || 0,
       created_at: offer.created_at,
@@ -84,9 +89,7 @@ export default function RequestOffers() {
   const fetchOffers = async () => {
     try {
       setLoadingOffers(true);
-      const response = await api.get(
-        `${API_ROUTES.getOffersById}/${requestId}`
-      );
+      const response = await api.get(`${API_ROUTES.getOffersById}${requestId}`);
       const offersData = response.data || [];
       setOffers(offersData.map(transformOfferData));
     } catch (error) {
@@ -108,40 +111,41 @@ export default function RequestOffers() {
   }, [requestId]);
 
   return (
-    <SafeAreaView>
+    <SafeAreaView style={{ flex: 1 }}>
       <CustomHeader title="Request Offers" showBackButton={true} />
       <Loading visible={loadingOffers} />
-      <Carousel
-        vertical={true}
-        pagingEnabled={true}
-        loop={false}
-        width={width}
-        height={Dimensions.get("window").height}
-        data={offers || []}
-        onProgressChange={() => {}}
-        renderItem={({ item }: { item: any }) => (
-          <View style={styles.fullScreenCard}>
-            {/* Product Image */}
-            <View style={styles.imageContainer}>
-              <TouchableOpacity
-                onPress={() => handleImagePress(item)}
-                activeOpacity={0.8}
-              >
-                <Image
-                  source={item.image}
-                  style={styles.fullScreenProductImage}
-                  resizeMode="cover"
-                />
-              </TouchableOpacity>
-            </View>
+      {offers.length > 0 ? (
+        <Carousel
+          vertical={true}
+          pagingEnabled={true}
+          loop={false}
+          width={width}
+          height={height}
+          data={offers || []}
+          onProgressChange={() => {}}
+          renderItem={({ item }: { item: any }) => (
+            <View style={styles.fullScreenCard}>
+              {/* Product Image */}
+              <View style={styles.imageContainer}>
+                <TouchableOpacity
+                  onPress={() => handleImagePress(item)}
+                  activeOpacity={0.8}
+                >
+                  <Image
+                    source={item.image}
+                    style={styles.fullScreenProductImage}
+                    resizeMode="cover"
+                  />
+                </TouchableOpacity>
+              </View>
 
-            {/* Customer wants to buy */}
-            <View style={styles.rowBetween}>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.customerText}>
-                  Store : {item.store_details?.name}
-                </Text>
-                {/* {item.type && (
+              {/* Customer wants to buy */}
+              <View style={styles.rowBetween}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.customerText}>
+                    Store : {item.store_details?.name}
+                  </Text>
+                  {/* {item.type && (
                   <View
                     style={[
                       styles.requestTypeBadge,
@@ -156,63 +160,70 @@ export default function RequestOffers() {
                     </Text>
                   </View>
                 )} */}
-              </View>
-              <TouchableOpacity
-                style={styles.sellButton}
-                onPress={() => {
-                  // Buy now for offers
-                  console.log("Buy now:", item.id);
-                }}
-              >
-                <Text style={styles.sellButtonText}>Chat</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Product Name */}
-            {<Text style={styles.productName}>{item.productName}</Text>}
-
-            {/* Details */}
-            <View style={styles.detailsRow}>
-              {/* {selectedTab === "Requested" && ( */}
-              {/* // Your request or other tabs details */}
-              <>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    marginBottom: s(10),
+                </View>
+                <TouchableOpacity
+                  style={styles.sellButton}
+                  onPress={() => {
+                    // Buy now for offers
+                    console.log("Buy now:", item.id);
                   }}
                 >
+                  <Text style={styles.sellButtonText}>Chat</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Product Name */}
+              {<Text style={styles.productName}>{item.productName}</Text>}
+
+              {/* Details */}
+              <View style={styles.detailsRow}>
+                {/* {selectedTab === "Requested" && ( */}
+                {/* // Your request or other tabs details */}
+                <>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      marginBottom: s(10),
+                    }}
+                  >
+                    <View>
+                      <Text style={styles.label}>
+                        Category{"\n"}
+                        <Text style={styles.subLabel}>{item.category}</Text>
+                      </Text>
+                    </View>
+                    <Text style={styles.budgetText}>₹{item.offerPrice}</Text>
+                  </View>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginBottom: s(10),
+                    }}
+                  >
+                    <View>
+                      <Text style={styles.label}>Sub Category</Text>
+                      <Text style={styles.subLabel}>{item.subCategory}</Text>
+                    </View>
+                  </View>
                   <View>
-                    <Text style={styles.label}>
-                      Category{"\n"}
-                      <Text style={styles.subLabel}>{item.category}</Text>
+                    <Text style={[styles.label]}>Description</Text>
+                    <Text style={styles.descriptionText}>
+                      {item.description}
                     </Text>
                   </View>
-                  <Text style={styles.budgetText}>₹{item.offerPrice}</Text>
-                </View>
-                <View
-                  style={{
-                    flexDirection: "row",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: s(10),
-                  }}
-                >
-                  <View>
-                    <Text style={styles.label}>Sub Category</Text>
-                    <Text style={styles.subLabel}>{item.subCategory}</Text>
-                  </View>
-                </View>
-                <View>
-                  <Text style={[styles.label]}>Description</Text>
-                  <Text style={styles.descriptionText}>{item.description}</Text>
-                </View>
-              </>
+                </>
+              </View>
             </View>
-          </View>
-        )}
-      />
+          )}
+        />
+      ) : (
+        <View style={styles.noOffersContainer}>
+          <Text style={styles.noOffersText}>No offers found</Text>
+        </View>
+      )}
       <ImagePreviewModal
         isImageModalVisible={isImageModalVisible}
         setIsImageModalVisible={setIsImageModalVisible}
@@ -229,8 +240,18 @@ const styles = ScaledSheet.create({
     // marginVertical: 6,
     borderRadius: 12,
     padding: 15,
-    height: Dimensions.get("window").height - vs(120), // Exact height for paging
+    height: height - vs(120), // Exact height for paging
     // justifyContent: "space-between",
+  },
+  noOffersContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  noOffersText: {
+    fontSize: "18@s",
+    fontWeight: "600",
+    color: "#000",
   },
   imageContainer: {
     position: "relative",

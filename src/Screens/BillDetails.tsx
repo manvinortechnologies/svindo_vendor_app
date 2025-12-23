@@ -16,6 +16,7 @@ import { API_ROUTES } from "../constants/api-routes.constants";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Loading from "../CommonComponent/Loading";
 import { ScaledSheet } from "react-native-size-matters";
+import moment from "moment";
 
 interface BillItem {
   id: number;
@@ -48,7 +49,6 @@ const BillDetails: React.FC = () => {
       setIsLoading(true);
       try {
         const res = await api.get(`${API_ROUTES.posSales}${params?.id}/`);
-
         setBillData({ ...res.data });
       } catch (error) {
         console.log(error, "get bill data");
@@ -298,8 +298,13 @@ const BillDetails: React.FC = () => {
         <View style={styles.invoiceBox}>
           <Text style={[styles.invoiceTitle, { flex: 1 }]}>Invoice</Text>
           <View>
-            <Text style={styles.invoiceNumber}>PINV-1</Text>
-            <Text style={styles.invoiceDate}>14-02-2025</Text>
+            <Text style={styles.invoiceNumber}>
+              {billData?.wholesale_invoice_details?.invoice_number ||
+                billData?.invoice_number}
+            </Text>
+            <Text style={styles.invoiceDate}>
+              {moment(billData?.created_at).format("DD-MM-YYYY")}
+            </Text>
           </View>
         </View>
         {!saleType && (
@@ -493,6 +498,7 @@ const styles = ScaledSheet.create({
     fontSize: 12,
     fontWeight: "600",
     paddingVertical: 6,
+    textAlign: "center",
     color: "#000",
   },
   serialCell: {

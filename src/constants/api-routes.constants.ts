@@ -72,7 +72,7 @@ export const API_ROUTES = {
   getOffersById: "/customer/request-offer/",
 
   storeOnlineSetting: "/vendor/onlineStoreSetting/",
-  automateNotificationOnOrder: "vendor/automate-notification-on-order/",
+  automateNotificationOnOrder: "vendor/order-notification-message/",
   storeWorkingHour: "/vendor/store-working-hour/",
   storeWorkingHourBulk: "/vendor/store-working-hour/bulk/",
 
@@ -108,4 +108,5 @@ export const API_ROUTES = {
   purchase: "/vendor/purchase/",
   vendorDashboard: "/vendor/vendor-dashboard/dashboard",
   onlineOrderLedger: "/vendor/online-order-ledger/",
+  topRatedProducts: "/vendor/top-rated-products/",
 };

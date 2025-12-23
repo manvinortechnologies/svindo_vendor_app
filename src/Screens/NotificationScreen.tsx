@@ -215,9 +215,9 @@ const NotificationScreen = ({ navigation }: any) => {
 
   const handleNotificationPress = (notification: NotificationItem) => {
     // Mark as read if not already read
-    if (!notification.isRead) {
-      markAsRead(notification.id);
-    }
+    // if (!notification.isRead) {
+    //   markAsRead(notification.id);
+    // }
 
     // Handle different notification types
     switch (notification.type) {

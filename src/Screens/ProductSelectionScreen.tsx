@@ -49,6 +49,7 @@ type RootStackParamList = {
     saleData: any;
     navigateScreen: string;
     formData?: any; // Add form data preservation
+    isPurchase?: boolean;
   };
 };
 
@@ -79,6 +80,7 @@ const ProductSelectionScreen: React.FC = () => {
     editMode,
     saleData,
     formData,
+    isPurchase,
   } = route.params || {};
 
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -218,7 +220,7 @@ const ProductSelectionScreen: React.FC = () => {
       const currentItem = findCartItem(id);
       const product = productList.find((p) => p.id === id);
       const stock = Number(product?.stock ?? 0);
-      const trackStock = product?.track_stock !== false; // Default to true if not specified
+      const trackStock = isPurchase ? false : product?.track_stock !== false; // Default to true if not specified
       const currentQty = currentItem ? currentItem.quantity : 0;
       const nextQty = currentQty === 0 ? INITIAL_QUANTITY : currentQty + 1;
       const isPrintProduct = product?.product_type === "print";
@@ -348,12 +350,14 @@ const ProductSelectionScreen: React.FC = () => {
             <Text style={styles.qtyBtn}>-</Text>
           </TouchableOpacity>
           <TextInput
-            key={`qty-${item.id}-${quantity}`}
+            key={`qty-${item.id}`}
             style={styles.qtyInput}
             value={quantity.toString()}
             onChangeText={(text) => handleQuantityChange(item.id, text)}
             keyboardType="numeric"
             selectTextOnFocus
+            submitBehavior="submit"
+            returnKeyType="done"
           />
           <TouchableOpacity
             onPress={() => canIncrement && increment(item.id)}

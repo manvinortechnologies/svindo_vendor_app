@@ -26,6 +26,7 @@ const CreateRequestScreen = () => {
     "Business"
   );
   const [categoryList, setCategoryList] = useState<any>([]);
+  const [allSubCategoryList, setAllSubCategoryList] = useState<any>([]);
   const [subCategoryList, setSubCategoryList] = useState<any>([]);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [selectedSubCategory, setSelectedSubCategory] = useState<any>(null);
@@ -60,7 +61,9 @@ const CreateRequestScreen = () => {
       ]);
 
       setCategoryList(categoryRes.data);
-      setSubCategoryList(subCategoryRes.data);
+      setAllSubCategoryList(subCategoryRes.data);
+      // Initially set empty subcategory list until a category is selected
+      setSubCategoryList([]);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -219,6 +222,16 @@ const CreateRequestScreen = () => {
         ...prev,
         category: "",
       }));
+    }
+    // Filter subcategories based on selected category
+    if (category && category.id) {
+      const filteredSubCategories = allSubCategoryList.filter(
+        (subCat: any) =>
+          subCat.category === category.id || subCat.category_id === category.id
+      );
+      setSubCategoryList(filteredSubCategories);
+    } else {
+      setSubCategoryList([]);
     }
     // Clear sub-category when category changes
     setSelectedSubCategory(null);

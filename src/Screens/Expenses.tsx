@@ -276,7 +276,9 @@ const Expenses = ({ navigation }: any) => {
           For create category{" "}
           <Text
             style={{ textDecorationLine: "underline", color: "blue" }}
-            onPress={() => Linking.openURL("https://vendor.svindo.com/")}
+            onPress={() =>
+              Linking.openURL("https://vendor.svindo.com/users/login-vendor/")
+            }
           >
             visit website
           </Text>

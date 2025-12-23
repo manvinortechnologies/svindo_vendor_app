@@ -18,7 +18,6 @@ import { SafeAreaView } from "react-native-safe-area-context";
 const TransactionMessages = () => {
   const navigation = useNavigation();
   const [message, setMessage] = useState("");
-  const [sendPaymentLink, setSendPaymentLink] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
 
@@ -33,14 +32,8 @@ const TransactionMessages = () => {
       const response = await api.get(API_ROUTES.automateNotificationOnOrder);
 
       // Response is an array, get the first item
-      if (Array.isArray(response.data) && response.data.length > 0) {
-        const messageData = response.data[0];
-        if (messageData.message) {
-          setMessage(messageData.message);
-        }
-        if (messageData.send_payment_link !== undefined) {
-          setSendPaymentLink(messageData.send_payment_link);
-        }
+      if (response.data) {
+        setMessage(response.data.message);
       }
     } catch (error) {
       console.error("Error fetching current message:", error);
@@ -66,7 +59,6 @@ const TransactionMessages = () => {
       // API call to save transaction message settings
       const payload = {
         message: message.trim(),
-        // send_payment_link: sendPaymentLink,
       };
 
       // You can replace this with the actual API endpoint for transaction messages

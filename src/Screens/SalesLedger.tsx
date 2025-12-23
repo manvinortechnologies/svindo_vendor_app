@@ -118,6 +118,7 @@ const SalesLedger = () => {
   const navigation = useNavigation();
   const route = useRoute<RouteProp<RootStackParamList, "SalesLedger">>();
   const [salesData, setSalesData] = useState<SalesEntry[]>([]);
+  const [onlineSalesData, setOnlineSalesData] = useState<SalesEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -131,6 +132,7 @@ const SalesLedger = () => {
   const [filteredSalesData, setFilteredSalesData] = useState<SalesEntry[]>([]);
   const [isFiltered, setIsFiltered] = useState<boolean>(false);
   const [calendarModel, setCalendarModel] = useState<string>("");
+  const [activeTab, setActiveTab] = useState<"Sales" | "Online Sales">("Sales");
 
   // Fetch sales data from API
   const fetchSalesData = async (isRefresh = false) => {
@@ -143,7 +145,13 @@ const SalesLedger = () => {
 
       const response = await api.get(API_ROUTES.posSales);
       setSalesData(
-        response.data.sort(
+        response.data.results.sort(
+          (a: any, b: any) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        ) || []
+      );
+      setOnlineSalesData(
+        response.data.online_order_ledgers.sort(
           (a: any, b: any) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         ) || []
@@ -196,10 +204,16 @@ const SalesLedger = () => {
       setIsDeleting(true);
       await api.delete(`${API_ROUTES.posSales}${selectedSale?.id}/`);
 
-      // Remove sale from local state
-      setSalesData((prevSales) =>
-        prevSales.filter((sale) => sale.id !== selectedSale?.id)
-      );
+      // Remove sale from local state based on active tab
+      if (activeTab === "Online Sales") {
+        setOnlineSalesData((prevSales) =>
+          prevSales.filter((sale) => sale.id !== selectedSale?.id)
+        );
+      } else {
+        setSalesData((prevSales) =>
+          prevSales.filter((sale) => sale.id !== selectedSale?.id)
+        );
+      }
 
       // Update filtered data if it exists
       if (isFiltered) {
@@ -230,12 +244,14 @@ const SalesLedger = () => {
 
   // Date filtering functions
   const filterSalesByDateRange = (start: string, end: string) => {
-    if (!start || !end) return salesData;
+    const dataSource =
+      activeTab === "Online Sales" ? onlineSalesData : salesData;
+    if (!start || !end) return dataSource;
 
     const startDateObj = new Date(start);
     const endDateObj = new Date(end);
 
-    return salesData.filter((sale) => {
+    return dataSource.filter((sale) => {
       const saleDate = new Date(sale.created_at || "");
       return saleDate >= startDateObj && saleDate <= endDateObj;
     });
@@ -282,8 +298,16 @@ const SalesLedger = () => {
     });
   };
 
-  // Use filtered data if available, otherwise use all sales data
-  const currentSalesData = isFiltered ? filteredSalesData : salesData;
+  // Get the current data source based on active tab
+  const getCurrentData = () => {
+    if (activeTab === "Online Sales") {
+      return isFiltered ? filteredSalesData : onlineSalesData;
+    }
+    return isFiltered ? filteredSalesData : salesData;
+  };
+
+  // Use filtered data if available, otherwise use all sales data based on active tab
+  const currentSalesData = getCurrentData();
 
   const groupedSales = currentSalesData.reduce((groups, sale) => {
     const date = formatDate(sale.created_at || "");
@@ -393,10 +417,51 @@ const SalesLedger = () => {
           }
         />
         <View style={styles.ledgerBanner}>
-          <Text style={styles.ledgerText}>Total Sales</Text>
+          <Text style={styles.ledgerText}>Total {activeTab}</Text>
           <Text style={styles.balanceText}>
             ₹{Number(totalBalance)?.toFixed(2)}
           </Text>
+        </View>
+
+        {/* Tabs */}
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity
+            style={[styles.tab, activeTab === "Sales" && styles.activeTab]}
+            onPress={() => {
+              setActiveTab("Sales");
+              setIsFiltered(false);
+              setFilteredSalesData([]);
+            }}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "Sales" && styles.activeTabText,
+              ]}
+            >
+              Sales
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.tab,
+              activeTab === "Online Sales" && styles.activeTab,
+            ]}
+            onPress={() => {
+              setActiveTab("Online Sales");
+              setIsFiltered(false);
+              setFilteredSalesData([]);
+            }}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                activeTab === "Online Sales" && styles.activeTabText,
+              ]}
+            >
+              Online Sales
+            </Text>
+          </TouchableOpacity>
         </View>
 
         {/* Sales Entries */}
@@ -416,7 +481,9 @@ const SalesLedger = () => {
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No sales data found</Text>
+              <Text style={styles.emptyText}>
+                No {activeTab.toLowerCase()} data found
+              </Text>
               <Text style={styles.emptySubText}>
                 Pull down to refresh or add a new sale
               </Text>
@@ -804,6 +871,34 @@ const styles = ScaledSheet.create({
     fontSize: 18,
     fontWeight: "700",
     color: "#4CAF50",
+  },
+  tabsContainer: {
+    flexDirection: "row",
+    marginHorizontal: 12,
+    marginTop: 12,
+    marginBottom: 8,
+    backgroundColor: "#F5F5F5",
+    borderRadius: 8,
+    padding: 4,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  activeTab: {
+    backgroundColor: "#FCA311",
+  },
+  tabText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#666",
+  },
+  activeTabText: {
+    color: "#fff",
   },
   list: {
     flex: 1,

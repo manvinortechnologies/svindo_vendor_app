@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
   View,
   Text,
@@ -39,17 +39,11 @@ interface Product {
   name: string;
   desc: string;
   price: number;
-  image: string;
-}
-
-interface Product {
-  id: number;
-  name: string;
-  desc: string;
-  price: number;
   purchase_price?: number;
   quantity: number;
   image: string;
+  gst?: number | null;
+  tax_inclusive?: boolean;
 }
 
 type RootStackParamList = {
@@ -66,7 +60,7 @@ type CreatePurchaseRouteProp = RouteProp<RootStackParamList, "CreatePurchase">;
 const CreatePurchase = ({ navigation }: any) => {
   const route = useRoute<CreatePurchaseRouteProp>();
   const [selectedPayment, setSelectedPayment] = useState("credit");
-  const [selectedAdvanceType, setSelectedAdvanceType] = useState("Bank");
+  const [selectedAdvanceType, setSelectedAdvanceType] = useState("Cash");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isVendorModalVisible, setIsVendorModalVisible] = useState(false);
   const [isPurchasePlanModalVisible, setIsPurchasePlanModalVisible] =
@@ -89,7 +83,7 @@ const CreatePurchase = ({ navigation }: any) => {
   const [dueDate, setDueDate] = useState<string>("");
   const [dueDateCallModel, setDueDateCallModel] = useState<boolean>(false);
   const [serialNo, setSerialNo] = useState<string>("");
-  const [advanceAmount, setAdvanceAmount] = useState<string>("");
+  const [advanceAmount, setAdvanceAmount] = useState<string>("0");
   const [selectedBank, setSelectedBank] = useState<DropDownOption>();
   const [supplierDate, setSupplierDate] = useState<string>(
     moment().format("YYYY-MM-DD")
@@ -136,6 +130,7 @@ const CreatePurchase = ({ navigation }: any) => {
     vehicleNumber: "",
     transportName: "",
     parcels: "",
+    gstNumber: "",
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -209,6 +204,100 @@ const CreatePurchase = ({ navigation }: any) => {
       setDiscount((p) => ({ ...p, amount: "" }));
     }
   };
+
+  // Calculate subtotal before discount (for discount calculation base)
+  const subtotalAmount = useMemo(() => {
+    if (!selectedProducts?.length) return 0;
+    return selectedProducts.reduce((sum, item) => {
+      const price = item.purchase_price || item.price || 0;
+      return sum + price * (item.quantity || 0);
+    }, 0);
+  }, [selectedProducts]);
+
+  // Calculate discount per item (proportional distribution)
+  const getItemDiscount = (item: Product): number => {
+    if (!selectedProducts?.length || subtotalAmount === 0) {
+      return 0;
+    }
+    const totalDiscount = Number(discount.amount) || 0;
+    const discountPercent = Number(discount.pr) || 0;
+    const price = item.purchase_price || item.price || 0;
+    const itemTotal = price * (item.quantity || 0);
+
+    if (discountPercent > 0) {
+      // Apply percentage discount per item
+      return (itemTotal * discountPercent) / 100;
+    } else if (totalDiscount > 0) {
+      // Distribute total discount proportionally
+      return (itemTotal * totalDiscount) / subtotalAmount;
+    }
+    return 0;
+  };
+
+  // Calculate GST amount on discounted amount per item
+  const gstAmount = useMemo(() => {
+    if (!selectedProducts?.length) return 0;
+
+    return selectedProducts.reduce((sum, item) => {
+      const price = item.purchase_price || item.price || 0;
+      const gstRate = Number(item.gst) || 0;
+      const quantity = item.quantity || 0;
+      const itemTotal = price * quantity;
+      const itemDiscount = getItemDiscount(item);
+      const itemTotalAfterDiscount = itemTotal - itemDiscount;
+
+      // GST is calculated on discounted amount
+      if (item.tax_inclusive) {
+        // GST is included in price, extract it from discounted amount
+        const gstValue = (itemTotalAfterDiscount * gstRate) / (100 + gstRate);
+        return sum + gstValue;
+      } else {
+        // GST is exclusive, add it on top of discounted amount
+        const gstValue = (itemTotalAfterDiscount * gstRate) / 100;
+        return sum + gstValue;
+      }
+    }, 0);
+  }, [selectedProducts, discount.amount, discount.pr, subtotalAmount]);
+
+  // Subtotal after discount, without GST (for display purposes)
+  const subtotalWithoutGst = useMemo(() => {
+    if (!selectedProducts?.length) return 0;
+
+    return selectedProducts.reduce((sum, item) => {
+      const price = item.purchase_price || item.price || 0;
+      const gstRate = Number(item.gst) || 0;
+      const quantity = item.quantity || 0;
+      const itemTotal = price * quantity;
+      const itemDiscount = getItemDiscount(item);
+      const itemTotalAfterDiscount = itemTotal;
+
+      if (item.tax_inclusive) {
+        // GST is included, so subtract it from discounted amount
+        const gstValue = (itemTotalAfterDiscount * gstRate) / (100 + gstRate);
+        return sum + (itemTotalAfterDiscount - gstValue);
+      } else {
+        // GST is exclusive, so discounted amount is already without GST
+        return sum + itemTotalAfterDiscount;
+      }
+    }, 0);
+  }, [selectedProducts, discount.amount, discount.pr, subtotalAmount]);
+
+  // Total amount after discount, including GST
+  const totalAmount = useMemo(() => {
+    return subtotalWithoutGst + gstAmount - Number(discount.amount);
+  }, [subtotalWithoutGst, gstAmount, discount]);
+
+  // Advance amount as numeric value
+  const advanceNumeric = useMemo(
+    () => Number(advanceAmount) || 0,
+    [advanceAmount]
+  );
+
+  // Due amount calculation
+  const dueAmount = useMemo(() => {
+    const due = totalAmount - advanceNumeric;
+    return due > 0 ? due : 0;
+  }, [totalAmount, advanceNumeric]);
 
   useEffect(() => {
     getInitialData();
@@ -351,6 +440,7 @@ const CreatePurchase = ({ navigation }: any) => {
         vehicleNumber: purchaseData.vehicle_no || "",
         transportName: purchaseData.transport_name || "",
         parcels: purchaseData.no_of_parcels?.toString() || "",
+        gstNumber: purchaseData.gst_number || "",
       }));
 
       // Set products
@@ -364,6 +454,8 @@ const CreatePurchase = ({ navigation }: any) => {
             purchase_price: item.price || 0,
             quantity: item.quantity || 1,
             image: item.product_details?.image || "",
+            gst: item.product_details?.gst || null,
+            tax_inclusive: item.product_details?.tax_inclusive || false,
           })
         );
         setSelectedProducts(mappedProducts);
@@ -466,6 +558,7 @@ const CreatePurchase = ({ navigation }: any) => {
         due_date: dueDate || null,
         advance_bank: selectedBank?.id || null,
         dispatch_address: formData.dispatchAddress || "",
+        gst_number: formData.gstNumber || "",
         references: formData.references || "",
         notes: formData.notes || "",
         terms: formData.terms || "",
@@ -607,6 +700,7 @@ const CreatePurchase = ({ navigation }: any) => {
                     selectedProducts: selectedProducts,
                     navigateScreen: HomeNavigation.CREATE_PURCHASE,
                     formData: getCurrentFormData(), // Pass current form data
+                    isPurchase: true,
                   });
                 }}
               >
@@ -736,6 +830,74 @@ const CreatePurchase = ({ navigation }: any) => {
               </View>
             )}
 
+            {/* GST Calculation Section - Below Product List */}
+            {!!selectedProducts.length && (
+              <View style={{ marginBottom: 12 }}>
+                {/* Item Total without GST */}
+                <View style={styles.totalBar}>
+                  <Text style={styles.totalLabel}>Item Total</Text>
+                  <Text style={styles.totalValue}>
+                    {formatNumber(Number(subtotalWithoutGst.toFixed(2)))}
+                  </Text>
+                </View>
+
+                {/* Discount (above total when discount is applied) */}
+                {Number(discount.amount) > 0 && (
+                  <View style={styles.totalBar}>
+                    <Text style={styles.totalLabel}>Discount</Text>
+                    <Text style={styles.totalValue}>
+                      -{formatNumber(Number(discount.amount))}
+                    </Text>
+                  </View>
+                )}
+
+                {/* GST (above total when GST is applicable) */}
+                {gstAmount > 0 && (
+                  <View style={styles.totalBar}>
+                    <Text style={styles.totalLabel}>GST</Text>
+                    <Text style={styles.totalValue}>
+                      +{formatNumber(Number(gstAmount.toFixed(2)))}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Total Amount (below product list) */}
+                <View
+                  style={[
+                    styles.totalBar,
+                    {
+                      borderTopWidth: 1,
+                      borderColor: "#FCA311",
+                      paddingTop: s(5),
+                    },
+                  ]}
+                >
+                  <Text style={styles.totalLabel}>Total</Text>
+                  <Text style={styles.totalValue}>
+                    {formatNumber(Number(totalAmount.toFixed(2)))}
+                  </Text>
+                </View>
+
+                {/* Advance and Due (only when advance entered) */}
+                {advanceNumeric > 0 && (
+                  <View style={styles.advanceDueBar}>
+                    <View style={styles.advanceDueRow}>
+                      <Text style={styles.totalLabel}>Advance</Text>
+                      <Text style={styles.totalValue}>
+                        {formatNumber(advanceNumeric)}
+                      </Text>
+                    </View>
+                    <View style={styles.advanceDueRow}>
+                      <Text style={styles.totalLabel}>Due</Text>
+                      <Text style={styles.totalValue}>
+                        {formatNumber(dueAmount)}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+              </View>
+            )}
+
             {/* Supplier Invoice */}
             <View style={styles.section}>
               <Text style={styles.label}>Supplier Invoice</Text>
@@ -779,6 +941,11 @@ const CreatePurchase = ({ navigation }: any) => {
                   icon: "file-document-outline",
                   label: "Add References",
                   state: "references",
+                },
+                {
+                  icon: "file-document-outline",
+                  label: "GST Number",
+                  state: "gstNumber",
                 },
                 {
                   icon: "note",
@@ -1656,5 +1823,37 @@ const styles = ScaledSheet.create({
     paddingVertical: 6,
     fontSize: 13,
     color: "#000",
+  },
+  totalBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    marginHorizontal: 10,
+    marginTop: s(6),
+  },
+  totalLabel: {
+    color: "#000",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  totalValue: {
+    color: "#000",
+    fontSize: 16,
+    fontWeight: "700",
+  },
+  advanceDueBar: {
+    paddingHorizontal: s(8),
+    paddingTop: s(6),
+    marginHorizontal: s(10),
+    marginTop: s(8),
+    borderTopWidth: 1,
+    borderTopColor: "#FCA311",
+  },
+  advanceDueRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginVertical: 2,
   },
 });

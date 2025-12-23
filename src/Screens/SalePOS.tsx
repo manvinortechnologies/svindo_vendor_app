@@ -89,7 +89,7 @@ const SalePOS = () => {
   const [advancePaymentMode, setAdvancePaymentMode] = useState<number | null>(
     null
   );
-  const [advanceAmount, setAdvanceAmount] = useState("");
+  const [advanceAmount, setAdvanceAmount] = useState("0");
   const [callenderModel, setCallenderModel] = useState<boolean>(false);
   const [dueDate, setDueDate] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
@@ -830,7 +830,7 @@ const SalePOS = () => {
                   onPress={() => {
                     setPaymentMode(method.key);
                     method.key === "credit"
-                      ? setAdvancePaymentMode(1)
+                      ? setAdvancePaymentMode(2)
                       : setAdvancePaymentMode(null);
                   }}
                   style={[

@@ -419,7 +419,9 @@ const Erp = () => {
               borderBottomWidth: 1,
               borderColor: "#ECECEC",
             }}
-            onPress={() => Linking.openURL("https://vendor.svindo.com/")}
+            onPress={() =>
+              Linking.openURL("https://vendor.svindo.com/users/login-vendor/")
+            }
           >
             <Text style={styles.sectionTitle}>
               Login to Svindo Business Web
