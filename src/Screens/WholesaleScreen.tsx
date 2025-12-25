@@ -61,15 +61,12 @@ export default function WholesaleScreen() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [formData, setFormData] = useState<FormData>({
     dispatchAddress:
-      params?.customer_details?.dispatch_address_line1 +
-        " " +
-        params?.customer_details?.dispatch_address_line2 +
-        " " +
-        params?.customer_details?.dispatch_city +
-        " " +
-        params?.customer_details?.dispatch_state +
-        " " +
-        params?.customer_details?.dispatch_pincode || "",
+      params?.customer_details?.dispatch_address_line1 ||
+      "" + params?.customer_details?.dispatch_address_line2 ||
+      "" + params?.customer_details?.dispatch_city ||
+      "" + params?.customer_details?.dispatch_state ||
+      "" + params?.customer_details?.dispatch_pincode ||
+      "",
     signature: "",
     references: "",
     notes: "",
@@ -160,23 +157,22 @@ export default function WholesaleScreen() {
           reverse_charges: formData?.reverseCharge || false,
         },
       };
-      {
-        setIsLoading(true);
 
-        const res = await api.post(API_ROUTES.posSales, data);
-        console.log(res);
-        navigation.reset({
-          index: 0,
-          routes: [
-            {
-              name: HomeNavigation.BOTTOM_NAVIGATION,
-              state: { index: 0, routes: [{ name: HomeNavigation.ERP }] },
-            },
-            { name: HomeNavigation.SALES_LEDGER },
-            { name: HomeNavigation.BILLDETAILS, params: { id: res.data?.id } },
-          ],
-        });
-      }
+      setIsLoading(true);
+
+      const res = await api.post(API_ROUTES.posSales, data);
+      console.log(res);
+      navigation.reset({
+        index: 0,
+        routes: [
+          {
+            name: HomeNavigation.BOTTOM_NAVIGATION,
+            state: { index: 0, routes: [{ name: HomeNavigation.ERP }] },
+          },
+          { name: HomeNavigation.SALES_LEDGER },
+          { name: HomeNavigation.BILLDETAILS, params: { id: res.data?.id } },
+        ],
+      });
     } catch (error) {
       console.log(error, "sales error");
     } finally {

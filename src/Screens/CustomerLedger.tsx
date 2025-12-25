@@ -95,7 +95,7 @@ const CustomerLedger = ({ navigation, route }: any) => {
         setLedgerData(transformedData);
 
         // Calculate total sale from ledger transactions
-        const totalSale = calculateTotalSale(response.data.ledger || []);
+        const totalSale = response.data.total_sales || 0;
         const creditBalance =
           response.data.balance ||
           route?.params?.customer?.opening_balance ||
@@ -160,12 +160,16 @@ const CustomerLedger = ({ navigation, route }: any) => {
         }
 
         // Calculate balance (this might need adjustment based on business logic)
-        const balance = txn.amount;
+        const balance =
+          type !== "invoice" ? txn.amount : Math.abs(txn.total_bill_amount);
 
         groupedByDate[date].push({
           type: type,
           id: txn.reference_id?.toString() || txn.id.toString(),
-          amount: type === "invoice" ? Math.abs(txn.amount) : undefined,
+          amount:
+            type === "invoice"
+              ? Math.abs(txn.amount)
+              : Math.abs(txn.total_bill_amount),
           paid: type === "payment" ? Math.abs(txn.amount) : 0,
           balance: balance,
           medium: txn.transaction_type,
@@ -280,7 +284,7 @@ const CustomerLedger = ({ navigation, route }: any) => {
 
   const handleDeleteCustomerApi = async () => {
     try {
-      await api.delete(`${API_ROUTES.vendorCustomer}/${customerId}/`);
+      await api.delete(`${API_ROUTES.vendorCustomer}${customerId}/`);
       Toast.show({
         type: "success",
         text1: "Success",

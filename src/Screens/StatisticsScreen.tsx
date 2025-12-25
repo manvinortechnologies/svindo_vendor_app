@@ -56,6 +56,7 @@ interface CompanyProfile {
   email?: string;
   phone?: string;
   address?: string;
+  profile_image?: string;
 }
 
 const recentActivity = [

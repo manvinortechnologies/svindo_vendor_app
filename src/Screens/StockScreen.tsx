@@ -278,14 +278,13 @@ const StockScreen = () => {
       });
     }
     // Apply advanced filters (only for products)\
-    let productsArr = data as ProductType[];
-    productsArr = productsArr.filter((product) => {
+    let productsArr: ProductType[] = data as ProductType[];
+    productsArr = productsArr.filter((product: ProductType) => {
       // Category filter
       if (
         appliedFilters.category &&
-        product[
-          selectedType === "Product/Service" ? "category" : "product_category"
-        ] !== appliedFilters.category
+        selectedType === "Product/Service" &&
+        product.category !== appliedFilters.category
       ) {
         return false;
       }
@@ -343,16 +342,24 @@ const StockScreen = () => {
     });
     // Price order (sort)
     if (appliedFilters.price === "low-to-high") {
-      const addOnsArr = data.map(
-        (item) => ({ ...item, price: item.price_per_unit } as Addon)
-      );
+      const addOnsArr = data.map((item: any) => ({
+        ...item,
+        price:
+          item.price !== undefined && item.price !== null
+            ? item.price
+            : item.price_per_unit,
+      }));
       productsArr = [
         ...(selectedType === "Product/Service" ? productsArr : addOnsArr),
       ].sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
     } else if (appliedFilters.price === "high-to-low") {
-      const addOnsArr = data.map(
-        (item) => ({ ...item, price: item.price_per_unit } as Addon)
-      );
+      const addOnsArr = data.map((item: any) => ({
+        ...item,
+        price:
+          item.price !== undefined && item.price !== null
+            ? item.price
+            : item.price_per_unit,
+      }));
       productsArr = [
         ...(selectedType === "Product/Service" ? productsArr : addOnsArr),
       ].sort((a, b) => (b.price ?? 0) - (a.price ?? 0));

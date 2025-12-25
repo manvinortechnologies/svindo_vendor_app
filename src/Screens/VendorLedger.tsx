@@ -156,7 +156,7 @@ const VendorLedger = ({ navigation, route }: any) => {
           id: txn.reference_id?.toString() || txn.id.toString(),
           amount: type === "invoice" ? Math.abs(txn.amount) : undefined,
           paid: type === "payment" ? Math.abs(txn.amount) : 0,
-          balance: txn.balance_after,
+          balance: txn.amount,
           medium: txn.transaction_type,
         });
       });
@@ -257,7 +257,7 @@ const VendorLedger = ({ navigation, route }: any) => {
 
   const handleDeleteVendorApi = async () => {
     try {
-      await api.delete(`${API_ROUTES.vendorList}/${vendorId}/`);
+      await api.delete(`${API_ROUTES.vendorList}${vendorId}/`);
       navigation.goBack();
     } catch (error) {
       console.error("Error deleting vendor:", error);

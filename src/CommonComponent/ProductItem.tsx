@@ -23,6 +23,7 @@ export interface ProductType {
   price: number;
   category?: string;
   subcategory?: string;
+  sub_category?: string;
   color?: string;
   size?: string;
   sale_type?: string;
@@ -30,6 +31,7 @@ export interface ProductType {
   parent?: string | null;
   variants?: ProductType[];
   product_type?: string;
+  batch_number?: string;
 }
 
 interface ProductItemProps {

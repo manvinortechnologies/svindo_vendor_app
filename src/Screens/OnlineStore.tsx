@@ -60,8 +60,8 @@ const OnlineStore = ({ navigation }: any) => {
 
   const {
     data: storeData,
-    error,
-    isLoading: isLoadingStore,
+    // error,
+    // isLoading: isLoadingStore,
     refetch,
   } = useGetVendorStoresQuery();
 

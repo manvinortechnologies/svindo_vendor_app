@@ -355,7 +355,7 @@ const SalePOS = () => {
       0
     );
     setDiscount((p) => ({ ...p, pr: value }));
-    const percent = parseFloat(value);
+    const percent = Number(value);
     if (!isNaN(percent)) {
       const amount = (totalAmount * percent) / 100;
       setDiscount((p) => ({ ...p, amount: amount.toFixed(2) }));
@@ -416,6 +416,7 @@ const SalePOS = () => {
     console.log(tempErrors, "tempErrors");
     return Object.keys(tempErrors).length > 0; // Everything OK
   };
+
   const handleSubmit = async () => {
     if (validateForm()) return;
     try {
@@ -439,22 +440,24 @@ const SalePOS = () => {
         })),
         total_items: products.reduce((sum, p) => sum + p.quantity, 0),
         total_amount_before_discount: subtotalAmount,
-        discount_amount: discount.amount,
+        discount_amount: Number(discount.amount).toFixed(2),
         total_amount: totalDiscountedAmount,
         gst_amount: wholesale ? gstAmount.toFixed(2) : 0,
         balance_amount:
           paymentMode === "credit"
-            ? totalDiscountedAmount - Number(advanceAmount)
+            ? Number(totalDiscountedAmount - Number(advanceAmount)).toFixed(2)
             : 0,
         wholesale_invoice_details: null,
-        advance_bank: selectedBank?.id || "",
-        advance_amount: paymentMode === "credit" ? advanceAmount || 0 : 0,
       };
 
       const data =
         paymentMode === "credit"
           ? {
               ...baseData,
+              advance_bank: selectedBank?.id || "",
+              advance_amount: advanceAmount,
+              advance_payment_method:
+                advancePaymentMode === 1 ? "bank" : "cash",
               credit_date: new Date(dueDate).toISOString(),
             }
           : baseData;
@@ -790,7 +793,9 @@ const SalePOS = () => {
             </View>
             <View style={styles.advanceDueRow}>
               <Text style={styles.totalLabel}>Due</Text>
-              <Text style={styles.totalValue}>{formatNumber(dueAmount)}</Text>
+              <Text style={styles.totalValue}>
+                {formatNumber(Number(dueAmount.toFixed(2)))}
+              </Text>
             </View>
           </View>
         )}

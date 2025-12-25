@@ -324,8 +324,8 @@ const PaymentsList = () => {
       {groupedPayments[date]
         ?.sort(
           (a, b) =>
-            new Date(b.payment_date).getTime() -
-            new Date(a.payment_date).getTime()
+            new Date(a.payment_date).getTime() -
+            new Date(b.payment_date).getTime()
         )
         .map((payment) => (
           <View key={payment.id}>{renderPaymentItem({ item: payment })}</View>

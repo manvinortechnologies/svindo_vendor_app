@@ -42,4 +42,10 @@ export interface VendorStore {
   pincode: string;
   is_offline: boolean;
   store_images: string[];
+  is_online: boolean;
+  is_location: boolean;
+  display_as_catalog: boolean;
+  private_catalog: boolean;
+  global_supplier: boolean;
+  is_gstin_verified: boolean;
 }

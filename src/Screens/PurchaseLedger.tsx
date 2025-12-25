@@ -24,6 +24,7 @@ import moment from "moment";
 import { ScaledSheet } from "react-native-size-matters";
 import Toast from "react-native-toast-message";
 import DeleteConfirmationModal from "../Modals/DeleteConfirmationModal";
+import { StackNavigationProp } from "@react-navigation/stack";
 
 interface PurchaseItem {
   product: number;
@@ -87,9 +88,15 @@ type RootStackParamList = {
   };
 };
 
+type PurchaseLedgerNavProp = StackNavigationProp<
+  RootStackParamList,
+  HomeNavigation.PURCHASE_LEDGER
+>;
+
 const PurchaseLedger = () => {
-  const navigation = useNavigation();
-  const route = useRoute<RouteProp<RootStackParamList, "PurchaseLedger">>();
+  const navigation = useNavigation<PurchaseLedgerNavProp>();
+  const route =
+    useRoute<RouteProp<RootStackParamList, HomeNavigation.PURCHASE_LEDGER>>();
 
   const [purchaseData, setPurchaseData] = useState<PurchaseEntry[]>([]);
   const [isLoading, setIsLoading] = useState(false);

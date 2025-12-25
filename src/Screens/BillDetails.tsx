@@ -73,14 +73,11 @@ const BillDetails: React.FC = () => {
   };
 
   // Calculate net total: total + charges - discount + tax
-  const baseTotal = Number(billData?.total_amount_before_discount) || 0;
-  const discount = Number(billData?.discount_amount) || 0;
-  const tax = totals.tax || 0;
-  const netTotal = baseTotal + totalCharges - discount + tax;
+  const gstAmount = Number(billData?.total_gst_amount) || 0;
+  const netTotal = Number(billData?.total_amount) || 0;
 
   // Calculate balance: net total - advance paid (only for credit payments)
-  const advancePaid = Number(billData?.advance_amount) || 0;
-  const balance = netTotal - advancePaid;
+  const balance = Number(billData?.balance_amount) || 0;
 
   const [printOptions, setPrintOptions] = useState([
     { label: "Customer", checked: true },
@@ -358,7 +355,7 @@ const BillDetails: React.FC = () => {
           </View>
           <View style={styles.totalRow}>
             <Text style={styles.totalLabel}>Tax</Text>
-            <Text style={styles.totalValue}>Rs {totals.tax.toFixed(2)}</Text>
+            <Text style={styles.totalValue}>Rs {gstAmount.toFixed(2)}</Text>
           </View>
           <View style={styles.totalRow}>
             <Text style={[styles.totalLabel, { fontWeight: "bold" }]}>

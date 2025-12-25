@@ -13,18 +13,13 @@ import { RouteProp, useNavigation } from "@react-navigation/native";
 import { HomeNavigation } from "../constants/app-routes.constants";
 
 type RootStackParamList = {
-  BuyersRequest: undefined;
+  BuyersRequest: { requestId?: number } | undefined;
 };
 
 type BuyersRequestNavProp = NativeStackNavigationProp<
   RootStackParamList,
-  "BuyersRequest"
+  HomeNavigation.BUYERSREQUEST
 >;
-
-type BuyersRequestProps = {
-  navigation: BuyersRequestNavProp;
-  route: RouteProp<RootStackParamList, "BuyersRequest">;
-};
 
 interface ProductRequest {
   id: number;
@@ -68,10 +63,17 @@ const RequestFromBuyers: React.FC<RequestFromBuyersProps> = ({
       {/* Request List */}
       {requests.length > 0 ? (
         <FlatList
-          data={requests}
+          data={requests.slice(0, 2)}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
-            <View style={styles.card}>
+            <TouchableOpacity
+              style={styles.card}
+              onPress={() =>
+                navigation.navigate(HomeNavigation.BUYERSREQUEST, {
+                  requestId: item.id,
+                })
+              }
+            >
               <View style={styles.cardRow}>
                 <Text style={styles.productName} numberOfLines={1}>
                   {item.product_name || "Product Name"}
@@ -91,7 +93,7 @@ const RequestFromBuyers: React.FC<RequestFromBuyersProps> = ({
                 </Text>
               )}
               <Text style={styles.budget}>Budget - ₹{item.budget || "0"}</Text>
-            </View>
+            </TouchableOpacity>
           )}
           scrollEnabled={false}
         />

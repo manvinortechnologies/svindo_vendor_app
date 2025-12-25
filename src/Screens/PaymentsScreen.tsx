@@ -223,7 +223,7 @@ const PaymentsScreen = () => {
         formData.append("notes", description);
       }
       if (selectedPaymentMethod !== "Cash" && selectedBank) {
-        formData.append("account", selectedBank.name);
+        formData.append("bank", selectedBank.id);
       }
 
       if (imageFile) {

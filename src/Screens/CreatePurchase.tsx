@@ -117,21 +117,24 @@ const CreatePurchase = ({ navigation }: any) => {
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [purchaseId, setPurchaseId] = useState<number | null>(null);
 
-  const [formData, setFormData] = useState<{ [key: string]: string }>({
-    dispatchAddress: "",
-    signature: "",
-    references: "",
-    notes: "",
-    terms: "",
-    shippingCharges: "",
-    packagingCharges: "",
-    ewayBill: "",
-    lrNumber: "",
-    vehicleNumber: "",
-    transportName: "",
-    parcels: "",
-    gstNumber: "",
-  });
+  const [formData, setFormData] = useState<{ [key: string]: string | boolean }>(
+    {
+      dispatchAddress: "",
+      signature: "",
+      references: "",
+      notes: "",
+      terms: "",
+      shippingCharges: "",
+      packagingCharges: "",
+      ewayBill: "",
+      lrNumber: "",
+      vehicleNumber: "",
+      transportName: "",
+      parcels: "",
+      gstNumber: "",
+      reverseCharge: false,
+    }
+  );
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
@@ -441,6 +444,7 @@ const CreatePurchase = ({ navigation }: any) => {
         transportName: purchaseData.transport_name || "",
         parcels: purchaseData.no_of_parcels?.toString() || "",
         gstNumber: purchaseData.gst_number || "",
+        reverseCharge: purchaseData.reverse_charges || false,
       }));
 
       // Set products
@@ -532,7 +536,7 @@ const CreatePurchase = ({ navigation }: any) => {
 
       const totalDiscountedAmount = totalAmount - Number(discount.amount || 0);
 
-      const data = {
+      const baseData = {
         purchase_date: purchaseDate,
         vendor: selectedVendor?.id,
         supplier_invoice_date: supplierDate,
@@ -549,26 +553,20 @@ const CreatePurchase = ({ navigation }: any) => {
             : "other",
         discount_percentage: discount.pr || "0",
         discount_amount: discount.amount || "0",
-        advance_amount: Number(advanceAmount) || 0,
-        advance_mode: selectedAdvanceType.toLowerCase(), // bank / cash
-        balance_amount:
-          selectedPayment === "In Credit"
-            ? Number(totalDiscountedAmount) - Number(advanceAmount || 0)
-            : 0,
-        due_date: dueDate || null,
-        advance_bank: selectedBank?.id || null,
+
         dispatch_address: formData.dispatchAddress || "",
         gst_number: formData.gstNumber || "",
         references: formData.references || "",
         notes: formData.notes || "",
         terms: formData.terms || "",
-        delivery_shipping_charges: Number(formData.shippingCharges) || 0,
+        delivery_charges: Number(formData.shippingCharges) || 0,
         packaging_charges: Number(formData.packagingCharges) || 0,
-        eway_bill_no: formData.ewayBill || "",
+        eway_bill_number: formData.ewayBill || "",
         lr_no: formData.lrNumber || "",
         vehicle_no: formData.vehicleNumber || "",
         transport_name: formData.transportName || "",
-        no_of_parcels: Number(formData.parcels) || null,
+        number_of_parcels: Number(formData.parcels) || null,
+        reverse_charges: formData.reverseCharge || false,
         items: selectedProducts.map((p) => ({
           product: p.id,
           quantity: p.quantity,
@@ -576,10 +574,16 @@ const CreatePurchase = ({ navigation }: any) => {
           total: Number(p.quantity) * Number(p.purchase_price || p.price || 0),
         })),
       };
-
-      if (selectedPayment !== "In Credit" && !dueDate) {
-        (data as { due_date?: typeof dueDate }).due_date = undefined;
-      }
+      const data =
+        selectedPayment === "In Credit"
+          ? {
+              ...baseData,
+              advance_amount: Number(advanceAmount) || 0,
+              advance_payment_method: selectedAdvanceType.toLowerCase(), // bank / cash
+              due_date: dueDate || null,
+              advance_bank: selectedBank?.id || null,
+            }
+          : baseData;
 
       console.log("Sending purchase data:", data);
 
@@ -603,7 +607,7 @@ const CreatePurchase = ({ navigation }: any) => {
   };
 
   const handleChange = (field: string, value: string | boolean) => {
-    setFormData((prev) => ({ ...prev, [field]: value as string }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   // Function to collect all current form data for preservation
@@ -1011,22 +1015,34 @@ const CreatePurchase = ({ navigation }: any) => {
                   state: "parcels",
                   keyboardType: "numeric",
                 },
-
+                {
+                  icon: "arrow-left-right",
+                  label: "Reverse Charge",
+                  state: "reverseCharge",
+                  keyboardType: "default",
+                },
                 // {
                 //   icon: "percent-outline",
                 //   label: "Add Extra Discount",
                 // },
-              ].map((item, index) => (
-                <OptionInput
-                  key={item.state}
-                  icon={item.icon || undefined}
-                  label={item.label}
-                  value={formData[item.state] || ""}
-                  onChangeText={(text) => handleChange(item.state, text)}
-                  keyboardType={item.keyboardType as any}
-                  boldLabelPrefix={item.boldLabelPrefix}
-                />
-              ))}
+              ].map((item, index) => {
+                const fieldValue = formData[item.state];
+                return (
+                  <OptionInput
+                    key={item.state}
+                    icon={item.icon || undefined}
+                    label={item.label}
+                    value={
+                      typeof fieldValue === "boolean"
+                        ? fieldValue
+                        : fieldValue || ""
+                    }
+                    onChangeText={(text) => handleChange(item.state, text)}
+                    keyboardType={item.keyboardType as any}
+                    boldLabelPrefix={item.boldLabelPrefix}
+                  />
+                );
+              })}
             </View>
 
             {/* Last Box Container */}

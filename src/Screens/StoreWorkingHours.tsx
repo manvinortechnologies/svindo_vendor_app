@@ -65,9 +65,12 @@ const StoreWorkingHours = () => {
       const res = await api.get(API_ROUTES.storeWorkingHour);
       if (res.data.length > 0) {
         const workingHours = transformWorkingHoursFromBE(res.data);
-        setHours(workingHours);
+        if (workingHours) {
+          setHours(workingHours);
+        }
       }
     } catch (error) {
+      console.log(error, "fetchWorkingData error");
     } finally {
       setIsLoading(false);
     }

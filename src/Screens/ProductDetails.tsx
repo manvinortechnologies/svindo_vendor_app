@@ -97,7 +97,6 @@ const styles = StyleSheet.create({
     color: "#000",
     fontWeight: "bold",
     margin: 15,
-    color: "#000",
   },
 
   fileCard: {
