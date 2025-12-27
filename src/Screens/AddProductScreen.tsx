@@ -802,7 +802,7 @@ const AddProductScreen = ({
             // mrp: product.mrp?.toString() || "",
             // opening_stock: product.opening_stock?.toString() || "",
             // low_stock_quantity: product.low_stock_quantity?.toString() || "",
-            is_stock_enabled: product.is_stock_enabled || false,
+            is_stock_enabled: product.track_stock || false,
             // low_stock_alert: product.low_stock_alert || false,
             hsn: product.hsn || "",
             gst: product.gst?.toString() || "",
@@ -849,7 +849,7 @@ const AddProductScreen = ({
             mrp: product.mrp?.toString() || "",
             opening_stock: product.opening_stock?.toString() || "",
             low_stock_quantity: product.low_stock_quantity?.toString() || "",
-            is_stock_enabled: product.is_stock_enabled || false,
+            is_stock_enabled: product.track_stock || false,
             low_stock_alert: product.low_stock_alert || false,
             hsn: product.hsn || "",
             gst: product.gst?.toString() || "",
@@ -1519,7 +1519,7 @@ const AddProductScreen = ({
             opening_stock: existingProduct.opening_stock?.toString() || "",
             low_stock_quantity:
               existingProduct.low_stock_quantity?.toString() || "",
-            is_stock_enabled: existingProduct.is_stock_enabled || false,
+            is_stock_enabled: existingProduct.track_stock || false,
             low_stock_alert: existingProduct.low_stock_alert || false,
             hsn: existingProduct.hsn || "",
             gst: existingProduct.gst?.toString() || "",
@@ -1672,7 +1672,6 @@ const AddProductScreen = ({
             setFieldTouched,
           }) => (
             <>
-              {console.log("errors", errors)}
               {/* Modals */}
               <CalendarModal
                 initialDate={values.expiry_date}

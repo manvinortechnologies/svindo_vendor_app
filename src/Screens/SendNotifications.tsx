@@ -80,7 +80,11 @@ const SendNotifications = ({ navigation }: any) => {
       setLoadingProducts(true);
       if (products.length === 0) {
         const res = await api.get(API_ROUTES.vendorProduct);
-        setProducts(res.data.filter((product: any) => product.is_active));
+        setProducts(
+          res.data.filter(
+            (product: any) => product.is_active && product.sale_type === "both"
+          )
+        );
       }
       setShowProductModal(true);
     } catch (e) {

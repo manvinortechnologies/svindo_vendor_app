@@ -80,157 +80,11 @@ const recentActivity = [
   },
 ];
 
-const notification = [
-  {
-    id: "1",
-    date: "8 feb 2025",
-    notify: "Lorem Ipsum is simply dummy text of the printing and typesetting",
-    image: require("../assets/notification.png"),
-  },
-  {
-    id: "3",
-    date: "8 feb 2025",
-    notify: "Lorem Ipsum is simply dummy text of the printing and typesetting",
-    image: require("../assets/notification.png"),
-  },
-  {
-    id: "4",
-    date: "8 feb 2025",
-    notify: "Lorem Ipsum is simply dummy text of the printing and typesetting",
-    image: require("../assets/notification.png"),
-  },
-];
-
-const products = [
-  {
-    id: "1",
-    name: "Product 1",
-    description: "This is product 1",
-    price: "10",
-    image: require("../assets/product.png"),
-    type: "Top Liked",
-  },
-  {
-    id: "2",
-    name: "Product 2",
-    description: "This is product 2",
-    price: "20",
-    image: require("../assets/product.png"),
-    type: "Top Liked",
-  },
-  {
-    id: "3",
-    name: "Product 3",
-    description: "This is product 3",
-    price: "30",
-    image: require("../assets/product.png"),
-    type: "Top Liked",
-  },
-  {
-    id: "4",
-    name: "Product 4",
-    description: "This is product 4",
-    price: "40",
-    image: require("../assets/product.png"),
-    type: "Top Rated",
-  },
-  {
-    id: "5",
-    name: "Product 5",
-    description: "This is product 5",
-    price: "50",
-    image: require("../assets/product.png"),
-    type: "Top Rated",
-  },
-  {
-    id: "6",
-    name: "Product 6",
-    description: "This is product 6",
-    price: "60",
-    image: require("../assets/product.png"),
-    type: "Top Rated",
-  },
-  {
-    id: "7",
-    name: "Product 7",
-    description: "This is product 7",
-    price: "70",
-    image: require("../assets/product.png"),
-    type: "Most Bought",
-  },
-  {
-    id: "8",
-    name: "Product 8",
-    description: "This is product 8",
-    price: "80",
-    image: require("../assets/product.png"),
-    type: "Most Bought",
-  },
-  {
-    id: "9",
-    name: "Product 9",
-    description: "This is product 9",
-    price: "90",
-    image: require("../assets/product.png"),
-    type: "Most Bought",
-  },
-  {
-    id: "10",
-    name: "Product 10",
-    description: "This is product 9",
-    price: "90",
-    image: require("../assets/product.png"),
-    type: "Low Stock",
-  },
-  {
-    id: "11",
-    name: "Product 11",
-    description: "This is product 9",
-    price: "90",
-    image: require("../assets/product.png"),
-    type: "Low Stock",
-  },
-  {
-    id: "12",
-    name: "Product 12",
-    description: "This is product 9",
-    price: "90",
-    image: require("../assets/product.png"),
-    type: "Low Stock",
-  },
-  {
-    id: "13",
-    name: "Product 13",
-    description: "This is product 9",
-    price: "90",
-    image: require("../assets/product.png"),
-    type: "Low Stock",
-  },
-  {
-    id: "14",
-    name: "Product 14",
-    description: "This is product 9",
-    price: "90",
-    image: require("../assets/product.png"),
-    type: "Low Stock",
-  },
-  {
-    id: "15",
-    name: "Product 15",
-    description: "This is product 9",
-    price: "90",
-    image: require("../assets/product.png"),
-    type: "Low Stock",
-  },
-];
-
 const StatisticsScreen = ({ navigation }: any) => {
-  const [deliveryDiscountEnabled, setDeliveryDiscountEnabled] = useState(true);
   const [selectedFilter, setSelectedFilter] = useState({
     name: "Online",
     id: "Online",
   });
-  const [showFilterDropdown, setShowFilterDropdown] = useState(false);
   const filters = ["Online", "Offline"];
 
   // Company profile state
@@ -415,35 +269,35 @@ const StatisticsScreen = ({ navigation }: any) => {
     }
   };
 
-  const requestStoragePermission = async () => {
-    if (Platform.OS === "android") {
-      try {
-        const granted = await PermissionsAndroid.requestMultiple([
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-          PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
-          PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
-        ]);
+  // const requestStoragePermission = async () => {
+  //   if (Platform.OS === "android") {
+  //     try {
+  //       const granted = await PermissionsAndroid.requestMultiple([
+  //         PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+  //         PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+  //         PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO,
+  //         PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES,
+  //       ]);
 
-        if (
-          granted[PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE] ===
-            PermissionsAndroid.RESULTS.GRANTED &&
-          granted[PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE] ===
-            PermissionsAndroid.RESULTS.GRANTED &&
-          granted[PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO] ===
-            PermissionsAndroid.RESULTS.GRANTED &&
-          granted[PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES] ===
-            PermissionsAndroid.RESULTS.GRANTED
-        ) {
-          console.log("Storage permissions granted");
-        } else {
-          console.log("Storage permissions denied");
-        }
-      } catch (err) {
-        console.warn("Error requesting storage permissions:", err);
-      }
-    }
-  };
+  //       if (
+  //         granted[PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE] ===
+  //           PermissionsAndroid.RESULTS.GRANTED &&
+  //         granted[PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE] ===
+  //           PermissionsAndroid.RESULTS.GRANTED &&
+  //         granted[PermissionsAndroid.PERMISSIONS.READ_MEDIA_VIDEO] ===
+  //           PermissionsAndroid.RESULTS.GRANTED &&
+  //         granted[PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES] ===
+  //           PermissionsAndroid.RESULTS.GRANTED
+  //       ) {
+  //         console.log("Storage permissions granted");
+  //       } else {
+  //         console.log("Storage permissions denied");
+  //       }
+  //     } catch (err) {
+  //       console.warn("Error requesting storage permissions:", err);
+  //     }
+  //   }
+  // };
 
   // const requestSmsPermission = async () => {
   //   if (Platform.OS === "android") {
@@ -1142,13 +996,21 @@ const StatisticsScreen = ({ navigation }: any) => {
                     <Image source={product.image} style={styles.productImage} />
                     <View style={styles.productDetails}>
                       <View style={styles.productTextContainer}>
-                        <Text style={styles.productName}>{product.name}</Text>
                         <Text
-                          style={styles.productDescription}
+                          style={styles.productName}
                           numberOfLines={1}
+                          ellipsizeMode="tail"
                         >
-                          {product.description.slice(0, 15)}...
+                          {product.name}
                         </Text>
+                        {product.description && (
+                          <Text
+                            style={styles.productDescription}
+                            numberOfLines={1}
+                          >
+                            {product.description.slice(0, 15)}
+                          </Text>
+                        )}
                       </View>
                       <Text style={styles.productPrice}>
                         Rs {product.price}
@@ -1540,12 +1402,14 @@ const styles = ScaledSheet.create({
   },
 
   productDetails: {
-    flexDirection: "row",
+    // flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
     paddingVTop: 10,
   },
-  productTextContainer: { flex: 1 },
+  productTextContainer: {
+    flex: 1,
+  },
   productName: {
     fontSize: 14,
     fontWeight: "bold",

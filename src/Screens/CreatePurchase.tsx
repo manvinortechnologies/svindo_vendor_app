@@ -285,10 +285,19 @@ const CreatePurchase = ({ navigation }: any) => {
     }, 0);
   }, [selectedProducts, discount.amount, discount.pr, subtotalAmount]);
 
-  // Total amount after discount, including GST
+  // Calculate total charges (delivery + packaging)
+  const totalCharges = useMemo(() => {
+    const delivery = Number(formData.shippingCharges) || 0;
+    const packaging = Number(formData.packagingCharges) || 0;
+    return delivery + packaging;
+  }, [formData.shippingCharges, formData.packagingCharges]);
+
+  // Total amount after discount, including GST and charges
   const totalAmount = useMemo(() => {
-    return subtotalWithoutGst + gstAmount - Number(discount.amount);
-  }, [subtotalWithoutGst, gstAmount, discount]);
+    return (
+      subtotalWithoutGst + gstAmount - Number(discount.amount) + totalCharges
+    );
+  }, [subtotalWithoutGst, gstAmount, discount, totalCharges]);
 
   // Advance amount as numeric value
   const advanceNumeric = useMemo(
@@ -559,7 +568,7 @@ const CreatePurchase = ({ navigation }: any) => {
         references: formData.references || "",
         notes: formData.notes || "",
         terms: formData.terms || "",
-        delivery_charges: Number(formData.shippingCharges) || 0,
+        delivery_shipping_charges: Number(formData.shippingCharges) || 0,
         packaging_charges: Number(formData.packagingCharges) || 0,
         eway_bill_number: formData.ewayBill || "",
         lr_no: formData.lrNumber || "",
@@ -571,7 +580,7 @@ const CreatePurchase = ({ navigation }: any) => {
           product: p.id,
           quantity: p.quantity,
           price: p.purchase_price || p.price || 0,
-          total: Number(p.quantity) * Number(p.purchase_price || p.price || 0),
+          amount: Number(p.quantity) * Number(p.purchase_price || 0),
         })),
       };
       const data =
@@ -861,6 +870,16 @@ const CreatePurchase = ({ navigation }: any) => {
                     <Text style={styles.totalLabel}>GST</Text>
                     <Text style={styles.totalValue}>
                       +{formatNumber(Number(gstAmount.toFixed(2)))}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Charges (delivery + packaging) */}
+                {totalCharges > 0 && (
+                  <View style={styles.totalBar}>
+                    <Text style={styles.totalLabel}>Charges</Text>
+                    <Text style={styles.totalValue}>
+                      +{formatNumber(Number(totalCharges.toFixed(2)))}
                     </Text>
                   </View>
                 )}
@@ -1237,77 +1256,7 @@ const CreatePurchase = ({ navigation }: any) => {
               onClose={() => setIsVendorModalVisible(false)}
             />
             <Loading visible={isLoading} />
-            {/* Purchase Data Modal */}
-            <CustomModal
-              visible={isEditModalVisible}
-              onClose={() => setIsEditModalVisible(false)}
-              children={
-                <>
-                  <TouchableOpacity
-                    style={{ marginTop: 20 }}
-                    onPress={() => setOpenCalendarModel(true)}
-                  >
-                    <Text style={{ marginBottom: 5 }}>Purchase Date</Text>
-                    <CustomTextInput
-                      value={purchaseDate}
-                      placeholder="Select Purchase Date"
-                      editable={false}
-                    />
-                  </TouchableOpacity>
-                  <CalendarModal
-                    visible={openCalendarModel}
-                    initialDate={purchaseDate}
-                    onClose={() => setOpenCalendarModel(false)}
-                    onSelect={(e) => setPurchaseDate(e)}
-                  />
-                  <CustomButton
-                    containerStyle={{ marginTop: 20 }}
-                    title="Done"
-                    onPress={() => setIsEditModalVisible(false)}
-                  />
-                </>
-              }
-            />
-            {/* Dispatch Address Modal */}
-            <CustomModal
-              visible={dispatchAddressModel}
-              onClose={() => setDispatchAddressModel(false)}
-              children={
-                <>
-                  <Text style={{ marginBottom: 5 }}>Dispatch Address</Text>
-                  <CustomTextInput
-                    value={dispatchAddress}
-                    onChangeText={setDispatchAddress}
-                    placeholder="Enter Dispatch Address"
-                  />
-                  <CustomButton
-                    containerStyle={{ marginTop: 20 }}
-                    title="Done"
-                    onPress={() => setDispatchAddressModel(false)}
-                  />
-                </>
-              }
-            />
-            {/* Bank Modal */}
-            <CustomModal
-              visible={bankModel}
-              onClose={() => setBankModel(false)}
-              children={
-                <>
-                  <Text style={{ marginBottom: 5 }}>Bank</Text>
-                  <CustomTextInput
-                    value={bank}
-                    onChangeText={setBank}
-                    placeholder="Enter Bank Details"
-                  />
-                  <CustomButton
-                    containerStyle={{ marginTop: 20 }}
-                    title="Done"
-                    onPress={() => setBankModel(false)}
-                  />
-                </>
-              }
-            />
+
             {/* Signature Modal */}
             <CustomModal
               visible={signatureModel}
@@ -1324,131 +1273,6 @@ const CreatePurchase = ({ navigation }: any) => {
                     containerStyle={{ marginTop: 20 }}
                     title="Done"
                     onPress={() => setSignatureModel(false)}
-                  />
-                </>
-              }
-            />
-            {/* References Modal */}
-            <CustomModal
-              visible={referencesModel}
-              onClose={() => setReferencesModel(false)}
-              children={
-                <>
-                  <Text style={{ marginBottom: 5 }}>References</Text>
-                  <CustomTextInput
-                    value={references}
-                    onChangeText={setReferences}
-                    placeholder="Enter References"
-                  />
-                  <CustomButton
-                    containerStyle={{ marginTop: 20 }}
-                    title="Done"
-                    onPress={() => setReferencesModel(false)}
-                  />
-                </>
-              }
-            />
-            {/* Notes Modal */}
-            <CustomModal
-              visible={notesModel}
-              onClose={() => setNotesModel(false)}
-              children={
-                <>
-                  <Text style={{ marginBottom: 5 }}>Notes</Text>
-                  <CustomTextInput
-                    value={notes}
-                    onChangeText={setNotes}
-                    placeholder="Enter Notes"
-                  />
-                  <CustomButton
-                    containerStyle={{ marginTop: 20 }}
-                    title="Done"
-                    onPress={() => setNotesModel(false)}
-                  />
-                </>
-              }
-            />
-            {/* Terms Modal */}
-            <CustomModal
-              visible={termsModel}
-              onClose={() => setTermsModel(false)}
-              children={
-                <>
-                  <Text style={{ marginBottom: 5 }}>Terms</Text>
-                  <CustomTextInput
-                    value={terms}
-                    onChangeText={setTerms}
-                    placeholder="Enter Terms"
-                  />
-                  <CustomButton
-                    containerStyle={{ marginTop: 20 }}
-                    title="Done"
-                    onPress={() => setTermsModel(false)}
-                  />
-                </>
-              }
-            />
-            {/* Extra Discount Modal */}
-            <CustomModal
-              visible={extraDiscountModel}
-              onClose={() => setExtraDiscountModel(false)}
-              children={
-                <>
-                  <Text style={{ marginBottom: 5 }}>Extra Discount</Text>
-                  <CustomTextInput
-                    value={extraDiscount}
-                    onChangeText={setExtraDiscount}
-                    placeholder="Enter Extra Discount"
-                    keyboardType="decimal-pad"
-                  />
-                  <CustomButton
-                    containerStyle={{ marginTop: 20 }}
-                    title="Done"
-                    onPress={() => setExtraDiscountModel(false)}
-                  />
-                </>
-              }
-            />
-            {/* Delivery Charges Modal */}
-            <CustomModal
-              visible={deliveryChargesModel}
-              onClose={() => setDeliveryChargesModel(false)}
-              children={
-                <>
-                  <Text style={{ marginBottom: 5 }}>
-                    Delivery/ Shipping Charges
-                  </Text>
-                  <CustomTextInput
-                    value={deliveryCharges}
-                    onChangeText={setDeliveryCharges}
-                    placeholder="Enter Delivery Charges"
-                    keyboardType="decimal-pad"
-                  />
-                  <CustomButton
-                    containerStyle={{ marginTop: 20 }}
-                    title="Done"
-                    onPress={() => setDeliveryChargesModel(false)}
-                  />
-                </>
-              }
-            />
-            {/* Packing Charges Modal */}
-            <CustomModal
-              visible={packingChargesModel}
-              onClose={() => setPackingChargesModel(false)}
-              children={
-                <>
-                  <Text style={{ marginBottom: 5 }}>Packaging Charges</Text>
-                  <CustomTextInput
-                    value={packingCharges}
-                    onChangeText={setPackingCharges}
-                    placeholder="Enter Packaging Charges"
-                    keyboardType="decimal-pad"
-                  />
-                  <CustomButton
-                    containerStyle={{ marginTop: 20 }}
-                    title="Done"
-                    onPress={() => setPackingChargesModel(false)}
                   />
                 </>
               }

@@ -563,7 +563,9 @@ const AddPostScreen = ({ navigation }: any) => {
               </View>
             ) : (
               <FlatList
-                data={productOptions}
+                data={productOptions.filter(
+                  (product: any) => product.sale_type === "both"
+                )}
                 keyExtractor={(item: any) =>
                   item?.id?.toString() || Math.random().toString()
                 }

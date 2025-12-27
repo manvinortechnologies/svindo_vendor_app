@@ -27,6 +27,8 @@ const CompanyProfile = ({ navigation, route }: any) => {
   const [sameAsBilling, setSameAsBilling] = useState(false);
   const [imageFile, setImageFile] = useState<any>();
   const [imagePickerModel, setImagePickerModel] = useState(false);
+  const [signatureFile, setSignatureFile] = useState<any>();
+  const [signaturePickerModel, setSignaturePickerModel] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [states, setStates] = useState<DropDownOption[]>([]);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -169,6 +171,7 @@ const CompanyProfile = ({ navigation, route }: any) => {
       setSameAsBilling(data.shipping_same_as_billing || false);
 
       setImageFile({ uri: data.profile_image });
+      setSignatureFile({ uri: data.signature_image });
     } catch (error) {
       console.log("getProfileData error:", error);
       Toast.show({
@@ -376,6 +379,14 @@ const CompanyProfile = ({ navigation, route }: any) => {
         });
       }
 
+      if (signatureFile?.uri) {
+        formData.append("signature_image", {
+          uri: signatureFile.uri,
+          name: signatureFile.name || "signature.jpg",
+          type: signatureFile.type || "image/jpeg",
+        });
+      }
+
       const apiEnd = `${API_ROUTES.companyProfle}${profileId || form.id}/`;
 
       const response = await api[profileId || form.id ? "put" : "post"](
@@ -542,6 +553,30 @@ const CompanyProfile = ({ navigation, route }: any) => {
               <Text style={styles.errorText}>{errors.state}</Text>
             )}
 
+            {/* Signature Image */}
+            <Text style={styles.dropdownLabel}>Signature</Text>
+            <TouchableOpacity
+              style={styles.signatureContainer}
+              onPress={() => setSignaturePickerModel(true)}
+            >
+              <View style={styles.signatureBox}>
+                {signatureFile?.uri ? (
+                  <Image
+                    source={{ uri: signatureFile?.uri }}
+                    style={styles.signatureImage}
+                    resizeMode="contain"
+                  />
+                ) : (
+                  <View style={styles.signaturePlaceholder}>
+                    <Ionicons name="create-outline" size={24} color="#FCA511" />
+                    <Text style={styles.signaturePlaceholderText}>
+                      Add Signature
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+
             {/* Billing Address */}
             <Text style={styles.sectionTitle}>Billing Address</Text>
             <View style={styles.addressContainer}>
@@ -661,6 +696,11 @@ const CompanyProfile = ({ navigation, route }: any) => {
               onClose={() => setImagePickerModel(false)}
               onSelectedFile={(file: any) => setImageFile(file)}
             />
+            <ModalUpdatePhoto
+              isVisible={signaturePickerModel}
+              onClose={() => setSignaturePickerModel(false)}
+              onSelectedFile={(file: any) => setSignatureFile(file)}
+            />
           </ScrollView>
         </KeyboardAvoidingView>
       </View>
@@ -729,6 +769,33 @@ const styles = StyleSheet.create({
     marginBottom: 6,
     fontWeight: "600",
     color: "#000",
+  },
+  signatureContainer: {
+    marginBottom: 16,
+  },
+  signatureBox: {
+    backgroundColor: "#FFF2D6",
+    borderWidth: 1,
+    borderColor: "#FCA511",
+    borderRadius: 8,
+    height: 120,
+    justifyContent: "center",
+    alignItems: "center",
+    overflow: "hidden",
+  },
+  signatureImage: {
+    width: "100%",
+    height: "100%",
+  },
+  signaturePlaceholder: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  signaturePlaceholderText: {
+    marginTop: 8,
+    color: "#FCA511",
+    fontSize: 14,
+    fontWeight: "500",
   },
 
   sectionTitle: {

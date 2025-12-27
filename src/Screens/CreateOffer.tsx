@@ -414,7 +414,9 @@ const CreateOffer = () => {
               </View>
             ) : (
               <FlatList
-                data={products}
+                data={products.filter(
+                  (product: any) => product.sale_type === "both"
+                )}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
                   <TouchableOpacity

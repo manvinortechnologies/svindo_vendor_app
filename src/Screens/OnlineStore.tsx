@@ -146,273 +146,265 @@ const OnlineStore = ({ navigation }: any) => {
     }
   };
   return (
-    <MainContainer>
-      <SafeAreaView style={styles.container}>
-        <CustomHeader title="Online Store Setting" />
-        {/* <Headerwithback title="Online Store Setting" /> */}
+    <SafeAreaView style={styles.container}>
+      <CustomHeader title="Online Store Setting" />
+      {/* <Headerwithback title="Online Store Setting" /> */}
 
-        <ScrollView>
-          <View style={styles.storepage}>
-            <View style={styles.storecontent}>
-              <Icon name="storefront-outline" size={24} color="#000" />
-              <Text style={styles.mytext}>Store Page</Text>
-            </View>
-            <View>
-              <Text style={{ marginLeft: 28, color: "#000" }}>
-                This option helps you hide/ un-hide your store and product on
-                svindo app
-              </Text>
-              <View style={styles.switchstorecontent}>
-                <Text style={styles.switchtext}>visible on svindo</Text>
-                <CustomSwitch
-                  value={isEnabled}
-                  onValueChange={() =>
-                    handleConfirmStoreStatus(
-                      "is_online",
-                      isEnabled,
-                      "Store Page"
-                    )
-                  }
-                  activeColor="#FCA311"
-                  inactiveColor="#999"
-                  borderColor="#999"
-                />
-              </View>
+      <ScrollView>
+        <View style={styles.storepage}>
+          <View style={styles.storecontent}>
+            <Icon name="storefront-outline" size={24} color="#000" />
+            <Text style={styles.mytext}>Store Page</Text>
+          </View>
+          <View>
+            <Text style={{ marginLeft: 28, color: "#000" }}>
+              This option helps you hide/ un-hide your store and product on
+              svindo app
+            </Text>
+            <View style={styles.switchstorecontent}>
+              <Text style={styles.switchtext}>visible on svindo</Text>
+              <CustomSwitch
+                value={isEnabled}
+                onValueChange={() =>
+                  handleConfirmStoreStatus("is_online", isEnabled, "Store Page")
+                }
+                activeColor="#FCA311"
+                inactiveColor="#999"
+                borderColor="#999"
+              />
             </View>
           </View>
+        </View>
 
-          {/* Global Store Container */}
-          <View style={styles.storepage}>
-            <View style={styles.storecontent}>
-              <Icon name="earth" size={24} color="#000" />
-              <Text style={styles.mytext}>Global Store</Text>
-            </View>
-            <View>
-              <Text style={{ marginLeft: 28, color: "#000" }}>
-                Verify GST to enable Global store
-              </Text>
-              <View style={styles.switchstorecontent}>
-                <Text style={styles.switchtext}>Enable Global Store</Text>
-                <CustomSwitch
-                  value={isGlobalStore}
-                  onValueChange={() =>
-                    handleConfirmStoreStatus(
-                      "global_supplier",
-                      isGlobalStore,
-                      "Global Store"
-                    )
-                  }
-                  disabled={!storeData?.is_gstin_verified}
-                  activeColor="#FCA311"
-                  inactiveColor="#999"
-                  borderColor="#999"
-                />
-              </View>
+        {/* Global Store Container */}
+        <View style={styles.storepage}>
+          <View style={styles.storecontent}>
+            <Icon name="earth" size={24} color="#000" />
+            <Text style={styles.mytext}>Global Store</Text>
+          </View>
+          <View>
+            <Text style={{ marginLeft: 28, color: "#000" }}>
+              Verify GST to enable Global store
+            </Text>
+            <View style={styles.switchstorecontent}>
+              <Text style={styles.switchtext}>Enable Global Store</Text>
+              <CustomSwitch
+                value={isGlobalStore}
+                onValueChange={() =>
+                  handleConfirmStoreStatus(
+                    "global_supplier",
+                    isGlobalStore,
+                    "Global Store"
+                  )
+                }
+                disabled={!storeData?.is_gstin_verified}
+                activeColor="#FCA311"
+                inactiveColor="#999"
+                borderColor="#999"
+              />
             </View>
           </View>
+        </View>
 
-          <View style={styles.menuContainer}>
-            {menuItems.map((item) => (
+        <View style={styles.menuContainer}>
+          {menuItems.map((item) => (
+            <TouchableOpacity
+              key={item.title}
+              style={styles.menuItem}
+              onPress={() => item.screen && navigation.navigate(item.screen)} // ✅ Corrected navigation
+            >
+              <Icon name={item.icon} size={24} color="#000" />
+              <Text style={styles.menuText}>{item.title}</Text>
+              <Icon
+                name="chevron-right"
+                size={24}
+                color="#000"
+                style={{ marginLeft: "auto" }}
+              />
+            </TouchableOpacity>
+          ))}
+        </View>
+        <View style={styles.storepage}>
+          <View style={styles.storecontent}>
+            <Ionicons name="location-sharp" size={24} color="#000" />
+            <Text style={styles.mytext}>Store Location </Text>
+          </View>
+          <View>
+            <Text style={{ marginLeft: 28, color: "#000" }}>
+              This option helps you to Hide / Un-hide your store location on
+              svindo app.
+            </Text>
+            <View style={styles.switchstorecontent}>
+              <Text style={styles.switchtext}>visible on svindo</Text>
+              <CustomSwitch
+                value={location}
+                onValueChange={() =>
+                  handleConfirmStoreStatus(
+                    "is_location",
+                    location,
+                    "Store Location"
+                  )
+                }
+                activeColor="#FCA311"
+                inactiveColor="#999"
+                borderColor="#999"
+              />
+            </View>
+          </View>
+        </View>
+        <View style={styles.storepage}>
+          <View
+            style={[styles.storecontent, { justifyContent: "space-between" }]}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Icon
+                name="chevron-right"
+                size={24}
+                color="#000"
+                style={{ marginLeft: "auto" }}
+              />
+              <Text style={styles.mytext}>Display products as Catalog </Text>
+            </View>
+            <View>
+              <CustomSwitch
+                value={display}
+                onValueChange={(newValue) => {
+                  setPendingDisplayValue(newValue);
+                  setShowCatalogConfirmModal(true);
+                }}
+                activeColor="#FCA311"
+                inactiveColor="#999"
+                borderColor="#999"
+              />
+            </View>
+          </View>
+          <View>
+            <Text style={{ marginLeft: 28, color: "#000" }}>
+              Enabling this option, makes the products posted online into a
+              catalog that is the customer will not be able to place order. But
+              can enquire through chat box. .
+            </Text>
+          </View>
+          <View
+            style={[
+              styles.storecontent,
+              { justifyContent: "space-between", marginTop: 10 },
+            ]}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Ionicons
+                name="eye-off-sharp"
+                size={24}
+                color="#000"
+                style={{ marginLeft: "auto" }}
+              />
+              <Text style={styles.mytext}>Private Catalog </Text>
+            </View>
+            <View>
+              <CustomSwitch
+                value={isPrivate}
+                onValueChange={() =>
+                  handleConfirmStoreStatus(
+                    "private_catalog",
+                    isPrivate,
+                    "Private Catalog"
+                  )
+                }
+                activeColor="#FCA311"
+                inactiveColor="#999"
+                borderColor="#999"
+              />
+            </View>
+          </View>
+          <View>
+            <Text style={{ marginLeft: 28, color: "#000" }}>
+              Enabling this option, makes the products posted online into a
+              catalog that is the customer will not be able to place order. But
+              can enquire through chat box. .
+            </Text>
+          </View>
+        </View>
+        <CustomButton
+          containerStyle={{ padding: 8 }}
+          title="Update Settings"
+          onPress={handelUpdateSetting}
+        />
+      </ScrollView>
+      <Loading visible={isLoading} />
+
+      {/* Confirmation Modal for Display as Catalog */}
+      <Modal
+        visible={showCatalogConfirmModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => {
+          if (!isUpdating) {
+            setShowCatalogConfirmModal(false);
+          }
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>
+              {pendingDisplayValue
+                ? "Enable Display as Catalog"
+                : "Disable Display as Catalog"}
+            </Text>
+            <Text style={styles.modalMessage}>
+              {pendingDisplayValue
+                ? "Enabling this option will make your products appear as a catalog. Customers will not be able to place orders directly but can enquire through the chat box. Do you want to continue?"
+                : "Disabling this option will allow customers to place orders directly on your products. Do you want to continue?"}
+            </Text>
+            <View style={styles.modalButtonContainer}>
               <TouchableOpacity
-                key={item.title}
-                style={styles.menuItem}
-                onPress={() => item.screen && navigation.navigate(item.screen)} // ✅ Corrected navigation
+                style={[
+                  styles.modalButton,
+                  styles.cancelButton,
+                  isUpdating && styles.disabledButton,
+                ]}
+                onPress={() => {
+                  if (!isUpdating) {
+                    setShowCatalogConfirmModal(false);
+                    setPendingDisplayValue(false);
+                  }
+                }}
+                disabled={isUpdating}
               >
-                <Icon name={item.icon} size={24} color="#000" />
-                <Text style={styles.menuText}>{item.title}</Text>
-                <Icon
-                  name="chevron-right"
-                  size={24}
-                  color="#000"
-                  style={{ marginLeft: "auto" }}
-                />
+                <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
-            ))}
-          </View>
-          <View style={styles.storepage}>
-            <View style={styles.storecontent}>
-              <Ionicons name="location-sharp" size={24} color="#000" />
-              <Text style={styles.mytext}>Store Location </Text>
-            </View>
-            <View>
-              <Text style={{ marginLeft: 28, color: "#000" }}>
-                This option helps you to Hide / Un-hide your store location on
-                svindo app.
-              </Text>
-              <View style={styles.switchstorecontent}>
-                <Text style={styles.switchtext}>visible on svindo</Text>
-                <CustomSwitch
-                  value={location}
-                  onValueChange={() =>
+              <TouchableOpacity
+                style={[
+                  styles.modalButton,
+                  styles.confirmButton,
+                  isUpdating && styles.disabledButton,
+                ]}
+                onPress={() => {
+                  if (!isUpdating) {
                     handleConfirmStoreStatus(
-                      "is_location",
-                      location,
-                      "Store Location"
-                    )
+                      "display_as_catalog",
+                      display,
+                      "Display products as Catalog"
+                    );
                   }
-                  activeColor="#FCA311"
-                  inactiveColor="#999"
-                  borderColor="#999"
-                />
-              </View>
+                }}
+                disabled={isUpdating}
+              >
+                {isUpdating ? (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="small" color="#fff" />
+                    <Text style={[styles.confirmButtonText, { marginLeft: 8 }]}>
+                      Updating...
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={styles.confirmButtonText}>Confirm</Text>
+                )}
+              </TouchableOpacity>
             </View>
           </View>
-          <View style={styles.storepage}>
-            <View
-              style={[styles.storecontent, { justifyContent: "space-between" }]}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Icon
-                  name="chevron-right"
-                  size={24}
-                  color="#000"
-                  style={{ marginLeft: "auto" }}
-                />
-                <Text style={styles.mytext}>Display products as Catalog </Text>
-              </View>
-              <View>
-                <CustomSwitch
-                  value={display}
-                  onValueChange={(newValue) => {
-                    setPendingDisplayValue(newValue);
-                    setShowCatalogConfirmModal(true);
-                  }}
-                  activeColor="#FCA311"
-                  inactiveColor="#999"
-                  borderColor="#999"
-                />
-              </View>
-            </View>
-            <View>
-              <Text style={{ marginLeft: 28, color: "#000" }}>
-                Enabling this option, makes the products posted online into a
-                catalog that is the customer will not be able to place order.
-                But can enquire through chat box. .
-              </Text>
-            </View>
-            <View
-              style={[
-                styles.storecontent,
-                { justifyContent: "space-between", marginTop: 10 },
-              ]}
-            >
-              <View style={{ flexDirection: "row", alignItems: "center" }}>
-                <Ionicons
-                  name="eye-off-sharp"
-                  size={24}
-                  color="#000"
-                  style={{ marginLeft: "auto" }}
-                />
-                <Text style={styles.mytext}>Private Catalog </Text>
-              </View>
-              <View>
-                <CustomSwitch
-                  value={isPrivate}
-                  onValueChange={() =>
-                    handleConfirmStoreStatus(
-                      "private_catalog",
-                      isPrivate,
-                      "Private Catalog"
-                    )
-                  }
-                  activeColor="#FCA311"
-                  inactiveColor="#999"
-                  borderColor="#999"
-                />
-              </View>
-            </View>
-            <View>
-              <Text style={{ marginLeft: 28, color: "#000" }}>
-                Enabling this option, makes the products posted online into a
-                catalog that is the customer will not be able to place order.
-                But can enquire through chat box. .
-              </Text>
-            </View>
-          </View>
-          <CustomButton
-            containerStyle={{ padding: 8 }}
-            title="Update Settings"
-            onPress={handelUpdateSetting}
-          />
-        </ScrollView>
-        <Loading visible={isLoading} />
-
-        {/* Confirmation Modal for Display as Catalog */}
-        <Modal
-          visible={showCatalogConfirmModal}
-          transparent={true}
-          animationType="fade"
-          onRequestClose={() => {
-            if (!isUpdating) {
-              setShowCatalogConfirmModal(false);
-            }
-          }}
-        >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContainer}>
-              <Text style={styles.modalTitle}>
-                {pendingDisplayValue
-                  ? "Enable Display as Catalog"
-                  : "Disable Display as Catalog"}
-              </Text>
-              <Text style={styles.modalMessage}>
-                {pendingDisplayValue
-                  ? "Enabling this option will make your products appear as a catalog. Customers will not be able to place orders directly but can enquire through the chat box. Do you want to continue?"
-                  : "Disabling this option will allow customers to place orders directly on your products. Do you want to continue?"}
-              </Text>
-              <View style={styles.modalButtonContainer}>
-                <TouchableOpacity
-                  style={[
-                    styles.modalButton,
-                    styles.cancelButton,
-                    isUpdating && styles.disabledButton,
-                  ]}
-                  onPress={() => {
-                    if (!isUpdating) {
-                      setShowCatalogConfirmModal(false);
-                      setPendingDisplayValue(false);
-                    }
-                  }}
-                  disabled={isUpdating}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.modalButton,
-                    styles.confirmButton,
-                    isUpdating && styles.disabledButton,
-                  ]}
-                  onPress={() => {
-                    if (!isUpdating) {
-                      handleConfirmStoreStatus(
-                        "display_as_catalog",
-                        display,
-                        "Display products as Catalog"
-                      );
-                    }
-                  }}
-                  disabled={isUpdating}
-                >
-                  {isUpdating ? (
-                    <View style={styles.loadingContainer}>
-                      <ActivityIndicator size="small" color="#fff" />
-                      <Text
-                        style={[styles.confirmButtonText, { marginLeft: 8 }]}
-                      >
-                        Updating...
-                      </Text>
-                    </View>
-                  ) : (
-                    <Text style={styles.confirmButtonText}>Confirm</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </Modal>
-      </SafeAreaView>
-    </MainContainer>
+        </View>
+      </Modal>
+    </SafeAreaView>
   );
 };
 

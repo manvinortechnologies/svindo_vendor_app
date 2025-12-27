@@ -381,7 +381,9 @@ const AddBannerScreen = ({ navigation }: any) => {
                 </View>
               ) : (
                 <FlatList
-                  data={products}
+                  data={products.filter(
+                    (product: any) => product.sale_type === "both"
+                  )}
                   keyExtractor={(it: any) =>
                     it.id?.toString() || Math.random().toString()
                   }
@@ -437,42 +439,32 @@ export default AddBannerScreen;
 const styles = ScaledSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: s(4),
+    paddingHorizontal: "12@s",
     backgroundColor: "#fff",
-    paddingTop: s(2),
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: s(2),
-  },
-  headerTitle: {
-    fontSize: s(5),
-    fontWeight: "bold",
-    marginLeft: s(2),
+    paddingTop: "10@s",
   },
   uploadBox: {
-    height: s(20),
+    height: s(100),
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#ccc",
     borderStyle: "dashed",
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: s(2),
+    marginBottom: "10@s",
   },
   uploadText: {
-    fontSize: s(8),
+    fontSize: "30@s",
     color: "#888",
   },
   uploadSubtext: {
     textAlign: "center",
     color: "#888",
-    fontSize: s(3),
+    fontSize: "12@s",
   },
   label: {
     fontWeight: "600",
-    fontSize: s(3.6),
+    fontSize: "12@s",
     marginBottom: 4,
     color: "#444",
   },
@@ -480,10 +472,10 @@ const styles = ScaledSheet.create({
     borderWidth: 1,
     borderColor: "#ffcc80",
     borderRadius: 6,
-    padding: s(3),
-    marginBottom: s(2),
+    padding: "8@s",
+    marginBottom: "10@s",
     backgroundColor: "#fff3e0",
-    fontSize: s(3.8),
+    fontSize: "12@s",
     color: "#000",
   },
   dropdown: {
@@ -497,18 +489,18 @@ const styles = ScaledSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: s(2),
+    marginVertical: "10@s",
   },
   costBox: {
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 10,
-    padding: s(4),
-    marginBottom: s(3),
+    padding: "4@s",
+    marginBottom: "10@s",
   },
   costText: {
-    fontSize: s(3.5),
-    marginBottom: s(1),
+    fontSize: "12@s",
+    marginBottom: "10@s",
     color: "#000",
   },
   bold: {
@@ -516,7 +508,7 @@ const styles = ScaledSheet.create({
     color: "#000",
   },
   caution: {
-    fontSize: s(3.2),
+    fontSize: "12@s",
     color: "#444",
   },
   terms: {
@@ -525,14 +517,14 @@ const styles = ScaledSheet.create({
   },
   submitButton: {
     backgroundColor: "#4CAF50",
-    paddingVertical: s(1.8),
+    paddingVertical: "10@s",
     borderRadius: 10,
     alignItems: "center",
   },
   submitText: {
     color: "#fff",
     fontWeight: "bold",
-    fontSize: s(4),
+    fontSize: "12@s",
   },
   uploadedMedia: {
     width: "100%",

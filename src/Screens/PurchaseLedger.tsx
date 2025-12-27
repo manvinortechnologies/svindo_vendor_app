@@ -574,38 +574,41 @@ const PurchaseLedger = () => {
 
               {/* Items Details */}
               {selectedPurchase.items && selectedPurchase.items.length > 0 && (
-                <View style={styles.sectionContainer}>
+                <View style={[styles.sectionContainer, { padding: 0 }]}>
                   <Text style={styles.sectionTitle}>
                     Items ({selectedPurchase.items.length})
                   </Text>
+
+                  {/* Table Header */}
+                  <View style={styles.itemsTableHeader}>
+                    <Text style={styles.itemsTableHeaderText}>S.No.</Text>
+                    <Text style={[styles.itemsTableHeaderText, { flex: 2 }]}>
+                      Item
+                    </Text>
+                    <Text style={styles.itemsTableHeaderText}>Quantity</Text>
+                    <Text style={styles.itemsTableHeaderText}>Price</Text>
+                    <Text style={styles.itemsTableHeaderText}>Amount</Text>
+                  </View>
+
+                  {/* Table Rows */}
                   {selectedPurchase.items.map((item, index) => (
-                    <View key={index} style={styles.itemContainer}>
-                      <View style={styles.itemHeader}>
-                        <Text style={styles.itemName}>
-                          Product ID: {item.product}
-                        </Text>
-                        {item.amount && (
-                          <Text style={styles.itemPrice}>
-                            ₹{Number(item.amount).toFixed(2)}
-                          </Text>
-                        )}
-                      </View>
-                      {item.quantity && (
-                        <View style={styles.detailRow}>
-                          <Text style={styles.detailLabel}>Quantity:</Text>
-                          <Text style={styles.detailValue}>
-                            {item.quantity}
-                          </Text>
-                        </View>
-                      )}
-                      {item.price && (
-                        <View style={styles.detailRow}>
-                          <Text style={styles.detailLabel}>Unit Price:</Text>
-                          <Text style={styles.detailValue}>
-                            ₹{Number(item.price).toFixed(2)}
-                          </Text>
-                        </View>
-                      )}
+                    <View key={index} style={styles.itemsTableRow}>
+                      <Text style={styles.itemsTableText}>{index + 1}</Text>
+                      <Text
+                        style={[styles.itemsTableText, { flex: 2 }]}
+                        numberOfLines={2}
+                      >
+                        {item.product_details?.name || `${item.product}`}
+                      </Text>
+                      <Text style={styles.itemsTableText}>
+                        {item.quantity || 0}
+                      </Text>
+                      <Text style={styles.itemsTableText}>
+                        ₹{Number(item.price || 0).toFixed(2)}
+                      </Text>
+                      <Text style={styles.itemsTableText}>
+                        ₹{Number(item.amount || 0).toFixed(2)}
+                      </Text>
                     </View>
                   ))}
                 </View>
@@ -989,7 +992,7 @@ const styles = ScaledSheet.create({
     marginBottom: 20,
     backgroundColor: "#F8F9FA",
     borderRadius: 8,
-    padding: 15,
+    padding: "10@s",
   },
   sectionTitle: {
     fontSize: 16,
@@ -1064,6 +1067,37 @@ const styles = ScaledSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#FCA311",
+  },
+  itemsTableHeader: {
+    flexDirection: "row",
+    backgroundColor: "#008BE1",
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    marginBottom: 8,
+  },
+  itemsTableHeaderText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#fff",
+    textAlign: "center",
+  },
+  itemsTableRow: {
+    flexDirection: "row",
+    backgroundColor: "#F5F5F5",
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+    alignItems: "center",
+  },
+  itemsTableText: {
+    flex: 1,
+    fontSize: 12,
+    fontWeight: "500",
+    color: "#000",
+    textAlign: "center",
   },
   purchaseEntryTouchable: {
     marginBottom: 8,

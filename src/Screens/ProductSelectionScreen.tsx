@@ -30,6 +30,7 @@ interface Product {
   name: string;
   desc: string;
   price: number;
+  purchase_price?: number;
   image: string;
   quantity?: number;
   stock?: number;
@@ -173,7 +174,7 @@ const ProductSelectionScreen: React.FC = () => {
         cart.filter((c) => c.quantity > 0).map((c) => c.id)
       );
       // Iterate over selected products and see if any other print item exists
-      for (const id of selectedIds) {
+      for (const id of Array.from(selectedIds)) {
         if (currentId !== undefined && id === currentId) continue;
         const prod = productList.find((p) => p.id === id);
         if (prod?.product_type === "print") return true;
@@ -184,10 +185,6 @@ const ProductSelectionScreen: React.FC = () => {
   );
 
   const handleSelectPrintProduct = useCallback(() => {
-    console.log(
-      "selectedPrintProductId",
-      hasAnotherPrintSelected(selectedPrintProductId as number)
-    );
     if (
       selectedPrintProductId &&
       hasAnotherPrintSelected(selectedPrintProductId)
@@ -389,7 +386,9 @@ const ProductSelectionScreen: React.FC = () => {
           {item.desc && <Text style={styles.desc}>{item.desc}</Text>}
           <View style={styles.bottomRow}>
             {renderQuantityControls(item, quantity)}
-            <Text style={styles.price}>₹ {item.price}</Text>
+            <Text style={styles.price}>
+              ₹ {isPurchase ? item.purchase_price : item.price}
+            </Text>
           </View>
         </View>
       );
