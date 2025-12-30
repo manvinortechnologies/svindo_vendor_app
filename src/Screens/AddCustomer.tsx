@@ -20,6 +20,7 @@ import { useRoute, RouteProp } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
 import CustomDropdown from "../CommonComponent/CustomDropdown";
 import { StorageUtils } from "../utils/storage";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type RootStackParamList = {
   AddCustomer: {
@@ -34,7 +35,7 @@ const AddCustomer = ({ navigation }: any) => {
   const route = useRoute<AddCustomerRouteProp>();
   const isEdit = route.params?.isEdit || false;
   const customer = route.params?.customer || {};
-
+  const insets = useSafeAreaInsets();
   const [sameAsBilling, setSameAsBilling] = useState(false);
   // const [currentUser, setCurrentUser] = useState<any>(null);
 
@@ -272,236 +273,235 @@ const AddCustomer = ({ navigation }: any) => {
   };
 
   return (
-    <MainContainer>
-      <SafeAreaView style={styles.container}>
-        <Headerwithback title={isEdit ? "Edit Customer" : "Add Customer"} />
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          // keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 20}
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
+      <Headerwithback title={isEdit ? "Edit Customer" : "Add Customer"} />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        // keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 20}
+      >
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContainer}
         >
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.scrollContainer}
-          >
-            {/* Basic Details */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Basic Details</Text>
-              <View style={styles.sectionContent}>
-                {(
-                  [
-                    { label: "Customer Name", key: "name" },
-                    { label: "Mobille Number", key: "mobile" },
-                    { label: "Email Id", key: "email" },
-                    { label: "Credit Balance", key: "opening_balance" },
-                  ] as { label: string; key: keyof typeof basicDetails }[]
-                ).map(({ label, key }, index) => (
-                  <View key={index} style={styles.inputWrapper}>
-                    <Text style={styles.label}>{label}</Text>
-                    <TextInput
-                      placeholder={`Enter ${label}`}
-                      placeholderTextColor="#999"
-                      style={[styles.input, errors[key] && styles.inputError]}
-                      value={basicDetails[key]}
-                      editable={!(isEdit && key === "opening_balance")}
-                      keyboardType={
-                        key === "mobile"
-                          ? "numeric"
-                          : key === "opening_balance"
-                          ? "numeric"
-                          : key === "email"
-                          ? "email-address"
-                          : "ascii-capable"
-                      }
-                      maxLength={key === "mobile" ? 10 : 100}
-                      onChangeText={(text) => {
-                        setBasicDetails((prev) => ({ ...prev, [key]: text }));
-                        // Clear error when user starts typing
-                        if (errors[key]) {
-                          setErrors((prev) => ({ ...prev, [key]: "" }));
-                        }
-                      }}
-                      selectTextOnFocus={key !== "opening_balance"}
-                    />
-                    {errors[key] && (
-                      <Text style={styles.errorText}>{errors[key]}</Text>
-                    )}
-                  </View>
-                ))}
-                <View style={styles.inputWrapper}>
-                  <Text style={styles.label}>State</Text>
-                  <CustomDropdown
-                    placeholder="Select State"
-                    options={states}
-                    onSelect={(option) => {
-                      setBasicDetails((prev) => ({
-                        ...prev,
-                        state: option.id,
-                      }));
-                      if (errors.state) {
-                        setErrors((prev) => ({ ...prev, state: "" }));
+          {/* Basic Details */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Basic Details</Text>
+            <View style={styles.sectionContent}>
+              {(
+                [
+                  { label: "Customer Name", key: "name" },
+                  { label: "Mobille Number", key: "mobile" },
+                  { label: "Email Id", key: "email" },
+                  { label: "Credit Balance", key: "opening_balance" },
+                ] as { label: string; key: keyof typeof basicDetails }[]
+              ).map(({ label, key }, index) => (
+                <View key={index} style={styles.inputWrapper}>
+                  <Text style={styles.label}>{label}</Text>
+                  <TextInput
+                    placeholder={`Enter ${label}`}
+                    placeholderTextColor="#999"
+                    style={[styles.input, errors[key] && styles.inputError]}
+                    value={basicDetails[key]}
+                    editable={!(isEdit && key === "opening_balance")}
+                    keyboardType={
+                      key === "mobile"
+                        ? "numeric"
+                        : key === "opening_balance"
+                        ? "numeric"
+                        : key === "email"
+                        ? "email-address"
+                        : "ascii-capable"
+                    }
+                    maxLength={key === "mobile" ? 10 : 100}
+                    onChangeText={(text) => {
+                      setBasicDetails((prev) => ({ ...prev, [key]: text }));
+                      // Clear error when user starts typing
+                      if (errors[key]) {
+                        setErrors((prev) => ({ ...prev, [key]: "" }));
                       }
                     }}
-                    selectedValue={basicDetails.state || null}
-                    dropDownBoxStyle={[
-                      styles.dropdown,
-                      errors.state && styles.inputError,
-                    ]}
+                    selectTextOnFocus={key !== "opening_balance"}
                   />
-                  {errors.state && (
-                    <Text style={styles.errorText}>{errors.state}</Text>
+                  {errors[key] && (
+                    <Text style={styles.errorText}>{errors[key]}</Text>
                   )}
                 </View>
-                <TouchableOpacity
-                  style={[styles.saveButton, { width: "100%" }]}
-                  onPress={handelSubmit}
-                >
-                  <Text style={styles.saveButtonText}>
-                    {isEdit ? "Update for Retail" : "Save for Retail"}
-                  </Text>
-                </TouchableOpacity>
+              ))}
+              <View style={styles.inputWrapper}>
+                <Text style={styles.label}>State</Text>
+                <CustomDropdown
+                  placeholder="Select State"
+                  options={states}
+                  onSelect={(option) => {
+                    setBasicDetails((prev) => ({
+                      ...prev,
+                      state: option.id,
+                    }));
+                    if (errors.state) {
+                      setErrors((prev) => ({ ...prev, state: "" }));
+                    }
+                  }}
+                  selectedValue={basicDetails.state || null}
+                  dropDownBoxStyle={[
+                    styles.dropdown,
+                    errors.state && styles.inputError,
+                  ]}
+                />
+                {errors.state && (
+                  <Text style={styles.errorText}>{errors.state}</Text>
+                )}
               </View>
+              <TouchableOpacity
+                style={[styles.saveButton, { width: "100%" }]}
+                onPress={handelSubmit}
+              >
+                <Text style={styles.saveButtonText}>
+                  {isEdit ? "Update for Retail" : "Save for Retail"}
+                </Text>
+              </TouchableOpacity>
             </View>
+          </View>
 
-            {/* Business Details */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Business Details</Text>
-              <View style={styles.sectionContent}>
-                {(
-                  [
-                    { label: "Business Name", key: "name" },
-                    { label: "GST", key: "gst" },
-                    { label: "Aadhar Number", key: "aadhar" },
-                    { label: "Pan", key: "pan" },
-                  ] as { label: string; key: keyof typeof businessDetails }[]
-                ).map(({ label, key }, index) => (
-                  <View key={index} style={styles.inputWrapper}>
-                    <Text style={styles.label}>{label}</Text>
-                    <TextInput
-                      placeholder={`Enter ${label}`}
-                      placeholderTextColor="#999"
-                      style={styles.input}
-                      maxLength={key === "aadhar" ? 16 : 100}
-                      autoCapitalize={key !== "name" ? "characters" : "words"}
-                      keyboardType={
-                        key === "aadhar" ? "numeric" : "ascii-capable"
-                      }
-                      value={businessDetails[key]}
-                      onChangeText={(text) =>
-                        setBusinessDetails((prev) => ({
-                          ...prev,
-                          [key]: text,
-                        }))
-                      }
-                    />
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            {/* Billing Address */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Billing Address</Text>
-              <View style={styles.sectionContent}>
-                {(
-                  [
-                    { placeholder: "Address Line 1", key: "line1" },
-                    { placeholder: "Address Line 2", key: "line2" },
-                    { placeholder: "Pincode", key: "pincode" },
-                    { placeholder: "City", key: "city" },
-                    { placeholder: "State", key: "state" },
-                    { placeholder: "Country", key: "country" },
-                  ] as {
-                    placeholder: string;
-                    key: keyof typeof billingAddress;
-                  }[]
-                ).map(({ placeholder, key }, idx) => (
+          {/* Business Details */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Business Details</Text>
+            <View style={styles.sectionContent}>
+              {(
+                [
+                  { label: "Business Name", key: "name" },
+                  { label: "GST", key: "gst" },
+                  { label: "Aadhar Number", key: "aadhar" },
+                  { label: "Pan", key: "pan" },
+                ] as { label: string; key: keyof typeof businessDetails }[]
+              ).map(({ label, key }, index) => (
+                <View key={index} style={styles.inputWrapper}>
+                  <Text style={styles.label}>{label}</Text>
                   <TextInput
-                    key={idx}
-                    placeholder={placeholder}
-                    placeholderTextColor="#888"
-                    style={[styles.input, { marginBottom: 10 }]}
+                    placeholder={`Enter ${label}`}
+                    placeholderTextColor="#999"
+                    style={styles.input}
+                    maxLength={key === "aadhar" ? 16 : 100}
+                    autoCapitalize={key !== "name" ? "characters" : "words"}
                     keyboardType={
-                      key === "pincode" ? "numeric" : "ascii-capable"
+                      key === "aadhar" ? "numeric" : "ascii-capable"
                     }
-                    maxLength={key === "pincode" ? 6 : 100}
-                    value={billingAddress[key]}
+                    value={businessDetails[key]}
                     onChangeText={(text) =>
-                      setBillingAddress((prev) => ({ ...prev, [key]: text }))
+                      setBusinessDetails((prev) => ({
+                        ...prev,
+                        [key]: text,
+                      }))
                     }
-                  />
-                ))}
-              </View>
-            </View>
-
-            {/* Dispatch Address */}
-            <View style={styles.section}>
-              <View style={styles.dispatchHeader}>
-                <Text style={styles.sectionTitle}>Dispatch Address</Text>
-                <View style={styles.sameAsRow}>
-                  <Text style={styles.sameAsText}>Same as Billing</Text>
-                  <CustomSwitch
-                    value={sameAsBilling}
-                    onValueChange={handleBillingToggle}
                   />
                 </View>
-              </View>
-              <View style={styles.sectionContent}>
-                {(
-                  [
-                    { placeholder: "Address Line 1", key: "line1" },
-                    { placeholder: "Address Line 2", key: "line2" },
-                    { placeholder: "Pincode", key: "pincode" },
-                    { placeholder: "City", key: "city" },
-                    { placeholder: "State", key: "state" },
-                    { placeholder: "Country", key: "country" },
-                  ] as {
-                    placeholder: string;
-                    key: keyof typeof dispatchAddress;
-                  }[]
-                ).map(({ placeholder, key }, idx) => (
-                  <TextInput
-                    key={idx}
-                    placeholder={placeholder}
-                    placeholderTextColor="#888"
-                    style={[styles.input, { marginBottom: 10 }]}
-                    value={dispatchAddress[key]}
-                    keyboardType={
-                      key === "pincode" ? "numeric" : "ascii-capable"
-                    }
-                    maxLength={key === "pincode" ? 6 : 100}
-                    onChangeText={(text) =>
-                      setDispatchAddress((prev) => ({ ...prev, [key]: text }))
-                    }
-                    // editable={!sameAsBilling}
-                  />
-                ))}
+              ))}
+            </View>
+          </View>
+
+          {/* Billing Address */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Billing Address</Text>
+            <View style={styles.sectionContent}>
+              {(
+                [
+                  { placeholder: "Address Line 1", key: "line1" },
+                  { placeholder: "Address Line 2", key: "line2" },
+                  { placeholder: "Pincode", key: "pincode" },
+                  { placeholder: "City", key: "city" },
+                  { placeholder: "State", key: "state" },
+                  { placeholder: "Country", key: "country" },
+                ] as {
+                  placeholder: string;
+                  key: keyof typeof billingAddress;
+                }[]
+              ).map(({ placeholder, key }, idx) => (
+                <TextInput
+                  key={idx}
+                  placeholder={placeholder}
+                  placeholderTextColor="#888"
+                  style={[styles.input, { marginBottom: 10 }]}
+                  keyboardType={key === "pincode" ? "numeric" : "ascii-capable"}
+                  maxLength={key === "pincode" ? 6 : 100}
+                  value={billingAddress[key]}
+                  onChangeText={(text) =>
+                    setBillingAddress((prev) => ({ ...prev, [key]: text }))
+                  }
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* Dispatch Address */}
+          <View style={styles.section}>
+            <View style={styles.dispatchHeader}>
+              <Text style={styles.sectionTitle}>Dispatch Address</Text>
+              <View style={styles.sameAsRow}>
+                <Text style={styles.sameAsText}>Same as Billing</Text>
+                <CustomSwitch
+                  value={sameAsBilling}
+                  onValueChange={handleBillingToggle}
+                />
               </View>
             </View>
-
-            {/* Transport Name */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Transport Name</Text>
-              <TextInput
-                placeholder="Transport Name"
-                placeholderTextColor="#888"
-                style={styles.input}
-                value={transportName}
-                onChangeText={setTransportName}
-              />
+            <View style={styles.sectionContent}>
+              {(
+                [
+                  { placeholder: "Address Line 1", key: "line1" },
+                  { placeholder: "Address Line 2", key: "line2" },
+                  { placeholder: "Pincode", key: "pincode" },
+                  { placeholder: "City", key: "city" },
+                  { placeholder: "State", key: "state" },
+                  { placeholder: "Country", key: "country" },
+                ] as {
+                  placeholder: string;
+                  key: keyof typeof dispatchAddress;
+                }[]
+              ).map(({ placeholder, key }, idx) => (
+                <TextInput
+                  key={idx}
+                  placeholder={placeholder}
+                  placeholderTextColor="#888"
+                  style={[styles.input, { marginBottom: 10 }]}
+                  value={dispatchAddress[key]}
+                  keyboardType={key === "pincode" ? "numeric" : "ascii-capable"}
+                  maxLength={key === "pincode" ? 6 : 100}
+                  onChangeText={(text) =>
+                    setDispatchAddress((prev) => ({ ...prev, [key]: text }))
+                  }
+                  // editable={!sameAsBilling}
+                />
+              ))}
             </View>
-            <Loading visible={isLoading} />
+          </View>
 
-            {/* Save Button */}
-            <TouchableOpacity style={styles.saveButton} onPress={handelSubmit}>
-              <Text style={styles.saveButtonText}>
-                {isEdit ? "Update Customer" : "Save Customer"}
-              </Text>
-            </TouchableOpacity>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </MainContainer>
+          {/* Transport Name */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Transport Name</Text>
+            <TextInput
+              placeholder="Transport Name"
+              placeholderTextColor="#888"
+              style={styles.input}
+              value={transportName}
+              onChangeText={setTransportName}
+            />
+          </View>
+          <Loading visible={isLoading} />
+
+          {/* Save Button */}
+          <TouchableOpacity style={styles.saveButton} onPress={handelSubmit}>
+            <Text style={styles.saveButtonText}>
+              {isEdit ? "Update Customer" : "Save Customer"}
+            </Text>
+          </TouchableOpacity>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 

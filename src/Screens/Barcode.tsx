@@ -12,8 +12,11 @@ import {
 } from "react-native";
 import Headerwithback from "./Headerwithback";
 import CustomSwitch from "./CustomSwitch";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScaledSheet } from "react-native-size-matters";
 
 const Barcode = () => {
+  const insets = useSafeAreaInsets();
   const [showPackageDate, setShowPackageDate] = useState(true);
   const [showPriceWithText, setShowPriceWithText] = useState(true);
   const [mrpLabel, setMrpLabel] = useState("MRP");
@@ -23,7 +26,12 @@ const Barcode = () => {
   const [size, setSize] = useState("25x50");
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Barcode" />
       <ScrollView contentContainerStyle={styles.content}>
         {/* Show Package Date */}
@@ -140,7 +148,7 @@ const Barcode = () => {
 
 export default Barcode;
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",

@@ -11,7 +11,10 @@ import {
 } from "react-native";
 import Headerwithback from "./Headerwithback";
 import CustomSwitch from "./CustomSwitch";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 const sampleData = [
   {
@@ -62,9 +65,14 @@ const sampleData = [
 
 const PromoteStore = ({ navigation }: any) => {
   const [boosted, setBoosted] = useState(false);
-
+  const insets = useSafeAreaInsets();
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title={"Promote Your Store"} />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -192,7 +200,7 @@ const PromoteStore = ({ navigation }: any) => {
           <Text style={styles.boostText}>Boost</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

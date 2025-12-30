@@ -21,9 +21,11 @@ import Toast from "react-native-toast-message";
 import CustomDropdown from "../CommonComponent/CustomDropdown";
 import { DropDownOption } from "../CommonComponent/CustomDropdown";
 import { StorageUtils } from "../utils/storage";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const CompanyProfile = ({ navigation, route }: any) => {
   const profileId = route?.params?.id;
+  const insets = useSafeAreaInsets();
   const [sameAsBilling, setSameAsBilling] = useState(false);
   const [imageFile, setImageFile] = useState<any>();
   const [imagePickerModel, setImagePickerModel] = useState(false);
@@ -342,7 +344,7 @@ const CompanyProfile = ({ navigation, route }: any) => {
       formData.append("address_line_2", form.billing.address2 || "");
       formData.append("pincode", form.billing.pincode || "");
       formData.append("city", form.billing.city || "");
-      formData.append("state", form.state ? parseInt(form.state) : "");
+      formData.append("state", form.state ? form.state : "");
       formData.append("country", form.billing.country || "India");
 
       // Shipping address - separate fields
@@ -426,285 +428,286 @@ const CompanyProfile = ({ navigation, route }: any) => {
     }
   };
   return (
-    <MainContainer>
-      <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="chevron-back" size={22} color="#fff" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Company Profile</Text>
-        </View>
-
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
         >
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.scrollContent}
-          >
-            {/* Profile Image */}
-            <TouchableOpacity
-              style={styles.profileContainer}
-              onPress={() => setImagePickerModel(true)}
-            >
-              <View style={styles.profileCircle}>
-                {imageFile?.uri && (
-                  <Image
-                    source={{ uri: imageFile?.uri }}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      resizeMode: "cover",
-                      borderRadius: 40,
-                    }}
-                  />
-                )}
-              </View>
-              <Text style={styles.profileText}>Update profile picture</Text>
-            </TouchableOpacity>
-
-            {/* Inputs */}
-            <InputBox
-              label="Company Name"
-              placeholder="Your Business name"
-              value={form.companyName}
-              onChangeText={(text) => {
-                setForm({ ...form, companyName: text });
-                if (errors.companyName) {
-                  setErrors((prev) => ({ ...prev, companyName: "" }));
-                }
-              }}
-              error={errors.companyName}
-            />
-            <InputBox
-              label="GSTIN (Optional)"
-              autoCapitalize="characters"
-              placeholder="GSTIN"
-              value={form.gstin}
-              onChangeText={(text) => {
-                setForm({ ...form, gstin: text.toUpperCase() });
-                if (errors.gstin) {
-                  setErrors((prev) => ({ ...prev, gstin: "" }));
-                }
-              }}
-              error={errors.gstin}
-            />
-            <InputBox
-              label="Email id"
-              placeholder="example@email.com"
-              keyboardType="email-address"
-              value={form.email}
-              onChangeText={(text) => {
-                setForm({ ...form, email: text });
-                if (errors.email) {
-                  setErrors((prev) => ({ ...prev, email: "" }));
-                }
-              }}
-              error={errors.email}
-            />
-            <InputBox
-              label="Contact"
-              placeholder="9876543210"
-              keyboardType="number-pad"
-              value={form.contact}
-              maxLength={10}
-              onChangeText={(text) => {
-                setForm({ ...form, contact: text });
-                if (errors.contact) {
-                  setErrors((prev) => ({ ...prev, contact: "" }));
-                }
-              }}
-              error={errors.contact}
-            />
-            <InputBox
-              label="Brand Name"
-              placeholder="Your brand"
-              value={form.brandName}
-              onChangeText={(text) => setForm({ ...form, brandName: text })}
-            />
-            <Text style={styles.dropdownLabel}>State</Text>
-            <CustomDropdown
-              placeholder="Select State"
-              options={states}
-              onSelect={(option) => {
-                setForm((prev) => ({
-                  ...prev,
-                  state: option?.id?.toString() || "",
-                }));
-                if (errors.state) {
-                  setErrors((prev) => ({ ...prev, state: "" }));
-                }
-              }}
-              selectedValue={
-                states.find((item) => item.id.toString() === form.state) || null
-              }
-              dropDownBoxStyle={[
-                styles.dropdown,
-                errors.state && styles.dropdownError,
-              ]}
-            />
-            {errors.state && (
-              <Text style={styles.errorText}>{errors.state}</Text>
-            )}
-
-            {/* Signature Image */}
-            <Text style={styles.dropdownLabel}>Signature</Text>
-            <TouchableOpacity
-              style={styles.signatureContainer}
-              onPress={() => setSignaturePickerModel(true)}
-            >
-              <View style={styles.signatureBox}>
-                {signatureFile?.uri ? (
-                  <Image
-                    source={{ uri: signatureFile?.uri }}
-                    style={styles.signatureImage}
-                    resizeMode="contain"
-                  />
-                ) : (
-                  <View style={styles.signaturePlaceholder}>
-                    <Ionicons name="create-outline" size={24} color="#FCA511" />
-                    <Text style={styles.signaturePlaceholderText}>
-                      Add Signature
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </TouchableOpacity>
-
-            {/* Billing Address */}
-            <Text style={styles.sectionTitle}>Billing Address</Text>
-            <View style={styles.addressContainer}>
-              {Object.keys(form.billing).map((key, i) => {
-                const errorKey = `billing_${key}` as keyof typeof errors;
-                return (
-                  <InputBox
-                    key={i}
-                    placeholder={key.replace(/^\w/, (c) => c.toUpperCase())}
-                    background="#FFEBCB"
-                    value={form.billing[key as keyof typeof form.billing]}
-                    keyboardType={key === "pincode" ? "number-pad" : "default"}
-                    maxLength={key === "pincode" ? 6 : undefined}
-                    onChangeText={(text) => {
-                      handleBillingChange(key, text);
-                      if (errors[errorKey]) {
-                        setErrors((prev) => ({ ...prev, [errorKey]: "" }));
-                      }
-                    }}
-                    error={errors[errorKey]}
-                  />
-                );
-              })}
-            </View>
-
-            {/* Shipping Address */}
-            <View style={styles.shippingHeader}>
-              <Text style={styles.sectionTitle}>Shipping Address</Text>
-              <View style={styles.sameAsBilling}>
-                <Text style={styles.sameText}>Same as Billing</Text>
-                <CustomSwitch
-                  value={sameAsBilling}
-                  onValueChange={toggleSameAsBilling}
-                />
-              </View>
-            </View>
-            <View style={styles.addressContainer}>
-              {Object.keys(form.shipping).map((key, i) => {
-                const errorKey = `shipping_${key}` as keyof typeof errors;
-                return (
-                  <InputBox
-                    key={i}
-                    placeholder={key.replace(/^\w/, (c) => c.toUpperCase())}
-                    background="#FFEBCB"
-                    editable={!sameAsBilling}
-                    value={form.shipping[key as keyof typeof form.shipping]}
-                    keyboardType={key === "pincode" ? "number-pad" : "default"}
-                    maxLength={key === "pincode" ? 6 : undefined}
-                    onChangeText={(text) => {
-                      setForm((prev) => ({
-                        ...prev,
-                        shipping: { ...prev.shipping, [key]: text },
-                      }));
-                      if (errors[errorKey]) {
-                        setErrors((prev) => ({ ...prev, [errorKey]: "" }));
-                      }
-                    }}
-                    error={!sameAsBilling ? errors[errorKey] : undefined}
-                  />
-                );
-              })}
-            </View>
-
-            {/* Optional Fields */}
-            <Text style={styles.optionalTitle}>Optional Fields</Text>
-            <InputBox
-              placeholder="PAN"
-              background="#FFEBCB"
-              autoCapitalize="characters"
-              value={form.pan}
-              onChangeText={(text) => {
-                setForm({ ...form, pan: text.toUpperCase() });
-                if (errors.pan) {
-                  setErrors((prev) => ({ ...prev, pan: "" }));
-                }
-              }}
-              error={errors.pan}
-            />
-            <InputBox
-              placeholder="Website"
-              background="#FFEBCB"
-              value={form.website}
-              onChangeText={(text) => {
-                setForm({ ...form, website: text });
-                if (errors.website) {
-                  setErrors((prev) => ({ ...prev, website: "" }));
-                }
-              }}
-              error={errors.website}
-            />
-            <InputBox
-              placeholder="UPI Id"
-              background="#FFEBCB"
-              value={form.upiId}
-              onChangeText={(text) => {
-                setForm({ ...form, upiId: text });
-                if (errors.upiId) {
-                  setErrors((prev) => ({ ...prev, upiId: "" }));
-                }
-              }}
-              error={errors.upiId}
-            />
-
-            {/* Save */}
-            <TouchableOpacity
-              style={styles.saveButton}
-              onPress={() => {
-                handleSaveCompany();
-              }}
-            >
-              <Text style={styles.saveText}>Save & Update</Text>
-            </TouchableOpacity>
-
-            <Loading visible={isLoading} />
-            <ModalUpdatePhoto
-              isVisible={imagePickerModel}
-              onClose={() => setImagePickerModel(false)}
-              onSelectedFile={(file: any) => setImageFile(file)}
-            />
-            <ModalUpdatePhoto
-              isVisible={signaturePickerModel}
-              onClose={() => setSignaturePickerModel(false)}
-              onSelectedFile={(file: any) => setSignatureFile(file)}
-            />
-          </ScrollView>
-        </KeyboardAvoidingView>
+          <Ionicons name="chevron-back" size={22} color="#fff" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Company Profile</Text>
       </View>
-    </MainContainer>
+
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 60 : 0}
+      >
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContent}
+        >
+          {/* Profile Image */}
+          <TouchableOpacity
+            style={styles.profileContainer}
+            onPress={() => setImagePickerModel(true)}
+          >
+            <View style={styles.profileCircle}>
+              {imageFile?.uri && (
+                <Image
+                  source={{ uri: imageFile?.uri }}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    resizeMode: "cover",
+                    borderRadius: 40,
+                  }}
+                />
+              )}
+            </View>
+            <Text style={styles.profileText}>Update profile picture</Text>
+          </TouchableOpacity>
+
+          {/* Inputs */}
+          <InputBox
+            label="Company Name"
+            placeholder="Your Business name"
+            value={form.companyName}
+            onChangeText={(text) => {
+              setForm({ ...form, companyName: text });
+              if (errors.companyName) {
+                setErrors((prev) => ({ ...prev, companyName: "" }));
+              }
+            }}
+            error={errors.companyName}
+          />
+          <InputBox
+            label="GSTIN (Optional)"
+            autoCapitalize="characters"
+            placeholder="GSTIN"
+            value={form.gstin}
+            onChangeText={(text) => {
+              setForm({ ...form, gstin: text.toUpperCase() });
+              if (errors.gstin) {
+                setErrors((prev) => ({ ...prev, gstin: "" }));
+              }
+            }}
+            error={errors.gstin}
+          />
+          <InputBox
+            label="Email id"
+            placeholder="example@email.com"
+            keyboardType="email-address"
+            value={form.email}
+            onChangeText={(text) => {
+              setForm({ ...form, email: text });
+              if (errors.email) {
+                setErrors((prev) => ({ ...prev, email: "" }));
+              }
+            }}
+            error={errors.email}
+          />
+          <InputBox
+            label="Contact"
+            placeholder="9876543210"
+            keyboardType="number-pad"
+            value={form.contact}
+            maxLength={10}
+            onChangeText={(text) => {
+              setForm({ ...form, contact: text });
+              if (errors.contact) {
+                setErrors((prev) => ({ ...prev, contact: "" }));
+              }
+            }}
+            error={errors.contact}
+          />
+          <InputBox
+            label="Brand Name"
+            placeholder="Your brand"
+            value={form.brandName}
+            onChangeText={(text) => setForm({ ...form, brandName: text })}
+          />
+          <Text style={styles.dropdownLabel}>State</Text>
+          <CustomDropdown
+            placeholder="Select State"
+            options={states}
+            onSelect={(option) => {
+              setForm((prev) => ({
+                ...prev,
+                state: option?.id?.toString() || "",
+              }));
+              if (errors.state) {
+                setErrors((prev) => ({ ...prev, state: "" }));
+              }
+            }}
+            selectedValue={
+              states.find((item) => item.id.toString() === form.state) || null
+            }
+            dropDownBoxStyle={[
+              styles.dropdown,
+              errors.state && styles.dropdownError,
+            ]}
+          />
+          {errors.state && <Text style={styles.errorText}>{errors.state}</Text>}
+
+          {/* Signature Image */}
+          <Text style={styles.dropdownLabel}>Signature</Text>
+          <TouchableOpacity
+            style={styles.signatureContainer}
+            onPress={() => setSignaturePickerModel(true)}
+          >
+            <View style={styles.signatureBox}>
+              {signatureFile?.uri ? (
+                <Image
+                  source={{ uri: signatureFile?.uri }}
+                  style={styles.signatureImage}
+                  resizeMode="contain"
+                />
+              ) : (
+                <View style={styles.signaturePlaceholder}>
+                  <Ionicons name="create-outline" size={24} color="#FCA511" />
+                  <Text style={styles.signaturePlaceholderText}>
+                    Add Signature
+                  </Text>
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+
+          {/* Billing Address */}
+          <Text style={styles.sectionTitle}>Billing Address</Text>
+          <View style={styles.addressContainer}>
+            {Object.keys(form.billing).map((key, i) => {
+              const errorKey = `billing_${key}` as keyof typeof errors;
+              return (
+                <InputBox
+                  key={i}
+                  placeholder={key.replace(/^\w/, (c) => c.toUpperCase())}
+                  background="#FFEBCB"
+                  value={form.billing[key as keyof typeof form.billing]}
+                  keyboardType={key === "pincode" ? "number-pad" : "default"}
+                  maxLength={key === "pincode" ? 6 : undefined}
+                  onChangeText={(text) => {
+                    handleBillingChange(key, text);
+                    if (errors[errorKey]) {
+                      setErrors((prev) => ({ ...prev, [errorKey]: "" }));
+                    }
+                  }}
+                  error={errors[errorKey]}
+                />
+              );
+            })}
+          </View>
+
+          {/* Shipping Address */}
+          <View style={styles.shippingHeader}>
+            <Text style={styles.sectionTitle}>Shipping Address</Text>
+            <View style={styles.sameAsBilling}>
+              <Text style={styles.sameText}>Same as Billing</Text>
+              <CustomSwitch
+                value={sameAsBilling}
+                onValueChange={toggleSameAsBilling}
+              />
+            </View>
+          </View>
+          <View style={styles.addressContainer}>
+            {Object.keys(form.shipping).map((key, i) => {
+              const errorKey = `shipping_${key}` as keyof typeof errors;
+              return (
+                <InputBox
+                  key={i}
+                  placeholder={key.replace(/^\w/, (c) => c.toUpperCase())}
+                  background="#FFEBCB"
+                  editable={!sameAsBilling}
+                  value={form.shipping[key as keyof typeof form.shipping]}
+                  keyboardType={key === "pincode" ? "number-pad" : "default"}
+                  maxLength={key === "pincode" ? 6 : undefined}
+                  onChangeText={(text) => {
+                    setForm((prev) => ({
+                      ...prev,
+                      shipping: { ...prev.shipping, [key]: text },
+                    }));
+                    if (errors[errorKey]) {
+                      setErrors((prev) => ({ ...prev, [errorKey]: "" }));
+                    }
+                  }}
+                  error={!sameAsBilling ? errors[errorKey] : undefined}
+                />
+              );
+            })}
+          </View>
+
+          {/* Optional Fields */}
+          <Text style={styles.optionalTitle}>Optional Fields</Text>
+          <InputBox
+            placeholder="PAN"
+            background="#FFEBCB"
+            autoCapitalize="characters"
+            value={form.pan}
+            onChangeText={(text) => {
+              setForm({ ...form, pan: text.toUpperCase() });
+              if (errors.pan) {
+                setErrors((prev) => ({ ...prev, pan: "" }));
+              }
+            }}
+            error={errors.pan}
+          />
+          <InputBox
+            placeholder="Website"
+            background="#FFEBCB"
+            value={form.website}
+            onChangeText={(text) => {
+              setForm({ ...form, website: text });
+              if (errors.website) {
+                setErrors((prev) => ({ ...prev, website: "" }));
+              }
+            }}
+            error={errors.website}
+          />
+          <InputBox
+            placeholder="UPI Id"
+            background="#FFEBCB"
+            value={form.upiId}
+            onChangeText={(text) => {
+              setForm({ ...form, upiId: text });
+              if (errors.upiId) {
+                setErrors((prev) => ({ ...prev, upiId: "" }));
+              }
+            }}
+            error={errors.upiId}
+          />
+
+          {/* Save */}
+          <TouchableOpacity
+            style={styles.saveButton}
+            onPress={() => {
+              handleSaveCompany();
+            }}
+          >
+            <Text style={styles.saveText}>Save & Update</Text>
+          </TouchableOpacity>
+
+          <Loading visible={isLoading} />
+          <ModalUpdatePhoto
+            isVisible={imagePickerModel}
+            onClose={() => setImagePickerModel(false)}
+            onSelectedFile={(file: any) => setImageFile(file)}
+          />
+          <ModalUpdatePhoto
+            isVisible={signaturePickerModel}
+            onClose={() => setSignaturePickerModel(false)}
+            onSelectedFile={(file: any) => setSignatureFile(file)}
+          />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 export default CompanyProfile;

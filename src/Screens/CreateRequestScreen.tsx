@@ -11,7 +11,10 @@ import {
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import Headerwithback from "./Headerwithback";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import CustomDropdown from "../CommonComponent/CustomDropdown";
 import ImageCropPicker from "react-native-image-crop-picker";
 import api from "../services/api/api";
@@ -22,6 +25,7 @@ import Toast from "react-native-toast-message";
 
 const CreateRequestScreen = () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [selectedType, setSelectedType] = useState<"Business" | "Personal">(
     "Business"
   );
@@ -372,7 +376,12 @@ const CreateRequestScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title={"Create Request"} />
       <Loading visible={isLoading} />
 
@@ -574,7 +583,7 @@ const CreateRequestScreen = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

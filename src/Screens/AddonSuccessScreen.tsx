@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, View, Image, TouchableOpacity } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import { HomeNavigation } from "../constants/app-routes.constants";
@@ -21,6 +21,7 @@ const AddonSuccessScreen: React.FC<AddonSuccessScreenProps> = ({
   route,
   navigation,
 }) => {
+  const insets = useSafeAreaInsets();
   // Default values or from route params
   const productName = route?.params?.productName || "White T shirt";
   const productDescription =
@@ -34,7 +35,12 @@ const AddonSuccessScreen: React.FC<AddonSuccessScreenProps> = ({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <CustomHeader title="Addon Added successfully" />
 
       <View style={styles.content}>
@@ -70,7 +76,7 @@ const AddonSuccessScreen: React.FC<AddonSuccessScreenProps> = ({
       <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
         <Text style={styles.continueButtonText}>Continue</Text>
       </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 };
 

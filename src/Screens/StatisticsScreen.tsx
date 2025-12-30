@@ -4,21 +4,15 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  StyleSheet,
   Dimensions,
   Platform,
-  StatusBar,
   Image,
-  Alert,
   PermissionsAndroid,
   Modal,
   ActivityIndicator,
   RefreshControl,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import Icons from "react-native-vector-icons/FontAwesome";
-
-import Bottomnavigation from "./Bottomnavigation";
 import NavigationButton from "./NavigationButton";
 import CustomSwitch from "./CustomSwitch";
 import RequestFromBuyers from "../CommonComponent/RequestFromBuyers";
@@ -26,7 +20,7 @@ import GroupedBars from "./BarChart";
 import LineCharts from "./LineChart";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import { API_ROUTES } from "../constants/api-routes.constants";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { s, ScaledSheet } from "react-native-size-matters";
 import CustomDropdown from "../CommonComponent/CustomDropdown";
 import api from "../services/api/api";
@@ -81,6 +75,7 @@ const recentActivity = [
 ];
 
 const StatisticsScreen = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
   const [selectedFilter, setSelectedFilter] = useState({
     name: "Online",
     id: "Online",
@@ -605,7 +600,7 @@ const StatisticsScreen = ({ navigation }: any) => {
     return [
       {
         title: "Total Purchases",
-        value: formatNumber(dashboardData.total_purchases || 0),
+        value: formatNumber(dashboardData?.total_purchases || 0),
         icon: "shopping-outline",
         change: "0",
         changeColor: "green",
@@ -613,7 +608,7 @@ const StatisticsScreen = ({ navigation }: any) => {
       },
       {
         title: "Total Sales",
-        value: formatNumber(dashboardData.total_sales || 0),
+        value: formatNumber(dashboardData?.total_sales || 0),
         icon: "cart-outline",
         change: "0",
         changeColor: "green",
@@ -621,7 +616,7 @@ const StatisticsScreen = ({ navigation }: any) => {
       },
       {
         title: "Total Expense",
-        value: formatNumber(dashboardData.total_expenses || 0),
+        value: formatNumber(dashboardData?.total_expenses || 0),
         icon: "file-document-edit-outline",
         change: "0",
         changeColor: "green",
@@ -629,7 +624,7 @@ const StatisticsScreen = ({ navigation }: any) => {
       },
       {
         title: "Total Stock Value",
-        value: formatNumber(dashboardData.total_stock_value || 0),
+        value: formatNumber(dashboardData?.total_stock_value || 0),
         icon: "chart-line",
         change: "0",
         changeColor: "green",
@@ -638,7 +633,7 @@ const StatisticsScreen = ({ navigation }: any) => {
       {
         title: "Total Cash in Hand",
         value: formatNumber(
-          dashboardData.total_cash || dashboardData.cash_in_hand || 0
+          dashboardData?.total_cash || dashboardData?.cash_in_hand || 0
         ),
         icon: "cash",
         change: "0",
@@ -648,7 +643,7 @@ const StatisticsScreen = ({ navigation }: any) => {
       {
         title: "Total Bank Balance",
         value: formatNumber(
-          dashboardData.total_bank_balance || dashboardData.bank_balance || 0
+          dashboardData?.total_bank_balance || dashboardData?.bank_balance || 0
         ),
         icon: "bank",
         change: "0",
@@ -734,7 +729,7 @@ const StatisticsScreen = ({ navigation }: any) => {
   }, [storeData]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       {/* Navigation Error Display */}
       {navigationError && (
         <View style={styles.errorContainer}>
@@ -1067,8 +1062,8 @@ const StatisticsScreen = ({ navigation }: any) => {
           <Text style={styles.title}>Reminders</Text>
           <View style={styles.recentActivityContainer}>
             {dashboardData?.top_reminders &&
-            dashboardData.top_reminders.length > 0 ? (
-              dashboardData.top_reminders.map((reminder: any) => (
+            dashboardData?.top_reminders?.length > 0 ? (
+              dashboardData?.top_reminders?.map((reminder: any) => (
                 <TouchableOpacity
                   key={reminder.id}
                   style={styles.notificationcontain}
@@ -1195,7 +1190,7 @@ const StatisticsScreen = ({ navigation }: any) => {
           <Text style={styles.buttongreen}>+ New Sale</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

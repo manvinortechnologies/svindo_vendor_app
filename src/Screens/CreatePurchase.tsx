@@ -588,7 +588,7 @@ const CreatePurchase = ({ navigation }: any) => {
           ? {
               ...baseData,
               advance_amount: Number(advanceAmount) || 0,
-              advance_payment_method: selectedAdvanceType.toLowerCase(), // bank / cash
+              advance_mode: selectedAdvanceType.toLowerCase(), // bank / cash
               due_date: dueDate || null,
               advance_bank: selectedBank?.id || null,
             }

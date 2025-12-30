@@ -12,13 +12,17 @@ import Headerwithback from "./Headerwithback";
 import Loading from "../CommonComponent/Loading";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { StorageUtils } from "../utils/storage";
 import Toast from "react-native-toast-message";
 
 const UserProfile = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLasttName] = useState<string>("");
@@ -154,7 +158,12 @@ const UserProfile = ({ navigation }: any) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="User Profile" />
       <ScrollView contentContainerStyle={styles.formcontainer}>
         {/* Profile Picture Section */}
@@ -289,7 +298,7 @@ const UserProfile = ({ navigation }: any) => {
         </View>
       </Modal>
       <Loading visible={isLoading} />
-    </SafeAreaView>
+    </View>
   );
 };
 

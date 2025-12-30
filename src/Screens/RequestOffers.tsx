@@ -7,7 +7,10 @@ import {
   Dimensions,
   Alert,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import Carousel from "react-native-reanimated-carousel";
 import { APP_CONSTANTS } from "../constants/app.constants";
@@ -39,7 +42,7 @@ export default function RequestOffers() {
   const route = useRoute<RouteProp<RootStackParamList, "RequestOffers">>();
   const requestId = route.params?.requestId;
   const navigation = useNavigation<RequestOffersScreenNavigationProp>();
-
+  const insets = useSafeAreaInsets();
   const [offers, setOffers] = useState<any[]>([]);
   const [loadingOffers, setLoadingOffers] = useState(false);
   const [selectedImage, setSelectedImage] = useState<any>(null);
@@ -111,7 +114,12 @@ export default function RequestOffers() {
   }, [requestId]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <CustomHeader title="Request Offers" showBackButton={true} />
       <Loading visible={loadingOffers} />
       {offers.length > 0 ? (
@@ -229,11 +237,15 @@ export default function RequestOffers() {
         setIsImageModalVisible={setIsImageModalVisible}
         selectedImage={selectedImage}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = ScaledSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
   fullScreenCard: {
     backgroundColor: "#FFFAF2",
     marginHorizontal: 12,

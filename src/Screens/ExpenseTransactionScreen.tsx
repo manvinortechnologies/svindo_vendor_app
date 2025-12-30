@@ -8,7 +8,10 @@ import {
   Modal,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from "moment";
 
@@ -16,6 +19,7 @@ import ReportHeader from "./ReportHeader";
 import Bottomnavigation from "./Bottomnavigation";
 
 const ExpenseTransactionScreen = () => {
+  const insets = useSafeAreaInsets();
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const [startDate, setStartDate] = useState(new Date("2025-02-01"));
   const [endDate, setEndDate] = useState(new Date("2025-02-28"));
@@ -54,7 +58,12 @@ const ExpenseTransactionScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <ReportHeader
         title="Expense Transaction"
         onBack={() => console.log("Back pressed")}
@@ -127,7 +136,7 @@ const ExpenseTransactionScreen = () => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 

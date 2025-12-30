@@ -8,9 +8,10 @@ import {
 } from "react-native";
 import Headerwithback from "./Headerwithback";
 import CustomSwitch from "./CustomSwitch"; // Make sure this path is correct
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Purchase = () => {
+  const insets = useSafeAreaInsets();
   const [SupplierInNo, SupplierInvoiceNo] = useState(false);
   const [showPrice, showpurcasePrice] = useState(true);
   const [PurcaseMargin, showPurcaseMargin] = useState(false);
@@ -21,7 +22,12 @@ const Purchase = () => {
   const [productDiscount, setProductDiscount] = useState(false);
   const [customColumns, setCustomColumns] = useState(false);
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Purchase" />
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -117,7 +123,7 @@ const Purchase = () => {
       <TouchableOpacity style={styles.updateBtn}>
         <Text style={styles.updateText}>Update</Text>
       </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 };
 

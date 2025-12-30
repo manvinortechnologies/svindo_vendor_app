@@ -14,7 +14,10 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { useNavigation } from "@react-navigation/native";
 import Header from "./Header";
 import { HomeNavigation } from "../constants/app-routes.constants";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 // ✅ Define the type for the navigation stack
 type RootStackParamList = {
@@ -43,9 +46,14 @@ export type MarketingToolsNavigationProp = StackNavigationProp<
 
 const MarketingTools = () => {
   const navigation = useNavigation<MarketingToolsNavigationProp>();
-
+  const insets = useSafeAreaInsets();
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Header
         title="Marketing Tools"
         backgroundColor="#FFF"
@@ -73,7 +81,7 @@ const MarketingTools = () => {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

@@ -24,14 +24,17 @@ import CustomDropdown, {
 import ModalUpdatePhoto from "../Modals/ModalUpdatePhoto";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import moment from "moment";
 
 const Expenses = ({ navigation }: any) => {
   const route = useRoute();
   const { editMode = false, expenseData = null } = (route.params as any) || {};
-
+  const insets = useSafeAreaInsets();
   const [isPaid, setIsPaid] = useState(true);
   const [selectedType, setSelectedType] = useState("cash");
   const [expense, setExpense] = useState<string>("");
@@ -213,7 +216,12 @@ const Expenses = ({ navigation }: any) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title={editMode ? "Edit Expense" : "Create Expenses"} />
       <Loading visible={isLoading} />
       <ScrollView>
@@ -451,7 +459,7 @@ const Expenses = ({ navigation }: any) => {
           </Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

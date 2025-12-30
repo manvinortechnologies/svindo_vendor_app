@@ -9,7 +9,7 @@ import {
   TextInput,
   Dimensions,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 import Headerwithback from "./Headerwithback";
 import api from "../services/api/api";
@@ -33,6 +33,7 @@ interface CashTransaction {
 }
 
 const CashInHand = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
   const [cashBalance, setCashBalance] = useState<string>("00.00");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [showAdjustModal, setShowAdjustModal] = useState<boolean>(false);
@@ -208,6 +209,7 @@ const CashInHand = ({ navigation }: any) => {
     // Refresh cash balance and ledger after successful bank transfer
     getCashAndLedger();
   };
+
   const renderTransactionItem = (item: CashTransaction) => {
     return (
       <View key={item.id} style={styles.transactionCard}>
@@ -268,7 +270,12 @@ const CashInHand = ({ navigation }: any) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback
         title="Cash in hand"
         rightIcons={[
@@ -449,7 +456,7 @@ const CashInHand = ({ navigation }: any) => {
         onClose={() => setShowBankTransferModal(false)}
         onSuccess={handleBankTransferSuccess}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 const styles = ScaledSheet.create({

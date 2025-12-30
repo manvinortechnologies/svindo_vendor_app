@@ -14,7 +14,10 @@ import IconIonic from "react-native-vector-icons/Ionicons";
 import MaterialIcon from "react-native-vector-icons/MaterialIcons";
 import Headerwithback from "./Headerwithback";
 import CustomSwitch from "./CustomSwitch";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Toast from "react-native-toast-message";
@@ -23,6 +26,7 @@ import { s } from "react-native-size-matters";
 const screenWidth = Dimensions.get("window").width;
 
 const VerificationPaymentsScreen = () => {
+  const insets = useSafeAreaInsets();
   // PAN Verification State
   const [panNumber, setPanNumber] = useState("");
   const [isPanVerified, setIsPanVerified] = useState(false);
@@ -999,7 +1003,12 @@ const VerificationPaymentsScreen = () => {
     </View>
   );
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title={"Verification & Payments"} />
       <FlatList
         data={sections}
@@ -1007,7 +1016,7 @@ const VerificationPaymentsScreen = () => {
         keyExtractor={(item, index) => item.key ?? index.toString()}
         contentContainerStyle={styles.listContainer}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

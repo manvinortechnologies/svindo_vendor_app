@@ -1,6 +1,9 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
 import { StyleSheet, TouchableOpacity, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { GiftedChat, IMessage, User } from "react-native-gifted-chat";
@@ -41,7 +44,7 @@ export default function ChatScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RouteProp<RootStackParamList, "Chat">>();
   const { ticket } = route.params;
-
+  const insets = useSafeAreaInsets();
   const [messages, setMessages] = useState<IMessage[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -158,7 +161,12 @@ export default function ChatScreen() {
     [ticket.id, isSending]
   );
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Chat Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -245,7 +253,7 @@ export default function ChatScreen() {
           </TouchableOpacity>
         )}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

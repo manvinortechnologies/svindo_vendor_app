@@ -18,6 +18,7 @@ import Loading from "../CommonComponent/Loading";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Toast from "react-native-toast-message";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const daysOfWeek = [
   "Sunday",
@@ -30,6 +31,7 @@ const daysOfWeek = [
 ];
 
 const StoreWorkingHours = () => {
+  const insets = useSafeAreaInsets();
   const [hours, setHours] = useState(
     daysOfWeek.reduce((acc, day) => {
       acc[day] = {
@@ -161,73 +163,76 @@ const StoreWorkingHours = () => {
   };
 
   return (
-    <MainContainer>
-      <View style={styles.container}>
-        <Headerwithback title="Store Working Hours" />
-        <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-          <View style={styles.noteBox}>
-            <Text style={styles.noteLabel}>Note :</Text>
-            <Text style={styles.noteText}>
-              This timings will be used to automatically open/close the shop
-              working status on svindo app and instant delivery orders.
-            </Text>
-          </View>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
+      <Headerwithback title="Store Working Hours" />
+      <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+        <View style={styles.noteBox}>
+          <Text style={styles.noteLabel}>Note :</Text>
+          <Text style={styles.noteText}>
+            This timings will be used to automatically open/close the shop
+            working status on svindo app and instant delivery orders.
+          </Text>
+        </View>
 
-          {daysOfWeek.map((day) => (
-            <View key={day} style={styles.dayCard}>
-              <View style={styles.dayHeader}>
-                <Text style={styles.dayText}>{day}</Text>
-                <Text style={styles.openText}>Open</Text>
-                <CustomSwitch
-                  value={hours[day].isOpen}
-                  onValueChange={() => handleToggle(day)}
-                />
-              </View>
-
-              {hours[day].isOpen && (
-                <View style={styles.timeRow}>
-                  <TouchableOpacity
-                    style={styles.timeBox}
-                    onPress={() => showTimePicker(day, "openTime")}
-                  >
-                    <Text style={styles.timeText}>
-                      {hours[day].openTime || "00:00 am"}
-                    </Text>
-                    {/* <Text style={styles.fixedLabel}>AM</Text> */}
-                  </TouchableOpacity>
-
-                  <Text style={styles.dash}>-</Text>
-
-                  <TouchableOpacity
-                    style={styles.timeBox}
-                    onPress={() => showTimePicker(day, "closeTime")}
-                  >
-                    <Text style={styles.timeText}>
-                      {hours[day].closeTime || "00:00 pm"}
-                    </Text>
-                    {/* <Text style={styles.fixedLabel}>PM</Text> */}
-                  </TouchableOpacity>
-                </View>
-              )}
+        {daysOfWeek.map((day) => (
+          <View key={day} style={styles.dayCard}>
+            <View style={styles.dayHeader}>
+              <Text style={styles.dayText}>{day}</Text>
+              <Text style={styles.openText}>Open</Text>
+              <CustomSwitch
+                value={hours[day].isOpen}
+                onValueChange={() => handleToggle(day)}
+              />
             </View>
-          ))}
 
-          <CustomButton title="SAVE" onPress={handleSubmit} />
-        </ScrollView>
-        <Loading visible={isLoading} />
+            {hours[day].isOpen && (
+              <View style={styles.timeRow}>
+                <TouchableOpacity
+                  style={styles.timeBox}
+                  onPress={() => showTimePicker(day, "openTime")}
+                >
+                  <Text style={styles.timeText}>
+                    {hours[day].openTime || "00:00 am"}
+                  </Text>
+                  {/* <Text style={styles.fixedLabel}>AM</Text> */}
+                </TouchableOpacity>
 
-        {/* Time Picker */}
-        {timePicker.show && (
-          <DateTimePicker
-            value={new Date()}
-            mode="time"
-            is24Hour={false}
-            display={Platform.OS === "ios" ? "spinner" : "default"}
-            onChange={onTimeChange}
-          />
-        )}
-      </View>
-    </MainContainer>
+                <Text style={styles.dash}>-</Text>
+
+                <TouchableOpacity
+                  style={styles.timeBox}
+                  onPress={() => showTimePicker(day, "closeTime")}
+                >
+                  <Text style={styles.timeText}>
+                    {hours[day].closeTime || "00:00 pm"}
+                  </Text>
+                  {/* <Text style={styles.fixedLabel}>PM</Text> */}
+                </TouchableOpacity>
+              </View>
+            )}
+          </View>
+        ))}
+
+        <CustomButton title="SAVE" onPress={handleSubmit} />
+      </ScrollView>
+      <Loading visible={isLoading} />
+
+      {/* Time Picker */}
+      {timePicker.show && (
+        <DateTimePicker
+          value={new Date()}
+          mode="time"
+          is24Hour={false}
+          display={Platform.OS === "ios" ? "spinner" : "default"}
+          onChange={onTimeChange}
+        />
+      )}
+    </View>
   );
 };
 

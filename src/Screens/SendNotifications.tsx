@@ -15,7 +15,10 @@ import {
 } from "react-native";
 import Headerwithback from "./Headerwithback";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import ImageCropPicker from "react-native-image-crop-picker";
 import DateTimePicker, {
   DateTimePickerEvent,
@@ -31,6 +34,7 @@ import Toast from "react-native-toast-message";
 import CustomDropdown from "../CommonComponent/CustomDropdown";
 
 const SendNotifications = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
   const [formData, setFormData] = useState({
     campaign_name: "",
     redirect_to: "store",
@@ -347,7 +351,12 @@ const SendNotifications = ({ navigation }: any) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title={"Send Notification"} />
       <ScrollView contentContainerStyle={styles.contentContainer}>
         {/* Upload Banner */}
@@ -725,7 +734,7 @@ const SendNotifications = ({ navigation }: any) => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 

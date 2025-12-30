@@ -34,6 +34,7 @@ import { useIsFocused } from "@react-navigation/native";
 import { StorageUtils } from "../utils/storage";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import { APP_CONSTANTS } from "../constants/app.constants";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface PrintVariantProps {
   variant: any;
@@ -617,6 +618,7 @@ const AddProductScreen = ({
 }) => {
   const formikRef = useRef<FormikProps<FormValues> | null>(null);
   const isFocused = useIsFocused();
+  const insets = useSafeAreaInsets();
   // State Management
   const [selectedType, setSelectedType] = useState("product");
   const [selectedFor, setSelectedFor] = useState("offline");
@@ -1589,7 +1591,12 @@ const AddProductScreen = ({
   }, [route.params?.isEdit, route.params?.productId, route.params?.product]);
 
   return (
-    <MainContainer>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback
         title={isEditMode ? "Edit Product" : "Enter Details"}
         rightIcons={[
@@ -2602,14 +2609,14 @@ const AddProductScreen = ({
           )}
         </Formik>
       </KeyboardAwareScrollView>
-    </MainContainer>
+    </View>
   );
 };
 
 export default AddProductScreen;
 
 const styles = ScaledSheet.create({
-  safeArea: {
+  container: {
     flex: 1,
     backgroundColor: "#fff",
   },

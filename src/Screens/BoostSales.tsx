@@ -13,7 +13,10 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import { useNavigation } from "@react-navigation/native";
 import Bottomnavigation from "./Bottomnavigation";
 import CustomHeader from "../CommonComponent/CustomHeader";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 // ✅ Define the type for the navigation stack
 type RootStackParamList = {
@@ -34,9 +37,14 @@ export type SecurityScreenNavigationProp = StackNavigationProp<
 
 const BoostSales = () => {
   const navigation = useNavigation<SecurityScreenNavigationProp>(); // ✅ Corrected navigation type
-
+  const insets = useSafeAreaInsets();
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <CustomHeader title="Promotions" />
       <ScrollView>
         <View style={styles.menuContainer}>
@@ -58,7 +66,7 @@ const BoostSales = () => {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

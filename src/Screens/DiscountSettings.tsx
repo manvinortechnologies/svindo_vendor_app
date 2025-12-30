@@ -11,11 +11,17 @@ import {
 import Headerwithback from "./Headerwithback";
 import CustomSwitch from "./CustomSwitch"; // Make sure this path is correct
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const DiscountSettings = () => {
+  const insets = useSafeAreaInsets();
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Discount Settings" />
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -37,7 +43,7 @@ const DiscountSettings = () => {
       <TouchableOpacity style={styles.updateBtn}>
         <Text style={styles.updateText}>Update</Text>
       </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 };
 

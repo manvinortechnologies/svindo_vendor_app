@@ -25,7 +25,10 @@ import {
   useGetVendorStoresQuery,
   useUpdateVendorStoreMutation,
 } from "../services/api/state-api-slice";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { HomeNavigation } from "../constants/app-routes.constants";
 
 // ✅ Define the type for the navigation stack
@@ -48,6 +51,7 @@ export type SecurityScreenNavigationProp = StackNavigationProp<
 >;
 
 const OnlineStore = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
   const [isEnabled, setEnable] = useState(true);
   const [location, setLocation] = useState<boolean>(true);
   const [display, setDisplay] = useState<boolean>(true);
@@ -146,7 +150,12 @@ const OnlineStore = ({ navigation }: any) => {
     }
   };
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <CustomHeader title="Online Store Setting" />
       {/* <Headerwithback title="Online Store Setting" /> */}
 
@@ -404,7 +413,7 @@ const OnlineStore = ({ navigation }: any) => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 

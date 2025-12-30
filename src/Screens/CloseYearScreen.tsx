@@ -6,13 +6,17 @@ import {
   StyleSheet,
   ScrollView,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from "moment";
 import Headerwithback from "./Headerwithback";
 
 const CloseYearScreen = () => {
+  const insets = useSafeAreaInsets();
   const [datePickerVisible, setDatePickerVisible] = useState(false);
   const [closingDate, setClosingDate] = useState(new Date());
 
@@ -22,7 +26,12 @@ const CloseYearScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Close Financial Books" />
 
       <ScrollView>
@@ -73,7 +82,7 @@ const CloseYearScreen = () => {
           maximumDate={new Date()}
         />
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

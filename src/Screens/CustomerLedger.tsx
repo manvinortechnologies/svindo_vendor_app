@@ -23,7 +23,10 @@ import moment from "moment";
 import DeleteModal from "./DeleteModal";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import Toast from "react-native-toast-message";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useIsFocused } from "@react-navigation/native";
 
 interface LedgerTransaction {
@@ -50,6 +53,7 @@ interface CustomerInfo {
 
 const CustomerLedger = ({ navigation, route }: any) => {
   const isFocused = useIsFocused();
+  const insets = useSafeAreaInsets();
   const [ledgerData, setLedgerData] = useState<LedgerSection[]>([]);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo>({
     name: route?.params?.customer?.name,
@@ -323,7 +327,12 @@ const CustomerLedger = ({ navigation, route }: any) => {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <CustomHeader
           title=""
           rightIcon={
@@ -341,12 +350,17 @@ const CustomerLedger = ({ navigation, route }: any) => {
           }
         />
         <Loading visible={isLoading} />
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Header */}
       <CustomHeader
         title=""
@@ -628,7 +642,7 @@ const CustomerLedger = ({ navigation, route }: any) => {
         buttonText="Cancel"
         buttonText2="Delete"
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

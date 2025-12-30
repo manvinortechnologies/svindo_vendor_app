@@ -7,9 +7,11 @@ import {
   TextInput,
   FlatList,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/MaterialCommunityIcons";
-import { Alert } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import Headerwithback from "./Headerwithback";
 import { s } from "react-native-size-matters";
@@ -24,7 +26,7 @@ interface NavigationProp {
 
 const Support = () => {
   const navigation = useNavigation<NavigationProp>();
-
+  const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState<any>("");
   const [isCreatingTicket, setIsCreatingTicket] = useState(false);
   const [tickets, setTickets] = useState<any[]>([]);
@@ -92,7 +94,12 @@ const Support = () => {
   }, []);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Help & Support" />
 
       <View style={styles.chatconatiner}>
@@ -197,7 +204,7 @@ const Support = () => {
           )}
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

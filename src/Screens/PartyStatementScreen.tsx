@@ -8,7 +8,10 @@ import {
   Modal,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from "moment";
 
@@ -16,6 +19,7 @@ import ReportHeader from "./ReportHeader";
 import Bottomnavigation from "./Bottomnavigation";
 
 const PartyStatementScreen = () => {
+  const insets = useSafeAreaInsets();
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const [startDate, setStartDate] = useState(new Date("2025-02-01"));
   const [endDate, setEndDate] = useState(new Date("2025-02-28"));
@@ -54,52 +58,55 @@ const PartyStatementScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <ReportHeader
-          title="Party Statement"
-          onBack={() => console.log("Back pressed")}
-          onPdfPress={() => console.log("Download PDF")}
-          onXlsPress={() => console.log("Download XLS")}
-        />
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
+      <ReportHeader
+        title="Party Statement"
+        onBack={() => console.log("Back pressed")}
+        onPdfPress={() => console.log("Download PDF")}
+        onXlsPress={() => console.log("Download XLS")}
+      />
 
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={styles.mothtab}
-            onPress={() => setMonthModalVisible(true)}
-          >
-            <Text style={styles.tabText}>Choose Month</Text>
-          </TouchableOpacity>
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={styles.mothtab}
+          onPress={() => setMonthModalVisible(true)}
+        >
+          <Text style={styles.tabText}>Choose Month</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.tab}
-            onPress={() => showDatePicker(true)}
-          >
-            <Icon name="calendar-month-outline" size={16} color="#000" />
-            <Text style={[styles.tabText, { marginLeft: 6 }]}>
-              {moment(startDate).format("DD/MM/YYYY")} To{" "}
-              {moment(endDate).format("DD/MM/YYYY")}
-            </Text>
-            <Icon name="chevron-down" size={16} color="#000" />
-          </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.tab}
+          onPress={() => showDatePicker(true)}
+        >
+          <Icon name="calendar-month-outline" size={16} color="#000" />
+          <Text style={[styles.tabText, { marginLeft: 6 }]}>
+            {moment(startDate).format("DD/MM/YYYY")} To{" "}
+            {moment(endDate).format("DD/MM/YYYY")}
+          </Text>
+          <Icon name="chevron-down" size={16} color="#000" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.filterSection}>
+        <View style={styles.filterHeader}>
+          <Icon name="filter-variant" size={18} color="#333" />
+          <Text style={styles.filterText}>Filters applied</Text>
         </View>
 
-        <View style={styles.filterSection}>
-          <View style={styles.filterHeader}>
-            <Icon name="filter-variant" size={18} color="#333" />
-            <Text style={styles.filterText}>Filters applied</Text>
+        <View style={styles.filterTags}>
+          <View style={styles.tag}>
+            <Text style={styles.tagText}>✕ </Text>
           </View>
-
-          <View style={styles.filterTags}>
-            <View style={styles.tag}>
-              <Text style={styles.tagText}>✕ </Text>
-            </View>
-            <View style={styles.tag}>
-              <Text style={styles.tagText}>✕ </Text>
-            </View>
+          <View style={styles.tag}>
+            <Text style={styles.tagText}>✕ </Text>
           </View>
         </View>
-      </SafeAreaView>
+      </View>
 
       <DateTimePickerModal
         isVisible={isDatePickerVisible}

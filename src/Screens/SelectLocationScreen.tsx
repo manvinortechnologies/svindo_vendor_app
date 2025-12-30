@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { View, StyleSheet } from "react-native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import LocationSelectionModal from "../Modals/LocationSelectionModal";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import { useUpdateVendorStoreMutation } from "../services/api/state-api-slice";
@@ -29,7 +32,7 @@ const SelectLocationScreen: React.FC<SelectLocationScreenProps> = ({
   navigation,
 }) => {
   const [updateVendorStore, { isLoading }] = useUpdateVendorStoreMutation();
-
+  const insets = useSafeAreaInsets();
   const handleLocationSelect = async (location: Location) => {
     try {
       // Save store location to API
@@ -71,7 +74,12 @@ const SelectLocationScreen: React.FC<SelectLocationScreenProps> = ({
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Loading visible={isLoading} />
       <LocationSelectionModal
         visible={true}
@@ -80,7 +88,7 @@ const SelectLocationScreen: React.FC<SelectLocationScreenProps> = ({
         initialLocation={null}
         nonSkippable={true}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

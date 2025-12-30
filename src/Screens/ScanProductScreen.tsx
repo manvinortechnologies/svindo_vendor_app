@@ -18,7 +18,10 @@ import {
 } from "react-native-vision-camera";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import api from "../services/api/api";
 import Toast from "react-native-toast-message";
@@ -43,6 +46,7 @@ type VerifiedProduct = {
 };
 
 const ScanProductScreen = () => {
+  const insets = useSafeAreaInsets();
   const [isActive, setIsActive] = useState(true);
   const [verifiedProducts, setVerifiedProducts] = useState<VerifiedProduct[]>(
     []
@@ -234,7 +238,12 @@ const ScanProductScreen = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Top Half - Scanner */}
       <View style={styles.cameraContainer}>
         <Camera
@@ -361,7 +370,7 @@ const ScanProductScreen = () => {
           </TouchableOpacity>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

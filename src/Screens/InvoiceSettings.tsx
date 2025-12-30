@@ -17,7 +17,10 @@ import Bottomnavigation from "./Bottomnavigation";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 type RootStackParamList = {
   MyAccount: undefined;
   InvoiceTemplates: undefined;
@@ -32,6 +35,7 @@ type SignupScreenNavigationProp = StackNavigationProp<
 
 const InvoiceSettings = () => {
   const navigation = useNavigation<SignupScreenNavigationProp>();
+  const insets = useSafeAreaInsets();
   const [toggles, setToggles] = useState({
     documentColor: false,
     showImages: false,
@@ -63,7 +67,12 @@ const InvoiceSettings = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Invoice Settings" />
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -236,7 +245,7 @@ const InvoiceSettings = () => {
       <TouchableOpacity style={styles.updateBtn}>
         <Text style={styles.updateText}>Save and Update</Text>
       </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 };
 

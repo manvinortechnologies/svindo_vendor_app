@@ -30,6 +30,8 @@ import { RouteProp, useRoute } from "@react-navigation/native";
 import { APP_CONSTANTS } from "../constants/app.constants";
 import ImageCropPicker from "react-native-image-crop-picker";
 import Toast from "react-native-toast-message";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScaledSheet } from "react-native-size-matters";
 
 type RootStackParamList = {
   AddPost: {
@@ -44,6 +46,7 @@ const AddPostScreen = ({ navigation }: any) => {
   const route = useRoute<AddPostRouteProp>();
   const item = route.params?.item;
   const type = route.params?.type;
+  const insets = useSafeAreaInsets();
   const [boostEnabled, setBoostEnabled] = useState(true);
   const [description, setDescription] = useState(item?.description || "");
   const [selectedProduct, setSelectedProduct] = useState<any | null>(
@@ -398,7 +401,11 @@ const AddPostScreen = ({ navigation }: any) => {
   };
 
   return (
-    <MainContainer>
+    <View
+      style={[
+        { flex: 1, paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Add Post / Reel" />
       <KeyboardAvoidingView
         style={{ flex: 1 }}
@@ -598,15 +605,15 @@ const AddPostScreen = ({ navigation }: any) => {
           </View>
         </View>
       </Modal>
-    </MainContainer>
+    </View>
   );
 };
 
 export default AddPostScreen;
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
-    padding: 16,
+    padding: "16@s",
     backgroundColor: "#fff",
   },
   header: {

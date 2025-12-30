@@ -13,10 +13,11 @@ import Loading from "../CommonComponent/Loading";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Toast from "react-native-toast-message";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const TransactionMessages = () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(false);
@@ -86,7 +87,12 @@ const TransactionMessages = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <CustomHeader title="Enter Details" />
       <Loading visible={isLoading || isFetching} />
 
@@ -143,7 +149,7 @@ const TransactionMessages = () => {
           <Text style={styles.saveButtonText}>save</Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

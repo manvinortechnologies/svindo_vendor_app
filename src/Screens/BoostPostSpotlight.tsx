@@ -9,11 +9,15 @@ import {
   ScrollView,
 } from "react-native";
 import CustomHeader from "../CommonComponent/CustomHeader";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
 const BoostPostSpotlight = () => {
+  const insets = useSafeAreaInsets();
   const [amount, setAmount] = useState("");
 
   const handleBoost = () => {
@@ -25,7 +29,12 @@ const BoostPostSpotlight = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Header */}
       <CustomHeader title="Enter Details" />
       <ScrollView contentContainerStyle={styles.scrollContent}>
@@ -52,7 +61,7 @@ const BoostPostSpotlight = () => {
           <Text style={styles.boostText}>Boost</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

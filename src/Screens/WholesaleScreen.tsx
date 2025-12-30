@@ -17,10 +17,7 @@ import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Loading from "../CommonComponent/Loading";
 import moment from "moment";
 
@@ -190,7 +187,12 @@ export default function WholesaleScreen() {
   }, [selectedType?.name]);
 
   return (
-    <SafeAreaView style={[styles.container]}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Loading visible={isLoading} />
       <Headerwithback
         title="Wholesale"
@@ -271,7 +273,7 @@ export default function WholesaleScreen() {
           <Text style={styles.proceedButtonText}>Proceed</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

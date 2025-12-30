@@ -9,9 +9,13 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import CustomHeader from "../CommonComponent/CustomHeader";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 const ModelReminderScreen = () => {
+  const insets = useSafeAreaInsets();
   const reminderData = {
     billing: "Raigun Enterprise",
     creditType: "Credit",
@@ -41,7 +45,12 @@ const ModelReminderScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Header */}
       <CustomHeader title="Reminder" />
 
@@ -137,7 +146,7 @@ const ModelReminderScreen = () => {
         <Icon name="logo-whatsapp" size={22} color="#25D366" />
         <Text style={styles.shareText}>Share Reminder</Text>
       </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 };
 

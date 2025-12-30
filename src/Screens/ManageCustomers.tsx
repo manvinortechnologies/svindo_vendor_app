@@ -8,7 +8,10 @@ import {
   FlatList,
   Image,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import Headerwithback from "./Headerwithback";
@@ -42,6 +45,7 @@ const customers = [
 ];
 
 const ManageCustomers = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [customersList, setCustomersList] = useState<Customer[]>([]);
   const [filteredCustomers, setFilteredCustomers] = useState<Customer[]>([]);
@@ -84,94 +88,97 @@ const ManageCustomers = ({ navigation }: any) => {
   }, [searchTerm, customersList]);
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <Headerwithback title="Manage Customers" />
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
+      <Headerwithback title="Manage Customers" />
 
-        {/* Search and Add */}
-        <View style={styles.searchContainer}>
-          <View style={styles.searchBox}>
-            <Icon name="search" size={20} color="#aaa" />
-            <TextInput
-              style={styles.searchInput}
-              placeholder="Search customer by name or phone"
-              placeholderTextColor="#888"
-              value={searchTerm}
-              onChangeText={setSearchTerm}
-            />
-          </View>
-          {/* <TouchableOpacity onPress={() => navigation.navigate("AddCustomer")}>
+      {/* Search and Add */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBox}>
+          <Icon name="search" size={20} color="#aaa" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search customer by name or phone"
+            placeholderTextColor="#888"
+            value={searchTerm}
+            onChangeText={setSearchTerm}
+          />
+        </View>
+        {/* <TouchableOpacity onPress={() => navigation.navigate("AddCustomer")}>
             <Text style={styles.addText}>+ Add New Customer</Text>
           </TouchableOpacity> */}
-        </View>
+      </View>
 
-        {/* You Collect & Pay */}
-        <View style={styles.summaryContainer}>
-          <TouchableOpacity style={styles.summaryBox}>
-            <Text style={styles.summaryText}>
-              Pending Amount: ₹{totalPendingAmount}
-            </Text>
-          </TouchableOpacity>
-        </View>
+      {/* You Collect & Pay */}
+      <View style={styles.summaryContainer}>
+        <TouchableOpacity style={styles.summaryBox}>
+          <Text style={styles.summaryText}>
+            Pending Amount: ₹{totalPendingAmount}
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-        {/* Table Headers */}
-        <View style={styles.tableHeader}>
-          <Text style={styles.headerText}>Details</Text>
-          <Text style={styles.headerText}>Credit Balance</Text>
-        </View>
+      {/* Table Headers */}
+      <View style={styles.tableHeader}>
+        <Text style={styles.headerText}>Details</Text>
+        <Text style={styles.headerText}>Credit Balance</Text>
+      </View>
 
-        {/* Customer List */}
-        <FlatList
-          data={filteredCustomers}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              style={styles.customerRow}
-              onPress={() =>
-                navigation.navigate("CustomerLedger", { customer: item })
-              }
-            >
-              <View style={styles.detailsColumn}>
-                {/* <View style={styles.detailsRow}>
+      {/* Customer List */}
+      <FlatList
+        data={filteredCustomers}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <TouchableOpacity
+            style={styles.customerRow}
+            onPress={() =>
+              navigation.navigate("CustomerLedger", { customer: item })
+            }
+          >
+            <View style={styles.detailsColumn}>
+              {/* <View style={styles.detailsRow}>
                   <View style={styles.avatar}>
                     <Text style={styles.avatarText}>
                       {item.name?.slice(0, 2)}
                     </Text>
                     </View>
                 </View> */}
-                <View style={styles.detailsTextContainer}>
-                  <Text style={styles.nameText}>{item.name}</Text>
-                  <Text style={styles.contactText}>{item.contact}</Text>
-                  <Text style={styles.emailText}>{item.company_name}</Text>
-                </View>
+              <View style={styles.detailsTextContainer}>
+                <Text style={styles.nameText}>{item.name}</Text>
+                <Text style={styles.contactText}>{item.contact}</Text>
+                <Text style={styles.emailText}>{item.company_name}</Text>
               </View>
-              <View style={styles.balanceColumn}>
-                <Text style={styles.balanceText}>{item.balance}</Text>
-              </View>
-            </TouchableOpacity>
-          )}
-          ListEmptyComponent={
-            !isLoading ? (
-              <View style={{ alignItems: "center", marginTop: 40 }}>
-                <Text style={{ fontSize: 16, color: "#888" }}>
-                  No customers found.
-                </Text>
-              </View>
-            ) : null
-          }
-        />
+            </View>
+            <View style={styles.balanceColumn}>
+              <Text style={styles.balanceText}>{item.balance}</Text>
+            </View>
+          </TouchableOpacity>
+        )}
+        ListEmptyComponent={
+          !isLoading ? (
+            <View style={{ alignItems: "center", marginTop: 40 }}>
+              <Text style={{ fontSize: 16, color: "#888" }}>
+                No customers found.
+              </Text>
+            </View>
+          ) : null
+        }
+      />
 
-        {/* FAB: Add New Customer */}
-        <TouchableOpacity
-          style={styles.fab}
-          activeOpacity={0.9}
-          onPress={() => navigation.navigate("AddCustomer")}
-        >
-          <Ionicons name="add" size={26} color="#fff" />
-        </TouchableOpacity>
+      {/* FAB: Add New Customer */}
+      <TouchableOpacity
+        style={styles.fab}
+        activeOpacity={0.9}
+        onPress={() => navigation.navigate("AddCustomer")}
+      >
+        <Ionicons name="add" size={26} color="#fff" />
+      </TouchableOpacity>
 
-        <Loading visible={isLoading} />
-      </SafeAreaView>
+      <Loading visible={isLoading} />
     </View>
   );
 };

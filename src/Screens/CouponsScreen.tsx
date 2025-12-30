@@ -24,6 +24,7 @@ import Icon from "react-native-vector-icons/Ionicons";
 import Toast from "react-native-toast-message";
 import moment from "moment";
 import DeleteConfirmationModal from "../Modals/DeleteConfirmationModal";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
@@ -44,6 +45,7 @@ type CouponsScreenProps = {
 
 const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
   const isFocused = useIsFocused();
+  const insets = useSafeAreaInsets();
   const [deliveryDiscountEnabled, setDeliveryDiscountEnabled] = useState(true);
   const [percentage, setPercentage] = useState("");
   const [minOrderValue, setMinOrderValue] = useState("");
@@ -298,7 +300,12 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
   };
 
   return (
-    <MainContainer>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Coupons / Discounts" />
       <ScrollView contentContainerStyle={styles.container}>
         {/* Delivery Discount Section */}
@@ -414,7 +421,7 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
         message="Are you sure you want to delete this coupon? This action cannot be undone."
         isLoading={isDeleting}
       />
-    </MainContainer>
+    </View>
   );
 };
 

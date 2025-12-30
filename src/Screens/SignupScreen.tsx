@@ -34,8 +34,7 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
   const [loading, setLoading] = useState(false);
 
   const handleContinue = async () => {
-    console.log("phoneNumber-->", phoneNumber.replaceAll("-", ""));
-    if (phoneNumber.replaceAll("-", "").length !== 10) {
+    if (phoneNumber.replace(/\D/g, "").length !== 10) {
       setError("Please enter a valid 10-digit phone number.");
       return;
     }
@@ -43,13 +42,18 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
     setLoading(true);
     setError("");
     try {
-      const fullPhoneNumber = `+91${phoneNumber.replaceAll("-", "")}`;
-      const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
+      const sanitizedPhoneNumber = `+91${phoneNumber.replace(/\D/g, "")}`;
+      console.log("sanitizedPhoneNumber-->", sanitizedPhoneNumber);
+
+      // Use the default auth instance - this ensures reCAPTCHA triggers on Android
+      const confirmation = await auth().signInWithPhoneNumber(
+        sanitizedPhoneNumber
+      );
 
       setConfirm(confirmation);
       navigation.navigate(HomeNavigation.OTP_SCREEN, {
         confirmAuth: confirmation,
-        phoneNumber: fullPhoneNumber,
+        phoneNumber: sanitizedPhoneNumber,
         authType: "signup",
       });
       // Alert.alert('Verification code sent to your phone.');

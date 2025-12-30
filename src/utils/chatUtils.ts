@@ -1,6 +1,6 @@
 import { StreamChat } from "stream-chat";
 
-const client = StreamChat.getInstance("c7wwttj85hg7");
+const client = StreamChat.getInstance("e484k6yk9w25");
 
 const getChatChannel = async (currentUserId: string, otherUserId: string) => {
   const filters = {

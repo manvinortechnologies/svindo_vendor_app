@@ -1,24 +1,11 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
-  TextInput,
-  Image,
-  Switch,
-  Alert,
-  ActivityIndicator,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { View, Text, FlatList, TouchableOpacity } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute, useNavigation } from "@react-navigation/native";
-import Icon from "react-native-vector-icons/Ionicons";
 import { ScaledSheet } from "react-native-size-matters";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
-import CustomSwitch from "../CommonComponent/CustomSwitch";
 import SearchBar from "../CommonComponent/SearchBar";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import ProductItem from "../CommonComponent/ProductItem";
@@ -46,7 +33,7 @@ const VariantsScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { product, variants: passedVariants } = (route.params as any) || {};
-
+  const insets = useSafeAreaInsets();
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [filteredVariants, setFilteredVariants] = useState<ProductVariant[]>(
     []
@@ -169,7 +156,12 @@ const VariantsScreen = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Header */}
       <CustomHeader title={product?.name || "Variants"} />
 
@@ -213,7 +205,7 @@ const VariantsScreen = () => {
         buttonText="Cancel"
         buttonText2="Delete"
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

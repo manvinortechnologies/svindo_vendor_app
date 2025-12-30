@@ -20,7 +20,10 @@ import { API_ROUTES } from "../constants/api-routes.constants";
 import api from "../services/api/api";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import CalendarModal from "../Modals/CalendarModal";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import Loading from "../CommonComponent/Loading";
 import moment from "moment";
 
@@ -38,7 +41,7 @@ type PaymentsScreenRouteProp = RouteProp<RootStackParamList, "PaymentsScreen">;
 const PaymentsScreen = () => {
   const navigation = useNavigation();
   const route = useRoute<PaymentsScreenRouteProp>();
-
+  const insets = useSafeAreaInsets();
   const [selectedType, setSelectedType] = useState(true);
   const [selectedParty, setSelectedParty] = useState<"Customer" | "Vendor">(
     "Customer"
@@ -256,7 +259,12 @@ const PaymentsScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title={isEditMode ? "Edit Payment" : "Payments"} />
 
       {isLoading && <Loading visible={isLoading} />}
@@ -539,7 +547,7 @@ const PaymentsScreen = () => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 

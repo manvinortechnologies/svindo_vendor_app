@@ -16,7 +16,10 @@ import Loading from "../CommonComponent/Loading";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import { useNotificationContext } from "../contexts/NotificationContext";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { HomeNavigation } from "../constants/app-routes.constants";
 
 interface NotificationItem {
@@ -35,6 +38,7 @@ interface NotificationItem {
 }
 
 const NotificationScreen = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [reminders, setReminders] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<"Other" | "Reminder">("Other");
@@ -273,7 +277,12 @@ const NotificationScreen = ({ navigation }: any) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Header */}
       <CustomHeader title="Notifications" />
 
@@ -516,7 +525,7 @@ const NotificationScreen = ({ navigation }: any) => {
           </>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

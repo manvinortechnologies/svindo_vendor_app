@@ -8,8 +8,9 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import CustomHeader from "../CommonComponent/CustomHeader";
-
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 const ProductDetails = () => {
+  const insets = useSafeAreaInsets();
   const files = [
     {
       name: "Img1234567.png",
@@ -33,7 +34,12 @@ const ProductDetails = () => {
   ];
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Header */}
       <CustomHeader title="Product Details" />
 

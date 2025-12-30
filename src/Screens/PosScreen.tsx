@@ -10,7 +10,10 @@ import {
   Dimensions,
   ActivityIndicator,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import api from "../services/api/api";
@@ -65,6 +68,7 @@ interface Product {
 }
 
 const PosScreen = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [cart, setCart] = useState<{ [key: string]: number }>({});
@@ -176,7 +180,12 @@ const PosScreen = ({ navigation }: any) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <CustomHeader title="Sales & POS" />
       {/* Search Bar */}
       <View style={styles.searchWrapper}>
@@ -238,7 +247,7 @@ const PosScreen = ({ navigation }: any) => {
       >
         <Text style={styles.proceedText}>Proceed</Text>
       </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 };
 

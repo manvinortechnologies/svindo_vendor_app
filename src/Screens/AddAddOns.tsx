@@ -19,6 +19,7 @@ import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { HomeNavigation } from "../constants/app-routes.constants";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface AddonFormData {
   description: string;
@@ -41,7 +42,7 @@ const AddAddOns = () => {
     >();
   const productId = route.params?.productId;
   const isEdit = route.params?.isEdit;
-
+  const insets = useSafeAreaInsets();
   const [formData, setFormData] = useState<AddonFormData>({
     description: "",
     name: "",
@@ -185,132 +186,135 @@ const AddAddOns = () => {
   };
 
   return (
-    <MainContainer>
-      <View style={styles.container}>
-        <Headerwithback title="Enter Details" />
-        <Loading visible={isLoading} />
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
+      <Headerwithback title="Enter Details" />
+      <Loading visible={isLoading} />
 
-        <ScrollView
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Addon Name Section */}
-          <View style={styles.section}>
-            <View style={styles.labelRow}>
-              <Text style={styles.label}>Addon Name</Text>
-              <Text style={styles.highlightedText}>Addon</Text>
-            </View>
-            <InputBox
-              placeholder="Enter addon name"
-              background="#FFF8EB"
-              value={formData.name}
-              onChangeText={(text) => handleInputChange("name", text)}
-              textInputStyle={errors.name ? styles.inputError : undefined}
-            />
-            {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Addon Name Section */}
+        <View style={styles.section}>
+          <View style={styles.labelRow}>
+            <Text style={styles.label}>Addon Name</Text>
+            {/* <Text style={styles.highlightedText}>Addon</Text> */}
           </View>
-
-          {/* Category Section */}
-          <View style={styles.section}>
-            <Text style={styles.label}>Category</Text>
-            <CustomDropdown
-              placeholder="Select Category"
-              options={categories}
-              onSelect={(option) => {
-                handleInputChange("product_category", option.id);
-                if (errors.product_category) {
-                  setErrors((prev) => ({
-                    ...prev,
-                    product_category: undefined,
-                  }));
-                }
-              }}
-              selectedValue={formData.product_category}
-              dropDownBoxStyle={[
-                styles.inputField,
-                errors.product_category && styles.dropdownError,
-              ]}
-            />
-            {errors.product_category && (
-              <Text style={styles.errorText}>{errors.product_category}</Text>
-            )}
-          </View>
-
-          {/* Price per Unit Section */}
-          <View style={styles.section}>
-            <Text style={styles.label}>Price per Unit</Text>
-            <InputBox
-              placeholder="Enter price per unit"
-              background="#FFF8EB"
-              value={formData.price_per_unit}
-              onChangeText={(text) => handleInputChange("price_per_unit", text)}
-              keyboardType="numeric"
-              textInputStyle={
-                errors.price_per_unit ? styles.inputError : undefined
-              }
-            />
-            {errors.price_per_unit && (
-              <Text style={styles.errorText}>{errors.price_per_unit}</Text>
-            )}
-          </View>
-
-          {/* Description Section */}
-          <View style={styles.section}>
-            <Text style={styles.label}>Description</Text>
-            <TextInput
-              style={[
-                styles.descriptionInput,
-                errors.description && styles.descriptionInputError,
-              ]}
-              placeholder="Enter description here..."
-              placeholderTextColor="#888"
-              value={formData.description}
-              onChangeText={(text) => handleInputChange("description", text)}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-            {errors.description && (
-              <Text style={styles.errorText}>{errors.description}</Text>
-            )}
-          </View>
-
-          {/* Image Section */}
-          <View style={styles.section}>
-            <Text style={styles.label}>Image (Optional)</Text>
-            <TouchableOpacity
-              style={styles.imagePlaceholder}
-              onPress={() => setIsImageModalVisible(true)}
-            >
-              {formData.image ? (
-                <Image
-                  source={{
-                    uri: formData.image?.uri || formData.image,
-                  }}
-                  style={styles.imagePreview}
-                />
-              ) : (
-                <Text style={styles.placeholderText}>Tap to select image</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </ScrollView>
-
-        {/* Submit Button */}
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>Submit</Text>
-          </TouchableOpacity>
+          <InputBox
+            placeholder="Enter addon name"
+            background="#FFF8EB"
+            value={formData.name}
+            onChangeText={(text) => handleInputChange("name", text)}
+            textInputStyle={errors.name ? styles.inputError : undefined}
+          />
+          {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
         </View>
 
-        {/* Image Modal */}
-        <ModalUpdatePhoto
-          isVisible={isImageModalVisible}
-          onClose={() => setIsImageModalVisible(false)}
-          onSelectedFile={handleImageSelect}
-        />
+        {/* Category Section */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Category</Text>
+          <CustomDropdown
+            placeholder="Select Category"
+            options={categories}
+            onSelect={(option) => {
+              handleInputChange("product_category", option.id);
+              if (errors.product_category) {
+                setErrors((prev) => ({
+                  ...prev,
+                  product_category: undefined,
+                }));
+              }
+            }}
+            selectedValue={formData.product_category}
+            dropDownBoxStyle={[
+              styles.inputField,
+              errors.product_category && styles.dropdownError,
+            ]}
+          />
+          {errors.product_category && (
+            <Text style={styles.errorText}>{errors.product_category}</Text>
+          )}
+        </View>
+
+        {/* Price per Unit Section */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Price per Unit</Text>
+          <InputBox
+            placeholder="Enter price per unit"
+            background="#FFF8EB"
+            value={formData.price_per_unit}
+            onChangeText={(text) => handleInputChange("price_per_unit", text)}
+            keyboardType="numeric"
+            textInputStyle={
+              errors.price_per_unit ? styles.inputError : undefined
+            }
+          />
+          {errors.price_per_unit && (
+            <Text style={styles.errorText}>{errors.price_per_unit}</Text>
+          )}
+        </View>
+
+        {/* Description Section */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Description</Text>
+          <TextInput
+            style={[
+              styles.descriptionInput,
+              errors.description && styles.descriptionInputError,
+            ]}
+            placeholder="Enter description here..."
+            placeholderTextColor="#888"
+            value={formData.description}
+            onChangeText={(text) => handleInputChange("description", text)}
+            multiline
+            numberOfLines={4}
+            textAlignVertical="top"
+          />
+          {errors.description && (
+            <Text style={styles.errorText}>{errors.description}</Text>
+          )}
+        </View>
+
+        {/* Image Section */}
+        <View style={styles.section}>
+          <Text style={styles.label}>Image (Optional)</Text>
+          <TouchableOpacity
+            style={styles.imagePlaceholder}
+            onPress={() => setIsImageModalVisible(true)}
+          >
+            {formData.image ? (
+              <Image
+                source={{
+                  uri: formData.image?.uri || formData.image,
+                }}
+                style={styles.imagePreview}
+              />
+            ) : (
+              <Text style={styles.placeholderText}>Tap to select image</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+
+      {/* Submit Button */}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
+          <Text style={styles.submitButtonText}>Submit</Text>
+        </TouchableOpacity>
       </View>
-    </MainContainer>
+
+      {/* Image Modal */}
+      <ModalUpdatePhoto
+        isVisible={isImageModalVisible}
+        onClose={() => setIsImageModalVisible(false)}
+        onSelectedFile={handleImageSelect}
+      />
+    </View>
   );
 };
 
@@ -324,6 +328,7 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     paddingHorizontal: 16,
+    paddingTop: 10,
   },
   section: {
     marginBottom: 24,

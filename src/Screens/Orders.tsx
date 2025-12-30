@@ -9,7 +9,10 @@ import {
   RefreshControl,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
@@ -20,6 +23,7 @@ import { s } from "react-native-size-matters";
 import CalendarModal from "../Modals/CalendarModal";
 
 const Orders = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [selectedType, setSelectedType] = useState("");
   const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -156,7 +160,12 @@ const Orders = ({ navigation }: any) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Loading visible={loading} />
       <View style={styles.midcontent}>
         <CustomHeader
@@ -398,7 +407,7 @@ const Orders = ({ navigation }: any) => {
           </TouchableOpacity>
         ))}
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

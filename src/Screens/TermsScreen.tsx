@@ -1,6 +1,9 @@
 import React from "react";
 import { View, StyleSheet, Dimensions } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import termsOfService from "../CommonComponent/Policies/TermsOfService";
@@ -8,8 +11,14 @@ import termsOfService from "../CommonComponent/Policies/TermsOfService";
 const { width } = Dimensions.get("window");
 
 const TermsScreen = () => {
+  const insets = useSafeAreaInsets();
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <CustomHeader title="Terms & Conditions" showBackButton={true} />
       <View style={styles.webViewContainer}>
         <WebView
@@ -19,7 +28,7 @@ const TermsScreen = () => {
           showsVerticalScrollIndicator={false}
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

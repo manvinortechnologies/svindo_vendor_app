@@ -7,7 +7,6 @@ import {
   ScrollView,
   Switch,
   Image,
-  SafeAreaView,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { ScaledSheet } from "react-native-size-matters";
@@ -17,14 +16,14 @@ import Loading from "../CommonComponent/Loading";
 import DeleteConfirmationModal from "../Modals/DeleteConfirmationModal";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { HomeNavigation } from "../constants/app-routes.constants";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const ExpensesDetailScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { expenseData: routeExpenseData } = (route.params as any) || {};
-
+  const insets = useSafeAreaInsets();
   const [expenseData, setExpenseData] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -59,7 +58,12 @@ const ExpensesDetailScreen = () => {
 
   if (error) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.backButton}
@@ -97,12 +101,17 @@ const ExpensesDetailScreen = () => {
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -227,7 +236,7 @@ const ExpensesDetailScreen = () => {
         message="Are you sure you want to delete this expense? This action cannot be undone."
         isLoading={isDeleting}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

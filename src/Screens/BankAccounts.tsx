@@ -10,7 +10,10 @@ import {
   RefreshControl,
   GestureResponderEvent,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import Headerwithback from "./Headerwithback";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
@@ -26,6 +29,7 @@ import MaterialIcon from "react-native-vector-icons/MaterialIcons";
 import Toast from "react-native-toast-message";
 
 const BankAccounts = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
   const [cash, setCash] = useState<string>("00.00");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -165,7 +169,12 @@ const BankAccounts = ({ navigation }: any) => {
     getCash(); // Refresh the data after successful transfer
   };
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Bank Account" />
 
       <FlatList
@@ -363,7 +372,7 @@ const BankAccounts = ({ navigation }: any) => {
         </View>
       </Modal>
       <Loading visible={isLoading} />
-    </SafeAreaView>
+    </View>
   );
 };
 

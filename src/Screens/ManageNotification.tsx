@@ -19,7 +19,10 @@ import { useNotifications } from "../hooks/useNotifications";
 import { NotificationType } from "../services/notification-service";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Toast from "react-native-toast-message";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
@@ -43,6 +46,7 @@ interface NotificationCampaign {
 }
 
 const ManageNotification = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
   const [notifications, setNotifications] = useState<NotificationCampaign[]>(
     []
   );
@@ -295,7 +299,12 @@ const ManageNotification = ({ navigation }: any) => {
 
   if (error) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <CustomHeader title="Manage Notifications" />
         <View style={styles.errorContainer}>
           <Text style={styles.errorText}>{error}</Text>
@@ -306,12 +315,17 @@ const ManageNotification = ({ navigation }: any) => {
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Header */}
       <CustomHeader title="Manage Notifications" />
 
@@ -373,7 +387,7 @@ const ManageNotification = ({ navigation }: any) => {
       </TouchableOpacity>
 
       <Loading visible={isLoading} />
-    </SafeAreaView>
+    </View>
   );
 };
 

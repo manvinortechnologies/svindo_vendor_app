@@ -14,8 +14,9 @@ import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import Toast from "react-native-toast-message";
-
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 const SmsScreen = () => {
+  const insets = useSafeAreaInsets();
   const [isLoading, setIsLoading] = useState(false);
   const [availableCredits, setAvailableCredits] = useState(0);
   const [usedCredits, setUsedCredits] = useState(0);
@@ -109,7 +110,12 @@ const SmsScreen = () => {
     }
   };
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <CustomHeader title="SMS" />
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>

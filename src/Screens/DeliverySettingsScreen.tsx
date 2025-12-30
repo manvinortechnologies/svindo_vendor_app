@@ -15,9 +15,13 @@ import CustomHeader from "../CommonComponent/CustomHeader";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import Toast from "react-native-toast-message";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 const DeliverySettingsScreen = () => {
+  const insets = useSafeAreaInsets();
   const [settings, setSettings] = useState({
     prepTime: "",
     deliveryTime: "",
@@ -84,10 +88,14 @@ const DeliverySettingsScreen = () => {
   };
 
   return (
-    <MainContainer>
-      <SafeAreaView style={styles.container}>
-        {/* Header */}
-        {/* <View style={styles.header}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
+      {/* Header */}
+      {/* <View style={styles.header}>
         <TouchableOpacity>
           <Icon name="arrow-back" size={24} color="#000" />
         </TouchableOpacity>
@@ -96,66 +104,65 @@ const DeliverySettingsScreen = () => {
           <Text style={styles.saveText}>SAVE</Text>
         </TouchableOpacity>
       </View> */}
-        <CustomHeader
-          title="Delivery settings"
-          rightIcon={
-            <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
-              <Text style={styles.saveText}>SAVE</Text>
-            </TouchableOpacity>
-          }
-        />
+      <CustomHeader
+        title="Delivery settings"
+        rightIcon={
+          <TouchableOpacity onPress={handleSave} style={styles.saveButton}>
+            <Text style={styles.saveText}>SAVE</Text>
+          </TouchableOpacity>
+        }
+      />
 
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* Input Fields */}
-          <InputBox
-            label="Instant Delivery order preparation time in minutes"
-            placeholder="Ex: 30"
-            value={settings.prepTime}
-            onChangeText={(value: any) => handleChange("prepTime", value)}
-            textInputStyle={{ width: "50%" }}
-            background="#FFEFD5"
-            keyboardType="decimal-pad"
-          />
-          <InputBox
-            label="General Delivery order delivery time in days"
-            placeholder="Ex: 2"
-            value={settings.deliveryTime}
-            onChangeText={(value: any) => handleChange("deliveryTime", value)}
-            textInputStyle={{ width: "50%" }}
-            background="#FFEFD5"
-            keyboardType="decimal-pad"
-          />
-          <InputBox
-            label="General Delivery charges"
-            placeholder="Ex: 50"
-            value={settings.deliveryCharge}
-            onChangeText={(value: any) => handleChange("deliveryCharge", value)}
-            textInputStyle={{ width: "50%" }}
-            background="#FFEFD5"
-            keyboardType="decimal-pad"
-          />
-          <InputBox
-            label="Instant delivery charges per KM after a basic fare for your assigned delivery boy"
-            placeholder="Ex: 10"
-            value={settings.perKmCharge}
-            onChangeText={(value: any) => handleChange("perKmCharge", value)}
-            textInputStyle={{ width: "50%" }}
-            background="#FFEFD5"
-            keyboardType="decimal-pad"
-          />
-          <InputBox
-            label="Minimum Basic fare for instant delivery"
-            placeholder="Ex: 30"
-            value={settings.baseFare}
-            onChangeText={(value: any) => handleChange("baseFare", value)}
-            background="#FFEFD5"
-            textInputStyle={{ width: "50%" }}
-            keyboardType="decimal-pad"
-          />
-          <Loading visible={isLoading} />
-        </ScrollView>
-      </SafeAreaView>
-    </MainContainer>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Input Fields */}
+        <InputBox
+          label="Instant Delivery order preparation time in minutes"
+          placeholder="Ex: 30"
+          value={settings.prepTime}
+          onChangeText={(value: any) => handleChange("prepTime", value)}
+          textInputStyle={{ width: "50%" }}
+          background="#FFEFD5"
+          keyboardType="decimal-pad"
+        />
+        <InputBox
+          label="General Delivery order delivery time in days"
+          placeholder="Ex: 2"
+          value={settings.deliveryTime}
+          onChangeText={(value: any) => handleChange("deliveryTime", value)}
+          textInputStyle={{ width: "50%" }}
+          background="#FFEFD5"
+          keyboardType="decimal-pad"
+        />
+        <InputBox
+          label="General Delivery charges"
+          placeholder="Ex: 50"
+          value={settings.deliveryCharge}
+          onChangeText={(value: any) => handleChange("deliveryCharge", value)}
+          textInputStyle={{ width: "50%" }}
+          background="#FFEFD5"
+          keyboardType="decimal-pad"
+        />
+        <InputBox
+          label="Instant delivery charges per KM after a basic fare for your assigned delivery boy"
+          placeholder="Ex: 10"
+          value={settings.perKmCharge}
+          onChangeText={(value: any) => handleChange("perKmCharge", value)}
+          textInputStyle={{ width: "50%" }}
+          background="#FFEFD5"
+          keyboardType="decimal-pad"
+        />
+        <InputBox
+          label="Minimum Basic fare for instant delivery"
+          placeholder="Ex: 30"
+          value={settings.baseFare}
+          onChangeText={(value: any) => handleChange("baseFare", value)}
+          background="#FFEFD5"
+          textInputStyle={{ width: "50%" }}
+          keyboardType="decimal-pad"
+        />
+        <Loading visible={isLoading} />
+      </ScrollView>
+    </View>
   );
 };
 

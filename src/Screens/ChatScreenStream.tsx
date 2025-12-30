@@ -1,7 +1,10 @@
 // ChatScreenStream.tsx
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { StreamChat } from "stream-chat";
 import {
@@ -29,7 +32,7 @@ const ChatScreenStream = () => {
   const navigation = useNavigation();
   const route = useRoute<RouteProp<{ params: RouteParams }, "params">>();
   const { otherUserId } = route.params || {};
-
+  const insets = useSafeAreaInsets();
   const [channel, setChannel] = useState<any>(null);
   const [isClientReady, setIsClientReady] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
@@ -110,16 +113,26 @@ const ChatScreenStream = () => {
   // Show loading or nothing until channel is ready
   if (!isClientReady || !channel || isInitializing) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <CustomHeader
           title={isInitializing ? "Initializing Chat..." : "Loading Chat..."}
         />
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <OverlayProvider>
         <Chat client={client}>
           <Channel channel={channel}>
@@ -131,7 +144,7 @@ const ChatScreenStream = () => {
           </Channel>
         </Chat>
       </OverlayProvider>
-    </SafeAreaView>
+    </View>
   );
 };
 

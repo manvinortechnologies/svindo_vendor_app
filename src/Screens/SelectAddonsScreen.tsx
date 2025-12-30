@@ -7,7 +7,10 @@ import {
   Image,
   ActivityIndicator,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { ScaledSheet } from "react-native-size-matters";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
@@ -26,6 +29,7 @@ interface Addon {
 
 const SelectAddonsScreen = () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [addons, setAddons] = useState<Addon[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedAddons, setSelectedAddons] = useState<number[]>([]);
@@ -168,7 +172,12 @@ const SelectAddonsScreen = () => {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()}>
             <Icon name="arrow-left" size={24} color="#FCA511" />
@@ -181,12 +190,17 @@ const SelectAddonsScreen = () => {
           <ActivityIndicator size="large" color="#FCA511" />
           <Text style={styles.loadingText}>Loading addons...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Icon name="arrow-left" size={24} color="#FCA511" />
@@ -214,7 +228,7 @@ const SelectAddonsScreen = () => {
       >
         <Text style={styles.continueButtonText}>Continue</Text>
       </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 };
 

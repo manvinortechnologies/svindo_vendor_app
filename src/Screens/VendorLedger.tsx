@@ -22,7 +22,10 @@ import { ScaledSheet } from "react-native-size-matters";
 import CalendarModal from "../Modals/CalendarModal";
 import moment from "moment";
 import Toast from "react-native-toast-message";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 interface LedgerTransaction {
   type: "invoice" | "payment";
@@ -47,6 +50,7 @@ interface VendorInfo {
 }
 
 const VendorLedger = ({ navigation, route }: any) => {
+  const insets = useSafeAreaInsets();
   const [ledgerData, setLedgerData] = useState<LedgerSection[]>([]);
   const [vendorInfo, setVendorInfo] = useState<VendorInfo>({
     name: route?.params?.vendor?.name || "Vendor Name",
@@ -257,7 +261,7 @@ const VendorLedger = ({ navigation, route }: any) => {
 
   const handleDeleteVendorApi = async () => {
     try {
-      await api.delete(`${API_ROUTES.vendorList}${vendorId}/`);
+      await api.delete(`${API_ROUTES.vendorList}${vendorId}/?force=1`);
       navigation.goBack();
     } catch (error) {
       console.error("Error deleting vendor:", error);
@@ -317,7 +321,12 @@ const VendorLedger = ({ navigation, route }: any) => {
     );
   }
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Header */}
       <CustomHeader
         title=""
@@ -593,7 +602,7 @@ const VendorLedger = ({ navigation, route }: any) => {
         buttonText="Cancel"
         buttonText2="Delete"
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

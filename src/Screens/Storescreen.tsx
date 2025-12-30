@@ -15,7 +15,7 @@ import {
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import MaterialIcon from "react-native-vector-icons/MaterialIcons";
 import CustomSwitch from "./CustomSwitch";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { s, ScaledSheet } from "react-native-size-matters";
 import {
   useGetVendorStoresQuery,
@@ -54,7 +54,7 @@ const Storescreen = ({ navigation }: any) => {
   const [isVideoPaused, setIsVideoPaused] = useState(false);
   const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [location, setLocation] = useState<any>(null);
-
+  const insets = useSafeAreaInsets();
   // Modal state
   const [modalVisible, setModalVisible] = useState(false);
   const [editType, setEditType] = useState<
@@ -325,26 +325,31 @@ const Storescreen = ({ navigation }: any) => {
   // Loading state
   if (isLoading) {
     return (
-      <SafeAreaView style={[styles.container, styles.centerContent]}>
+      <View style={[styles.container, styles.centerContent]}>
         <ActivityIndicator size="large" color="#006EB2" />
         <Text style={styles.loadingText}>Loading store details...</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   // Error state
   if (error) {
     return (
-      <SafeAreaView style={[styles.container, styles.centerContent]}>
+      <View style={[styles.container, styles.centerContent]}>
         <Icon name="alert-circle-outline" size={64} color="#FF6B6B" />
         <Text style={styles.errorText}>Failed to load store details</Text>
         <Text style={styles.errorSubtext}>Please try again later</Text>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <CustomHeader
         title="Store"
         titleStyle={{ textAlign: "left" }}
@@ -1175,7 +1180,7 @@ const Storescreen = ({ navigation }: any) => {
             : null
         }
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

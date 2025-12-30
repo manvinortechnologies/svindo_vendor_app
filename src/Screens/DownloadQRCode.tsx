@@ -20,7 +20,10 @@ import RNFS from "react-native-fs";
 import { CameraRoll } from "@react-native-camera-roll/camera-roll";
 import { PERMISSIONS, request, RESULTS, check } from "react-native-permissions";
 import Toast from "react-native-toast-message";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 const DownloadQRCode = () => {
   const [storeId, setStoreId] = useState<string>("0"); // Default value
@@ -28,6 +31,7 @@ const DownloadQRCode = () => {
   const [error, setError] = useState<string | null>(null);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const qrRef = useRef<any>(null);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     fetchVendorStores();
@@ -207,7 +211,12 @@ const DownloadQRCode = () => {
   const logo = require("../assets/svindo_qr_logo.jpeg");
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <CustomHeader title="Store QR Code" />
 
       {error && (
@@ -250,7 +259,7 @@ const DownloadQRCode = () => {
       </ScrollView>
 
       <Loading visible={isLoading} />
-    </SafeAreaView>
+    </View>
   );
 };
 

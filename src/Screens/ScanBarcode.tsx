@@ -17,7 +17,10 @@ import {
 } from "react-native-vision-camera";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/MaterialIcons";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -36,6 +39,7 @@ type RootStackParamList = {
 };
 
 const VisionCameraScanner = () => {
+  const insets = useSafeAreaInsets();
   const [isActive, setIsActive] = useState(true);
   const [scannedItems, setScannedItems] = useState<ScannedItem[]>([]);
 
@@ -135,7 +139,12 @@ const VisionCameraScanner = () => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Top Half - Scanner */}
       <View style={styles.cameraContainer}>
         <Camera
@@ -231,7 +240,7 @@ const VisionCameraScanner = () => {
           </View>
         )}
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

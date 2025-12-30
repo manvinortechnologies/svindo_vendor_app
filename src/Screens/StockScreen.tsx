@@ -14,7 +14,7 @@ import {
 import Icon from "react-native-vector-icons/Ionicons";
 import Header from "./Header";
 import NavigationButton from "./NavigationButton";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
@@ -62,6 +62,7 @@ const staticFilterOptions = {
 
 const StockScreen = () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [selectedFilter, setSelectedFilter] = useState("All");
   const [selectedType, setSelectedType] = useState("Product/Service");
   const [quantities, setQuantities] = useState<{ [key: string]: number }>({});
@@ -521,7 +522,12 @@ const StockScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Header
         title="Stock"
         backgroundColor="#FFF"
@@ -859,7 +865,7 @@ const StockScreen = () => {
         buttonText="Cancel"
         buttonText2="Delete"
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

@@ -25,7 +25,10 @@ import CompanySelectModal from "../Modals/CompanySelectModal";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import CalendarModal from "../Modals/CalendarModal";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useIsFocused } from "@react-navigation/native";
 import formatNumber from "../utils/priceFormatter";
 import { s, ScaledSheet } from "react-native-size-matters";
@@ -68,6 +71,7 @@ const SalePOS = () => {
   const navigation: any = useNavigation();
   const route = useRoute<SalePOSRouteProp>();
   const isFoxcused = useIsFocused();
+  const insets = useSafeAreaInsets();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [companyList, setCompanyList] = useState<DropDownOption[]>();
@@ -496,7 +500,12 @@ const SalePOS = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback
         title={route.params?.editMode ? "Edit Sale" : "Sales & POS"}
       />
@@ -976,7 +985,7 @@ const SalePOS = () => {
         minDate={moment().format("YYYY-MM-DD")}
         initialDate={dueDate}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

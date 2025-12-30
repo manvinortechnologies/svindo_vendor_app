@@ -8,7 +8,10 @@ import {
   Modal,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from "moment";
 
@@ -16,6 +19,7 @@ import Bottomnavigation from "./Bottomnavigation";
 import Headerwithback from "./Headerwithback";
 
 const RecycleBinScreen = () => {
+  const insets = useSafeAreaInsets();
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const [startDate, setStartDate] = useState(new Date("2025-02-01"));
   const [endDate, setEndDate] = useState(new Date("2025-02-28"));
@@ -54,78 +58,81 @@ const RecycleBinScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <Headerwithback title="Recycle Bin" />
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
+      <Headerwithback title="Recycle Bin" />
 
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={styles.mothtab}
-            onPress={() => setMonthModalVisible(true)}
-          >
-            <Text style={styles.tabText}>Choose Month</Text>
-          </TouchableOpacity>
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={styles.mothtab}
+          onPress={() => setMonthModalVisible(true)}
+        >
+          <Text style={styles.tabText}>Choose Month</Text>
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.tab}
-            onPress={() => showDatePicker(true)}
-          >
-            <Icon name="calendar-month-outline" size={16} color="#000" />
-            <Text style={[styles.tabText, { marginLeft: 6 }]}>
-              {moment(startDate).format("DD/MM/YYYY")} To{" "}
-              {moment(endDate).format("DD/MM/YYYY")}
+        <TouchableOpacity
+          style={styles.tab}
+          onPress={() => showDatePicker(true)}
+        >
+          <Icon name="calendar-month-outline" size={16} color="#000" />
+          <Text style={[styles.tabText, { marginLeft: 6 }]}>
+            {moment(startDate).format("DD/MM/YYYY")} To{" "}
+            {moment(endDate).format("DD/MM/YYYY")}
+          </Text>
+          <Icon name="chevron-down" size={16} color="#000" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.filterSection}>
+        <View style={styles.filterHeader}>
+          <Icon name="filter-variant" size={18} color="#333" />
+          <Text style={styles.filterText}>Filters applied</Text>
+        </View>
+
+        <View style={styles.filterTags}>
+          <View style={styles.tag}>
+            <Text style={styles.tagText}>✕ Txns Type: Sale & Cr Note</Text>
+          </View>
+          <View style={styles.tag}>
+            <Text style={styles.tagText}>✕ Txns Type: Sale & Note</Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.actionRow}>
+        <Text style={styles.actionText}>Select</Text>
+        <Text style={styles.actionText}>Delete Selected</Text>
+        <Text style={styles.actionText}>Recover Selected</Text>
+        <Text style={styles.actionText}>Select All</Text>
+        <Text style={styles.actionText}>Delete All</Text>
+        <Text style={styles.actionText}>Recover All</Text>
+      </View>
+      <View style={styles.deletedItemContainer}>
+        <View style={styles.deletedItemHeader}>
+          <View>
+            <Text style={styles.deletedItemTitle}>Lorem ipsum</Text>
+            <Text style={styles.deletedItemDeletedText}>
+              Deleted on <Text style={{ color: "black" }}>01/02/2025</Text>{" "}
+              <Text style={{ fontSize: 10 }}>8:45 PM</Text>
             </Text>
-            <Icon name="chevron-down" size={16} color="#000" />
+          </View>
+        </View>
+
+        <View style={styles.deletedItemFooter}>
+          <Text style={styles.deletedItemTotalLabel}>Total</Text>
+          <Text style={styles.deletedItemTotalValue}>Rs 700</Text>
+
+          <TouchableOpacity style={styles.saleTransactionButton}>
+            <Text style={styles.saleTransactionButtonText}>
+              Sale Transaction
+            </Text>
           </TouchableOpacity>
         </View>
-
-        <View style={styles.filterSection}>
-          <View style={styles.filterHeader}>
-            <Icon name="filter-variant" size={18} color="#333" />
-            <Text style={styles.filterText}>Filters applied</Text>
-          </View>
-
-          <View style={styles.filterTags}>
-            <View style={styles.tag}>
-              <Text style={styles.tagText}>✕ Txns Type: Sale & Cr Note</Text>
-            </View>
-            <View style={styles.tag}>
-              <Text style={styles.tagText}>✕ Txns Type: Sale & Note</Text>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.actionRow}>
-          <Text style={styles.actionText}>Select</Text>
-          <Text style={styles.actionText}>Delete Selected</Text>
-          <Text style={styles.actionText}>Recover Selected</Text>
-          <Text style={styles.actionText}>Select All</Text>
-          <Text style={styles.actionText}>Delete All</Text>
-          <Text style={styles.actionText}>Recover All</Text>
-        </View>
-        <View style={styles.deletedItemContainer}>
-          <View style={styles.deletedItemHeader}>
-            <View>
-              <Text style={styles.deletedItemTitle}>Lorem ipsum</Text>
-              <Text style={styles.deletedItemDeletedText}>
-                Deleted on <Text style={{ color: "black" }}>01/02/2025</Text>{" "}
-                <Text style={{ fontSize: 10 }}>8:45 PM</Text>
-              </Text>
-            </View>
-          </View>
-
-          <View style={styles.deletedItemFooter}>
-            <Text style={styles.deletedItemTotalLabel}>Total</Text>
-            <Text style={styles.deletedItemTotalValue}>Rs 700</Text>
-
-            <TouchableOpacity style={styles.saleTransactionButton}>
-              <Text style={styles.saleTransactionButtonText}>
-                Sale Transaction
-              </Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </SafeAreaView>
+      </View>
 
       <DateTimePickerModal
         isVisible={isDatePickerVisible}

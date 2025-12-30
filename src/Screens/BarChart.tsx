@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { View, Text } from "react-native";
 import { BarChart } from "react-native-gifted-charts";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { s } from "react-native-size-matters";
 
 interface SalesExpenseData {
@@ -55,6 +56,7 @@ export default function GroupedBars({ data }: GroupedBarsProps) {
       100
     );
   }, [data]);
+
   const renderTitle = () => {
     return (
       <View

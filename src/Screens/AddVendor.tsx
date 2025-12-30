@@ -19,6 +19,7 @@ import Loading from "../CommonComponent/Loading";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
 import CustomDropdown from "../CommonComponent/CustomDropdown";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 type RootStackParamList = {
   AddVendor: {
@@ -33,7 +34,7 @@ const AddVendor = ({ navigation }: any) => {
   const route = useRoute<AddVendorRouteProp>();
   const isEdit = route.params?.isEdit || false;
   const vendor = route.params?.vendor || {};
-
+  const insets = useSafeAreaInsets();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [states, setStates] = useState<{ id: string | number; name: string }[]>(
@@ -210,168 +211,167 @@ const AddVendor = ({ navigation }: any) => {
   };
 
   return (
-    <MainContainer>
-      <SafeAreaView style={styles.container}>
-        <Headerwithback title={isEdit ? "Edit Vendor" : "Add Vendor"} />
-        <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 20}
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
+      <Headerwithback title={isEdit ? "Edit Vendor" : "Add Vendor"} />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 20}
+      >
+        <ScrollView
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContainer}
         >
-          <ScrollView
-            keyboardShouldPersistTaps="handled"
-            contentContainerStyle={styles.scrollContainer}
-          >
-            {/* Basic Details */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Basic Details</Text>
-              <View style={styles.sectionContent}>
-                {(
-                  [
-                    { label: "Vendor Name", key: "name" },
-                    { label: "Mobille Number", key: "mobile" },
-                    { label: "Email Id", key: "email" },
-                    { label: "Opening Balance", key: "opening_balance" },
-                  ] as { label: string; key: keyof typeof basicDetails }[]
-                ).map(({ label, key }, index) => (
-                  <View key={index} style={styles.inputWrapper}>
-                    <Text style={styles.label}>{label}</Text>
-                    <TextInput
-                      placeholder={`Enter ${label}`}
-                      placeholderTextColor="#999"
-                      style={[styles.input, errors[key] && styles.inputError]}
-                      keyboardType={
-                        key === "mobile"
-                          ? "numeric"
-                          : key === "opening_balance"
-                          ? "numeric"
-                          : key === "email"
-                          ? "email-address"
-                          : "ascii-capable"
-                      }
-                      maxLength={key === "mobile" ? 10 : 100}
-                      value={basicDetails[key]}
-                      onChangeText={(text) => {
-                        setBasicDetails((prev) => ({ ...prev, [key]: text }));
-                        // Clear error when user starts typing
-                        if (errors[key]) {
-                          setErrors((prev) => ({ ...prev, [key]: "" }));
-                        }
-                      }}
-                    />
-                    {errors[key] && (
-                      <Text style={styles.errorText}>{errors[key]}</Text>
-                    )}
-                  </View>
-                ))}
-                <View style={styles.inputWrapper}>
-                  <Text style={styles.label}>State</Text>
-                  <CustomDropdown
-                    placeholder="Select State"
-                    options={states}
-                    onSelect={(option) => {
-                      setBasicDetails((prev) => ({
-                        ...prev,
-                        state: option.id,
-                      }));
-                      if (errors.state) {
-                        setErrors((prev) => ({ ...prev, state: "" }));
+          {/* Basic Details */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Basic Details</Text>
+            <View style={styles.sectionContent}>
+              {(
+                [
+                  { label: "Vendor Name", key: "name" },
+                  { label: "Mobille Number", key: "mobile" },
+                  { label: "Email Id", key: "email" },
+                  { label: "Opening Balance", key: "opening_balance" },
+                ] as { label: string; key: keyof typeof basicDetails }[]
+              ).map(({ label, key }, index) => (
+                <View key={index} style={styles.inputWrapper}>
+                  <Text style={styles.label}>{label}</Text>
+                  <TextInput
+                    placeholder={`Enter ${label}`}
+                    placeholderTextColor="#999"
+                    style={[styles.input, errors[key] && styles.inputError]}
+                    keyboardType={
+                      key === "mobile"
+                        ? "numeric"
+                        : key === "opening_balance"
+                        ? "numeric"
+                        : key === "email"
+                        ? "email-address"
+                        : "ascii-capable"
+                    }
+                    maxLength={key === "mobile" ? 10 : 100}
+                    value={basicDetails[key]}
+                    onChangeText={(text) => {
+                      setBasicDetails((prev) => ({ ...prev, [key]: text }));
+                      // Clear error when user starts typing
+                      if (errors[key]) {
+                        setErrors((prev) => ({ ...prev, [key]: "" }));
                       }
                     }}
-                    selectedValue={basicDetails.state || null}
-                    dropDownBoxStyle={[
-                      styles.dropdown,
-                      errors.state && styles.inputError,
-                    ]}
                   />
-                  {errors.state && (
-                    <Text style={styles.errorText}>{errors.state}</Text>
+                  {errors[key] && (
+                    <Text style={styles.errorText}>{errors[key]}</Text>
                   )}
                 </View>
-              </View>
-            </View>
-
-            {/* Business Details */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Business Details</Text>
-              <View style={styles.sectionContent}>
-                {(
-                  [
-                    { label: "Company Name", key: "company" },
-                    { label: "GST", key: "gst" },
-                    { label: "Aadhar Number", key: "aadhar" },
-                    { label: "Pan", key: "pan" },
-                  ] as { label: string; key: keyof typeof businessDetails }[]
-                ).map(({ label, key }, index) => (
-                  <View key={index} style={styles.inputWrapper}>
-                    <Text style={styles.label}>{label}</Text>
-                    <TextInput
-                      placeholder={`Enter ${label}`}
-                      placeholderTextColor="#999"
-                      style={styles.input}
-                      maxLength={key === "aadhar" ? 16 : 100}
-                      autoCapitalize={
-                        key !== "company" ? "characters" : "words"
-                      }
-                      keyboardType={
-                        key === "aadhar" ? "numeric" : "ascii-capable"
-                      }
-                      value={businessDetails[key]}
-                      onChangeText={(text) =>
-                        setBusinessDetails((prev) => ({
-                          ...prev,
-                          [key]: text,
-                        }))
-                      }
-                    />
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            {/* Address Section */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Address</Text>
-              <View style={styles.sectionContent}>
-                {(
-                  [
-                    { placeholder: "Address Line 1", key: "line1" },
-                    { placeholder: "Address Line 2", key: "line2" },
-                    { placeholder: "Pincode", key: "pincode" },
-                    { placeholder: "City", key: "city" },
-                    { placeholder: "State", key: "state" },
-                    { placeholder: "Country", key: "country" },
-                  ] as { placeholder: string; key: keyof typeof address }[]
-                ).map(({ placeholder, key }, idx) => (
-                  <TextInput
-                    key={idx}
-                    placeholder={placeholder}
-                    placeholderTextColor="#888"
-                    style={[styles.input, { marginBottom: 10 }]}
-                    keyboardType={
-                      key === "pincode" ? "numeric" : "ascii-capable"
+              ))}
+              <View style={styles.inputWrapper}>
+                <Text style={styles.label}>State</Text>
+                <CustomDropdown
+                  placeholder="Select State"
+                  options={states}
+                  onSelect={(option) => {
+                    setBasicDetails((prev) => ({
+                      ...prev,
+                      state: option.id,
+                    }));
+                    if (errors.state) {
+                      setErrors((prev) => ({ ...prev, state: "" }));
                     }
-                    maxLength={key === "pincode" ? 6 : 200}
-                    value={address[key]}
+                  }}
+                  selectedValue={basicDetails.state || null}
+                  dropDownBoxStyle={[
+                    styles.dropdown,
+                    errors.state && styles.inputError,
+                  ]}
+                />
+                {errors.state && (
+                  <Text style={styles.errorText}>{errors.state}</Text>
+                )}
+              </View>
+            </View>
+          </View>
+
+          {/* Business Details */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Business Details</Text>
+            <View style={styles.sectionContent}>
+              {(
+                [
+                  { label: "Company Name", key: "company" },
+                  { label: "GST", key: "gst" },
+                  { label: "Aadhar Number", key: "aadhar" },
+                  { label: "Pan", key: "pan" },
+                ] as { label: string; key: keyof typeof businessDetails }[]
+              ).map(({ label, key }, index) => (
+                <View key={index} style={styles.inputWrapper}>
+                  <Text style={styles.label}>{label}</Text>
+                  <TextInput
+                    placeholder={`Enter ${label}`}
+                    placeholderTextColor="#999"
+                    style={styles.input}
+                    maxLength={key === "aadhar" ? 16 : 100}
+                    autoCapitalize={key !== "company" ? "characters" : "words"}
+                    keyboardType={
+                      key === "aadhar" ? "numeric" : "ascii-capable"
+                    }
+                    value={businessDetails[key]}
                     onChangeText={(text) =>
-                      setAddress((prev) => ({ ...prev, [key]: text }))
+                      setBusinessDetails((prev) => ({
+                        ...prev,
+                        [key]: text,
+                      }))
                     }
                   />
-                ))}
-              </View>
+                </View>
+              ))}
             </View>
+          </View>
 
-            {/* Save Button */}
-            <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-              <Text style={styles.saveButtonText}>
-                {isEdit ? "Update Vendor" : "Save Vendor"}
-              </Text>
-            </TouchableOpacity>
-            <Loading visible={isLoading} />
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </MainContainer>
+          {/* Address Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Address</Text>
+            <View style={styles.sectionContent}>
+              {(
+                [
+                  { placeholder: "Address Line 1", key: "line1" },
+                  { placeholder: "Address Line 2", key: "line2" },
+                  { placeholder: "Pincode", key: "pincode" },
+                  { placeholder: "City", key: "city" },
+                  { placeholder: "State", key: "state" },
+                  { placeholder: "Country", key: "country" },
+                ] as { placeholder: string; key: keyof typeof address }[]
+              ).map(({ placeholder, key }, idx) => (
+                <TextInput
+                  key={idx}
+                  placeholder={placeholder}
+                  placeholderTextColor="#888"
+                  style={[styles.input, { marginBottom: 10 }]}
+                  keyboardType={key === "pincode" ? "numeric" : "ascii-capable"}
+                  maxLength={key === "pincode" ? 6 : 200}
+                  value={address[key]}
+                  onChangeText={(text) =>
+                    setAddress((prev) => ({ ...prev, [key]: text }))
+                  }
+                />
+              ))}
+            </View>
+          </View>
+
+          {/* Save Button */}
+          <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+            <Text style={styles.saveButtonText}>
+              {isEdit ? "Update Vendor" : "Save Vendor"}
+            </Text>
+          </TouchableOpacity>
+          <Loading visible={isLoading} />
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 };
 export default AddVendor;

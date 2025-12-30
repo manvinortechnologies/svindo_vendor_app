@@ -16,7 +16,10 @@ import { useIsFocused } from "@react-navigation/native";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import { ScaledSheet } from "react-native-size-matters";
 import CustomHeader from "../CommonComponent/CustomHeader";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import CalendarModal from "../Modals/CalendarModal";
 import moment from "moment";
 import { HomeNavigation } from "../constants/app-routes.constants";
@@ -27,7 +30,7 @@ import { CategoryType } from "../modelType/CommonType";
 
 const ExpensesScreen = ({ navigation }: any) => {
   const isFocused = useIsFocused();
-
+  const insets = useSafeAreaInsets();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [expensesList, setExpenseseList] = useState<Expense[]>([]);
   const [groupedExpenses, setGroupedExpenses] = useState<{
@@ -258,7 +261,12 @@ const ExpensesScreen = ({ navigation }: any) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Header */}
       <CustomHeader
         title="Expenses"
@@ -401,7 +409,7 @@ const ExpensesScreen = ({ navigation }: any) => {
         </View>
       </Modal>
       <Loading visible={isLoading} />
-    </SafeAreaView>
+    </View>
   );
 };
 

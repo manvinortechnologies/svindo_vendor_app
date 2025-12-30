@@ -16,7 +16,10 @@ import ScanProductModal, { VerifiedProduct } from "../Modals/ScanProductModal";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import { HomeNavigation } from "../constants/app-routes.constants";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { ScaledSheet } from "react-native-size-matters";
 import Toast from "react-native-toast-message";
 
@@ -75,6 +78,7 @@ type ProductSelectionNavigationProp = StackNavigationProp<
 const ProductSelectionScreen: React.FC = () => {
   const navigation = useNavigation<ProductSelectionNavigationProp>();
   const route = useRoute<ProductSelectionRouteProp>();
+  const insets = useSafeAreaInsets();
   const {
     selectedProducts = [],
     navigateScreen,
@@ -577,7 +581,12 @@ const ProductSelectionScreen: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <View style={styles.header}>
         <TouchableOpacity onPress={handleGoBack}>
           <Icon name="arrow-back" size={24} color="#000" />
@@ -647,7 +656,7 @@ const ProductSelectionScreen: React.FC = () => {
         onClose={() => setShowScanModal(false)}
         onProductsScanned={handleProductsScanned}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

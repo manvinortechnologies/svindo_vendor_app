@@ -19,6 +19,7 @@ import { BannerCampaign } from "../type/common";
 import api from "../services/api/api";
 import DeleteModal from "./DeleteModal";
 import { ScaledSheet, s } from "react-native-size-matters";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const getStatusStyle = (status: string) => {
   switch (status) {
@@ -52,6 +53,7 @@ const getStatusStyle = (status: string) => {
 };
 
 const BannerAds = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [bannerData, setBannerData] = useState<BannerCampaign[]>([]);
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -198,7 +200,12 @@ const BannerAds = ({ navigation }: any) => {
   };
 
   return (
-    <MainContainer>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <CustomHeader title="Banner Ads" />
       <View style={styles.container}>
         <Loading visible={isLoading || deletingId !== null} />
@@ -267,7 +274,7 @@ const BannerAds = ({ navigation }: any) => {
         buttonText="Cancel"
         buttonText2="Delete"
       />
-    </MainContainer>
+    </View>
   );
 };
 

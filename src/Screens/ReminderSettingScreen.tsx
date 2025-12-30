@@ -14,6 +14,7 @@ import Loading from "../CommonComponent/Loading";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Toast from "react-native-toast-message";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const ReminderRow = ({
   title,
@@ -52,6 +53,7 @@ const ReminderRow = ({
 );
 
 const ReminderScreen = () => {
+  const insets = useSafeAreaInsets();
   const [creditReminder, setCreditReminder] = useState(true);
   const [creditDays, setCreditDays] = useState("30");
 
@@ -115,48 +117,51 @@ const ReminderScreen = () => {
   };
 
   return (
-    <MainContainer>
-      <View style={styles.container}>
-        <Headerwithback title="Reminder" />
-        <Loading visible={isLoading} />
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
+      <Headerwithback title="Reminder" />
+      <Loading visible={isLoading} />
 
-        <ReminderRow
-          title="Credit Bill/Purchase Reminder"
-          value={creditReminder}
-          onToggle={setCreditReminder}
-          showDaysInput
-          days={creditDays}
-          onDaysChange={setCreditDays}
-        />
+      <ReminderRow
+        title="Credit Bill/Purchase Reminder"
+        value={creditReminder}
+        onToggle={setCreditReminder}
+        showDaysInput
+        days={creditDays}
+        onDaysChange={setCreditDays}
+      />
 
-        <ReminderRow
-          title="Pending Invoices Reminder"
-          value={pendingInvoices}
-          onToggle={setPendingInvoices}
-          showDaysInput
-          days={pendingDays}
-          onDaysChange={setPendingDays}
-        />
+      <ReminderRow
+        title="Pending Invoices Reminder"
+        value={pendingInvoices}
+        onToggle={setPendingInvoices}
+        showDaysInput
+        days={pendingDays}
+        onDaysChange={setPendingDays}
+      />
 
-        <ReminderRow
-          title="Low Stock Reminder"
-          value={lowStock}
-          onToggle={setLowStock}
-        />
+      <ReminderRow
+        title="Low Stock Reminder"
+        value={lowStock}
+        onToggle={setLowStock}
+      />
 
-        <ReminderRow
-          title="Expiry Stock Reminder"
-          value={expiryStock}
-          onToggle={setExpiryStock}
-        />
+      <ReminderRow
+        title="Expiry Stock Reminder"
+        value={expiryStock}
+        onToggle={setExpiryStock}
+      />
 
-        <View style={{ paddingHorizontal: 12, marginTop: 12 }}>
-          <TouchableOpacity style={styles.updateButton} onPress={handleUpdate}>
-            <Text style={styles.updateText}>Update</Text>
-          </TouchableOpacity>
-        </View>
+      <View style={{ paddingHorizontal: 12, marginTop: 12 }}>
+        <TouchableOpacity style={styles.updateButton} onPress={handleUpdate}>
+          <Text style={styles.updateText}>Update</Text>
+        </TouchableOpacity>
       </View>
-    </MainContainer>
+    </View>
   );
 };
 

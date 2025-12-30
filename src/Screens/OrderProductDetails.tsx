@@ -574,7 +574,12 @@ const OrderProductDetails = ({ navigation }: any) => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
         {/* Header */}
         <CustomHeader
@@ -892,7 +897,7 @@ const OrderProductDetails = ({ navigation }: any) => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 

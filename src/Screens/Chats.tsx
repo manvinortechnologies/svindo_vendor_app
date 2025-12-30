@@ -9,6 +9,7 @@ import {
 import Header from "./Header";
 import { Text } from "react-native-gesture-handler";
 import SearchHeader from "./SearchHeader";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const tabs = ["All", "Unread", "Favourites"];
 const chatData = [
@@ -56,7 +57,7 @@ const chatData = [
 
 const Chats = () => {
   const [activeTab, setActiveTab] = useState("All");
-
+  const insets = useSafeAreaInsets();
   const renderTab = (tab: string) => (
     <TouchableOpacity
       key={tab}
@@ -97,7 +98,12 @@ const Chats = () => {
   );
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Header
         title="Chats"
         backgroundColor="#FCA311"

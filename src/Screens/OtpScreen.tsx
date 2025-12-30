@@ -27,8 +27,10 @@ import { s, ScaledSheet } from "react-native-size-matters";
 import Toast from "react-native-toast-message";
 import NotificationService from "../services/notification-service";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const OtpScreen: React.FC<OtpScreenProps> = () => {
+  const insets = useSafeAreaInsets();
   const navigation =
     useNavigation<NativeStackNavigationProp<THomeNavigation>>();
   const route =
@@ -184,7 +186,11 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
 
   return (
     <KeyboardAwareScrollView
-      contentContainerStyle={{ flex: 1 }}
+      contentContainerStyle={{
+        flex: 1,
+        paddingTop: insets.top,
+        paddingBottom: insets.bottom,
+      }}
       style={styles.container}
     >
       <ScrollView

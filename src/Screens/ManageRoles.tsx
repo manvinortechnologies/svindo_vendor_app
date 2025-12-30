@@ -8,7 +8,10 @@ import {
 } from "react-native";
 import Headerwithback from "./Headerwithback";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 interface Permissions {
   Signatures: boolean;
@@ -25,6 +28,7 @@ interface RolePermissions {
 }
 
 const ManageRoles = () => {
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<"allUsers" | "permissions">(
     "allUsers"
   );
@@ -157,7 +161,12 @@ const ManageRoles = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Manage Roles" />
 
       {/* Tabs */}
@@ -200,7 +209,7 @@ const ManageRoles = () => {
       <View style={{ flex: 1 }}>
         {activeTab === "allUsers" ? renderAllUsers() : renderPermissions()}
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

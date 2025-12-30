@@ -13,7 +13,10 @@ import {
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import CustomSwitch from "./CustomSwitch";
 import Headerwithback from "./Headerwithback";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import { formatOrderDate } from "../utils/dateandTime";
@@ -58,6 +61,7 @@ interface TransformedReview {
 }
 
 const CustomerFeedback = () => {
+  const insets = useSafeAreaInsets();
   const [allReviews, setAllReviews] = useState<TransformedReview[]>([]);
   const [reviews, setReviews] = useState<TransformedReview[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -265,7 +269,12 @@ const CustomerFeedback = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Rating & Review" />
 
       <ScrollView>
@@ -448,7 +457,7 @@ const CustomerFeedback = () => {
           </View>
         </TouchableOpacity>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 

@@ -12,9 +12,11 @@ import {
   Dimensions,
   Image,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import Icon from "react-native-vector-icons/Ionicons";
-import MainContainer from "../CommonComponent/MainContainer";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import Loading from "../CommonComponent/Loading";
 import api from "../services/api/api";
@@ -81,6 +83,7 @@ interface Payment {
 
 const PaymentsList = () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [payments, setPayments] = useState<Payment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -345,7 +348,12 @@ const PaymentsList = () => {
   const netAmount = totalReceived - totalGiven;
 
   return (
-    <MainContainer>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <View style={styles.container}>
         <Loading visible={isLoading} />
 
@@ -711,7 +719,7 @@ const PaymentsList = () => {
           </View>
         </View>
       </Modal>
-    </MainContainer>
+    </View>
   );
 };
 

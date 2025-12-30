@@ -14,7 +14,11 @@ import { StackNavigationProp } from "@react-navigation/stack";
 import Header from "./Header";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import Toast from "react-native-toast-message";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { s } from "react-native-size-matters";
 
 type RootStackParamList = {
   SalePOS: undefined;
@@ -55,7 +59,7 @@ type RootStackParamList = {
 
 const Erp = () => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-
+  const insets = useSafeAreaInsets();
   const topTabs = [
     {
       label: "Sale & POS",
@@ -323,13 +327,18 @@ const Erp = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Header
         title="ERP"
         backgroundColor="#FFF"
         textColor="#000"
         borderBottomColor="#ccc"
-        paddingTop={50}
+        paddingTop={insets.top + s(10)}
       />
 
       <ScrollView>
@@ -535,7 +544,7 @@ const Erp = () => {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

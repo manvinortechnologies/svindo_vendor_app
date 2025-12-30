@@ -16,14 +16,22 @@ import NavigationButton from "./NavigationButton";
 import Bottomnavigation from "./Bottomnavigation";
 import { useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { HomeNavigation } from "../constants/app-routes.constants";
 
 const CreateAddons = () => {
   const navigation = useNavigation();
-
+  const insets = useSafeAreaInsets();
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Header with Back Button and Search Bar */}
       <View style={styles.header}>
         {/* Back Button */}
@@ -68,7 +76,7 @@ const CreateAddons = () => {
           textStyle={styles.buttongreen}
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

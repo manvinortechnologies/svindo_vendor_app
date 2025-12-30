@@ -16,7 +16,11 @@ import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import CalendarModal from "../Modals/CalendarModal";
 import moment from "moment";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
+import { ScaledSheet } from "react-native-size-matters";
 
 interface BankTransaction {
   id: number;
@@ -36,6 +40,7 @@ interface BankInfo {
 }
 
 const BankNameScreen = ({ navigation, route }: any) => {
+  const insets = useSafeAreaInsets();
   const [transactions, setTransactions] = useState<BankTransaction[]>([]);
   const [groupedTransactions, setGroupedTransactions] = useState<{
     [key: string]: BankTransaction[];
@@ -293,7 +298,12 @@ const BankNameScreen = ({ navigation, route }: any) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Header */}
       <CustomHeader
         title={bankInfo.name}
@@ -441,7 +451,7 @@ const BankNameScreen = ({ navigation, route }: any) => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -449,7 +459,7 @@ export default BankNameScreen;
 
 const { width, height } = Dimensions.get("window");
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: { flex: 1, backgroundColor: "#fff" },
 
   // Header

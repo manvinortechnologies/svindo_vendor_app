@@ -17,6 +17,7 @@ import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import moment from "moment";
 import Toast from "react-native-toast-message";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface Transaction {
   id: string;
@@ -29,6 +30,7 @@ interface Transaction {
 }
 
 const OnlineSaleWallet = () => {
+  const insets = useSafeAreaInsets();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [balance, setBalance] = useState<number>(0);
   const [totalSales, setTotalSales] = useState<number>(0);
@@ -138,7 +140,12 @@ const OnlineSaleWallet = () => {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <Headerwithback title="Sale Ledger" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#FCA311" />
@@ -149,7 +156,12 @@ const OnlineSaleWallet = () => {
   }
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Sale Ledger" />
       <ScrollView contentContainerStyle={styles.contentContainer}>
         <View style={styles.balanceBox}>

@@ -13,7 +13,10 @@ import Headerwithback from "./Headerwithback";
 import api from "../services/api/api";
 import { useRoute } from "@react-navigation/native";
 import { API_ROUTES } from "../constants/api-routes.constants";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import Loading from "../CommonComponent/Loading";
 import { ScaledSheet } from "react-native-size-matters";
 import moment from "moment";
@@ -40,7 +43,7 @@ interface InfoItem {
 
 const BillDetails: React.FC = () => {
   const { params }: any = useRoute();
-
+  const insets = useSafeAreaInsets();
   const [billData, setBillData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
@@ -234,7 +237,12 @@ const BillDetails: React.FC = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Header */}
       <Loading visible={isLoading} />
       <Headerwithback
@@ -424,7 +432,7 @@ const BillDetails: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

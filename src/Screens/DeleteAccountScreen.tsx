@@ -8,7 +8,10 @@ import {
   ActivityIndicator,
 } from "react-native";
 import Headerwithback from "./Headerwithback";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import { StorageUtils } from "../utils/storage";
@@ -19,7 +22,7 @@ import Toast from "react-native-toast-message";
 const DeleteAccountScreen = () => {
   const navigation = useNavigation();
   const [isLoading, setIsLoading] = useState(false);
-
+  const insets = useSafeAreaInsets();
   const handleDelete = () => {
     Alert.alert(
       "Confirm Account Deletion",
@@ -75,7 +78,12 @@ const DeleteAccountScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Delete Account" />
       <View style={styles.content}>
         <Text style={styles.title}>
@@ -110,7 +118,7 @@ const DeleteAccountScreen = () => {
           )}
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

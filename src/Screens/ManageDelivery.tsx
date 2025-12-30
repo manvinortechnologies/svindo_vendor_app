@@ -16,6 +16,7 @@ import Header from "./Header";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import MainContainer from "../CommonComponent/MainContainer";
 import { HomeNavigation } from "../constants/app-routes.constants";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ✅ Define the type for the navigation stack
 type RootStackParamList = {
@@ -36,41 +37,44 @@ export type SecurityScreenNavigationProp = StackNavigationProp<
 
 const ManageDelivery = () => {
   const navigation = useNavigation<SecurityScreenNavigationProp>(); // ✅ Corrected navigation type
-
+  const insets = useSafeAreaInsets();
   return (
-    <MainContainer>
-      <View style={styles.container}>
-        {/* <Header
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
+      {/* <Header
         title="Dilevery Management"
         backgroundColor="#FCA311"
         textColor="#fff"
         borderBottomColor="#ccc"
         paddingTop={50}
       />  */}
-        <CustomHeader title="Delivery Management" />
-        <ScrollView>
-          <View style={styles.menuContainer}>
-            {menuItems.map((item) => (
-              <TouchableOpacity
-                key={item.title}
-                style={styles.menuItem}
-                onPress={() => {
-                  navigation.navigate(item.screen as any);
-                }}
-              >
-                <Text style={styles.menuText}>{item.title}</Text>
-                <Icon
-                  name="chevron-right"
-                  size={24}
-                  color="#000"
-                  style={{ marginLeft: "auto" }}
-                />
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
-      </View>
-    </MainContainer>
+      <CustomHeader title="Delivery Management" />
+      <ScrollView>
+        <View style={styles.menuContainer}>
+          {menuItems.map((item) => (
+            <TouchableOpacity
+              key={item.title}
+              style={styles.menuItem}
+              onPress={() => {
+                navigation.navigate(item.screen as any);
+              }}
+            >
+              <Text style={styles.menuText}>{item.title}</Text>
+              <Icon
+                name="chevron-right"
+                size={24}
+                color="#000"
+                style={{ marginLeft: "auto" }}
+              />
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+    </View>
   );
 };
 

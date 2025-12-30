@@ -15,6 +15,8 @@ import { StorageUtils } from "../utils/storage";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import { client } from "../utils/chatUtils";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { ScaledSheet } from "react-native-size-matters";
 
 type RootStackParamList = {
   [HomeNavigation.ALL_CHAT_USER_SCREEN]: undefined;
@@ -27,6 +29,7 @@ type RootStackParamList = {
 };
 
 const AllChatUserScreen = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isClientReady, setIsClientReady] = useState<boolean>(false);
@@ -102,18 +105,28 @@ const AllChatUserScreen = () => {
 
   if (!isClientReady || !filters) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <View
+        style={[
+          styles.safe,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         {/* <StatusBar barStyle="dark-content" backgroundColor="#fff" /> */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Chats</Text>
         </View>
         <Loading visible={isLoading} />
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <View
+      style={[
+        styles.safe,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* <StatusBar barStyle="dark-content" backgroundColor="#fff" /> */}
       <CustomHeader title="Chats" />
       <OverlayProvider>
@@ -127,13 +140,13 @@ const AllChatUserScreen = () => {
         </Chat>
       </OverlayProvider>
       <Loading visible={isLoading} />
-    </SafeAreaView>
+    </View>
   );
 };
 
 export default AllChatUserScreen;
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   safe: {
     flex: 1,
     backgroundColor: "#fff",

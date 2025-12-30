@@ -9,7 +9,10 @@ import {
   TouchableOpacity,
 } from "react-native";
 import Headerwithback from "./Headerwithback";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 const screenWidth = Dimensions.get("window").width;
 const cardWidth = screenWidth / 2 - 24;
@@ -60,6 +63,7 @@ const products = [
 ];
 
 const SelectSpotlightProduct = () => {
+  const insets = useSafeAreaInsets();
   const renderItem = ({ item }: { item: (typeof products)[0] }) => (
     <View style={styles.card}>
       <View style={styles.stockBadge}>
@@ -77,7 +81,12 @@ const SelectSpotlightProduct = () => {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Add Spotlight Product" />
       <FlatList
         data={products}
@@ -86,7 +95,7 @@ const SelectSpotlightProduct = () => {
         renderItem={renderItem}
         contentContainerStyle={styles.listContainer}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

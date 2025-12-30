@@ -9,7 +9,10 @@ import {
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { s } from "react-native-size-matters";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import { HomeNavigation } from "../constants/app-routes.constants";
@@ -69,9 +72,14 @@ const menuItems: MenuItemType[] = [
 
 const SecurityScreen = () => {
   const navigation = useNavigation<SecurityScreenNavigationProp>();
-
+  const insets = useSafeAreaInsets();
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <CustomHeader title="Security & Policy" showBackButton={true} />
 
       <ScrollView>
@@ -96,7 +104,7 @@ const SecurityScreen = () => {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

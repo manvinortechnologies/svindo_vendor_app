@@ -18,9 +18,13 @@ import CustomSwitch from "./CustomSwitch";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
+import { ScaledSheet } from "react-native-size-matters";
 
 type RootStackParamList = {
   AddSpotlight: {
@@ -56,6 +60,7 @@ const AddSpotlightScreen = () => {
   const navigation = useNavigation();
   const route = useRoute<AddSpotlightRouteProp>();
   const item = route.params?.item;
+  const insets = useSafeAreaInsets();
   const [formData, setFormData] = useState<SpotlightFormData>({
     product: item?.product || "",
     discount_tag: item?.discount_tag || "",
@@ -211,10 +216,15 @@ const AddSpotlightScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <View
+      style={[
+        styles.mainContainer,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
+      <Headerwithback title={"Add Spotlight Product"} />
       <ScrollView contentContainerStyle={styles.container}>
         {/* Header */}
-        <Headerwithback title={"Add Spotlight Product"} />
         <Loading visible={isLoading} />
 
         <View style={{ marginTop: 10 }}>
@@ -374,17 +384,21 @@ const AddSpotlightScreen = () => {
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
 export default AddSpotlightScreen;
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
+  mainContainer: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
   container: {
     flex: 1,
-    padding: 12,
     backgroundColor: "#fff",
+    padding: "12@s",
   },
   label: {
     fontSize: 14,

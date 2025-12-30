@@ -18,8 +18,10 @@ import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import { DeliveryPerson } from "../type/common";
 import DeleteModal from "./DeleteModal";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const AddDeliveryBoy = () => {
+  const insets = useSafeAreaInsets();
   const [name, setName] = useState("");
   const [mobile, setMobile] = useState("");
   const [rating, setRating] = useState("");
@@ -289,7 +291,12 @@ const AddDeliveryBoy = () => {
   };
 
   return (
-    <MainContainer>
+    <View
+      style={[
+        styles.mainContainer,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback
         title={isEditing ? "Edit Delivery Boy" : "Add Own Delivery Boy"}
       />
@@ -491,13 +498,17 @@ const AddDeliveryBoy = () => {
           buttonText2="Delete"
         />
       </View>
-    </MainContainer>
+    </View>
   );
 };
 
 export default AddDeliveryBoy;
 
 const styles = StyleSheet.create({
+  mainContainer: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
   container: {
     flex: 1,
     backgroundColor: "#fff",

@@ -14,7 +14,7 @@ import { Company } from "../type/Company";
 import api from "../services/api/api";
 import { ScaledSheet } from "react-native-size-matters";
 import { API_ROUTES } from "../constants/api-routes.constants";
-
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 // interface Company {
 //   id: number;
 //   name: string;
@@ -26,6 +26,7 @@ import { API_ROUTES } from "../constants/api-routes.constants";
 // ];
 
 const ManageCompanies = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [companiesList, setCompaniesLst] = useState<Company[]>();
 
@@ -92,45 +93,48 @@ const ManageCompanies = ({ navigation }: any) => {
   );
 
   return (
-    <MainContainer>
-      <View style={styles.container}>
-        {/* Header */}
-        <CustomHeader
-          title="Manage Companies"
-          rightIcon={
-            !companiesList?.length ? (
-              <TouchableOpacity
-                onPress={handleAdd}
-                style={{ flexDirection: "row", alignItems: "center" }}
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
+      {/* Header */}
+      <CustomHeader
+        title="Manage Companies"
+        rightIcon={
+          !companiesList?.length ? (
+            <TouchableOpacity
+              onPress={handleAdd}
+              style={{ flexDirection: "row", alignItems: "center" }}
+            >
+              <Ionicons name="add" size={20} color="#FCA511" />
+              <Text
+                style={{ color: "#FCA511", fontWeight: "700", marginLeft: 4 }}
               >
-                <Ionicons name="add" size={20} color="#FCA511" />
-                <Text
-                  style={{ color: "#FCA511", fontWeight: "700", marginLeft: 4 }}
-                >
-                  Add
-                </Text>
-              </TouchableOpacity>
-            ) : null
-          }
-        />
-
-        {/* List */}
-        <FlatList
-          data={companiesList}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={{ padding: 16 }}
-          renderItem={renderCompany}
-          ListEmptyComponent={
-            <>
-              <Text style={{ alignSelf: "center", color: "#777" }}>
-                List is Empty
+                Add
               </Text>
-            </>
-          }
-        />
-        <Loading visible={isLoading} />
-      </View>
-    </MainContainer>
+            </TouchableOpacity>
+          ) : null
+        }
+      />
+
+      {/* List */}
+      <FlatList
+        data={companiesList}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={{ padding: 16 }}
+        renderItem={renderCompany}
+        ListEmptyComponent={
+          <>
+            <Text style={{ alignSelf: "center", color: "#777" }}>
+              List is Empty
+            </Text>
+          </>
+        }
+      />
+      <Loading visible={isLoading} />
+    </View>
   );
 };
 

@@ -1,6 +1,9 @@
 import React from "react";
 import { View, StyleSheet, Dimensions } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import privacyPolicy from "../CommonComponent/Policies/PrivacyPolicy";
@@ -8,8 +11,14 @@ import privacyPolicy from "../CommonComponent/Policies/PrivacyPolicy";
 const { width } = Dimensions.get("window");
 
 const PrivacyPolicyScreen = () => {
+  const insets = useSafeAreaInsets();
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <CustomHeader title="Privacy & Policy" showBackButton={true} />
       <View style={styles.webViewContainer}>
         <WebView
@@ -19,7 +28,7 @@ const PrivacyPolicyScreen = () => {
           showsVerticalScrollIndicator={false}
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

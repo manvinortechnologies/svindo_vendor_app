@@ -11,7 +11,10 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useNavigation } from "@react-navigation/native";
 
 import Ionicons from "react-native-vector-icons/MaterialCommunityIcons";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 type ReminderItemProps = {
   label: string;
@@ -21,6 +24,7 @@ type ReminderItemProps = {
 
 const ReminderScreen = () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [emailReminders, setEmailReminders] = useState({
     pendingInvoices: true,
     lowStock: false,
@@ -44,7 +48,12 @@ const ReminderScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity
@@ -210,7 +219,7 @@ const ReminderScreen = () => {
       )}
 
       {/* Save Button */}
-    </SafeAreaView>
+    </View>
   );
 };
 

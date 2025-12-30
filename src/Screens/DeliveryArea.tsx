@@ -8,7 +8,10 @@ import {
   TouchableOpacity,
   Alert,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import CheckBox from "@react-native-community/checkbox";
 import MainContainer from "../CommonComponent/MainContainer";
 import CustomHeader from "../CommonComponent/CustomHeader";
@@ -24,9 +27,11 @@ interface Pincode {
   city?: string;
   state?: string;
   district?: string;
+  code?: string;
 }
 
 const DeliveryArea = () => {
+  const insets = useSafeAreaInsets();
   const [pincodes, setPincodes] = useState<Pincode[]>([]);
   const [filteredPincodes, setFilteredPincodes] = useState<Pincode[]>([]);
   const [selectedPincodes, setSelectedPincodes] = useState<number[]>([]);
@@ -219,97 +224,100 @@ const DeliveryArea = () => {
   };
 
   return (
-    <MainContainer>
-      <SafeAreaView style={styles.container}>
-        <CustomHeader
-          title="Visibility & Instant Delivery Areas"
-          // rightIcon={
-          //   <CheckBox
-          //     value={
-          //       selectedPincodes.length === filteredPincodes.length &&
-          //       filteredPincodes.length > 0
-          //     }
-          //     onValueChange={handleSelectAll}
-          //     tintColors={{ true: "#FCA311", false: "#ccc" }}
-          //   />
-          // }
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
+      <CustomHeader
+        title="Visibility & Instant Delivery Areas"
+        // rightIcon={
+        //   <CheckBox
+        //     value={
+        //       selectedPincodes.length === filteredPincodes.length &&
+        //       filteredPincodes.length > 0
+        //     }
+        //     onValueChange={handleSelectAll}
+        //     tintColors={{ true: "#FCA311", false: "#ccc" }}
+        //   />
+        // }
+      />
+
+      {/* Search Bar */}
+      <View style={styles.searchContainer}>
+        <Icon name="search-outline" size={20} color="#666" />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="Search by pincode, city, state..."
+          placeholderTextColor="#999"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
         />
+        {searchQuery.length > 0 && (
+          <TouchableOpacity onPress={() => setSearchQuery("")}>
+            <Icon name="close-circle" size={20} color="#999" />
+          </TouchableOpacity>
+        )}
+      </View>
 
-        {/* Search Bar */}
-        <View style={styles.searchContainer}>
-          <Icon name="search-outline" size={20} color="#666" />
-          <TextInput
-            style={styles.searchInput}
-            placeholder="Search by pincode, city, state..."
-            placeholderTextColor="#999"
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-          />
-          {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery("")}>
-              <Icon name="close-circle" size={20} color="#999" />
-            </TouchableOpacity>
-          )}
-        </View>
+      {/* Note */}
+      <View style={styles.noteContainer}>
+        <Text style={styles.noteText}>
+          For All India visibility of store please verify your business and
+          contact supports. {"\n"}For unregistered Stores please add pincodes
+          only from the same state, Selling outside the state online without GST
+          is illegal, If found your account will be banned permanently.
+        </Text>
+      </View>
 
-        {/* Note */}
-        <View style={styles.noteContainer}>
-          <Text style={styles.noteText}>
-            For All India visibility of store please verify your business and
-            contact supports. {"\n"}For unregistered Stores please add pincodes
-            only from the same state, Selling outside the state online without
-            GST is illegal, If found your account will be banned permanently.
-          </Text>
-        </View>
-
-        {/* Pincode List */}
-        <View style={styles.listContainer}>
-          {filteredPincodes.length > 0 ? (
-            <>
-              <Text style={styles.selectedCount}>
-                {selectedPincodes.length} of {filteredPincodes.length} selected
-              </Text>
-              <FlatList
-                data={filteredPincodes}
-                renderItem={renderPincodeItem}
-                keyExtractor={(item) => item.id.toString()}
-                contentContainerStyle={styles.listContent}
-                showsVerticalScrollIndicator={true}
-              />
-            </>
-          ) : (
-            <View style={styles.emptyContainer}>
-              <Icon name="location-outline" size={60} color="#ccc" />
-              <Text style={styles.emptyText}>
-                {searchQuery ? "No pincodes found" : "No pincodes available"}
-              </Text>
-              {searchQuery && (
-                <TouchableOpacity
-                  onPress={() => setSearchQuery("")}
-                  style={styles.clearButton}
-                >
-                  <Text style={styles.clearButtonText}>Clear Search</Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-        </View>
-
-        {/* Save Button */}
-        {hasChanges() && (
-          <View style={styles.footer}>
-            <CustomButton
-              title={`Save ${selectedPincodes.length} Pincode(s)`}
-              onPress={handleSave}
-              isLoading={isSaving}
-              disabled={isSaving}
+      {/* Pincode List */}
+      <View style={styles.listContainer}>
+        {filteredPincodes.length > 0 ? (
+          <>
+            <Text style={styles.selectedCount}>
+              {selectedPincodes.length} of {filteredPincodes.length} selected
+            </Text>
+            <FlatList
+              data={filteredPincodes}
+              renderItem={renderPincodeItem}
+              keyExtractor={(item) => item.id.toString()}
+              contentContainerStyle={styles.listContent}
+              showsVerticalScrollIndicator={true}
             />
+          </>
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Icon name="location-outline" size={60} color="#ccc" />
+            <Text style={styles.emptyText}>
+              {searchQuery ? "No pincodes found" : "No pincodes available"}
+            </Text>
+            {searchQuery && (
+              <TouchableOpacity
+                onPress={() => setSearchQuery("")}
+                style={styles.clearButton}
+              >
+                <Text style={styles.clearButtonText}>Clear Search</Text>
+              </TouchableOpacity>
+            )}
           </View>
         )}
+      </View>
 
-        <Loading visible={isLoading} />
-      </SafeAreaView>
-    </MainContainer>
+      {/* Save Button */}
+      {hasChanges() && (
+        <View style={styles.footer}>
+          <CustomButton
+            title={`Save ${selectedPincodes.length} Pincode(s)`}
+            onPress={handleSave}
+            isLoading={isSaving}
+            disabled={isSaving}
+          />
+        </View>
+      )}
+
+      <Loading visible={isLoading} />
+    </View>
   );
 };
 

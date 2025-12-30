@@ -11,9 +11,13 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import Headerwithback from "./Headerwithback"; // ✅ your custom header
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 const RateUsScreen = () => {
+  const insets = useSafeAreaInsets();
   const [rating, setRating] = useState(5);
   const [comment, setComment] = useState("");
 
@@ -28,7 +32,12 @@ const RateUsScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Rate Us" />
       <ScrollView contentContainerStyle={styles.scroolcontainer}>
         {/* Header */}
@@ -75,7 +84,7 @@ const RateUsScreen = () => {
           As a thank you, enjoy a 10% discount on your next order!
         </Text>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

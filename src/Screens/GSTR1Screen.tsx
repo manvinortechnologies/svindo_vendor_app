@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from "moment";
 
@@ -9,6 +12,7 @@ import ReportHeader from "./ReportHeader";
 import Bottomnavigation from "./Bottomnavigation";
 
 const GSTR1Screen = () => {
+  const insets = useSafeAreaInsets();
   const [nonTaxChecked, setNonTaxChecked] = useState(false);
   const [activeTab, setActiveTab] = useState<"sale" | "saleReturn">("sale");
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
@@ -32,82 +36,82 @@ const GSTR1Screen = () => {
   };
 
   return (
-    <View style={styles.container}>
-      <SafeAreaView style={{ flex: 1 }}>
-        <ReportHeader
-          title="Day Book "
-          onBack={() => console.log("Back pressed")}
-          onPdfPress={() => console.log("Download PDF")}
-          onXlsPress={() => console.log("Download XLS")}
-        />
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
+      <ReportHeader
+        title="Day Book "
+        onBack={() => console.log("Back pressed")}
+        onPdfPress={() => console.log("Download PDF")}
+        onXlsPress={() => console.log("Download XLS")}
+      />
 
-        <View style={styles.tabContainer}>
-          <TouchableOpacity
-            style={styles.tab}
-            onPress={() => showDatePicker(true)}
-          >
-            <Icon name="calendar-month-outline" size={16} color="#FCA311" />
-            <Text style={[styles.tabText, { marginLeft: 6 }]}>
-              {moment(startDate).format("DD/MM/YYYY")} To{" "}
-              {moment(endDate).format("DD/MM/YYYY")}
-            </Text>
-            <Icon name="chevron-down" size={16} color="#000" />
-          </TouchableOpacity>
-        </View>
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={styles.tab}
+          onPress={() => showDatePicker(true)}
+        >
+          <Icon name="calendar-month-outline" size={16} color="#FCA311" />
+          <Text style={[styles.tabText, { marginLeft: 6 }]}>
+            {moment(startDate).format("DD/MM/YYYY")} To{" "}
+            {moment(endDate).format("DD/MM/YYYY")}
+          </Text>
+          <Icon name="chevron-down" size={16} color="#000" />
+        </TouchableOpacity>
+      </View>
 
-        {/* Checkbox Section */}
-        <View style={styles.checkboxContainer}>
-          <TouchableOpacity
-            style={styles.checkboxRow}
-            onPress={() => setNonTaxChecked(!nonTaxChecked)}
-          >
-            <Icon
-              name={
-                nonTaxChecked ? "checkbox-marked" : "checkbox-blank-outline"
-              }
-              size={18}
-              color="#FCA311"
-            />
-            <Text style={styles.checkboxLabel}>
-              Consider non tax txns as exempted
-            </Text>
-          </TouchableOpacity>
-        </View>
+      {/* Checkbox Section */}
+      <View style={styles.checkboxContainer}>
+        <TouchableOpacity
+          style={styles.checkboxRow}
+          onPress={() => setNonTaxChecked(!nonTaxChecked)}
+        >
+          <Icon
+            name={nonTaxChecked ? "checkbox-marked" : "checkbox-blank-outline"}
+            size={18}
+            color="#FCA311"
+          />
+          <Text style={styles.checkboxLabel}>
+            Consider non tax txns as exempted
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-        {/* Tabs for Sale / Sale Return */}
-        <View style={styles.tabBar}>
-          <TouchableOpacity
-            style={[styles.tabButton, activeTab === "sale" && styles.activeTab]}
-            onPress={() => setActiveTab("sale")}
-          >
-            <Text
-              style={[
-                styles.tabLabel,
-                activeTab === "sale" && styles.activeTabLabel,
-              ]}
-            >
-              Sale
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+      {/* Tabs for Sale / Sale Return */}
+      <View style={styles.tabBar}>
+        <TouchableOpacity
+          style={[styles.tabButton, activeTab === "sale" && styles.activeTab]}
+          onPress={() => setActiveTab("sale")}
+        >
+          <Text
             style={[
-              styles.tabButton,
-              activeTab === "saleReturn" && styles.activeTab,
+              styles.tabLabel,
+              activeTab === "sale" && styles.activeTabLabel,
             ]}
-            onPress={() => setActiveTab("saleReturn")}
           >
-            <Text
-              style={[
-                styles.tabLabel,
-                activeTab === "saleReturn" && styles.activeTabLabel,
-              ]}
-            >
-              Sale Return
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </SafeAreaView>
-
+            Sale
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.tabButton,
+            activeTab === "saleReturn" && styles.activeTab,
+          ]}
+          onPress={() => setActiveTab("saleReturn")}
+        >
+          <Text
+            style={[
+              styles.tabLabel,
+              activeTab === "saleReturn" && styles.activeTabLabel,
+            ]}
+          >
+            Sale Return
+          </Text>
+        </TouchableOpacity>
+      </View>
       <DateTimePickerModal
         isVisible={isDatePickerVisible}
         mode="date"

@@ -11,9 +11,13 @@ import {
 import Headerwithback from "./Headerwithback";
 import Bottomnavigation from "./Bottomnavigation";
 import CustomSwitch from "./CustomSwitch"; // Make sure this path is correct
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 const PreferencesScreen = () => {
+  const insets = useSafeAreaInsets();
   const [sortBy, setSortBy] = useState<"created" | "document">("created");
   const [roundOff, setRoundOff] = useState(false);
   const [sendEmail, setSendEmail] = useState(true);
@@ -22,7 +26,12 @@ const PreferencesScreen = () => {
   const [trackDeliveryInventory, setTrackDeliveryInventory] = useState(true);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Preferences" />
 
       <ScrollView contentContainerStyle={styles.content}>
@@ -103,7 +112,7 @@ const PreferencesScreen = () => {
       <TouchableOpacity style={styles.updateBtn}>
         <Text style={styles.updateText}>Update</Text>
       </TouchableOpacity>
-    </SafeAreaView>
+    </View>
   );
 };
 

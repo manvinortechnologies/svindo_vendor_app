@@ -11,7 +11,10 @@ import {
 } from "react-native";
 import NavigationButton from "./NavigationButton";
 import CustomHeader from "../CommonComponent/CustomHeader";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 const screenWidth = Dimensions.get("window").width - 20;
 interface Product {
@@ -150,8 +153,14 @@ const getFilteredProducts = (type: string) => {
 };
 
 const DraftScreen = () => {
+  const insets = useSafeAreaInsets();
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <CustomHeader
         title="Draft"
         rightIcon={
@@ -221,7 +230,7 @@ const DraftScreen = () => {
           <Text style={styles.barcodetext}>Bar-code{"\n"} scan</Text>
         </View>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

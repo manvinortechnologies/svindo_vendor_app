@@ -12,7 +12,10 @@ import Headerwithback from "./Headerwithback";
 import Bottomnavigation from "./Bottomnavigation";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 // Define your navigation types if needed
 type RootStackParamList = {
@@ -30,7 +33,7 @@ type SettingsScreenNavigationProp = StackNavigationProp<
 
 const SettingsScreen = () => {
   const navigation = useNavigation<SettingsScreenNavigationProp>();
-
+  const insets = useSafeAreaInsets();
   const settingsOptions = [
     { label: "Preferences", route: "PreferencesScreen" },
     { label: "Sales", route: "Sales" },
@@ -40,7 +43,12 @@ const SettingsScreen = () => {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Settings" />
       <ScrollView contentContainerStyle={styles.scrollContent}>
         {settingsOptions.map((item, index) => (
@@ -54,7 +62,7 @@ const SettingsScreen = () => {
           </TouchableOpacity>
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

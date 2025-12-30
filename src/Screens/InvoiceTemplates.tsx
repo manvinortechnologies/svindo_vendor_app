@@ -16,7 +16,7 @@ import Bottomnavigation from "./Bottomnavigation";
 
 import { useNavigation } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
-
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 const templates = [
   require("../assets/tamplate.png"),
   require("../assets/tamplate1.png"),
@@ -33,11 +33,17 @@ const invoiceTypes = ["Invoice", "Purchase", "Estimate"];
 
 const InvoiceTemplates = () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [selectedType, setSelectedType] = useState("Invoice");
   const [selectedTemplate, setSelectedTemplate] = useState(0);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Header */}
       <Headerwithback title="Invoice Tamplates" />
 
@@ -115,7 +121,7 @@ const InvoiceTemplates = () => {
           <Text style={styles.updateText}>Save and Update</Text>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

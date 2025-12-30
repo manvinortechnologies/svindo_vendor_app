@@ -13,13 +13,18 @@ import Headerwithback from "./Headerwithback";
 import CustomSwitch from "./CustomSwitch";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from "moment";
+import { ScaledSheet } from "react-native-size-matters";
 
 const { width } = Dimensions.get("window");
 
 const AutoAssignDelivery = () => {
+  const insets = useSafeAreaInsets();
   const [isEnabled, setIsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [tillDate, setTillDate] = useState<Date>(new Date());
@@ -88,7 +93,12 @@ const AutoAssignDelivery = () => {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Auto Assign Delivery Partner" />
       <Loading visible={loading} />
       {/* Assign Delivery Partner */}
@@ -214,13 +224,13 @@ const AutoAssignDelivery = () => {
         date={tillDate}
         maximumDate={new Date()}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
 export default AutoAssignDelivery;
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",

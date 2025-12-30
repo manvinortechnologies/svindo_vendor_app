@@ -20,7 +20,6 @@ import Carousel, { ICarouselInstance } from "react-native-reanimated-carousel";
 import CustomDropdown from "../CommonComponent/CustomDropdown";
 import { vs } from "react-native-size-matters";
 import { HomeNavigation } from "../constants/app-routes.constants";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
@@ -479,7 +478,12 @@ const BuyersRequestScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Reuse your Headerwithback */}
       <Headerwithback title="Buyers Request" />
       <View>
@@ -942,7 +946,7 @@ const BuyersRequestScreen: React.FC = () => {
         setIsImageModalVisible={setIsImageModalVisible}
         selectedImage={selectedImage}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

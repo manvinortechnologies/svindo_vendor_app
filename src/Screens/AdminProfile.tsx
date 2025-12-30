@@ -16,7 +16,10 @@ import apis from "../services/api/api";
 import api from "../services/api/api";
 import { DEFAULT_STATUS_CODE_SUCCESS } from "../constants/api-const";
 import { HomeNavigation } from "../constants/app-routes.constants";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { ScaledSheet } from "react-native-size-matters";
 import { StorageUtils } from "../utils/storage";
 import {
@@ -35,6 +38,7 @@ type FormData = {
 };
 
 const AdminProfile = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
   const {
     control,
     handleSubmit,
@@ -108,7 +112,12 @@ const AdminProfile = ({ navigation }: any) => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Loading visible={isLoading} />
 
       <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -315,7 +324,7 @@ const AdminProfile = ({ navigation }: any) => {
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
@@ -325,7 +334,7 @@ const styles = ScaledSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
-    paddingHorizontal: 20,
+    paddingHorizontal: "20@s",
   },
   scrollContainer: {
     alignItems: "center",

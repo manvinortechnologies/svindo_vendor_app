@@ -8,7 +8,10 @@ import {
   Dimensions,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from "moment";
 import api from "../services/api/api";
@@ -37,6 +40,7 @@ interface DayBookData {
 }
 
 const DayBookScreen = () => {
+  const insets = useSafeAreaInsets();
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [daybookData, setDaybookData] = useState<DayBookData | null>(null);
@@ -171,7 +175,12 @@ const DayBookScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <ReportHeader
         title="Day Book "
         onBack={() => console.log("Back pressed")}
@@ -312,7 +321,7 @@ const DayBookScreen = () => {
         maxDate={moment().format("YYYY-MM-DD")}
         initialDate={moment(selectedDate).format("YYYY-MM-DD")}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

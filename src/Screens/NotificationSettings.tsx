@@ -13,6 +13,7 @@ import Headerwithback from "./Headerwithback";
 import MainContainer from "../CommonComponent/MainContainer";
 import NotificationService from "../services/notification-service";
 import Toast from "react-native-toast-message";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface NotificationSettings {
   pushNotifications: boolean;
@@ -26,6 +27,7 @@ interface NotificationSettings {
 }
 
 const NotificationSettings = () => {
+  const insets = useSafeAreaInsets();
   const [settings, setSettings] = useState<NotificationSettings>({
     pushNotifications: true,
     orderNotifications: true,
@@ -137,7 +139,12 @@ const NotificationSettings = () => {
   );
 
   return (
-    <MainContainer>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Notification Settings" />
       <ScrollView style={styles.container}>
         {/* Push Notifications Section */}
@@ -225,7 +232,7 @@ const NotificationSettings = () => {
           </Text>
         </TouchableOpacity>
       </ScrollView>
-    </MainContainer>
+    </View>
   );
 };
 

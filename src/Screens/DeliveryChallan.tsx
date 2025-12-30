@@ -13,13 +13,19 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Feather from "react-native-vector-icons/Feather";
 import Headerwithback from "./Headerwithback";
 import { SafeAreaView } from "react-native-safe-area-context";
-
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 const DeliveryChallan = () => {
+  const insets = useSafeAreaInsets();
   const handleSearch = () => {
     // Handle search action
   };
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback
         title="Delivery Challan"
         rightIcons={[
@@ -116,7 +122,7 @@ const DeliveryChallan = () => {
           ))}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

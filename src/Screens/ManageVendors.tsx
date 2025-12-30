@@ -7,7 +7,10 @@ import {
   TextInput,
   FlatList,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import Ionicons from "react-native-vector-icons/Ionicons";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import Headerwithback from "./Headerwithback";
@@ -29,6 +32,7 @@ export type SecurityScreenNavigationProp = StackNavigationProp<
 >;
 
 const ManageVendors = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [vendorList, setVendorList] = useState<Vendor[]>();
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -69,7 +73,12 @@ const ManageVendors = ({ navigation }: any) => {
   }, [searchTerm, vendorList]);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Manage Venders" />
 
       {/* Search and Add */}
@@ -149,7 +158,7 @@ const ManageVendors = ({ navigation }: any) => {
         <Ionicons name="add" size={26} color="#fff" />
       </TouchableOpacity>
       <Loading visible={isLoading} />
-    </SafeAreaView>
+    </View>
   );
 };
 const styles = StyleSheet.create({

@@ -17,6 +17,8 @@ export interface ProductType {
   id: string;
   name: string;
   stock: number;
+  stock_cached?: number;
+  unit?: string;
   track_stock?: boolean;
   description: string;
   image?: string;
@@ -71,7 +73,9 @@ const ProductItem: React.FC<ProductItemProps> = ({
     >
       {showStock && (
         <View style={styles.stockBadgeAbove}>
-          <Text style={styles.stockText}>{product.stock} Pieces Left</Text>
+          <Text style={styles.stockText}>
+            {product.stock_cached} {product.unit} Left
+          </Text>
         </View>
       )}
 

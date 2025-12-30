@@ -16,7 +16,12 @@ import CustomModal from "../Modals/CustomModal";
 import CalendarModal from "../Modals/CalendarModal";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import {
+  useNavigation,
+  useRoute,
+  RouteProp,
+  useIsFocused,
+} from "@react-navigation/native";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import Icon from "react-native-vector-icons/Ionicons";
 import CustomHeader from "../CommonComponent/CustomHeader";
@@ -25,6 +30,7 @@ import { ScaledSheet } from "react-native-size-matters";
 import Toast from "react-native-toast-message";
 import DeleteConfirmationModal from "../Modals/DeleteConfirmationModal";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface PurchaseItem {
   product: number;
@@ -94,7 +100,9 @@ type PurchaseLedgerNavProp = StackNavigationProp<
 >;
 
 const PurchaseLedger = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<PurchaseLedgerNavProp>();
+  const isFocused = useIsFocused();
   const route =
     useRoute<RouteProp<RootStackParamList, HomeNavigation.PURCHASE_LEDGER>>();
 
@@ -264,8 +272,10 @@ const PurchaseLedger = () => {
   };
 
   useEffect(() => {
-    fetchPurchaseData();
-  }, []);
+    if (isFocused) {
+      fetchPurchaseData();
+    }
+  }, [isFocused]);
 
   // Handle navigation params - open purchase modal if purchaseId is provided
   useEffect(() => {
@@ -393,453 +403,451 @@ const PurchaseLedger = () => {
   );
 
   return (
-    <MainContainer>
-      <View style={styles.container}>
-        <Loading visible={isLoading} />
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
+      <Loading visible={isLoading} />
 
-        {/* Ledger Summary Banner */}
-        <CustomHeader
-          title="Purchase Ledger"
-          rightIcon={
-            <TouchableOpacity onPress={() => setShowCalendarModal(true)}>
-              <Icon name="calendar-outline" size={22} color="#FCA311" />
-            </TouchableOpacity>
-          }
-        />
-        <View style={styles.ledgerBanner}>
-          <Text style={styles.ledgerText}>Total Purchases</Text>
-          <Text style={styles.balanceText}>₹{totalBalance.toFixed(2)}</Text>
-        </View>
+      {/* Ledger Summary Banner */}
+      <CustomHeader
+        title="Purchase Ledger"
+        rightIcon={
+          <TouchableOpacity onPress={() => setShowCalendarModal(true)}>
+            <Icon name="calendar-outline" size={22} color="#FCA311" />
+          </TouchableOpacity>
+        }
+      />
+      <View style={styles.ledgerBanner}>
+        <Text style={styles.ledgerText}>Total Purchases</Text>
+        <Text style={styles.balanceText}>₹{totalBalance.toFixed(2)}</Text>
+      </View>
 
-        {/* Purchase Entries */}
-        <FlatList
-          data={Object.keys(groupedPurchases)}
-          renderItem={renderDateGroup}
-          keyExtractor={(date) => date}
-          style={styles.list}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContent}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={onRefresh}
-              colors={["#FCA311"]}
-              tintColor="#FCA311"
-            />
-          }
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No purchase data found</Text>
-              <Text style={styles.emptySubText}>
-                Pull down to refresh or add a new purchase
-              </Text>
+      {/* Purchase Entries */}
+      <FlatList
+        data={Object.keys(groupedPurchases)}
+        renderItem={renderDateGroup}
+        keyExtractor={(date) => date}
+        style={styles.list}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefresh}
+            colors={["#FCA311"]}
+            tintColor="#FCA311"
+          />
+        }
+        ListEmptyComponent={
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>No purchase data found</Text>
+            <Text style={styles.emptySubText}>
+              Pull down to refresh or add a new purchase
+            </Text>
+          </View>
+        }
+      />
+
+      {/* Add Purchase Button */}
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() =>
+          (navigation as any).navigate(HomeNavigation.CREATE_PURCHASE)
+        }
+        activeOpacity={0.9}
+      >
+        <Icon name="add" size={28} color="#fff" />
+      </TouchableOpacity>
+
+      {/* Purchase Details Modal */}
+      <CustomModal
+        visible={isModalVisible}
+        onClose={closeModal}
+        title="Purchase Details"
+        modalStyle={styles.modalStyle}
+      >
+        {selectedPurchase && (
+          <ScrollView
+            style={styles.modalContent}
+            showsVerticalScrollIndicator={false}
+          >
+            {/* Purchase Header */}
+            <View style={styles.modalHeader}>
+              <View style={styles.headerActions}>
+                <Text style={styles.purchaseTitle}>
+                  {selectedPurchase.purchase_code}
+                </Text>
+                <Text style={styles.paymentMethod}>
+                  {selectedPurchase.payment_method.charAt(0).toUpperCase() +
+                    selectedPurchase.payment_method.slice(1) +
+                    " Purchase"}
+                </Text>
+              </View>
+              {/* Edit and Delete Buttons */}
+              <View style={styles.actionButtonsContainer}>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.editButton]}
+                  onPress={handleEditPurchase}
+                >
+                  <Icon name="create-outline" size={18} color="#fff" />
+                  <Text style={styles.actionButtonText}>Edit</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionButton, styles.deleteButton]}
+                  onPress={handleDeleteClick}
+                >
+                  <Icon name="trash-outline" size={18} color="#fff" />
+                  <Text style={styles.actionButtonText}>Delete</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          }
-        />
 
-        {/* Add Purchase Button */}
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={() =>
-            (navigation as any).navigate(HomeNavigation.CREATE_PURCHASE)
-          }
-          activeOpacity={0.9}
-        >
-          <Icon name="add" size={28} color="#fff" />
-        </TouchableOpacity>
-
-        {/* Purchase Details Modal */}
-        <CustomModal
-          visible={isModalVisible}
-          onClose={closeModal}
-          title="Purchase Details"
-          modalStyle={styles.modalStyle}
-        >
-          {selectedPurchase && (
-            <ScrollView
-              style={styles.modalContent}
-              showsVerticalScrollIndicator={false}
-            >
-              {/* Purchase Header */}
-              <View style={styles.modalHeader}>
-                <View style={styles.headerActions}>
-                  <Text style={styles.purchaseTitle}>
-                    {selectedPurchase.purchase_code}
-                  </Text>
-                  <Text style={styles.paymentMethod}>
-                    {selectedPurchase.payment_method.charAt(0).toUpperCase() +
-                      selectedPurchase.payment_method.slice(1) +
-                      " Purchase"}
-                  </Text>
-                </View>
-                {/* Edit and Delete Buttons */}
-                <View style={styles.actionButtonsContainer}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.editButton]}
-                    onPress={handleEditPurchase}
-                  >
-                    <Icon name="create-outline" size={18} color="#fff" />
-                    <Text style={styles.actionButtonText}>Edit</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.actionButton, styles.deleteButton]}
-                    onPress={handleDeleteClick}
-                  >
-                    <Icon name="trash-outline" size={18} color="#fff" />
-                    <Text style={styles.actionButtonText}>Delete</Text>
-                  </TouchableOpacity>
-                </View>
+            {/* Vendor Details */}
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>Vendor Details</Text>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Vendor Name:</Text>
+                <Text style={styles.detailValue}>
+                  {selectedPurchase.vendor_details?.name || "N/A"}
+                </Text>
               </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Company Name:</Text>
+                <Text style={styles.detailValue}>
+                  {selectedPurchase.vendor_details?.company_name || "N/A"}
+                </Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Email:</Text>
+                <Text style={styles.detailValue}>
+                  {selectedPurchase.vendor_details?.email || "N/A"}
+                </Text>
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Contact:</Text>
+                <Text style={styles.detailValue}>
+                  {selectedPurchase.vendor_details?.contact || "N/A"}
+                </Text>
+              </View>
+              {selectedPurchase.vendor_details?.gst && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>GST:</Text>
+                  <Text style={styles.detailValue}>
+                    {selectedPurchase.vendor_details.gst}
+                  </Text>
+                </View>
+              )}
+              {selectedPurchase.vendor_details?.state_details && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>State:</Text>
+                  <Text style={styles.detailValue}>
+                    {selectedPurchase.vendor_details.state_details.name}
+                  </Text>
+                </View>
+              )}
+            </View>
 
-              {/* Vendor Details */}
-              <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Vendor Details</Text>
+            {/* Purchase Information */}
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>Purchase Information</Text>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Purchase Date:</Text>
+                <Text style={styles.detailValue}>
+                  {formatDate(selectedPurchase.purchase_date)}
+                </Text>
+              </View>
+              {selectedPurchase.supplier_invoice_date && (
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Vendor Name:</Text>
+                  <Text style={styles.detailLabel}>Supplier Invoice Date:</Text>
                   <Text style={styles.detailValue}>
-                    {selectedPurchase.vendor_details?.name || "N/A"}
+                    {formatDate(selectedPurchase.supplier_invoice_date)}
                   </Text>
                 </View>
+              )}
+              {selectedPurchase.due_date && (
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Company Name:</Text>
+                  <Text style={styles.detailLabel}>Due Date:</Text>
                   <Text style={styles.detailValue}>
-                    {selectedPurchase.vendor_details?.company_name || "N/A"}
+                    {formatDate(selectedPurchase.due_date)}
                   </Text>
                 </View>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Email:</Text>
-                  <Text style={styles.detailValue}>
-                    {selectedPurchase.vendor_details?.email || "N/A"}
+              )}
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Payment Method:</Text>
+                <Text style={styles.detailValue}>
+                  {selectedPurchase.payment_method.charAt(0).toUpperCase() +
+                    selectedPurchase.payment_method.slice(1)}
+                </Text>
+              </View>
+            </View>
+
+            {/* Items Details */}
+            {selectedPurchase.items && selectedPurchase.items.length > 0 && (
+              <View style={[styles.sectionContainer, { padding: 0 }]}>
+                <Text style={styles.sectionTitle}>
+                  Items ({selectedPurchase.items.length})
+                </Text>
+
+                {/* Table Header */}
+                <View style={styles.itemsTableHeader}>
+                  <Text style={styles.itemsTableHeaderText}>S.No.</Text>
+                  <Text style={[styles.itemsTableHeaderText, { flex: 2 }]}>
+                    Item
                   </Text>
+                  <Text style={styles.itemsTableHeaderText}>Quantity</Text>
+                  <Text style={styles.itemsTableHeaderText}>Price</Text>
+                  <Text style={styles.itemsTableHeaderText}>Amount</Text>
                 </View>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Contact:</Text>
-                  <Text style={styles.detailValue}>
-                    {selectedPurchase.vendor_details?.contact || "N/A"}
-                  </Text>
-                </View>
-                {selectedPurchase.vendor_details?.gst && (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>GST:</Text>
-                    <Text style={styles.detailValue}>
-                      {selectedPurchase.vendor_details.gst}
+
+                {/* Table Rows */}
+                {selectedPurchase.items.map((item, index) => (
+                  <View key={index} style={styles.itemsTableRow}>
+                    <Text style={styles.itemsTableText}>{index + 1}</Text>
+                    <Text
+                      style={[styles.itemsTableText, { flex: 2 }]}
+                      numberOfLines={2}
+                    >
+                      {item.product_details?.name || `${item.product}`}
+                    </Text>
+                    <Text style={styles.itemsTableText}>
+                      {item.quantity || 0}
+                    </Text>
+                    <Text style={styles.itemsTableText}>
+                      ₹{Number(item.price || 0).toFixed(2)}
+                    </Text>
+                    <Text style={styles.itemsTableText}>
+                      ₹{Number(item.amount || 0).toFixed(2)}
                     </Text>
                   </View>
-                )}
-                {selectedPurchase.vendor_details?.state_details && (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>State:</Text>
-                    <Text style={styles.detailValue}>
-                      {selectedPurchase.vendor_details.state_details.name}
-                    </Text>
-                  </View>
-                )}
+                ))}
               </View>
+            )}
 
-              {/* Purchase Information */}
-              <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Purchase Information</Text>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Purchase Date:</Text>
-                  <Text style={styles.detailValue}>
-                    {formatDate(selectedPurchase.purchase_date)}
-                  </Text>
-                </View>
-                {selectedPurchase.supplier_invoice_date && (
+            {/* Financial Summary */}
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>Financial Summary</Text>
+              {selectedPurchase.discount_amount &&
+                Number(selectedPurchase.discount_amount) > 0 && (
                   <View style={styles.detailRow}>
                     <Text style={styles.detailLabel}>
-                      Supplier Invoice Date:
+                      Discount ({selectedPurchase.discount_percentage}%):
                     </Text>
                     <Text style={styles.detailValue}>
-                      {formatDate(selectedPurchase.supplier_invoice_date)}
+                      ₹{Number(selectedPurchase.discount_amount).toFixed(2)}
                     </Text>
                   </View>
                 )}
-                {selectedPurchase.due_date && (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Due Date:</Text>
-                    <Text style={styles.detailValue}>
-                      {formatDate(selectedPurchase.due_date)}
-                    </Text>
-                  </View>
-                )}
+              {Number(selectedPurchase.delivery_shipping_charges || 0) > 0 && (
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Payment Method:</Text>
+                  <Text style={styles.detailLabel}>Shipping Charges:</Text>
                   <Text style={styles.detailValue}>
-                    {selectedPurchase.payment_method.charAt(0).toUpperCase() +
-                      selectedPurchase.payment_method.slice(1)}
-                  </Text>
-                </View>
-              </View>
-
-              {/* Items Details */}
-              {selectedPurchase.items && selectedPurchase.items.length > 0 && (
-                <View style={[styles.sectionContainer, { padding: 0 }]}>
-                  <Text style={styles.sectionTitle}>
-                    Items ({selectedPurchase.items.length})
-                  </Text>
-
-                  {/* Table Header */}
-                  <View style={styles.itemsTableHeader}>
-                    <Text style={styles.itemsTableHeaderText}>S.No.</Text>
-                    <Text style={[styles.itemsTableHeaderText, { flex: 2 }]}>
-                      Item
-                    </Text>
-                    <Text style={styles.itemsTableHeaderText}>Quantity</Text>
-                    <Text style={styles.itemsTableHeaderText}>Price</Text>
-                    <Text style={styles.itemsTableHeaderText}>Amount</Text>
-                  </View>
-
-                  {/* Table Rows */}
-                  {selectedPurchase.items.map((item, index) => (
-                    <View key={index} style={styles.itemsTableRow}>
-                      <Text style={styles.itemsTableText}>{index + 1}</Text>
-                      <Text
-                        style={[styles.itemsTableText, { flex: 2 }]}
-                        numberOfLines={2}
-                      >
-                        {item.product_details?.name || `${item.product}`}
-                      </Text>
-                      <Text style={styles.itemsTableText}>
-                        {item.quantity || 0}
-                      </Text>
-                      <Text style={styles.itemsTableText}>
-                        ₹{Number(item.price || 0).toFixed(2)}
-                      </Text>
-                      <Text style={styles.itemsTableText}>
-                        ₹{Number(item.amount || 0).toFixed(2)}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              )}
-
-              {/* Financial Summary */}
-              <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Financial Summary</Text>
-                {selectedPurchase.discount_amount &&
-                  Number(selectedPurchase.discount_amount) > 0 && (
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>
-                        Discount ({selectedPurchase.discount_percentage}%):
-                      </Text>
-                      <Text style={styles.detailValue}>
-                        ₹{Number(selectedPurchase.discount_amount).toFixed(2)}
-                      </Text>
-                    </View>
-                  )}
-                {Number(selectedPurchase.delivery_shipping_charges || 0) >
-                  0 && (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Shipping Charges:</Text>
-                    <Text style={styles.detailValue}>
-                      ₹
-                      {Number(
-                        selectedPurchase.delivery_shipping_charges
-                      ).toFixed(2)}
-                    </Text>
-                  </View>
-                )}
-                {Number(selectedPurchase.packaging_charges || 0) > 0 && (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Packaging Charges:</Text>
-                    <Text style={styles.detailValue}>
-                      ₹{Number(selectedPurchase.packaging_charges).toFixed(2)}
-                    </Text>
-                  </View>
-                )}
-                {Number(selectedPurchase.advance_amount || 0) > 0 && (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Advance Amount:</Text>
-                    <Text style={styles.detailValue}>
-                      ₹{Number(selectedPurchase.advance_amount).toFixed(2)}
-                    </Text>
-                  </View>
-                )}
-                <View style={[styles.detailRow, styles.totalRow]}>
-                  <Text style={styles.totalLabel}>Total Amount:</Text>
-                  <Text style={styles.totalValue}>
-                    ₹{calculatePurchaseTotal(selectedPurchase).toFixed(2)}
-                  </Text>
-                </View>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Balance Amount:</Text>
-                  <Text style={[styles.detailValue, styles.balanceAmount]}>
                     ₹
-                    {(
-                      calculatePurchaseTotal(selectedPurchase) -
-                      Number(selectedPurchase.advance_amount || 0)
-                    ).toFixed(2)}
+                    {Number(selectedPurchase.delivery_shipping_charges).toFixed(
+                      2
+                    )}
                   </Text>
                 </View>
-              </View>
-
-              {/* Additional Details */}
-              {(selectedPurchase.notes ||
-                selectedPurchase.references ||
-                selectedPurchase.eway_bill_no ||
-                selectedPurchase.lr_no ||
-                selectedPurchase.vehicle_no) && (
-                <View style={styles.sectionContainer}>
-                  <Text style={styles.sectionTitle}>Additional Details</Text>
-                  {selectedPurchase.notes && (
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Notes:</Text>
-                      <Text style={styles.detailValue}>
-                        {selectedPurchase.notes}
-                      </Text>
-                    </View>
-                  )}
-                  {selectedPurchase.references && (
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>References:</Text>
-                      <Text style={styles.detailValue}>
-                        {selectedPurchase.references}
-                      </Text>
-                    </View>
-                  )}
-                  {selectedPurchase.eway_bill_no && (
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>E-Way Bill No:</Text>
-                      <Text style={styles.detailValue}>
-                        {selectedPurchase.eway_bill_no}
-                      </Text>
-                    </View>
-                  )}
-                  {selectedPurchase.lr_no && (
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>LR No:</Text>
-                      <Text style={styles.detailValue}>
-                        {selectedPurchase.lr_no}
-                      </Text>
-                    </View>
-                  )}
-                  {selectedPurchase.vehicle_no && (
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Vehicle No:</Text>
-                      <Text style={styles.detailValue}>
-                        {selectedPurchase.vehicle_no}
-                      </Text>
-                    </View>
-                  )}
-                  {selectedPurchase.transport_name && (
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Transport Name:</Text>
-                      <Text style={styles.detailValue}>
-                        {selectedPurchase.transport_name}
-                      </Text>
-                    </View>
-                  )}
+              )}
+              {Number(selectedPurchase.packaging_charges || 0) > 0 && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Packaging Charges:</Text>
+                  <Text style={styles.detailValue}>
+                    ₹{Number(selectedPurchase.packaging_charges).toFixed(2)}
+                  </Text>
                 </View>
               )}
-            </ScrollView>
-          )}
-        </CustomModal>
-
-        {/* Calendar Modal */}
-        <CalendarModal
-          visible={calendarModel !== ""}
-          onClose={() => setCalendarModel("")}
-          onSelect={(e) =>
-            calendarModel === "start" ? setStartDate(e) : setEndDate(e)
-          }
-          maxDate={moment().format("YYYY-MM-DD")}
-          initialDate={calendarModel === "start" ? startDate : endDate}
-        />
-
-        {/* Date Range Filter Modal */}
-        <Modal
-          visible={showCalendarModal}
-          transparent={true}
-          animationType="slide"
-          onRequestClose={() => setShowCalendarModal(false)}
-        >
-          <View style={styles.filterModalOverlay}>
-            <View style={styles.filterModalContainer}>
-              <View style={styles.filterModalHeader}>
-                <Text style={styles.filterModalTitle}>
-                  Filter by Date Range
+              {Number(selectedPurchase.advance_amount || 0) > 0 && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Advance Amount:</Text>
+                  <Text style={styles.detailValue}>
+                    ₹{Number(selectedPurchase.advance_amount).toFixed(2)}
+                  </Text>
+                </View>
+              )}
+              <View style={[styles.detailRow, styles.totalRow]}>
+                <Text style={styles.totalLabel}>Total Amount:</Text>
+                <Text style={styles.totalValue}>
+                  ₹{calculatePurchaseTotal(selectedPurchase).toFixed(2)}
                 </Text>
-                <TouchableOpacity
-                  onPress={() => setShowCalendarModal(false)}
-                  style={styles.filterCloseButton}
-                >
-                  <Icon name="close" size={24} color="#666" />
+              </View>
+              <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Balance Amount:</Text>
+                <Text style={[styles.detailValue, styles.balanceAmount]}>
+                  ₹
+                  {(
+                    calculatePurchaseTotal(selectedPurchase) -
+                    Number(selectedPurchase.advance_amount || 0)
+                  ).toFixed(2)}
+                </Text>
+              </View>
+            </View>
+
+            {/* Additional Details */}
+            {(selectedPurchase.notes ||
+              selectedPurchase.references ||
+              selectedPurchase.eway_bill_no ||
+              selectedPurchase.lr_no ||
+              selectedPurchase.vehicle_no) && (
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Additional Details</Text>
+                {selectedPurchase.notes && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Notes:</Text>
+                    <Text style={styles.detailValue}>
+                      {selectedPurchase.notes}
+                    </Text>
+                  </View>
+                )}
+                {selectedPurchase.references && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>References:</Text>
+                    <Text style={styles.detailValue}>
+                      {selectedPurchase.references}
+                    </Text>
+                  </View>
+                )}
+                {selectedPurchase.eway_bill_no && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>E-Way Bill No:</Text>
+                    <Text style={styles.detailValue}>
+                      {selectedPurchase.eway_bill_no}
+                    </Text>
+                  </View>
+                )}
+                {selectedPurchase.lr_no && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>LR No:</Text>
+                    <Text style={styles.detailValue}>
+                      {selectedPurchase.lr_no}
+                    </Text>
+                  </View>
+                )}
+                {selectedPurchase.vehicle_no && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Vehicle No:</Text>
+                    <Text style={styles.detailValue}>
+                      {selectedPurchase.vehicle_no}
+                    </Text>
+                  </View>
+                )}
+                {selectedPurchase.transport_name && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Transport Name:</Text>
+                    <Text style={styles.detailValue}>
+                      {selectedPurchase.transport_name}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </ScrollView>
+        )}
+      </CustomModal>
+
+      {/* Calendar Modal */}
+      <CalendarModal
+        visible={calendarModel !== ""}
+        onClose={() => setCalendarModel("")}
+        onSelect={(e) =>
+          calendarModel === "start" ? setStartDate(e) : setEndDate(e)
+        }
+        maxDate={moment().format("YYYY-MM-DD")}
+        initialDate={calendarModel === "start" ? startDate : endDate}
+      />
+
+      {/* Date Range Filter Modal */}
+      <Modal
+        visible={showCalendarModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowCalendarModal(false)}
+      >
+        <View style={styles.filterModalOverlay}>
+          <View style={styles.filterModalContainer}>
+            <View style={styles.filterModalHeader}>
+              <Text style={styles.filterModalTitle}>Filter by Date Range</Text>
+              <TouchableOpacity
+                onPress={() => setShowCalendarModal(false)}
+                style={styles.filterCloseButton}
+              >
+                <Icon name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.filterModalContent}>
+              <View style={styles.dateInputContainer}>
+                <Text style={styles.dateLabel}>Start Date</Text>
+                <TouchableOpacity onPress={() => setCalendarModel("start")}>
+                  <TextInput
+                    style={styles.dateInput}
+                    value={startDate}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor="#999"
+                    editable={false}
+                  />
                 </TouchableOpacity>
               </View>
 
-              <View style={styles.filterModalContent}>
-                <View style={styles.dateInputContainer}>
-                  <Text style={styles.dateLabel}>Start Date</Text>
-                  <TouchableOpacity onPress={() => setCalendarModel("start")}>
-                    <TextInput
-                      style={styles.dateInput}
-                      value={startDate}
-                      placeholder="YYYY-MM-DD"
-                      placeholderTextColor="#999"
-                      editable={false}
-                    />
-                  </TouchableOpacity>
-                </View>
+              <View style={styles.dateInputContainer}>
+                <Text style={styles.dateLabel}>End Date</Text>
+                <TouchableOpacity onPress={() => setCalendarModel("end")}>
+                  <TextInput
+                    style={styles.dateInput}
+                    value={endDate}
+                    editable={false}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor="#999"
+                  />
+                </TouchableOpacity>
+              </View>
 
-                <View style={styles.dateInputContainer}>
-                  <Text style={styles.dateLabel}>End Date</Text>
-                  <TouchableOpacity onPress={() => setCalendarModel("end")}>
-                    <TextInput
-                      style={styles.dateInput}
-                      value={endDate}
-                      editable={false}
-                      placeholder="YYYY-MM-DD"
-                      placeholderTextColor="#999"
-                    />
-                  </TouchableOpacity>
-                </View>
-
-                {isFiltered && (
-                  <View style={styles.filterStatus}>
-                    <Text style={styles.filterStatusText}>
-                      Filtered by date range
-                    </Text>
-                    <TouchableOpacity
-                      onPress={handleClearFilter}
-                      style={styles.clearFilterButton}
-                    >
-                      <Text style={styles.clearFilterText}>Clear Filter</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-
-                <View style={styles.modalButtons}>
+              {isFiltered && (
+                <View style={styles.filterStatus}>
+                  <Text style={styles.filterStatusText}>
+                    Filtered by date range
+                  </Text>
                   <TouchableOpacity
-                    style={[styles.modalButton, styles.cancelButton]}
-                    onPress={() => setShowCalendarModal(false)}
+                    onPress={handleClearFilter}
+                    style={styles.clearFilterButton}
                   >
-                    <Text style={styles.cancelButtonText}>Cancel</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.modalButton, styles.applyButton]}
-                    onPress={handleApplyFilter}
-                    disabled={!startDate || !endDate}
-                  >
-                    <Text style={styles.applyButtonText}>Apply Filter</Text>
+                    <Text style={styles.clearFilterText}>Clear Filter</Text>
                   </TouchableOpacity>
                 </View>
+              )}
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={() => setShowCalendarModal(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.applyButton]}
+                  onPress={handleApplyFilter}
+                  disabled={!startDate || !endDate}
+                >
+                  <Text style={styles.applyButtonText}>Apply Filter</Text>
+                </TouchableOpacity>
               </View>
             </View>
           </View>
-        </Modal>
+        </View>
+      </Modal>
 
-        {/* Delete Confirmation Modal */}
-        <DeleteConfirmationModal
-          visible={showDeleteModal}
-          onClose={handleCancelDelete}
-          onConfirm={handleConfirmDelete}
-          title="Delete Purchase"
-          message="Are you sure you want to delete this purchase? This action cannot be undone."
-          isLoading={isDeleting}
-        />
-      </View>
-    </MainContainer>
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        visible={showDeleteModal}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        title="Delete Purchase"
+        message="Are you sure you want to delete this purchase? This action cannot be undone."
+        isLoading={isDeleting}
+      />
+    </View>
   );
 };
 

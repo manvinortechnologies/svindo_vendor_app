@@ -13,7 +13,7 @@ import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Toast from "react-native-toast-message";
-
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 // UI Display Arrays
 const productSettings = [
   // "Wholesale price",
@@ -91,6 +91,7 @@ const allSettingsLabels = [
 ];
 
 const ProductSetting = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
   const [isLoading, setIsLoading] = useState<boolean>(false);
   // Initialize all values to true
   const [settings, setSettings] = useState<{ [key: string]: boolean }>(() => {
@@ -226,31 +227,35 @@ const ProductSetting = ({ navigation }: any) => {
   );
 
   return (
-    <MainContainer>
-      <View style={styles.container}>
-        <Headerwithback
-          title="Product Settings"
-          rightIcons={
-            hasChanges()
-              ? [
-                  <TouchableOpacity
-                    key="save"
-                    onPress={saveProductSettings}
-                    style={styles.saveButton}
-                    disabled={isLoading}
-                  >
-                    <Text style={styles.saveButtonText}>Save</Text>
-                  </TouchableOpacity>,
-                ]
-              : []
-          }
-        />
-        <ScrollView showsVerticalScrollIndicator={false}>
-          {renderSection("", productSettings)}
-          {renderSection("Delivery Details", deliveryDetails)}
-          {renderSection("Policies", policies)}
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
+      <Headerwithback
+        title="Product Settings"
+        rightIcons={
+          hasChanges()
+            ? [
+                <TouchableOpacity
+                  key="save"
+                  onPress={saveProductSettings}
+                  style={styles.saveButton}
+                  disabled={isLoading}
+                >
+                  <Text style={styles.saveButtonText}>Save</Text>
+                </TouchableOpacity>,
+              ]
+            : []
+        }
+      />
+      <ScrollView showsVerticalScrollIndicator={false}>
+        {renderSection("", productSettings)}
+        {renderSection("Delivery Details", deliveryDetails)}
+        {renderSection("Policies", policies)}
 
-          {/* <View style={styles.section}>
+        {/* <View style={styles.section}>
             <SettingItem
               title="Online Catalog only"
               value={settings["Online Catalog only"]}
@@ -262,10 +267,9 @@ const ProductSetting = ({ navigation }: any) => {
               shown to the users.
             </Text>
           </View> */}
-          <Loading visible={isLoading} />
-        </ScrollView>
-      </View>
-    </MainContainer>
+        <Loading visible={isLoading} />
+      </ScrollView>
+    </View>
   );
 };
 

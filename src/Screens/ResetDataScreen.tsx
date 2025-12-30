@@ -10,7 +10,10 @@ import {
   ActivityIndicator,
 } from "react-native";
 import Headerwithback from "./Headerwithback";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { useNavigation } from "@react-navigation/native";
 import { StorageUtils } from "../utils/storage";
 import { HomeNavigation } from "../constants/app-routes.constants";
@@ -21,7 +24,7 @@ import Toast from "react-native-toast-message";
 const ResetDataScreen = () => {
   const navigation = useNavigation();
   const [isResetting, setIsResetting] = useState(false);
-
+  const insets = useSafeAreaInsets();
   const handleReset = () => {
     Alert.alert(
       "Confirm Reset",
@@ -101,7 +104,12 @@ const ResetDataScreen = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       {/* Header */}
       <Headerwithback title="Reset Data" />
 
@@ -137,7 +145,7 @@ const ResetDataScreen = () => {
           )}
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </View>
   );
 };
 

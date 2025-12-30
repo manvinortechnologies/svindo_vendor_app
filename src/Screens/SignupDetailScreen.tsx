@@ -14,7 +14,10 @@ import { useAddCompanyMutation } from "../services/api/state-api-slice";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import { useForm, Controller } from "react-hook-form";
 import { StorageUtils } from "../utils/storage";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { ScaledSheet } from "react-native-size-matters";
 import Loading from "../CommonComponent/Loading";
 import Toast from "react-native-toast-message";
@@ -29,6 +32,7 @@ type FormData = {
 const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({
   navigation,
 }) => {
+  const insets = useSafeAreaInsets();
   const {
     control,
     handleSubmit,
@@ -139,7 +143,12 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({
     }
   };
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Loading visible={isLoading} />
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         {/* Header Section */}
@@ -361,7 +370,7 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({
           </Text>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

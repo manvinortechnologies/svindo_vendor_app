@@ -12,7 +12,10 @@ import Feather from "react-native-vector-icons/Feather";
 import Headerwithback from "./Headerwithback";
 import Bottomnavigation from "./Bottomnavigation";
 import { useNavigation } from "@react-navigation/native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 const reportData = [
   {
@@ -45,7 +48,7 @@ const reportData = [
 
 const Reports = () => {
   const navigation = useNavigation();
-
+  const insets = useSafeAreaInsets();
   const handleReportPress = (reportName: string) => {
     // Map report names to screen names here
     const routeMap: { [key: string]: string } = {
@@ -70,7 +73,12 @@ const Reports = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback
         title="Reports"
         rightIcons={[
@@ -97,7 +105,7 @@ const Reports = () => {
           </View>
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

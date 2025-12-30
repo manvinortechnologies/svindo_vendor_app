@@ -12,16 +12,21 @@ import Headerwithback from "./Headerwithback";
 import CustomSwitch from "./CustomSwitch";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
+import { ScaledSheet } from "react-native-size-matters";
 
 type RootStackParamList = {
   AddDeliveryBoy: undefined;
 };
 
 const AssignOwnDeliveryBoy = () => {
+  const insets = useSafeAreaInsets();
   const [isEnabled, setIsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -67,7 +72,12 @@ const AssignOwnDeliveryBoy = () => {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { paddingTop: insets.top, paddingBottom: insets.bottom },
+      ]}
+    >
       <Headerwithback title="Manage Own Delivery Boy" />
       <Loading visible={loading} />
       {/* Toggle Section */}
@@ -148,13 +158,13 @@ const AssignOwnDeliveryBoy = () => {
         style={{ marginTop: 12 }}
         showsVerticalScrollIndicator={false}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
 export default AssignOwnDeliveryBoy;
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
