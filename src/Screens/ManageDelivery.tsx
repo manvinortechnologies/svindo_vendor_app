@@ -12,7 +12,6 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { useNavigation } from "@react-navigation/native";
 import Bottomnavigation from "./Bottomnavigation";
-import Header from "./Header";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import MainContainer from "../CommonComponent/MainContainer";
 import { HomeNavigation } from "../constants/app-routes.constants";

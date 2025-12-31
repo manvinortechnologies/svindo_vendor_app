@@ -217,13 +217,15 @@ const BankNameScreen = ({ navigation, route }: any) => {
                 { color: item.isCredit ? "#163881" : "#FF0000" },
               ]}
             >
-              {item.amount.toFixed(2)}
+              {Number(item?.amount).toFixed(2)}
             </Text>
           </View>
 
           <View style={styles.col}>
             <Text style={styles.label}>Balance</Text>
-            <Text style={{ color: "#000" }}>{item.balance.toFixed(2)}</Text>
+            <Text style={{ color: "#000" }}>
+              {Number(item?.balance).toFixed(2)}
+            </Text>
           </View>
         </View>
         <View
@@ -234,7 +236,7 @@ const BankNameScreen = ({ navigation, route }: any) => {
           }}
         >
           <Text style={styles.label}>Detail : </Text>
-          <Text style={{ color: "#000" }}>{item.detail}</Text>
+          <Text style={{ color: "#000" }}>{item?.detail}</Text>
         </View>
       </View>
     );

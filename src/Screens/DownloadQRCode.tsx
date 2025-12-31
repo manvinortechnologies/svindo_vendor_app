@@ -8,7 +8,6 @@ import {
   TouchableOpacity,
   Platform,
 } from "react-native";
-import Header from "./Header";
 import { Text } from "react-native";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import QRCode from "react-native-qrcode-svg";

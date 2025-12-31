@@ -89,6 +89,7 @@ interface CompanyProfileDetails {
 interface SalesEntry {
   id: number;
   payment_method: string;
+  invoice_number: string;
   company_profile: number;
   customer: number | null;
   company_profile_detials: CompanyProfileDetails;
@@ -109,6 +110,19 @@ interface SalesEntry {
   created_at?: string;
 }
 
+interface OnlineOrderLedgerItem {
+  id: number;
+  order_item_id: number;
+  order_id: number;
+  product: number;
+  product_name: string;
+  quantity: number;
+  amount: number;
+  status: string;
+  note: string;
+  created_at: string;
+}
+
 type RootStackParamList = {
   SalesLedger: {
     saleId?: number;
@@ -120,18 +134,24 @@ const SalesLedger = () => {
   const route = useRoute<RouteProp<RootStackParamList, "SalesLedger">>();
   const insets = useSafeAreaInsets();
   const [salesData, setSalesData] = useState<SalesEntry[]>([]);
-  const [onlineSalesData, setOnlineSalesData] = useState<SalesEntry[]>([]);
+  const [onlineSalesData, setOnlineSalesData] = useState<
+    OnlineOrderLedgerItem[]
+  >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedSale, setSelectedSale] = useState<SalesEntry | null>(null);
+  const [selectedOnlineSale, setSelectedOnlineSale] =
+    useState<OnlineOrderLedgerItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   // Date filter states
   const [showCalendarModal, setShowCalendarModal] = useState<boolean>(false);
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
-  const [filteredSalesData, setFilteredSalesData] = useState<SalesEntry[]>([]);
+  const [filteredSalesData, setFilteredSalesData] = useState<
+    (SalesEntry | OnlineOrderLedgerItem)[]
+  >([]);
   const [isFiltered, setIsFiltered] = useState<boolean>(false);
   const [calendarModel, setCalendarModel] = useState<string>("");
   const [activeTab, setActiveTab] = useState<"Sales" | "Online Sales">("Sales");
@@ -180,14 +200,21 @@ const SalesLedger = () => {
   };
 
   // Handle modal open/close
-  const openModal = (sale: SalesEntry) => {
-    setSelectedSale(sale);
+  const openModal = (sale: SalesEntry | OnlineOrderLedgerItem) => {
+    if (activeTab === "Online Sales") {
+      setSelectedOnlineSale(sale as OnlineOrderLedgerItem);
+      setSelectedSale(null);
+    } else {
+      setSelectedSale(sale as SalesEntry);
+      setSelectedOnlineSale(null);
+    }
     setIsModalVisible(true);
   };
 
   const closeModal = () => {
     setIsModalVisible(false);
     setSelectedSale(null);
+    setSelectedOnlineSale(null);
   };
 
   // Delete sale function
@@ -312,18 +339,24 @@ const SalesLedger = () => {
   const currentSalesData = getCurrentData();
 
   const groupedSales = currentSalesData.reduce((groups, sale) => {
-    const date = formatDate(sale.created_at || "");
+    const date = formatDate(
+      (sale as SalesEntry).created_at ||
+        (sale as OnlineOrderLedgerItem).created_at ||
+        ""
+    );
     if (!groups[date]) {
       groups[date] = [];
     }
     groups[date].push(sale);
     return groups;
-  }, {} as Record<string, SalesEntry[]>);
+  }, {} as Record<string, (SalesEntry | OnlineOrderLedgerItem)[]>);
 
-  const totalBalance = currentSalesData.reduce(
-    (sum, sale) => sum + Number(sale?.total_amount || 0),
-    0
-  );
+  const totalBalance = currentSalesData.reduce((sum, sale) => {
+    if (activeTab === "Online Sales") {
+      return sum + Number((sale as OnlineOrderLedgerItem)?.amount || 0);
+    }
+    return sum + Number((sale as SalesEntry)?.total_amount || 0);
+  }, 0);
 
   const renderSalesEntry = ({ item }: { item: SalesEntry }) => {
     const totalItems = item.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -337,7 +370,10 @@ const SalesLedger = () => {
       <View style={styles.entryContainer}>
         <View style={styles.tableRow}>
           <View style={styles.tableCell}>
-            <Text style={styles.tableValue}>INV-{item.id}</Text>
+            <Text style={styles.tableValue}>
+              {item.wholesale_invoice_details?.invoice_number ||
+                item.invoice_number}
+            </Text>
           </View>
           <View style={styles.tableCell}>
             <Text style={styles.tableValue}>
@@ -383,6 +419,57 @@ const SalesLedger = () => {
     );
   };
 
+  const renderOnlineSalesEntry = ({
+    item,
+  }: {
+    item: OnlineOrderLedgerItem;
+  }) => {
+    const formattedDate = moment(item.created_at).format("DD/MM/YYYY");
+    const formattedTime = moment(item.created_at).format("hh:mm A");
+
+    return (
+      <View style={styles.entryContainer}>
+        <View style={styles.tableRow}>
+          <View style={styles.tableCell}>
+            <Text style={styles.tableValue}>#{item.order_id}</Text>
+          </View>
+          <View style={styles.tableCell}>
+            <Text style={styles.tableValue}>
+              ₹{Number(item.amount)?.toFixed(2)}
+            </Text>
+          </View>
+          <View style={styles.tableCell}>
+            <Text style={styles.tableValue}>
+              ₹{Number(item.amount)?.toFixed(2)}
+            </Text>
+          </View>
+          <View style={styles.tableCell}>
+            <Text style={styles.tableValue}>₹0.00</Text>
+          </View>
+        </View>
+
+        <View style={styles.detailsRow}>
+          <Text style={styles.detailText}>{item.product_name}</Text>
+          <Text style={styles.detailText}>Qty: {item.quantity}</Text>
+          <Text style={styles.detailText}>Online Sale</Text>
+          <Text
+            style={[
+              styles.statusText,
+              {
+                color:
+                  item.status === "recorded" || item.status === "completed"
+                    ? "#4CAF50"
+                    : "#F44336",
+              },
+            ]}
+          >
+            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+          </Text>
+        </View>
+      </View>
+    );
+  };
+
   const renderDateGroup = ({ item: date }: { item: string }) => (
     <View style={styles.dateGroup}>
       <Text style={styles.dateHeader}>{date}</Text>
@@ -395,10 +482,18 @@ const SalesLedger = () => {
       {groupedSales[date].map((sale) => (
         <TouchableOpacity
           key={sale.id}
-          onPress={() => openModal(sale)}
-          style={styles.saleEntryTouchable}
+          onPress={() => {
+            openModal(sale);
+          }}
+          style={[
+            styles.saleEntryTouchable,
+            sale?.wholesale_invoice_details?.invoice_type === "quotation" &&
+              styles.quotationEntryTouchable,
+          ]}
         >
-          {renderSalesEntry({ item: sale })}
+          {activeTab === "Online Sales"
+            ? renderOnlineSalesEntry({ item: sale as OnlineOrderLedgerItem })
+            : renderSalesEntry({ item: sale as SalesEntry })}
         </TouchableOpacity>
       ))}
     </View>
@@ -511,229 +606,347 @@ const SalesLedger = () => {
       <CustomModal
         visible={isModalVisible}
         onClose={closeModal}
-        title="Sale Details"
+        title={selectedOnlineSale ? "Online Sale Details" : "Sale Details"}
         modalStyle={styles.modalStyle}
       >
-        {selectedSale && (
+        {selectedOnlineSale ? (
           <ScrollView
             style={styles.modalContent}
             showsVerticalScrollIndicator={false}
           >
-            {/* Invoice Header */}
+            {/* Order Header */}
             <View style={styles.modalHeader}>
               <View style={styles.headerActions}>
                 <Text style={styles.invoiceTitle}>
-                  Invoice #{selectedSale.id}
+                  Order #{selectedOnlineSale.order_id}
                 </Text>
-                <Text style={styles.paymentMethod}>
-                  {selectedSale.payment_method.charAt(0).toUpperCase() +
-                    selectedSale.payment_method.slice(1) +
-                    " Sale"}
-                </Text>
-              </View>
-              {/* Action Buttons */}
-              <View style={styles.actionButtonsContainer}>
-                {/* Edit Button */}
-                <TouchableOpacity
-                  style={styles.editButton}
-                  onPress={() => {
-                    closeModal();
-                    (navigation as any).navigate(HomeNavigation.SALE_POS, {
-                      editMode: true,
-                      saleData: selectedSale,
-                    });
-                  }}
-                >
-                  <Icon name="pencil" size={20} color="#fff" />
-                  <Text style={styles.editButtonText}>Edit</Text>
-                </TouchableOpacity>
-
-                {/* Delete Button */}
-                <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={handleDeleteSale}
-                  disabled={isDeleting}
-                >
-                  <Icon name="trash" size={20} color="#fff" />
-                  <Text style={styles.deleteButtonText}>
-                    {isDeleting ? "Deleting..." : "Delete"}
-                  </Text>
-                </TouchableOpacity>
+                <Text style={styles.paymentMethod}>Online Sale</Text>
               </View>
             </View>
 
-            {/* Company Details */}
+            {/* Order Details */}
             <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Company Details</Text>
+              <Text style={styles.sectionTitle}>Order Details</Text>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Company Name:</Text>
+                <Text style={styles.detailLabel}>Order ID:</Text>
                 <Text style={styles.detailValue}>
-                  {selectedSale.company_profile_detials.company_name}
+                  #{selectedOnlineSale.order_id}
                 </Text>
               </View>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Brand Name:</Text>
+                <Text style={styles.detailLabel}>Order Item ID:</Text>
                 <Text style={styles.detailValue}>
-                  {selectedSale.company_profile_detials.brand_name}
+                  #{selectedOnlineSale.order_item_id}
                 </Text>
               </View>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Email:</Text>
-                <Text style={styles.detailValue}>
-                  {selectedSale.company_profile_detials.email}
+                <Text style={styles.detailLabel}>Status:</Text>
+                <Text
+                  style={[
+                    styles.detailValue,
+                    {
+                      color:
+                        selectedOnlineSale.status === "recorded" ||
+                        selectedOnlineSale.status === "completed"
+                          ? "#4CAF50"
+                          : "#F44336",
+                    },
+                  ]}
+                >
+                  {selectedOnlineSale.status.charAt(0).toUpperCase() +
+                    selectedOnlineSale.status.slice(1)}
                 </Text>
               </View>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Contact:</Text>
+                <Text style={styles.detailLabel}>Created At:</Text>
                 <Text style={styles.detailValue}>
-                  {selectedSale.company_profile_detials.contact || "N/A"}
+                  {selectedOnlineSale.created_at
+                    ? formatDate(selectedOnlineSale.created_at)
+                    : "N/A"}
                 </Text>
               </View>
             </View>
 
-            {/* Customer Details */}
-            {selectedSale.customer_details && (
-              <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Customer Details</Text>
-                <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Customer Name:</Text>
-                  <Text style={styles.detailValue}>
-                    {selectedSale.customer_details.name || "N/A"}
+            {/* Product Details */}
+            <View style={styles.sectionContainer}>
+              <Text style={styles.sectionTitle}>Product Details</Text>
+              <View style={styles.itemContainer}>
+                <View style={styles.itemHeader}>
+                  <Text style={styles.itemName}>
+                    {selectedOnlineSale.product_name}
                   </Text>
                 </View>
-              </View>
-            )}
-
-            {/* Items Details */}
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>
-                Items ({selectedSale.total_items})
-              </Text>
-              {selectedSale.items.map((item, index) => (
-                <View key={index} style={styles.itemContainer}>
-                  <View style={styles.itemHeader}>
-                    <Text style={styles.itemName}>
-                      {item?.product_details.name}
-                    </Text>
-                    <Text style={styles.itemPrice}>
-                      ₹{Number(item?.price).toFixed(2)}
+                <View style={styles.itemDetails}>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Product ID:</Text>
+                    <Text style={styles.detailValue}>
+                      #{selectedOnlineSale.product}
                     </Text>
                   </View>
-                  <View style={styles.itemDetails}>
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Quantity:</Text>
-                      <Text style={styles.detailValue}>
-                        {item.quantity} {item.product_details.unit}
-                      </Text>
-                    </View>
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Unit Price:</Text>
-                      <Text style={styles.detailValue}>
-                        ₹{Number(item.product_details.sales_price).toFixed(2)}
-                      </Text>
-                    </View>
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Total Amount:</Text>
-                      <Text style={styles.detailValue}>
-                        ₹{Number(item.amount).toFixed(2)}
-                      </Text>
-                    </View>
-                    {item.product_details.brand_name && (
-                      <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Brand:</Text>
-                        <Text style={styles.detailValue}>
-                          {item.product_details.brand_name}
-                        </Text>
-                      </View>
-                    )}
-                    {item.product_details.color && (
-                      <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Color:</Text>
-                        <Text style={styles.detailValue}>
-                          {item.product_details.color}
-                        </Text>
-                      </View>
-                    )}
-                    {item.product_details.size && (
-                      <View style={styles.detailRow}>
-                        <Text style={styles.detailLabel}>Size:</Text>
-                        <Text style={styles.detailValue}>
-                          {item.product_details.size}
-                        </Text>
-                      </View>
-                    )}
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Quantity:</Text>
+                    <Text style={styles.detailValue}>
+                      {selectedOnlineSale.quantity}
+                    </Text>
+                  </View>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Amount:</Text>
+                    <Text style={styles.detailValue}>
+                      ₹{Number(selectedOnlineSale.amount).toFixed(2)}
+                    </Text>
                   </View>
                 </View>
-              ))}
+              </View>
             </View>
 
             {/* Financial Summary */}
             <View style={styles.sectionContainer}>
               <Text style={styles.sectionTitle}>Financial Summary</Text>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>
-                  Total Amount (Before Discount):
-                </Text>
-                <Text style={styles.detailValue}>
-                  ₹
-                  {Number(selectedSale.total_amount_before_discount).toFixed(2)}
-                </Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>
-                  Discount ({selectedSale.discount_percentage}%):
-                </Text>
-                <Text style={styles.detailValue}>
-                  ₹{Number(selectedSale.discount_amount).toFixed(2)}
-                </Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Advance Amount:</Text>
-                <Text style={styles.detailValue}>
-                  ₹{Number(selectedSale.advance_amount).toFixed(2)}
-                </Text>
-              </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Balance Amount:</Text>
-                <Text style={[styles.detailValue, styles.balanceAmount]}>
-                  ₹{Number(selectedSale.balance_amount).toFixed(2)}
-                </Text>
-              </View>
               <View style={[styles.detailRow, styles.totalRow]}>
                 <Text style={styles.totalLabel}>Total Amount:</Text>
                 <Text style={styles.totalValue}>
-                  ₹{Number(selectedSale.total_amount).toFixed(2)}
+                  ₹{Number(selectedOnlineSale.amount).toFixed(2)}
                 </Text>
               </View>
             </View>
 
-            {/* Additional Details */}
-            <View style={styles.sectionContainer}>
-              <Text style={styles.sectionTitle}>Additional Details</Text>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Wholesale Rate:</Text>
-                <Text style={styles.detailValue}>
-                  {selectedSale.is_wholesale_rate ? "Yes" : "No"}
-                </Text>
-              </View>
-              {selectedSale.payment_method === "credit" && (
+            {/* Additional Notes */}
+            {selectedOnlineSale.note && (
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Notes</Text>
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>Credit Date:</Text>
                   <Text style={styles.detailValue}>
-                    {formatDate(selectedSale.credit_date || "")}
+                    {selectedOnlineSale.note}
                   </Text>
                 </View>
-              )}
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Created At:</Text>
-                <Text style={styles.detailValue}>
-                  {selectedSale.created_at
-                    ? formatDate(selectedSale.created_at)
-                    : "N/A"}
-                </Text>
               </View>
-            </View>
+            )}
           </ScrollView>
+        ) : (
+          selectedSale && (
+            <ScrollView
+              style={styles.modalContent}
+              showsVerticalScrollIndicator={false}
+            >
+              {/* Invoice Header */}
+              <View style={styles.modalHeader}>
+                <View style={styles.headerActions}>
+                  <Text style={styles.invoiceTitle}>
+                    {selectedSale.wholesale_invoice_details?.invoice_number ||
+                      selectedSale.invoice_number}
+                  </Text>
+                  <Text style={styles.paymentMethod}>
+                    {selectedSale.payment_method.charAt(0).toUpperCase() +
+                      selectedSale.payment_method.slice(1) +
+                      " Sale"}
+                  </Text>
+                </View>
+                {/* Action Buttons */}
+                <View style={styles.actionButtonsContainer}>
+                  {/* Edit Button */}
+                  <TouchableOpacity
+                    style={styles.editButton}
+                    onPress={() => {
+                      closeModal();
+                      (navigation as any).navigate(HomeNavigation.SALE_POS, {
+                        editMode: true,
+                        saleData: selectedSale,
+                      });
+                    }}
+                  >
+                    <Icon name="pencil" size={20} color="#fff" />
+                    <Text style={styles.editButtonText}>Edit</Text>
+                  </TouchableOpacity>
+
+                  {/* Delete Button */}
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={handleDeleteSale}
+                    disabled={isDeleting}
+                  >
+                    <Icon name="trash" size={20} color="#fff" />
+                    <Text style={styles.deleteButtonText}>
+                      {isDeleting ? "Deleting..." : "Delete"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Company Details */}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Company Details</Text>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Company Name:</Text>
+                  <Text style={styles.detailValue}>
+                    {selectedSale.company_profile_detials.company_name}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Brand Name:</Text>
+                  <Text style={styles.detailValue}>
+                    {selectedSale.company_profile_detials.brand_name}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Email:</Text>
+                  <Text style={styles.detailValue}>
+                    {selectedSale.company_profile_detials.email}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Contact:</Text>
+                  <Text style={styles.detailValue}>
+                    {selectedSale.company_profile_detials.contact || "N/A"}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Customer Details */}
+              {selectedSale.customer_details && (
+                <View style={styles.sectionContainer}>
+                  <Text style={styles.sectionTitle}>Customer Details</Text>
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Customer Name:</Text>
+                    <Text style={styles.detailValue}>
+                      {selectedSale.customer_details.name || "N/A"}
+                    </Text>
+                  </View>
+                </View>
+              )}
+
+              {/* Items Details */}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>
+                  Items ({selectedSale.total_items})
+                </Text>
+                {selectedSale.items.map((item, index) => (
+                  <View key={index} style={styles.itemContainer}>
+                    <View style={styles.itemHeader}>
+                      <Text style={styles.itemName}>
+                        {item?.product_details.name}
+                      </Text>
+                      <Text style={styles.itemPrice}>
+                        ₹{Number(item?.price).toFixed(2)}
+                      </Text>
+                    </View>
+                    <View style={styles.itemDetails}>
+                      <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Quantity:</Text>
+                        <Text style={styles.detailValue}>
+                          {item.quantity} {item.product_details.unit}
+                        </Text>
+                      </View>
+                      <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Unit Price:</Text>
+                        <Text style={styles.detailValue}>
+                          ₹{Number(item.product_details.sales_price).toFixed(2)}
+                        </Text>
+                      </View>
+                      <View style={styles.detailRow}>
+                        <Text style={styles.detailLabel}>Total Amount:</Text>
+                        <Text style={styles.detailValue}>
+                          ₹{Number(item.amount).toFixed(2)}
+                        </Text>
+                      </View>
+                      {item.product_details.brand_name && (
+                        <View style={styles.detailRow}>
+                          <Text style={styles.detailLabel}>Brand:</Text>
+                          <Text style={styles.detailValue}>
+                            {item.product_details.brand_name}
+                          </Text>
+                        </View>
+                      )}
+                      {item.product_details.color && (
+                        <View style={styles.detailRow}>
+                          <Text style={styles.detailLabel}>Color:</Text>
+                          <Text style={styles.detailValue}>
+                            {item.product_details.color}
+                          </Text>
+                        </View>
+                      )}
+                      {item.product_details.size && (
+                        <View style={styles.detailRow}>
+                          <Text style={styles.detailLabel}>Size:</Text>
+                          <Text style={styles.detailValue}>
+                            {item.product_details.size}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                ))}
+              </View>
+
+              {/* Financial Summary */}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Financial Summary</Text>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>
+                    Total Amount (Before Discount):
+                  </Text>
+                  <Text style={styles.detailValue}>
+                    ₹
+                    {Number(selectedSale.total_amount_before_discount).toFixed(
+                      2
+                    )}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>
+                    Discount ({selectedSale.discount_percentage}%):
+                  </Text>
+                  <Text style={styles.detailValue}>
+                    ₹{Number(selectedSale.discount_amount).toFixed(2)}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Advance Amount:</Text>
+                  <Text style={styles.detailValue}>
+                    ₹{Number(selectedSale.advance_amount).toFixed(2)}
+                  </Text>
+                </View>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Balance Amount:</Text>
+                  <Text style={[styles.detailValue, styles.balanceAmount]}>
+                    ₹{Number(selectedSale.balance_amount).toFixed(2)}
+                  </Text>
+                </View>
+                <View style={[styles.detailRow, styles.totalRow]}>
+                  <Text style={styles.totalLabel}>Total Amount:</Text>
+                  <Text style={styles.totalValue}>
+                    ₹{Number(selectedSale.total_amount).toFixed(2)}
+                  </Text>
+                </View>
+              </View>
+
+              {/* Additional Details */}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Additional Details</Text>
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Wholesale Rate:</Text>
+                  <Text style={styles.detailValue}>
+                    {selectedSale.is_wholesale_rate ? "Yes" : "No"}
+                  </Text>
+                </View>
+                {selectedSale.payment_method === "credit" && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Credit Date:</Text>
+                    <Text style={styles.detailValue}>
+                      {formatDate(selectedSale.credit_date || "")}
+                    </Text>
+                  </View>
+                )}
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Created At:</Text>
+                  <Text style={styles.detailValue}>
+                    {selectedSale.created_at
+                      ? formatDate(selectedSale.created_at)
+                      : "N/A"}
+                  </Text>
+                </View>
+              </View>
+            </ScrollView>
+          )
         )}
       </CustomModal>
 
@@ -1004,7 +1217,7 @@ const styles = ScaledSheet.create({
     borderBottomColor: "#E0E0E0",
   },
   invoiceTitle: {
-    fontSize: 20,
+    fontSize: "10@s",
     fontWeight: "700",
     color: "#FCA311",
     marginBottom: 5,
@@ -1099,6 +1312,11 @@ const styles = ScaledSheet.create({
   },
   saleEntryTouchable: {
     marginBottom: 8,
+  },
+  quotationEntryTouchable: {
+    marginBottom: 8,
+    backgroundColor: "#FFF3E0",
+    borderRadius: 8,
   },
   // Date Filter Modal Styles
   filterModalOverlay: {

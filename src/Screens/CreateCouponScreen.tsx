@@ -12,7 +12,6 @@ import {
   Image,
   Alert,
 } from "react-native";
-import Header from "./Header";
 import Headerwithback from "./Headerwithback";
 import CustomSwitch from "../CommonComponent/CustomSwitch";
 import MainContainer from "../CommonComponent/MainContainer";
@@ -39,7 +38,9 @@ const CreateCouponScreen = ({ navigation }: any) => {
   const customer = route.params?.customer;
   const [selectedType, setSelectedType] = useState<string>("discount");
   const [customerIdEnabled, setCustomerIdEnabled] = useState(!!customer?.id);
-  const [customerId, setCustomerIdValue] = useState("USR" + customer?.id || "");
+  const [customerId, setCustomerIdValue] = useState(
+    customer ? "USR" + customer?.id : ""
+  );
   const [onlyFollowers, setOnlyFollowers] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [discountAmount, setDiscountAmount] = useState<string>("");

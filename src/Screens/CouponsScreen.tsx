@@ -234,8 +234,8 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
 
   const renderCoupon = ({ item }: { item: Coupon }) => {
     const discountText = item.discount_percentage
-      ? `Discount Amount - Rs ${item.discount_percentage}`
-      : `Discount Amount - Rs ${item.discount_amount}`;
+      ? `Discount - ${item.discount_percentage}%`
+      : `Discount - Rs ${item.discount_amount}`;
 
     const formatDateTime = (dateStr: string) => {
       const date = new Date(dateStr);
@@ -604,8 +604,8 @@ const styles = ScaledSheet.create({
   },
   addBtn: {
     position: "absolute",
-    bottom: 40,
-    right: 20,
+    bottom: "60@s",
+    right: "20@s",
     backgroundColor: "#1A9443",
     paddingVertical: 12,
     paddingHorizontal: 40,

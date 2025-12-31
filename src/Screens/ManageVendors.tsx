@@ -51,7 +51,7 @@ const ManageVendors = ({ navigation }: any) => {
       setFilteredVendors(res.data); // initialize filtered data
       setTotalPendingAmount(
         res.data.reduce(
-          (acc: number, vendor: Vendor) => acc + vendor.balance,
+          (acc: number, vendor: Vendor) => acc + Number(vendor.balance),
           0
         )
       );

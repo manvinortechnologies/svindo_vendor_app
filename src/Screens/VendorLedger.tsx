@@ -26,6 +26,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import { useIsFocused } from "@react-navigation/native";
 
 interface LedgerTransaction {
   type: "invoice" | "payment";
@@ -51,6 +52,7 @@ interface VendorInfo {
 
 const VendorLedger = ({ navigation, route }: any) => {
   const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
   const [ledgerData, setLedgerData] = useState<LedgerSection[]>([]);
   const [vendorInfo, setVendorInfo] = useState<VendorInfo>({
     name: route?.params?.vendor?.name || "Vendor Name",
@@ -73,10 +75,10 @@ const VendorLedger = ({ navigation, route }: any) => {
   const vendorId = route?.params?.vendor?.id;
 
   useEffect(() => {
-    if (vendorId) {
+    if (vendorId && isFocused) {
       fetchLedgerData();
     }
-  }, [vendorId]);
+  }, [vendorId, isFocused]);
 
   const fetchLedgerData = async () => {
     try {

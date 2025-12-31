@@ -51,7 +51,7 @@ const BankAccounts = ({ navigation }: any) => {
 
       if (res2.data) {
         const totalBalance = res2.data.reduce(
-          (acc: number, item: any) => acc + item.balance,
+          (acc: number, item: any) => acc + Number(item.balance),
           0
         );
         setCash(totalBalance);
@@ -197,7 +197,7 @@ const BankAccounts = ({ navigation }: any) => {
                 bank: item,
               })
             }
-            style={[styles.card, styles.accCard]}
+            style={[styles.card]}
           >
             <View style={styles.rowBetween}>
               <Image
@@ -221,29 +221,36 @@ const BankAccounts = ({ navigation }: any) => {
                 </Text>
               </View>
               <View>
-                <View style={styles.cardActions}>
-                  <TouchableOpacity
-                    style={styles.cardActionButton}
-                    onPress={(event: GestureResponderEvent) => {
-                      event.stopPropagation();
-                      handleOpenEdit(item);
-                    }}
-                  >
-                    <Icon name="create-outline" size={18} color="#4A4A4A" />
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.cardActionButton}
-                    onPress={(event: GestureResponderEvent) => {
-                      event.stopPropagation();
-                      handleOpenDelete(item);
-                    }}
-                  >
-                    <Icon name="trash-outline" size={18} color="#D32F2F" />
-                  </TouchableOpacity>
-                </View>
+                {!item.online_order_bank && (
+                  <View style={styles.cardActions}>
+                    <TouchableOpacity
+                      style={styles.cardActionButton}
+                      onPress={(event: GestureResponderEvent) => {
+                        event.stopPropagation();
+                        handleOpenEdit(item);
+                      }}
+                    >
+                      <Icon name="create-outline" size={18} color="#4A4A4A" />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.cardActionButton}
+                      onPress={(event: GestureResponderEvent) => {
+                        event.stopPropagation();
+                        handleOpenDelete(item);
+                      }}
+                    >
+                      <Icon name="trash-outline" size={18} color="#D32F2F" />
+                    </TouchableOpacity>
+                  </View>
+                )}
                 <Text style={styles.accBalance}>₹ {item.balance}</Text>
               </View>
             </View>
+            {item.online_order_bank && (
+              <Text style={styles.accBalance}>
+                Online order amount will show in this account
+              </Text>
+            )}
           </TouchableOpacity>
         )}
         ListHeaderComponent={() => (

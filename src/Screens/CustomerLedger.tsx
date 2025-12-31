@@ -36,6 +36,7 @@ interface LedgerTransaction {
   paid: number;
   balance: number;
   medium?: string;
+  date: string;
 }
 
 interface LedgerSection {
@@ -177,6 +178,7 @@ const CustomerLedger = ({ navigation, route }: any) => {
           paid: type === "payment" ? Math.abs(txn.amount) : 0,
           balance: balance,
           medium: txn.transaction_type,
+          date,
         });
       });
       // Convert grouped data to sections

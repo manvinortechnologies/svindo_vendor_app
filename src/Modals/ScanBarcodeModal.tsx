@@ -33,12 +33,14 @@ interface ScanBarcodeModalProps {
   visible: boolean;
   onClose: () => void;
   onScanComplete: (scannedItems: ScannedItem[]) => void;
+  singleScan?: boolean; // If true, automatically close after first scan
 }
 
 const ScanBarcodeModal: React.FC<ScanBarcodeModalProps> = ({
   visible,
   onClose,
   onScanComplete,
+  singleScan = false,
 }) => {
   const [isActive, setIsActive] = useState(true);
   const [scannedItems, setScannedItems] = useState<ScannedItem[]>([]);
@@ -92,6 +94,14 @@ const ScanBarcodeModal: React.FC<ScanBarcodeModalProps> = ({
             type: type || "unknown",
             timestamp: Date.now(),
           };
+
+          // If singleScan mode, immediately return with just this one item
+          if (singleScan) {
+            onScanComplete([newItem]);
+            onClose();
+            return;
+          }
+
           setScannedItems((prev) => [...prev, newItem]);
 
           // Temporarily pause scanning to prevent duplicate scans

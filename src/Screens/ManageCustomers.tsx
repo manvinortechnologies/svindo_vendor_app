@@ -65,7 +65,7 @@ const ManageCustomers = ({ navigation }: any) => {
       setFilteredCustomers(res.data); // initially show all
       setTotalPendingAmount(
         res.data.reduce(
-          (acc: number, customer: Customer) => acc + customer.balance,
+          (acc: number, customer: Customer) => acc + Number(customer.balance),
           0
         )
       );

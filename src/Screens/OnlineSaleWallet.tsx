@@ -9,6 +9,7 @@ import {
   FlatList,
   Text,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -48,54 +49,63 @@ const OnlineSaleWallet = () => {
 
       const response = await api.get(API_ROUTES.onlineOrderLedger);
 
-      if (response.data) {
-        // Extract balance, sales, and settled amounts
-        const balanceAmount = response.data.total_sum || 0;
-        const salesAmount = response.data.total_sum || 0;
-        const settledAmount = response.data.total_settled || 0;
+      // Handle both array response and object with results
+      const ledgerEntries = Array.isArray(response.data)
+        ? response.data
+        : response.data?.results || [];
 
-        setBalance(balanceAmount);
-        setTotalSales(salesAmount);
-        setTotalSettled(settledAmount);
-
-        // Transform ledger entries to transaction format
-        const ledgerEntries = response.data.results || [];
-
-        const transformedTransactions: Transaction[] = ledgerEntries.map(
-          (entry: any, index: number) => {
-            const date =
-              entry.date ||
-              entry.created_at ||
-              entry.transaction_date ||
-              new Date().toISOString();
-            const formattedDate = moment(date).format("D/M/YYYY");
-            const formattedTime = moment(date).format("h:mm A");
-
-            const amount = Math.abs(entry.amount || entry.total || 0);
-            const transactionType = entry.transaction_type || entry.type || "";
-            const isSettled =
-              transactionType.toLowerCase().includes("settle") ||
-              transactionType.toLowerCase().includes("payment") ||
-              entry.status === "settled";
-
-            return {
-              id:
-                entry.id?.toString() ||
-                entry.transaction_id?.toString() ||
-                index.toString(),
-              amount: `Rs. ${amount.toFixed(2)}`,
-              date: formattedDate,
-              time: formattedTime,
-              type: isSettled ? "Settled" : "Sales",
-              direction: isSettled ? "down" : "up",
-              orderNo:
-                entry.order_no ||
-                entry.order_number ||
-                entry.order_id ||
-                undefined,
-            };
+      if (ledgerEntries.length > 0) {
+        // Group by order_id to create transactions
+        const orderGroups: { [key: number]: any[] } = {};
+        ledgerEntries.forEach((entry: any) => {
+          const orderId = entry.order_id;
+          if (!orderGroups[orderId]) {
+            orderGroups[orderId] = [];
           }
-        );
+          orderGroups[orderId].push(entry);
+        });
+
+        // Calculate totals and transform grouped entries to transaction format
+        let totalSalesAmount = 0;
+        let totalSettledAmount = 0;
+
+        const transformedTransactions: Transaction[] = Object.keys(
+          orderGroups
+        ).map((orderId) => {
+          const entries = orderGroups[Number(orderId)];
+          // Use the first entry's date for the transaction
+          const firstEntry = entries[0];
+          const date = firstEntry.created_at || new Date().toISOString();
+          const formattedDate = moment(date).format("D/M/YYYY");
+          const formattedTime = moment(date).format("h:mm A");
+
+          // Calculate total amount for this order
+          const orderTotal = entries.reduce((sum, entry) => {
+            return sum + parseFloat(entry.amount || "0");
+          }, 0);
+
+          // Determine if order is settled (all items settled)
+          const allSettled = entries.every(
+            (entry) =>
+              entry.status === "settled" || entry.status === "completed"
+          );
+
+          // Add to totals
+          totalSalesAmount += orderTotal;
+          if (allSettled) {
+            totalSettledAmount += orderTotal;
+          }
+
+          return {
+            id: `order_${orderId}`,
+            amount: `Rs. ${orderTotal.toFixed(2)}`,
+            date: formattedDate,
+            time: formattedTime,
+            type: allSettled ? "Settled" : "Sales",
+            direction: allSettled ? "down" : "up",
+            orderNo: orderId?.toString(),
+          };
+        });
 
         // Sort by date (newest first)
         transformedTransactions.sort((a, b) => {
@@ -110,7 +120,19 @@ const OnlineSaleWallet = () => {
           return dateB.getTime() - dateA.getTime();
         });
 
+        // Calculate balance (total sales - total settled)
+        const balanceAmount = totalSalesAmount - totalSettledAmount;
+
+        setBalance(balanceAmount);
+        setTotalSales(totalSalesAmount);
+        setTotalSettled(totalSettledAmount);
         setTransactions(transformedTransactions);
+      } else {
+        // No data
+        setBalance(0);
+        setTotalSales(0);
+        setTotalSettled(0);
+        setTransactions([]);
       }
     } catch (error: any) {
       console.error("Error fetching online order ledger:", error);
@@ -119,6 +141,10 @@ const OnlineSaleWallet = () => {
         text1: "Error",
         text2: "Failed to load sale ledger data. Please try again.",
       });
+      setBalance(0);
+      setTotalSales(0);
+      setTotalSettled(0);
+      setTransactions([]);
     } finally {
       if (isRefresh) {
         setIsRefreshing(false);
@@ -163,7 +189,17 @@ const OnlineSaleWallet = () => {
       ]}
     >
       <Headerwithback title="Sale Ledger" />
-      <ScrollView contentContainerStyle={styles.contentContainer}>
+      <ScrollView
+        contentContainerStyle={styles.contentContainer}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={() => fetchLedgerData(true)}
+            colors={["#FCA311"]}
+            tintColor="#FCA311"
+          />
+        }
+      >
         <View style={styles.balanceBox}>
           <View>
             <Text style={styles.balanceLabel}>Balance</Text>
@@ -341,6 +377,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "700",
     marginTop: 4,
+    color: "#000",
   },
   transactionItem: {
     backgroundColor: "#fff",

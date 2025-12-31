@@ -57,6 +57,7 @@ interface VendorDetails {
 interface PurchaseEntry {
   id: number;
   total_amount: number;
+  total_gst_amount: number;
   purchase_code: string;
   purchase_date: string;
   supplier_invoice_date: string | null;
@@ -636,7 +637,7 @@ const PurchaseLedger = () => {
                       Discount ({selectedPurchase.discount_percentage}%):
                     </Text>
                     <Text style={styles.detailValue}>
-                      ₹{Number(selectedPurchase.discount_amount).toFixed(2)}
+                      - ₹{Number(selectedPurchase.discount_amount).toFixed(2)}
                     </Text>
                   </View>
                 )}
@@ -655,7 +656,15 @@ const PurchaseLedger = () => {
                 <View style={styles.detailRow}>
                   <Text style={styles.detailLabel}>Packaging Charges:</Text>
                   <Text style={styles.detailValue}>
-                    ₹{Number(selectedPurchase.packaging_charges).toFixed(2)}
+                    + ₹{Number(selectedPurchase.packaging_charges).toFixed(2)}
+                  </Text>
+                </View>
+              )}
+              {Number(selectedPurchase.total_gst_amount || 0) > 0 && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>GST Amount:</Text>
+                  <Text style={styles.detailValue}>
+                    + ₹{Number(selectedPurchase.total_gst_amount).toFixed(2)}
                   </Text>
                 </View>
               )}
@@ -670,19 +679,21 @@ const PurchaseLedger = () => {
               <View style={[styles.detailRow, styles.totalRow]}>
                 <Text style={styles.totalLabel}>Total Amount:</Text>
                 <Text style={styles.totalValue}>
-                  ₹{calculatePurchaseTotal(selectedPurchase).toFixed(2)}
+                  ₹{Number(selectedPurchase.total_amount).toFixed(2)}
                 </Text>
               </View>
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Balance Amount:</Text>
-                <Text style={[styles.detailValue, styles.balanceAmount]}>
-                  ₹
-                  {(
-                    calculatePurchaseTotal(selectedPurchase) -
-                    Number(selectedPurchase.advance_amount || 0)
-                  ).toFixed(2)}
-                </Text>
-              </View>
+              {selectedPurchase.payment_method === "credit" && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Balance Amount:</Text>
+                  <Text style={[styles.detailValue, styles.balanceAmount]}>
+                    ₹
+                    {(
+                      calculatePurchaseTotal(selectedPurchase) -
+                      Number(selectedPurchase.advance_amount || 0)
+                    ).toFixed(2)}
+                  </Text>
+                </View>
+              )}
             </View>
 
             {/* Additional Details */}

@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   Switch,
   FlatList,
+  RefreshControl,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Headerwithback from "./Headerwithback";
@@ -20,15 +21,31 @@ import { HomeNavigation } from "../constants/app-routes.constants";
 import { useNavigation } from "@react-navigation/native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { ScaledSheet } from "react-native-size-matters";
+import { API_ROUTES } from "../constants/api-routes.constants";
+import moment from "moment";
 
 type RootStackParamList = {
   AddDeliveryBoy: undefined;
 };
 
+interface Transaction {
+  id: string | number;
+  amount: string | number;
+  date: string;
+  time: string;
+  order: string | number;
+  delivery_boy: string | number;
+}
+
 const AssignOwnDeliveryBoy = () => {
   const insets = useSafeAreaInsets();
   const [isEnabled, setIsEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [ordersDelivered, setOrdersDelivered] = useState(0);
+  const [totalEarnings, setTotalEarnings] = useState(0);
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const toggleSwitch = async () => {
     setLoading(true);
@@ -57,19 +74,70 @@ const AssignOwnDeliveryBoy = () => {
     }
   };
 
+  const fetchDeliveryHistory = async () => {
+    try {
+      setLoadingTransactions(true);
+      const res = await api.get(API_ROUTES.deliveryBoysHistory);
+      const data = res.data || {};
+
+      // Extract overall summary from API response
+      const overallDeliveries = data.overall_total_deliveries || 0;
+      const overallEarnings = data.overall_total_earnings || 0;
+
+      // Extract delivery history array directly from root
+      const deliveryHistory = data.delivery_history || [];
+      const allTransactions: Transaction[] = deliveryHistory.map(
+        (item: any) => {
+          const dateTime =
+            item.order_date || item.created_at || new Date().toISOString();
+          const momentDate = moment(dateTime);
+
+          return {
+            id: item.order_id || Math.random().toString(),
+            amount: item.shipping_fee || 0,
+            date: momentDate.format("MM/DD/YYYY"),
+            time: momentDate.format("hh:mm A"),
+            order: item.order_id || "-",
+            delivery_boy: item.delivery_boy?.name || "-",
+          };
+        }
+      );
+
+      // Sort transactions by date (newest first)
+      allTransactions.sort((a, b) => {
+        const dateA = moment(a.date + " " + a.time, "MM/DD/YYYY hh:mm A");
+        const dateB = moment(b.date + " " + b.time, "MM/DD/YYYY hh:mm A");
+        return dateB.valueOf() - dateA.valueOf();
+      });
+
+      setTransactions(allTransactions);
+      setOrdersDelivered(overallDeliveries);
+      setTotalEarnings(overallEarnings);
+    } catch (error) {
+      console.error("Failed to fetch delivery history:", error);
+      setTransactions([]);
+      setOrdersDelivered(0);
+      setTotalEarnings(0);
+    } finally {
+      setLoadingTransactions(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([getValues(), fetchDeliveryHistory()]);
+    } catch (error) {
+      console.error("Error refreshing:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   useEffect(() => {
     getValues();
+    fetchDeliveryHistory();
   }, []);
-
-  const transactions = [
-    {
-      id: "1",
-      amount: "500",
-      date: "4/27/2025",
-      time: "11:00 AM",
-      order: "12345",
-    },
-  ];
 
   return (
     <View
@@ -113,7 +181,9 @@ const AssignOwnDeliveryBoy = () => {
         <View style={styles.summaryBox}>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Orders Delivered</Text>
-            <Text style={styles.summaryAmount}>10</Text>
+            <Text style={styles.summaryAmount}>
+              {loadingTransactions ? "..." : ordersDelivered}
+            </Text>
           </View>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Earnings</Text>
@@ -124,7 +194,9 @@ const AssignOwnDeliveryBoy = () => {
                 justifyContent: "space-between",
               }}
             >
-              <Text style={styles.summaryAmount}>Rs.1000.00</Text>
+              <Text style={styles.summaryAmount}>
+                {loadingTransactions ? "..." : `Rs.${totalEarnings.toFixed(2)}`}
+              </Text>
               <Icon
                 name="wallet"
                 size={24}
@@ -139,24 +211,44 @@ const AssignOwnDeliveryBoy = () => {
       {/* Transactions */}
       <FlatList
         data={transactions}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (
           <View style={styles.transactionCard}>
             <View>
               <Text style={[styles.amountText, { color: "#005120" }]}>
-                Rs. {item.amount}
+                Rs.{" "}
+                {typeof item.amount === "number"
+                  ? item.amount.toFixed(2)
+                  : item.amount}
               </Text>
               <Text style={styles.orderText}>Order no: {item.order}</Text>
+              <Text style={styles.orderDeliveryBoyText}>
+                Delivery boy: {item.delivery_boy}
+              </Text>
             </View>
             <View style={{ alignItems: "flex-end", gap: 10 }}>
               <Text style={styles.dateText}>Date: {item.date}</Text>
               <Text style={styles.dateText}>Time: {item.time}</Text>
-              {/* <Icon name="arrow-down" size={20} color="#2EAE47" /> */}
             </View>
           </View>
         )}
         style={{ marginTop: 12 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#FCA311"]}
+            tintColor="#FCA311"
+          />
+        }
+        ListEmptyComponent={
+          !loadingTransactions ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No transactions found</Text>
+            </View>
+          ) : null
+        }
       />
     </View>
   );
@@ -254,9 +346,25 @@ const styles = ScaledSheet.create({
     fontWeight: "600",
     marginTop: 4,
   },
+  orderDeliveryBoyText: {
+    fontSize: 13,
+    color: "navy",
+    fontWeight: "500",
+    marginTop: 4,
+  },
   dateText: {
     fontSize: 13,
     color: "#000",
     fontWeight: "600",
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyText: {
+    fontSize: 14,
+    color: "#999",
+    fontWeight: "500",
   },
 });

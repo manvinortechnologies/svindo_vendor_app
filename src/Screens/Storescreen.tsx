@@ -11,6 +11,7 @@ import {
   Alert,
   RefreshControl,
   Linking,
+  Platform,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import MaterialIcon from "react-native-vector-icons/MaterialIcons";
@@ -47,6 +48,8 @@ const Storescreen = ({ navigation }: any) => {
     "You have reached the limit. Please remove items to add or edit current items."
   );
   const [refreshing, setRefreshing] = useState(false);
+  const [banners, setBanners] = useState<any[]>([]);
+  const [loadingBanners, setLoadingBanners] = useState(false);
 
   // Video Modal state
   const [videoModalVisible, setVideoModalVisible] = useState(false);
@@ -121,9 +124,24 @@ const Storescreen = ({ navigation }: any) => {
     }
   };
 
+  // Fetch banners from API
+  const fetchBanners = async () => {
+    try {
+      setLoadingBanners(true);
+      const response = await api.get(API_ROUTES.bannerCampaigns);
+      setBanners(response.data || []);
+    } catch (error) {
+      console.error("Failed to fetch banners:", error);
+      setBanners([]);
+    } finally {
+      setLoadingBanners(false);
+    }
+  };
+
   useEffect(() => {
     if (isFocused) {
       refetch();
+      fetchBanners();
     }
   }, [isFocused]);
 
@@ -174,6 +192,7 @@ const Storescreen = ({ navigation }: any) => {
                 text2: "Banner deleted successfully",
               });
               refetch();
+              fetchBanners();
             } catch (e) {
               Toast.show({
                 type: "error",
@@ -301,6 +320,7 @@ const Storescreen = ({ navigation }: any) => {
     setRefreshing(true);
     try {
       await refetch();
+      await fetchBanners();
     } catch (error) {
       console.error("Error refreshing data:", error);
     } finally {
@@ -314,6 +334,30 @@ const Storescreen = ({ navigation }: any) => {
       storeData?.longitude || 0
     );
     setLocation(locationDetails);
+  };
+
+  const openAndroidApp = async () => {
+    const packageName = "in.webgrid.svindo"; // target app id
+
+    const intentUrl = `svindo://`;
+    const storeUrl = Platform.select({
+      android: `market://details?id=${packageName}`,
+      ios: `https://apps.apple.com/app/id${packageName}`,
+    });
+    try {
+      const canOpen = await Linking.canOpenURL(storeUrl || "");
+      console.log("canOpen", canOpen);
+      if (canOpen) {
+        await Linking.openURL(intentUrl); // 🎯 App installed → open it
+      } else {
+        await Linking.openURL(storeUrl || ""); // 🛒 Not installed → Play Store
+      }
+    } catch (e) {
+      // Fallback in rare cases → open Play Store web link
+      await Linking.openURL(
+        `https://play.google.com/store/apps/details?id=${packageName}`
+      );
+    }
   };
 
   useEffect(() => {
@@ -356,9 +400,7 @@ const Storescreen = ({ navigation }: any) => {
         showBackButton={false}
         rightIcon={
           <TouchableOpacity
-            onPress={() =>
-              Linking.openURL(`https://svindo.com/#/store/${storeData?.id}`)
-            }
+            onPress={openAndroidApp}
             style={{
               padding: 5,
               backgroundColor: "#006EB2",
@@ -565,7 +607,7 @@ const Storescreen = ({ navigation }: any) => {
               marginBottom: 8,
             }}
             onPress={() => {
-              const current = storeData?.banners?.length || 0;
+              const current = banners?.length || 0;
               const MAX = 3;
               if (current >= MAX) {
                 setLimitMessage(
@@ -586,19 +628,34 @@ const Storescreen = ({ navigation }: any) => {
           <Text style={styles.sectionTitleRight}>Max - 3</Text>
         </View>
         {/* Scrollable Banner */}
-        {storeData?.banners && storeData?.banners?.length > 0 ? (
+        {loadingBanners ? (
+          <View
+            style={[
+              styles.scrollBanner,
+              {
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "#f0f0f0",
+              },
+            ]}
+          >
+            <ActivityIndicator size="large" color="#FCA311" />
+          </View>
+        ) : banners && banners.length > 0 ? (
           <Carousel
-            data={storeData?.banners || []}
+            data={banners || []}
             loop={false}
             renderItem={({ item }) => (
               <View style={{ position: "relative" }}>
                 <Image
                   source={{
-                    uri: APP_CONSTANTS.API_BASE_URL + item.banner_image,
+                    uri: item.banner_image.includes("http")
+                      ? item.banner_image
+                      : APP_CONSTANTS.API_BASE_URL + item.banner_image,
                   }}
                   style={styles.scrollBanner}
                 />
-                <TouchableOpacity
+                {/* <TouchableOpacity
                   style={styles.editBannerButton}
                   onPress={() =>
                     navigation.navigate(HomeNavigation.ADD_BANNER_SCREEN, {
@@ -608,7 +665,12 @@ const Storescreen = ({ navigation }: any) => {
                   }
                 >
                   <Icon name="pencil-outline" size={s(25)} color="#000" />
-                </TouchableOpacity>
+                </TouchableOpacity> */}
+                <View style={styles.approvedBannerButton}>
+                  <Text style={styles.approvedBannerText}>
+                    {item.is_approved ? "Approved" : "Pending"}
+                  </Text>
+                </View>
                 <TouchableOpacity
                   style={styles.deleteBannerButton}
                   onPress={() => handleDeleteBanner(item?.id)}
@@ -1495,6 +1557,20 @@ const styles = ScaledSheet.create({
     height: "150@s",
     alignSelf: "center",
     borderRadius: 10,
+  },
+  approvedBannerButton: {
+    position: "absolute",
+    top: "5@s",
+    right: "15@s",
+    backgroundColor: "#fff",
+    borderRadius: "6@s",
+    padding: "5@s",
+    elevation: 5,
+  },
+  approvedBannerText: {
+    fontSize: 12,
+    fontWeight: "bold",
+    color: "#000",
   },
   editBannerButton: {
     position: "absolute",

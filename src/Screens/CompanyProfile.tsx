@@ -271,6 +271,10 @@ const CompanyProfile = ({ navigation, route }: any) => {
       newErrors.billing_pincode = "Pincode must be 6 digits";
     }
 
+    if (!signatureFile?.uri) {
+      newErrors.signature = "Signature is required";
+    }
+
     // Validate shipping address (only if not same as billing)
     if (!sameAsBilling) {
       if (!form.shipping.address1.trim()) {
@@ -580,7 +584,9 @@ const CompanyProfile = ({ navigation, route }: any) => {
               )}
             </View>
           </TouchableOpacity>
-
+          {errors.signature && (
+            <Text style={styles.errorText}>{errors.signature}</Text>
+          )}
           {/* Billing Address */}
           <Text style={styles.sectionTitle}>Billing Address</Text>
           <View style={styles.addressContainer}>

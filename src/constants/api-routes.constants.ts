@@ -77,6 +77,7 @@ export const API_ROUTES = {
   storeWorkingHourBulk: "/vendor/store-working-hour/bulk/",
 
   posSales: "/vendor/sales/",
+  posSalesInvoice: "vendor/customer-sale-invoice/",
   invoiceNumber: "/vendor/get-next-invoiceno/",
 
   GET_VENDOR_LIST: "/getAllVendors",
@@ -92,7 +93,12 @@ export const API_ROUTES = {
   addons: "/vendor/addon/",
   spotlightProduct: "/vendor/spotlight-product/",
   deliveryBoys: "/vendor/deliveryboys/",
+  deliveryBoysHistory: "/vendor/deliveryboys/manual-delivery-history/",
+  autoDeliveryBoysHistory:
+    "/vendor/deliveryboys/auto-assigned-delivery-history/",
   orders: "/vendor/orders/",
+  orderItemTracking: "/vendor/order-item-tracking/",
+  assignDeliveryBoy: "/vendor/orders/:id/assign-delivery-boy/",
   supportTickets: "/customer/support/tickets/",
   supportTicketMessages: "/customer/support/tickets/:ticket_id/messages/",
   printVariantChoices: "/vendor/print-variant/choices/",

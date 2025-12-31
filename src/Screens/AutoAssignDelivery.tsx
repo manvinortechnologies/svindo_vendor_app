@@ -7,6 +7,7 @@ import {
   Switch,
   FlatList,
   Dimensions,
+  RefreshControl,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Headerwithback from "./Headerwithback";
@@ -20,8 +21,19 @@ import {
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import moment from "moment";
 import { ScaledSheet } from "react-native-size-matters";
+import Toast from "react-native-toast-message";
+import { API_ROUTES } from "../constants/api-routes.constants";
 
 const { width } = Dimensions.get("window");
+
+interface Transaction {
+  id: string | number;
+  amount: string | number;
+  date: string;
+  time: string;
+  order: string | number | null;
+  type: "spent" | "added";
+}
 
 const AutoAssignDelivery = () => {
   const insets = useSafeAreaInsets();
@@ -29,6 +41,11 @@ const AutoAssignDelivery = () => {
   const [loading, setLoading] = useState(true);
   const [tillDate, setTillDate] = useState<Date>(new Date());
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loadingTransactions, setLoadingTransactions] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [totalDiscountAmount, setTotalDiscountAmount] = useState(0);
+  const [totalDeliveryAmount, setTotalDeliveryAmount] = useState(0);
   const toggleSwitch = async () => {
     setLoading(true);
     try {
@@ -37,8 +54,12 @@ const AutoAssignDelivery = () => {
         is_self_delivery_enabled: isEnabled,
       });
       setIsEnabled((previousState) => !previousState);
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
+      Toast.show({
+        type: "error",
+        text1: error?.response?.data?.detail || "Something went wrong",
+      });
     } finally {
       setLoading(false);
     }
@@ -56,9 +77,86 @@ const AutoAssignDelivery = () => {
     }
   };
 
+  const fetchAutoDeliveryHistory = async () => {
+    try {
+      setLoadingTransactions(true);
+      const dateParam = moment(tillDate).format("YYYY-MM-DD");
+      const res = await api.get(API_ROUTES.autoDeliveryBoysHistory, {
+        params: { date: dateParam },
+      });
+      const data = res.data || {};
+
+      // Extract summary data
+      const discountAmount = data.total_discount_amount || 0;
+      const deliveryAmount = data.total_delivery_amount || 0;
+
+      // Extract delivery history array
+      const deliveryHistory = data.delivery_history || data.results || [];
+      const allTransactions: Transaction[] = deliveryHistory.map(
+        (item: any) => {
+          const dateTime =
+            item.order_date ||
+            item.created_at ||
+            item.assigned_at ||
+            new Date().toISOString();
+          const momentDate = moment(dateTime);
+
+          return {
+            id: item.id || item.order_id || Math.random().toString(),
+            amount: item.delivery_fee || item.shipping_fee || item.amount || 0,
+            date: momentDate.format("MM/DD/YYYY"),
+            time: momentDate.format("hh:mm A"),
+            order: item.order_id || item.order?.id || null,
+            type: "spent" as const,
+          };
+        }
+      );
+
+      // Sort transactions by date (newest first)
+      allTransactions.sort((a, b) => {
+        const dateA = moment(a.date + " " + a.time, "MM/DD/YYYY hh:mm A");
+        const dateB = moment(b.date + " " + b.time, "MM/DD/YYYY hh:mm A");
+        return dateB.valueOf() - dateA.valueOf();
+      });
+
+      setTransactions(allTransactions);
+      setTotalDiscountAmount(discountAmount);
+      setTotalDeliveryAmount(deliveryAmount);
+    } catch (error: any) {
+      console.error("Failed to fetch auto delivery history:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2:
+          error?.response?.data?.detail || "Failed to load delivery history",
+      });
+      setTransactions([]);
+      setTotalDiscountAmount(0);
+      setTotalDeliveryAmount(0);
+    } finally {
+      setLoadingTransactions(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await Promise.all([getValues(), fetchAutoDeliveryHistory()]);
+    } catch (error) {
+      console.error("Error refreshing:", error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   useEffect(() => {
     getValues();
+    fetchAutoDeliveryHistory();
   }, []);
+
+  useEffect(() => {
+    fetchAutoDeliveryHistory();
+  }, [tillDate]);
 
   const showDatePicker = () => {
     setDatePickerVisible(true);
@@ -72,25 +170,6 @@ const AutoAssignDelivery = () => {
   const handleDateCancel = () => {
     setDatePickerVisible(false);
   };
-
-  const transactions = [
-    {
-      id: "1",
-      amount: "500",
-      date: "4/27/2025",
-      time: "11:00 AM",
-      type: "spent",
-      order: "12345",
-    },
-    {
-      id: "2",
-      amount: "1000",
-      date: "4/27/2025",
-      time: "11:00 AM",
-      type: "added",
-      order: null,
-    },
-  ];
 
   return (
     <View
@@ -132,7 +211,7 @@ const AutoAssignDelivery = () => {
       >
         <View style={styles.rowSpace}>
           <Text style={styles.sectionTitle}>Delivery Details</Text>
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.filterButton}
             onPress={showDatePicker}
           >
@@ -145,13 +224,17 @@ const AutoAssignDelivery = () => {
               color="#FCA311"
               style={{ marginLeft: 5 }}
             />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
 
         <View style={styles.summaryBox}>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Total Discount Amount</Text>
-            <Text style={styles.summaryAmount}>Rs.2000.00</Text>
+            <Text style={styles.summaryAmount}>
+              {loadingTransactions
+                ? "..."
+                : `Rs.${Number(totalDiscountAmount).toFixed(2)}`}
+            </Text>
           </View>
           <View style={styles.summaryItem}>
             <Text style={styles.summaryLabel}>Total Delivery Amount</Text>
@@ -162,7 +245,11 @@ const AutoAssignDelivery = () => {
                 justifyContent: "space-between",
               }}
             >
-              <Text style={styles.summaryAmount}>Rs.1000.00</Text>
+              <Text style={styles.summaryAmount}>
+                {loadingTransactions
+                  ? "..."
+                  : `Rs.${Number(totalDeliveryAmount).toFixed(2)}`}
+              </Text>
               <Icon
                 name="wallet"
                 size={20}
@@ -177,7 +264,7 @@ const AutoAssignDelivery = () => {
       {/* Transactions */}
       <FlatList
         data={transactions}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => (
           <View style={styles.transactionCard}>
             <View>
@@ -187,12 +274,15 @@ const AutoAssignDelivery = () => {
                   { color: item.type === "spent" ? "#005120" : "#492F99" },
                 ]}
               >
-                Rs. {item.amount}
+                Rs.{" "}
+                {typeof item.amount === "number"
+                  ? item.amount.toFixed(2)
+                  : item.amount}
               </Text>
               {item.order ? (
                 <Text style={styles.orderText}>Order no: {item.order}</Text>
               ) : (
-                <Text style={styles.orderText}>Added to wallet</Text>
+                <Text style={styles.orderText}>Auto assigned delivery</Text>
               )}
             </View>
             <View style={{ alignItems: "flex-end" }}>
@@ -208,6 +298,21 @@ const AutoAssignDelivery = () => {
         )}
         style={{ marginTop: 12, marginHorizontal: 16 }}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={["#FCA311"]}
+            tintColor="#FCA311"
+          />
+        }
+        ListEmptyComponent={
+          !loadingTransactions ? (
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No delivery history found</Text>
+            </View>
+          ) : null
+        }
       />
 
       {/* Add Amount Button */}
@@ -335,5 +440,15 @@ const styles = ScaledSheet.create({
   addBtnText: {
     color: "#fff",
     fontWeight: "600",
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyText: {
+    fontSize: 14,
+    color: "#999",
+    fontWeight: "500",
   },
 });

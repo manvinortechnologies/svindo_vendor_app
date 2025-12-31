@@ -316,7 +316,7 @@ const Orders = ({ navigation }: any) => {
         <FlatList
           data={filteredOrders}
           contentContainerStyle={{
-            paddingBottom: s(80),
+            paddingBottom: s(150),
           }}
           keyExtractor={(item: any) => item.id.toString()}
           renderItem={({ item }: { item: any }) => (

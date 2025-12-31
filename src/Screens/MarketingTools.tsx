@@ -18,6 +18,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import { s } from "react-native-size-matters";
 
 // ✅ Define the type for the navigation stack
 type RootStackParamList = {
@@ -59,6 +60,7 @@ const MarketingTools = () => {
         backgroundColor="#FFF"
         textColor="#333"
         borderBottomColor="#ccc"
+        paddingTop={s(10)}
       />
 
       <ScrollView>

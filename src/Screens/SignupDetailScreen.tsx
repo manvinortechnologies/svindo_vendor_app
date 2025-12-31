@@ -10,7 +10,8 @@ import {
 import LinearGradient from "react-native-linear-gradient";
 import ImageCropPicker from "react-native-image-crop-picker";
 import { SignUpDetailScreenProps } from "../type";
-import { useAddCompanyMutation } from "../services/api/state-api-slice";
+import api from "../services/api/api";
+import { API_ROUTES } from "../constants/api-routes.constants";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import { useForm, Controller } from "react-hook-form";
 import { StorageUtils } from "../utils/storage";
@@ -53,7 +54,6 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({
     type: string;
     name: string;
   } | null>(null);
-  const [addCompany, { error: signupError }] = useAddCompanyMutation();
   const [isLoading, setIsLoading] = useState(false);
 
   const selectProfilePicture = async () => {
@@ -109,10 +109,6 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({
 
   const onSubmit = async (data: FormData) => {
     setIsLoading(true);
-    if (signupError) {
-      console.log("Signup Error:", signupError);
-      return;
-    }
     try {
       const formData = new FormData();
 
@@ -127,14 +123,19 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({
           uri: profileImage.uri,
           type: profileImage.type,
           name: profileImage.name,
-        });
+        } as any);
       }
 
-      const res = await addCompany(formData).unwrap();
+      // Using axios directly to ensure token is sent via interceptor
+      const res = await api.post(API_ROUTES.companyProfle, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       StorageUtils.removeSignupStatus();
       StorageUtils.removeAdminProfile();
-      StorageUtils.setBusinessProfile(JSON.stringify(res));
+      StorageUtils.setBusinessProfile(JSON.stringify(res.data));
       navigation.navigate(HomeNavigation.SELECT_LOCATION_SCREEN as never);
     } catch (error) {
       console.log("Comapny Error:", error);

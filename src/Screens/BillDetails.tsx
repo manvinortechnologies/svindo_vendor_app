@@ -6,6 +6,9 @@ import {
   ScrollView,
   TouchableOpacity,
   FlatList,
+  Platform,
+  Linking,
+  Alert,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import CheckBox from "@react-native-community/checkbox";
@@ -20,6 +23,10 @@ import {
 import Loading from "../CommonComponent/Loading";
 import { ScaledSheet } from "react-native-size-matters";
 import moment from "moment";
+import RNFS from "react-native-fs";
+import Toast from "react-native-toast-message";
+import { StorageUtils } from "../utils/storage";
+import { APP_CONSTANTS } from "../constants/app.constants";
 
 interface BillItem {
   id: number;
@@ -46,6 +53,7 @@ const BillDetails: React.FC = () => {
   const insets = useSafeAreaInsets();
   const [billData, setBillData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isDownloadingPDF, setIsDownloadingPDF] = useState<boolean>(false);
 
   useEffect(() => {
     (async () => {
@@ -199,6 +207,105 @@ const BillDetails: React.FC = () => {
       value: billData?.wholesale_invoice_details?.number_of_parcels,
     },
   ];
+
+  const handleViewPDF = async () => {
+    if (!params?.id) {
+      Alert.alert("Error", "Invoice ID not found");
+      return;
+    }
+
+    try {
+      setIsDownloadingPDF(true);
+
+      const apiUrl = `${APP_CONSTANTS.API_BASE_URL}${API_ROUTES.posSalesInvoice}?id=${params.id}`;
+      const token = StorageUtils.getAccessToken();
+
+      // Use axios with responseType: 'arraybuffer' to get binary data
+      const response = await api.get(apiUrl, {
+        responseType: "arraybuffer",
+      });
+
+      // Convert ArrayBuffer to base64
+      const arrayBuffer = response.data;
+      const base64String = arrayBufferToBase64(arrayBuffer);
+
+      // Create filename with timestamp
+      const timestamp = moment().format("YYYYMMDD_HHmmss");
+      const invoiceNumber =
+        billData?.wholesale_invoice_details?.invoice_number ||
+        billData?.invoice_number ||
+        params.id;
+      const filename = `Invoice_${invoiceNumber}_${timestamp}.pdf`;
+
+      // Determine save path based on platform
+      const downloadPath =
+        Platform.OS === "ios"
+          ? `${RNFS.DocumentDirectoryPath}/${filename}`
+          : `${RNFS.DownloadDirectoryPath}/${filename}`;
+
+      // Write file to device
+      await RNFS.writeFile(downloadPath, base64String, "base64");
+
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: `PDF downloaded successfully!`,
+      });
+
+      // Try to open the PDF file
+      try {
+        const fileUrl = `file://${downloadPath}`;
+        const canOpen = await Linking.canOpenURL(fileUrl);
+        if (canOpen) {
+          await Linking.openURL(fileUrl);
+        }
+      } catch (openError) {
+        console.log("Could not open PDF automatically");
+      }
+    } catch (error: any) {
+      console.error("Error downloading PDF:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to download PDF";
+      Alert.alert("Error", errorMessage);
+    } finally {
+      setIsDownloadingPDF(false);
+    }
+  };
+
+  // Helper function to convert ArrayBuffer to base64
+  const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    // Use btoa if available (React Native polyfill), otherwise use manual conversion
+    if (typeof btoa !== "undefined") {
+      return btoa(binary);
+    } else {
+      // Manual base64 encoding for React Native
+      const chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+      let result = "";
+      let i = 0;
+      while (i < binary.length) {
+        const a = binary.charCodeAt(i++);
+        const b = i < binary.length ? binary.charCodeAt(i++) : 0;
+        const c = i < binary.length ? binary.charCodeAt(i++) : 0;
+
+        const bitmap = (a << 16) | (b << 8) | c;
+        result += chars.charAt((bitmap >> 18) & 63);
+        result += chars.charAt((bitmap >> 12) & 63);
+        result +=
+          i - 2 < binary.length ? chars.charAt((bitmap >> 6) & 63) : "=";
+        result += i - 1 < binary.length ? chars.charAt(bitmap & 63) : "=";
+      }
+      return result;
+    }
+  };
 
   const renderItem = ({ item }: { item: InfoItem }) => (
     <View style={styles.infoRow}>
@@ -418,14 +525,22 @@ const BillDetails: React.FC = () => {
         {/* Buttons Section */}
         <View style={styles.buttonRow}>
           <TouchableOpacity
-            style={[styles.button, { backgroundColor: "#89ACF7" }]}
+            style={[
+              styles.button,
+              { backgroundColor: "#89ACF7" },
+              isDownloadingPDF && { opacity: 0.6 },
+            ]}
+            onPress={handleViewPDF}
+            disabled={isDownloadingPDF}
           >
-            <Text style={styles.buttonText}>View PDF</Text>
+            <Text style={styles.buttonText}>
+              {isDownloadingPDF ? "Downloading..." : "View PDF"}
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.button, { backgroundColor: "#92F1A0" }]}
           >
-            <Text style={styles.buttonText}>Print</Text>
+            <Text style={styles.buttonText}>Download</Text>
           </TouchableOpacity>
           <TouchableOpacity style={{ margin: 5 }}>
             <Icon name="whatsapp" size={28} color="#25d366" />

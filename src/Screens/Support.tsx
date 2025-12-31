@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TextInput,
   FlatList,
+  Modal,
 } from "react-native";
 import {
   SafeAreaView,
@@ -32,6 +33,7 @@ const Support = () => {
   const [tickets, setTickets] = useState<any[]>([]);
   const [isLoadingTickets, setIsLoadingTickets] = useState(false);
   const [subject, setSubject] = useState<any>("");
+  const [showTicketModal, setShowTicketModal] = useState(false);
 
   const fetchTickets = async () => {
     setIsLoadingTickets(true);
@@ -51,11 +53,11 @@ const Support = () => {
   };
 
   const handleCreateTicket = async () => {
-    if (!subject) {
+    if (!subject.trim()) {
       Toast.show({
         type: "error",
         text1: "Error",
-        text2: "Please select an order first",
+        text2: "Please enter a subject for the ticket",
       });
       return;
     }
@@ -63,13 +65,14 @@ const Support = () => {
     setIsCreatingTicket(true);
     try {
       const payload = {
-        subject: subject,
+        subject: subject.trim(),
         role: "vendor",
       };
 
-      const response = await api.post(API_ROUTES.supportTickets, payload);
+      await api.post(API_ROUTES.supportTickets, payload);
 
       setSubject("");
+      setShowTicketModal(false);
       fetchTickets();
 
       Toast.show({
@@ -77,16 +80,28 @@ const Support = () => {
         text1: "Success",
         text2: "Support ticket created successfully",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating ticket:", error);
       Toast.show({
         type: "error",
         text1: "Error",
-        text2: "Failed to create support ticket. Please try again.",
+        text2:
+          error?.response?.data?.detail ||
+          "Failed to create support ticket. Please try again.",
       });
     } finally {
       setIsCreatingTicket(false);
     }
+  };
+
+  const handleOpenModal = () => {
+    setSubject("");
+    setShowTicketModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setSubject("");
+    setShowTicketModal(false);
   };
 
   useEffect(() => {
@@ -120,27 +135,12 @@ const Support = () => {
           />
         </View>
 
-        <View style={styles.dropdowncontainer}>
-          <TextInput
-            placeholder="Enter Subject"
-            placeholderTextColor="#A0A0A0"
-            style={styles.input}
-            value={subject}
-            onChangeText={setSubject}
-          />
-        </View>
-
         <TouchableOpacity
-          style={[
-            styles.button,
-            (!subject || isCreatingTicket) && styles.buttonDisabled,
-          ]}
-          disabled={!subject || isCreatingTicket}
-          onPress={handleCreateTicket}
+          style={styles.raiseTicketButton}
+          onPress={handleOpenModal}
         >
-          <Text style={styles.buttontext}>
-            {isCreatingTicket ? "Creating Ticket..." : "Raise Ticket"}
-          </Text>
+          <Ionicons name="plus-circle" size={s(20)} color="#fff" />
+          <Text style={styles.raiseTicketButtonText}>Raise Ticket</Text>
         </TouchableOpacity>
 
         <View style={styles.ticketsContainer}>
@@ -204,6 +204,61 @@ const Support = () => {
           )}
         </View>
       </View>
+
+      {/* Raise Ticket Modal */}
+      <Modal
+        visible={showTicketModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={handleCloseModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Raise Ticket</Text>
+              <TouchableOpacity onPress={handleCloseModal}>
+                <Ionicons name="close" size={s(24)} color="#000" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.modalContent}>
+              <Text style={styles.modalLabel}>Subject</Text>
+              <TextInput
+                placeholder="Enter subject"
+                placeholderTextColor="#A0A0A0"
+                style={styles.modalInput}
+                value={subject}
+                onChangeText={setSubject}
+                multiline={false}
+                autoFocus={true}
+              />
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalCancelButton, styles.modalButton]}
+                  onPress={handleCloseModal}
+                >
+                  <Text style={styles.modalCancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.modalSubmitButton,
+                    styles.modalButton,
+                    (!subject.trim() || isCreatingTicket) &&
+                      styles.modalButtonDisabled,
+                  ]}
+                  onPress={handleCreateTicket}
+                  disabled={!subject.trim() || isCreatingTicket}
+                >
+                  <Text style={styles.modalSubmitButtonText}>
+                    {isCreatingTicket ? "Creating..." : "Raise Ticket"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -457,6 +512,108 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: s(16),
     color: "#999",
+  },
+  raiseTicketButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#FCA311",
+    paddingVertical: s(12),
+    paddingHorizontal: s(20),
+    borderRadius: s(25),
+    marginHorizontal: s(20),
+    marginBottom: s(15),
+    gap: s(8),
+  },
+  raiseTicketButtonText: {
+    color: "#fff",
+    fontSize: s(16),
+    fontWeight: "bold",
+  },
+  // Modal styles
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: s(20),
+    width: "90%",
+    maxWidth: 400,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: s(20),
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  modalTitle: {
+    fontSize: s(20),
+    fontWeight: "bold",
+    color: "#000",
+  },
+  modalContent: {
+    padding: s(20),
+  },
+  modalLabel: {
+    fontSize: s(14),
+    fontWeight: "600",
+    color: "#000",
+    marginBottom: s(8),
+  },
+  modalInput: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: s(10),
+    paddingHorizontal: s(15),
+    paddingVertical: s(12),
+    fontSize: s(14),
+    color: "#000",
+    backgroundColor: "#F2F2F2",
+    marginBottom: s(20),
+  },
+  modalButtons: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: s(10),
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: s(12),
+    borderRadius: s(10),
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  modalCancelButton: {
+    backgroundColor: "#F5F5F5",
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  modalCancelButtonText: {
+    color: "#666",
+    fontSize: s(16),
+    fontWeight: "600",
+  },
+  modalSubmitButton: {
+    backgroundColor: "#FCA311",
+  },
+  modalButtonDisabled: {
+    backgroundColor: "#ccc",
+    opacity: 0.6,
+  },
+  modalSubmitButtonText: {
+    color: "#fff",
+    fontSize: s(16),
+    fontWeight: "bold",
   },
 });
 

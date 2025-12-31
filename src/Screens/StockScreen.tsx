@@ -145,7 +145,6 @@ const StockScreen = () => {
       const parent = parentProducts.find((p) => p.id === child.parent);
       if (parent) {
         parent.variants = parent.variants || [];
-        parent.variants.push(child);
       }
     });
 
@@ -533,6 +532,7 @@ const StockScreen = () => {
         backgroundColor="#FFF"
         textColor="#333"
         borderBottomColor="#ccc"
+        paddingTop={s(10)}
       />
       <ScrollView contentContainerStyle={styles.midcontent}>
         <SearchBar

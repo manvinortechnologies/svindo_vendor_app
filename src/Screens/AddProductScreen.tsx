@@ -685,6 +685,10 @@ const AddProductScreen = ({
 
   // Helper function to check if a field should be shown
   const shouldShowField = (fieldKey: string): boolean => {
+    // Only consider product settings for offline products
+    // For "both" type, always show all fields
+    if (selectedFor !== "offline") return true;
+
     // If settings are not loaded yet, show field by default
     if (Object.keys(settings).length === 0) return true;
     // Return true if setting is true or undefined, false if explicitly false
@@ -1359,7 +1363,7 @@ const AddProductScreen = ({
     }>
   ) => {
     if (scannedItems && scannedItems.length > 0) {
-      // Take only the first scanned barcode
+      // Only allow one barcode - take the first one
       const barcode = scannedItems[0].value;
       setAssignedBarcode(barcode);
       Toast.show({
@@ -1409,6 +1413,8 @@ const AddProductScreen = ({
       // Set default values for delivery details and policies based on settings
       const updates: Partial<FormValues> = {};
 
+      updates.is_stock_enabled = settings.stock || false;
+      updates.low_stock_alert = settings.low_stock_alert || false;
       // Set delivery details based on settings
       updates.instant_delivery = settings.instant_delivery || false;
       updates.self_pickup = settings.self_pickup || false;
@@ -1706,6 +1712,7 @@ const AddProductScreen = ({
                 visible={scanBarcodeModalVisible}
                 onClose={() => setScanBarcodeModalVisible(false)}
                 onScanComplete={handleAssignBarcode}
+                singleScan={true}
               />
 
               {/* Product Name Section */}
@@ -1972,7 +1979,7 @@ const AddProductScreen = ({
                           value={values.opening_stock}
                           keyboardType="number-pad"
                           onChangeText={handleChange("opening_stock")}
-                          editable={!imeiList.length}
+                          editable={!imeiList.length || !isEditMode}
                         />
                       </FormField>
 

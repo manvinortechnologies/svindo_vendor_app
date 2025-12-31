@@ -165,11 +165,15 @@ const DayBookScreen = () => {
         return new Date(b.time).getTime() - new Date(a.time).getTime();
       })
       .map((entry: any) => ({
-        type: entry.type || entry.entry_type || "Transaction",
+        type:
+          entry.type
+            .split("_")
+            .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ") || "Transaction",
         detail: entry.detail || entry.description || entry.reference || "-",
         medium: entry.medium || entry.payment_mode || "Cash",
-        debit: formatValue(entry.debit || 0),
-        credit: formatValue(entry.credit || 0),
+        debit: entry.debit || 0,
+        credit: entry.credit || 0,
         time: entry.time || entry.created_at || "",
       }));
   };
@@ -284,7 +288,15 @@ const DayBookScreen = () => {
                 <View style={{ padding: 6, backgroundColor: "#FFF8ED" }}>
                   <View style={styles.transTopRow}>
                     <Text style={styles.transType}>{item.type}</Text>
-                    <Text style={styles.transAmount}>₹{amount}</Text>
+                    <Text
+                      style={[
+                        styles.transAmount,
+                        Number(item.credit) > 0 && { color: "#163881" },
+                        Number(item.debit) > 0 && { color: "#FF0000" },
+                      ]}
+                    >
+                      ₹{Number(item.credit || item.debit).toFixed(2)}
+                    </Text>
                   </View>
                   <View style={styles.transBottomRow}>
                     <Text

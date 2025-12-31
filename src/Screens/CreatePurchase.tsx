@@ -59,7 +59,7 @@ type CreatePurchaseRouteProp = RouteProp<RootStackParamList, "CreatePurchase">;
 
 const CreatePurchase = ({ navigation }: any) => {
   const route = useRoute<CreatePurchaseRouteProp>();
-  const [selectedPayment, setSelectedPayment] = useState("credit");
+  const [selectedPayment, setSelectedPayment] = useState("Cash");
   const [selectedAdvanceType, setSelectedAdvanceType] = useState("Cash");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isVendorModalVisible, setIsVendorModalVisible] = useState(false);
@@ -913,7 +913,7 @@ const CreatePurchase = ({ navigation }: any) => {
                     <View style={styles.advanceDueRow}>
                       <Text style={styles.totalLabel}>Due</Text>
                       <Text style={styles.totalValue}>
-                        {formatNumber(dueAmount)}
+                        {Number(formatNumber(dueAmount)).toFixed(2)}
                       </Text>
                     </View>
                   </View>
@@ -1081,7 +1081,7 @@ const CreatePurchase = ({ navigation }: any) => {
                 <TextInput
                   value={discount?.pr}
                   onChangeText={handlePercentChange}
-                  placeholder="0"
+                  placeholder="%"
                   placeholderTextColor="#ccc"
                   style={styles.input}
                   keyboardType="numeric"
@@ -1089,7 +1089,7 @@ const CreatePurchase = ({ navigation }: any) => {
                 <TextInput
                   value={discount?.amount}
                   onChangeText={handleAmountChange}
-                  placeholder="%"
+                  placeholder="0"
                   placeholderTextColor="#ccc"
                   style={styles.input}
                   keyboardType="numeric"

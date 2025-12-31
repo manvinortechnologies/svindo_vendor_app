@@ -1,6 +1,6 @@
 import React from "react";
-import { View, Text, Dimensions } from "react-native";
-import { BarChart, LineChart } from "react-native-gifted-charts";
+import { Dimensions } from "react-native";
+import { LineChart } from "react-native-gifted-charts";
 const { width, height } = Dimensions.get("window");
 export default function LineCharts({
   color = "#000000",
@@ -16,6 +16,12 @@ export default function LineCharts({
       dataPointsColor1={color}
       width={width - 70}
       adjustToWidth
+      yAxisTextStyle={{ color: "gray" }}
+      xAxisLabelTextStyle={{ color: "gray", fontSize: 12 }}
+      xAxisColor="gray"
+      xAxisThickness={1}
+      noOfSections={8}
+      // stepValue={2}
     />
   );
 }

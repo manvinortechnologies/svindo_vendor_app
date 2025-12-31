@@ -483,7 +483,8 @@ const StatisticsScreen = ({ navigation }: any) => {
 
   const groupedByDate = (data: any) =>
     data?.reduce((acc: any, item: any) => {
-      const date = item.visited_at.split("T")[0]; // YYYY-MM-DD
+      const date =
+        item?.visited_at?.split("T")[0] || item?.followed_at?.split("T")[0]; // YYYY-MM-DD
 
       if (!acc[date]) {
         acc[date] = [];
@@ -901,7 +902,7 @@ const StatisticsScreen = ({ navigation }: any) => {
               </View>
               <View style={styles.cardFooter}>
                 <Text style={styles.cardFooterText}>
-                  {item.title.split(" ")[1]}
+                  {item.title?.split(" ")[1]}
                 </Text>
                 <Icon name="chevron-right" size={16} color="#333" />
               </View>
@@ -932,7 +933,7 @@ const StatisticsScreen = ({ navigation }: any) => {
         </TouchableOpacity>
 
         <View style={styles.insightsContainer}>
-          <Text style={styles.insightLabel}>Store Insights</Text>
+          <Text style={styles.insightMainLabel}>Store Insights</Text>
           <View style={styles.insightCard}>
             <View style={styles.chartPlaceholder}>
               <LineCharts
@@ -944,8 +945,10 @@ const StatisticsScreen = ({ navigation }: any) => {
                         const groupedData = groupedByDate(
                           dashboardData?.store_insights?.recent_followers
                         );
+                        console.log(groupedData);
                         return Object.keys(groupedData).map((date: string) => ({
                           value: groupedData[date].length,
+                          label: moment(date).format("MMM"),
                         }));
                       })()
                     : []
@@ -954,7 +957,7 @@ const StatisticsScreen = ({ navigation }: any) => {
             </View>
             <View style={styles.categoryTitlesection}>
               <Text style={styles.insightLabel}>Followers</Text>
-              <Text style={styles.viewall}>View all</Text>
+              {/* <Text style={styles.viewall}>View all</Text> */}
             </View>
           </View>
           <View style={styles.insightCard}>
@@ -969,6 +972,7 @@ const StatisticsScreen = ({ navigation }: any) => {
                         );
                         return Object.keys(groupedData).map((date: string) => ({
                           value: groupedData[date].length,
+                          label: moment(date).format("MMM"),
                         }));
                       })()
                     : []
@@ -977,7 +981,7 @@ const StatisticsScreen = ({ navigation }: any) => {
             </View>
             <View style={styles.categoryTitlesection}>
               <Text style={styles.insightLabel}>Shop Visits</Text>
-              <Text style={styles.viewall}>View all</Text>
+              {/* <Text style={styles.viewall}>View all</Text> */}
             </View>
           </View>
         </View>
@@ -1016,7 +1020,7 @@ const StatisticsScreen = ({ navigation }: any) => {
               </View>
               <View style={styles.categoryTitlesection}>
                 <Text style={styles.categoryTitle}>{category} Products</Text>
-                <Text style={styles.viewall}>View all</Text>
+                {/* <Text style={styles.viewall}>View all</Text> */}
               </View>
             </View>
           ))}
@@ -1025,11 +1029,17 @@ const StatisticsScreen = ({ navigation }: any) => {
         <View>
           <Text style={styles.title}>Recent Store Activity</Text>
           <View style={styles.recentActivityContainer}>
-            {recentActivity.map((activity) => (
+            <View style={styles.noteContainer}>
+              <Icon name="information-outline" size={18} color="#FCA311" />
+              <Text style={styles.noteText}>
+                You can generate coupon codes using user id (USR : 4) mentioned.
+              </Text>
+            </View>
+            {dashboardData?.activity?.activities?.map((activity: any) => (
               <View key={activity.id} style={styles.activityRow}>
                 <View style={styles.activityTextContainer}>
-                  <Text style={styles.userid}>{activity.userid}</Text>
-                  <Text style={styles.comment}>{activity.Comment}</Text>
+                  {/* <Text style={styles.userid}>{activity.userid}</Text> */}
+                  <Text style={styles.comment}>{activity.message}</Text>
                 </View>
                 <Image source={activity.image} style={styles.activityImage} />
               </View>
@@ -1233,23 +1243,23 @@ const styles = ScaledSheet.create({
     flex: 1,
   },
   chartPlaceholder: {
-    height: 220,
+    height: "200@s",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
-    borderRadius: 10,
-    marginBottom: 20,
+    borderRadius: "10@s",
+    marginBottom: "10@s",
     overflow: "hidden",
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 5,
     elevation: 3,
   },
-
   cardsContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
+    marginTop: "10@s",
   },
   logoContainer: {
     width: "40@s",
@@ -1316,7 +1326,7 @@ const styles = ScaledSheet.create({
     // gap: "20@s",
     bottom: "10@s",
   },
-  viewall: { fontSize: 16 },
+  viewall: { fontSize: 16, color: "#FCA311" },
   categoryTitlesection: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1433,8 +1443,15 @@ const styles = ScaledSheet.create({
   insightsContainer: { marginTop: 20 },
   insightsTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },
   insightCard: { marginBottom: 20 },
+  insightMainLabel: {
+    fontSize: "16@s",
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 5,
+    color: "#000",
+  },
   insightLabel: {
-    fontSize: 16,
+    fontSize: "14@s",
     fontWeight: "bold",
     marginBottom: 5,
     color: "#FCA311",
@@ -1450,6 +1467,23 @@ const styles = ScaledSheet.create({
     shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowRadius: 5,
+  },
+  noteContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFF8EB",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 15,
+    borderLeftWidth: 3,
+    borderLeftColor: "#FCA311",
+  },
+  noteText: {
+    fontSize: 13,
+    color: "#666",
+    marginLeft: 8,
+    flex: 1,
+    fontWeight: "500",
   },
 
   activityTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 10 },

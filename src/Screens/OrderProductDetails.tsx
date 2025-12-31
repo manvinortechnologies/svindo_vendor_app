@@ -23,8 +23,9 @@ import {
 } from "react-native-safe-area-context";
 import { Swipeable } from "react-native-gesture-handler";
 import Icon from "react-native-vector-icons/Ionicons";
-import { s } from "react-native-size-matters";
+import { s, ScaledSheet } from "react-native-size-matters";
 import { formatOrderDate } from "../utils/dateandTime";
+import Toast from "react-native-toast-message";
 
 type OrderProductDetailsRouteParams = {
   orderId: string;
@@ -44,6 +45,8 @@ interface OrderItem {
   sales_price: number;
   mrp: number;
   status?: string;
+  tracking_link?: string;
+  delivery_boy?: number | null;
 }
 
 interface Order {
@@ -91,7 +94,12 @@ const OrderProductDetails = ({ navigation }: any) => {
   const [loading, setLoading] = useState<boolean>(true);
   const [deliveryBoys, setDeliveryBoys] = useState<any[]>([]);
   const [selectedDeliveryBoy, setSelectedDeliveryBoy] = useState<any>(null);
-  const [trackingLink, setTrackingLink] = useState<string>("");
+  const [trackingLinks, setTrackingLinks] = useState<{ [key: number]: string }>(
+    {}
+  );
+  const [updatingTrackingLink, setUpdatingTrackingLink] = useState<{
+    [key: number]: boolean;
+  }>({});
   const [updatingStatus, setUpdatingStatus] = useState<{
     [key: number]: boolean;
   }>({});
@@ -112,13 +120,24 @@ const OrderProductDetails = ({ navigation }: any) => {
       setOrder(response.data);
 
       // Set selected delivery boy if order already has one assigned
-      if (response.data.delivery_boy) {
+      if (response.data.delivery_boy && deliveryBoys.length > 0) {
         const assignedDeliveryBoy = deliveryBoys.find(
           (db) => db.id === response.data.delivery_boy
         );
         if (assignedDeliveryBoy) {
           setSelectedDeliveryBoy(assignedDeliveryBoy);
         }
+      }
+
+      // Initialize tracking links from order items
+      if (response.data.items) {
+        const initialTrackingLinks: { [key: number]: string } = {};
+        response.data.items.forEach((item: OrderItem) => {
+          if (item.tracking_link) {
+            initialTrackingLinks[item.id] = item.tracking_link;
+          }
+        });
+        setTrackingLinks(initialTrackingLinks);
       }
 
       setLoading(false);
@@ -132,8 +151,16 @@ const OrderProductDetails = ({ navigation }: any) => {
       try {
         const response = await api.get(API_ROUTES.deliveryBoys);
         setDeliveryBoys(response.data);
+        // After delivery boys are loaded, fetch order details to initialize per-item delivery boys
+        if (orderId) {
+          fetchOrderDetails();
+        }
       } catch (error) {
         console.error("Failed to fetch delivery boys:", error);
+        // Still fetch order details even if delivery boys fail
+        if (orderId) {
+          fetchOrderDetails();
+        }
       }
     };
 
@@ -174,12 +201,55 @@ const OrderProductDetails = ({ navigation }: any) => {
       setLoading(true);
       const response = await api.put(`${API_ROUTES.orders}${orderId}/`, {
         status: status,
-        delivery_boy: selectedDeliveryBoy?.id,
       });
       setOrder(response.data);
       setLoading(false);
     } catch (error) {
       console.error("Failed to update order:", error);
+      setLoading(false);
+    }
+  };
+
+  const handleAssignDeliveryBoy = async () => {
+    if (!selectedDeliveryBoy?.id) {
+      Alert.alert("Error", "Please select a delivery boy");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Create FormData for the request
+      const formData = new FormData();
+      formData.append("delivery_boy_id", selectedDeliveryBoy.id.toString());
+
+      await api.post(
+        `${API_ROUTES.assignDeliveryBoy.replace(":id", orderId)}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Delivery boy assigned successfully",
+      });
+
+      // Refresh order details to get updated delivery boy
+      fetchOrderDetails();
+    } catch (error: any) {
+      console.error("Failed to assign delivery boy:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to assign delivery boy";
+      Alert.alert("Error", errorMessage);
+    } finally {
       setLoading(false);
     }
   };
@@ -260,6 +330,53 @@ const OrderProductDetails = ({ navigation }: any) => {
         "Failed to process return/exchange request";
     } finally {
       setUpdatingStatus((prev) => ({ ...prev, [itemId]: false }));
+    }
+  };
+
+  const handleUpdateTrackingLink = async (itemId: number) => {
+    const trackingLink = trackingLinks[itemId];
+
+    if (!trackingLink || !trackingLink.trim()) {
+      Alert.alert("Error", "Please enter a tracking link");
+      return;
+    }
+
+    try {
+      setUpdatingTrackingLink((prev) => ({ ...prev, [itemId]: true }));
+
+      // Call API with tracking_link and order_item_id
+      await api.post(API_ROUTES.orderItemTracking + itemId + "/", {
+        tracking_link: trackingLink.trim(),
+      });
+
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Tracking link updated successfully",
+      });
+
+      // Update local state with the new tracking link
+      if (order) {
+        const updatedItems = order.items.map((item) =>
+          item.id === itemId
+            ? { ...item, tracking_link: trackingLink.trim() }
+            : item
+        );
+        setOrder({ ...order, items: updatedItems });
+      }
+
+      // Clear the input for this item
+      setTrackingLinks((prev) => ({ ...prev, [itemId]: "" }));
+    } catch (error: any) {
+      console.error("Failed to update tracking link:", error);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to update tracking link";
+      Alert.alert("Error", errorMessage);
+    } finally {
+      setUpdatingTrackingLink((prev) => ({ ...prev, [itemId]: false }));
     }
   };
 
@@ -476,14 +593,20 @@ const OrderProductDetails = ({ navigation }: any) => {
 
   const renderRegularItem = (item: OrderItem) => (
     <View style={styles.itemRow} key={item.id}>
-      <Image
-        source={{
-          uri: item?.product_details?.image
-            ? item?.product_details?.image
-            : undefined,
-        }}
-        style={styles.itemImg}
-      />
+      <View style={styles.itemImgContainer}>
+        {item?.product_details?.image ? (
+          <Image
+            source={{
+              uri: item?.product_details?.image
+                ? item?.product_details?.image
+                : undefined,
+            }}
+            style={styles.itemImg}
+          />
+        ) : (
+          <Icon name="image" size={s(40)} color="#ccc" />
+        )}
+      </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.itemName}>
           {item?.product_details?.name} | {item.quantity} Qty
@@ -505,6 +628,58 @@ const OrderProductDetails = ({ navigation }: any) => {
         {item.status === "returned/replaced_requested" && (
           <Text style={styles.pickup}>Requested Return/Exchange</Text>
         )}
+
+        {/* Tracking Link Section - Only for general_delivery */}
+        {order?.delivery_type === "general_delivery" && (
+          <View style={styles.trackingLinkContainer}>
+            {item.tracking_link && (
+              <View style={styles.existingTrackingLink}>
+                <Text style={styles.trackingLinkLabel}>Current Tracking:</Text>
+                <Text
+                  style={styles.trackingLinkValue}
+                  onPress={() => {
+                    if (item.tracking_link) {
+                      Linking.openURL(item.tracking_link);
+                    }
+                  }}
+                >
+                  {item.tracking_link}
+                </Text>
+              </View>
+            )}
+            <TextInput
+              placeholder="Enter Tracking Link"
+              placeholderTextColor="#ccc"
+              style={styles.trackingLinkInput}
+              value={trackingLinks[item.id] || ""}
+              onChangeText={(text) =>
+                setTrackingLinks((prev) => ({ ...prev, [item.id]: text }))
+              }
+            />
+            <TouchableOpacity
+              style={[
+                styles.trackingLinkButton,
+                (!trackingLinks[item.id] || !trackingLinks[item.id].trim()) &&
+                  styles.trackingLinkButtonDisabled,
+              ]}
+              onPress={() => handleUpdateTrackingLink(item.id)}
+              disabled={
+                updatingTrackingLink[item.id] ||
+                !trackingLinks[item.id] ||
+                !trackingLinks[item.id].trim()
+              }
+            >
+              {updatingTrackingLink[item.id] ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.trackingLinkButtonText}>
+                  {item.tracking_link ? "Update" : "Add"} Tracking Link
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
+
         {/* Status Button */}
         {order.status === "accepted" &&
         item.status !== "delivered" &&
@@ -676,26 +851,36 @@ const OrderProductDetails = ({ navigation }: any) => {
         {/* Delivery Boy Selection */}
         <View style={[styles.card, { zIndex: 3000 }]}>
           <Text style={styles.sectionTitle}>DELIVERY ASSIGNMENT</Text>
-          {order?.delivery_type === "general_delivery" ? (
-            <TextInput
-              placeholder="Enter Tracking Link"
-              placeholderTextColor="#ccc"
-              style={styles.input}
-              value={trackingLink}
-              onChangeText={(text) => setTrackingLink(text)}
-            />
-          ) : order?.delivery_type === "on_shop_order" ||
-            order?.delivery_type === "self_pickup" ||
-            (order?.delivery_type === "instant_delivery" &&
-              !deliveryMode?.is_auto_assign_enabled) ? null : (
-            <CustomDropdown
-              placeholder="Select Delivery Boy"
-              options={deliveryBoys.map((db) => ({ name: db.name, id: db.id }))}
-              onSelect={(value) => setSelectedDeliveryBoy(value)}
-              selectedValue={
-                selectedDeliveryBoy ? selectedDeliveryBoy.name : ""
-              }
-            />
+          {order?.delivery_type === "on_shop_order" ||
+          order?.delivery_type === "self_pickup" ||
+          (order?.delivery_type === "instant_delivery" &&
+            deliveryMode?.is_auto_assign_enabled) ? null : (
+            <View>
+              <CustomDropdown
+                placeholder="Select Delivery Boy"
+                options={deliveryBoys.map((db) => ({
+                  name: db.name,
+                  id: db.id,
+                }))}
+                onSelect={(value) => setSelectedDeliveryBoy(value)}
+                selectedValue={selectedDeliveryBoy ? selectedDeliveryBoy : ""}
+              />
+              {selectedDeliveryBoy && (
+                <TouchableOpacity
+                  style={[styles.statusButton, { marginTop: 10 }]}
+                  onPress={handleAssignDeliveryBoy}
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.statusButtonText}>
+                      Assign Delivery Boy
+                    </Text>
+                  )}
+                </TouchableOpacity>
+              )}
+            </View>
           )}
           {order.delivery_boy && (
             <Text style={styles.assignedText}>
@@ -747,6 +932,14 @@ const OrderProductDetails = ({ navigation }: any) => {
             </Text>
           </View>
           <Text style={styles.taxNote}>Incl. all taxes and charges</Text>
+          {!order.is_paid && (
+            <View style={styles.cashLedgerNote}>
+              <Text style={styles.cashLedgerNoteText}>
+                Once order fulfilled, amount will be reflected in cash ledger
+                for COD delivery
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Delivery Details */}
@@ -903,7 +1096,7 @@ const OrderProductDetails = ({ navigation }: any) => {
 
 export default OrderProductDetails;
 
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   rightActionContainer: {
     height: "100%",
     width: "100%",
@@ -962,8 +1155,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9f9f9",
   },
   orderInfo: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    // flexDirection: "row",
+    // justifyContent: "space-between",
     marginBottom: 8,
   },
   orderId: {
@@ -1049,11 +1242,20 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
   },
+  itemImgContainer: {
+    width: "60@s",
+    height: "60@s",
+    marginRight: "12@s",
+    borderRadius: "8@s",
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#eee",
+    justifyContent: "center",
+    alignItems: "center",
+  },
   itemImg: {
-    width: 60,
-    height: 60,
-    marginRight: 12,
-    borderRadius: 8,
+    width: "100%",
+    height: "100%",
   },
   itemName: {
     color: "#000",
@@ -1107,6 +1309,20 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#005A92",
     fontSize: 16,
+  },
+  cashLedgerNote: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: "#FFF3CD",
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: "#FFC107",
+  },
+  cashLedgerNoteText: {
+    fontSize: 13,
+    color: "#856404",
+    fontStyle: "italic",
+    lineHeight: 18,
   },
   taxNote: {
     fontSize: 12,
@@ -1474,5 +1690,96 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "700",
     color: "#006EB2",
+  },
+  trackingLinkContainer: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: "#F8F9FC",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  existingTrackingLink: {
+    marginBottom: 10,
+    padding: 8,
+    backgroundColor: "#E6F2FF",
+    borderRadius: 6,
+  },
+  trackingLinkLabel: {
+    fontSize: 12,
+    color: "#666",
+    marginBottom: 4,
+  },
+  trackingLinkValue: {
+    fontSize: 13,
+    color: "#006EB2",
+    textDecorationLine: "underline",
+  },
+  trackingLinkInput: {
+    borderWidth: 1,
+    borderColor: "#DDD",
+    borderRadius: 6,
+    padding: 10,
+    fontSize: 14,
+    backgroundColor: "#FFF",
+    color: "#000",
+    marginBottom: 8,
+  },
+  trackingLinkButton: {
+    backgroundColor: "#FCA511",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    alignItems: "center",
+  },
+  trackingLinkButtonDisabled: {
+    backgroundColor: "#CCC",
+    opacity: 0.6,
+  },
+  trackingLinkButtonText: {
+    color: "#FFF",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+  deliveryBoyContainer: {
+    marginTop: 12,
+    padding: 12,
+    backgroundColor: "#F8F9FC",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  existingDeliveryBoy: {
+    marginBottom: 10,
+    padding: 8,
+    backgroundColor: "#E6F2FF",
+    borderRadius: 6,
+  },
+  deliveryBoyLabel: {
+    fontSize: 12,
+    color: "#666",
+    marginBottom: 4,
+  },
+  deliveryBoyValue: {
+    fontSize: 13,
+    color: "#006EB2",
+    fontWeight: "600",
+  },
+  deliveryBoyButton: {
+    backgroundColor: "#FCA511",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 6,
+    alignItems: "center",
+    marginTop: 8,
+  },
+  deliveryBoyButtonDisabled: {
+    backgroundColor: "#CCC",
+    opacity: 0.6,
+  },
+  deliveryBoyButtonText: {
+    color: "#FFF",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });

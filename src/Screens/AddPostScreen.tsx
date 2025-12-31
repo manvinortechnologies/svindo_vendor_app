@@ -292,6 +292,7 @@ const AddPostScreen = ({ navigation }: any) => {
             id: product.id,
             name: product.name || product.product_name || "Unnamed Product",
             image: product.image || product.feature_image || null,
+            ...product,
           }));
         setProductOptions(products);
         if (item?.product) {

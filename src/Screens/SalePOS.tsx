@@ -36,6 +36,8 @@ import moment from "moment";
 
 interface Product {
   id: number;
+  stock_cached?: number;
+  track_stock?: boolean;
   name: string;
   desc: string;
   price: number;
@@ -89,7 +91,7 @@ const SalePOS = () => {
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [wholesale, setWholesale] = useState<boolean>(false);
   const [discount, setDiscount] = useState({ pr: "", amount: "" });
-  const [paymentMode, setPaymentMode] = useState("Cash");
+  const [paymentMode, setPaymentMode] = useState("cash");
   const [advancePaymentMode, setAdvancePaymentMode] = useState<number | null>(
     null
   );
@@ -627,7 +629,7 @@ const SalePOS = () => {
           <Text style={{ color: "red" }}>{errors?.quantity}</Text>
         )}
         {/* Product List */}
-        {products.map((item, index) => (
+        {products.map((item: Product, index) => (
           <View key={`${index}-${item.id}`}>
             {index === 0 && (
               <View style={[styles.tableRow, styles.tableHeader]}>
@@ -686,13 +688,19 @@ const SalePOS = () => {
                   const newQuantity = parseInt(text) || 0;
                   if (newQuantity >= 0) {
                     const updatedProducts = [...products];
-
-                    // Update quantity
-                    updatedProducts[index] = {
-                      ...item,
-                      quantity: newQuantity,
-                    };
-
+                    const quantity = parseInt(text) || 0;
+                    const stock = Number(item?.stock_cached ?? 0);
+                    const trackStock = item?.track_stock !== false; // Default to true if not specified
+                    const boundedQty =
+                      trackStock && stock > 0
+                        ? Math.min(quantity, stock)
+                        : quantity;
+                    if (boundedQty >= 0) {
+                      updatedProducts[index] = {
+                        ...item,
+                        quantity: boundedQty,
+                      };
+                    }
                     setProducts(updatedProducts);
                   }
                 }}

@@ -29,6 +29,7 @@ const VerificationPaymentsScreen = () => {
   const insets = useSafeAreaInsets();
   // PAN Verification State
   const [panNumber, setPanNumber] = useState("");
+  const [openingBalance, setOpeningBalance] = useState("");
   const [isPanVerified, setIsPanVerified] = useState(false);
   const [isVerifyingPan, setIsVerifyingPan] = useState(false);
   const [panVerificationData, setPanVerificationData] = useState<{
@@ -110,39 +111,21 @@ const VerificationPaymentsScreen = () => {
 
           if (storeData) {
             // Update PAN verification status and value
-            if (storeData.pan_number) {
-              setPanNumber(storeData.pan_number);
-            }
-            if (storeData.is_pan_verified !== undefined) {
-              setIsPanVerified(storeData.is_pan_verified);
-            }
+            setPanNumber(storeData.pan_number || "");
+            setIsPanVerified(storeData.is_pan_verified);
 
             // Update GSTIN verification status and value
-            if (storeData.gstin) {
-              setGstin(storeData.gstin);
-            }
-            if (storeData.is_gstin_verified !== undefined) {
-              setIsGstinVerified(storeData.is_gstin_verified);
-            }
+            setGstin(storeData.gstin || "");
+            setIsGstinVerified(storeData.is_gstin_verified);
 
             // Update FSSAI verification status and value
-            if (storeData.fssai_number) {
-              setFssai(storeData.fssai_number);
-            }
-            if (storeData.is_fssai_verified !== undefined) {
-              setIsFssaiVerified(storeData.is_fssai_verified);
-            }
+            setFssai(storeData.fssai_number || "");
+            setIsFssaiVerified(storeData.is_fssai_verified);
 
             // Update Bank verification status
-            if (storeData.is_bank_verified !== undefined) {
-              setIsBankVerified(storeData.is_bank_verified);
-            }
-            if (storeData.bank_account_number) {
-              setAccountNumber(storeData.bank_account_number);
-            }
-            if (storeData.bank_ifsc) {
-              setIfscCode(storeData.bank_ifsc);
-            }
+            setIsBankVerified(storeData.is_bank_verified);
+            setAccountNumber(storeData.bank_account_number || "");
+            setIfscCode(storeData.bank_ifsc || "");
           }
         }
       } catch (error: any) {
@@ -368,6 +351,7 @@ const VerificationPaymentsScreen = () => {
       const response = await api.post("vendor/kyc/verify-bank/", {
         ifsc: ifscCode.toUpperCase(),
         account_number: accountNumber,
+        opening_balance: openingBalance,
       });
 
       if (response.data?.verified === true && response.data?.result?.data) {
@@ -548,7 +532,7 @@ const VerificationPaymentsScreen = () => {
                 setGstinVerificationData(null);
               }}
               maxLength={15}
-              editable={!isVerifyingGstin}
+              editable={!isVerifyingGstin || !isGstinVerified}
             />
             {isGstinVerified && gstinVerificationData && (
               <View style={styles.verifiedInfo}>
@@ -574,31 +558,33 @@ const VerificationPaymentsScreen = () => {
             <Text style={[styles.note, { marginVertical: 5 }]}>
               Note: GSTIN will be verified instantly using government database.
             </Text>
-            <TouchableOpacity
-              style={[
-                styles.otpButton,
-                isVerifyingGstin && styles.otpButtonDisabled,
-              ]}
-              onPress={handleVerifyGSTIN}
-              disabled={isVerifyingGstin || !gstin.trim()}
-            >
-              {isVerifyingGstin ? (
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <ActivityIndicator size="small" color="#fff" />
-                  <Text style={[styles.otpButtonText, { marginLeft: 8 }]}>
-                    Verifying...
-                  </Text>
-                </View>
-              ) : (
-                <Text style={styles.otpButtonText}>Verify GSTIN</Text>
-              )}
-            </TouchableOpacity>
+            {!isGstinVerified && (
+              <TouchableOpacity
+                style={[
+                  styles.otpButton,
+                  isVerifyingGstin && styles.otpButtonDisabled,
+                ]}
+                onPress={handleVerifyGSTIN}
+                disabled={isVerifyingGstin || !gstin.trim()}
+              >
+                {isVerifyingGstin ? (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <ActivityIndicator size="small" color="#fff" />
+                    <Text style={[styles.otpButtonText, { marginLeft: 8 }]}>
+                      Verifying...
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={styles.otpButtonText}>Verify GSTIN</Text>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
 
           {/* UID */}
@@ -648,7 +634,7 @@ const VerificationPaymentsScreen = () => {
                 setPanVerificationData(null);
               }}
               maxLength={10}
-              editable={!isVerifyingPan}
+              editable={!isVerifyingPan || !isPanVerified}
             />
             {isPanVerified && panVerificationData && (
               <View style={styles.verifiedInfo}>
@@ -668,31 +654,33 @@ const VerificationPaymentsScreen = () => {
             <Text style={[styles.note, { marginVertical: 5 }]}>
               Note: PAN will be verified instantly using government database.
             </Text>
-            <TouchableOpacity
-              style={[
-                styles.otpButton,
-                isVerifyingPan && styles.otpButtonDisabled,
-              ]}
-              onPress={handleVerifyPAN}
-              disabled={isVerifyingPan || !panNumber.trim()}
-            >
-              {isVerifyingPan ? (
-                <View
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
-                  }}
-                >
-                  <ActivityIndicator size="small" color="#fff" />
-                  <Text style={[styles.otpButtonText, { marginLeft: 8 }]}>
-                    Verifying...
-                  </Text>
-                </View>
-              ) : (
-                <Text style={styles.otpButtonText}>Verify PAN</Text>
-              )}
-            </TouchableOpacity>
+            {!isPanVerified && (
+              <TouchableOpacity
+                style={[
+                  styles.otpButton,
+                  isVerifyingPan && styles.otpButtonDisabled,
+                ]}
+                onPress={handleVerifyPAN}
+                disabled={isVerifyingPan || !panNumber.trim()}
+              >
+                {isVerifyingPan ? (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <ActivityIndicator size="small" color="#fff" />
+                    <Text style={[styles.otpButtonText, { marginLeft: 8 }]}>
+                      Verifying...
+                    </Text>
+                  </View>
+                ) : (
+                  <Text style={styles.otpButtonText}>Verify PAN</Text>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
         </View>
       ),
@@ -723,7 +711,7 @@ const VerificationPaymentsScreen = () => {
               setIsFssaiVerified(false);
               setFssaiVerificationData(null);
             }}
-            editable={!isVerifyingFssai}
+            editable={!isVerifyingFssai || !isFssaiVerified}
           />
           {isFssaiVerified && fssaiVerificationData && (
             <View style={styles.verifiedInfo}>
@@ -749,31 +737,33 @@ const VerificationPaymentsScreen = () => {
           <Text style={[styles.note, { marginVertical: 5 }]}>
             Note: FSSAI will be verified instantly using government database.
           </Text>
-          <TouchableOpacity
-            style={[
-              styles.otpButton,
-              isVerifyingFssai && styles.otpButtonDisabled,
-            ]}
-            onPress={handleVerifyFSSAI}
-            disabled={isVerifyingFssai || !fssai.trim()}
-          >
-            {isVerifyingFssai ? (
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <ActivityIndicator size="small" color="#fff" />
-                <Text style={[styles.otpButtonText, { marginLeft: 8 }]}>
-                  Verifying...
-                </Text>
-              </View>
-            ) : (
-              <Text style={styles.otpButtonText}>Verify FSSAI</Text>
-            )}
-          </TouchableOpacity>
+          {!isFssaiVerified && (
+            <TouchableOpacity
+              style={[
+                styles.otpButton,
+                isVerifyingFssai && styles.otpButtonDisabled,
+              ]}
+              onPress={handleVerifyFSSAI}
+              disabled={isVerifyingFssai || !fssai.trim()}
+            >
+              {isVerifyingFssai ? (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <ActivityIndicator size="small" color="#fff" />
+                  <Text style={[styles.otpButtonText, { marginLeft: 8 }]}>
+                    Verifying...
+                  </Text>
+                </View>
+              ) : (
+                <Text style={styles.otpButtonText}>Verify FSSAI</Text>
+              )}
+            </TouchableOpacity>
+          )}
           <View style={styles.disclaimerContainer}>
             <Text style={styles.disclaimerText}>
               Selling Food products online without FSSAI verification is
@@ -799,6 +789,7 @@ const VerificationPaymentsScreen = () => {
               style={styles.input}
               value={accountHolderName}
               onChangeText={setAccountHolderName}
+              // editable={!isBankVerified}
             />
           </View>
           <View style={styles.inputWrapper}>
@@ -819,7 +810,7 @@ const VerificationPaymentsScreen = () => {
                 setBankVerificationData(null);
               }}
               maxLength={11}
-              editable={!isVerifyingBank}
+              // editable={!isVerifyingBank || !isBankVerified}
             />
           </View>
           <View style={styles.inputWrapper}>
@@ -832,6 +823,21 @@ const VerificationPaymentsScreen = () => {
               style={styles.input}
               value={bankName}
               onChangeText={setBankName}
+              // editable={!isVerifyingBank || !isBankVerified}
+            />
+          </View>
+          <View style={styles.inputWrapper}>
+            <Text style={{ marginBottom: 5, fontWeight: "500", color: "#000" }}>
+              Opening Balance
+            </Text>
+            <TextInput
+              placeholder="Enter here"
+              placeholderTextColor="#999"
+              style={styles.input}
+              value={openingBalance}
+              onChangeText={setOpeningBalance}
+              keyboardType="numeric"
+              // editable={!isVerifyingBank || !isBankVerified}
             />
           </View>
           <View style={styles.inputWrapper}>
@@ -852,7 +858,7 @@ const VerificationPaymentsScreen = () => {
                 setBankVerificationData(null);
               }}
               keyboardType="numeric"
-              editable={!isVerifyingBank}
+              // editable={!isVerifyingBank || !isBankVerified}
             />
           </View>
           <View style={styles.inputWrapper}>
@@ -866,6 +872,7 @@ const VerificationPaymentsScreen = () => {
               value={reEnterAccountNumber}
               onChangeText={setReEnterAccountNumber}
               keyboardType="numeric"
+              // editable={!isVerifyingBank || !isBankVerified}
             />
           </View>
           {isBankVerified && bankVerificationData && (
@@ -893,36 +900,33 @@ const VerificationPaymentsScreen = () => {
             Note: Bank account will be verified instantly using government
             database.
           </Text>
-          <TouchableOpacity
-            style={[
-              styles.otpButton,
-              isVerifyingBank && styles.otpButtonDisabled,
-            ]}
-            onPress={handleVerifyBank}
-            disabled={
-              isVerifyingBank ||
-              !ifscCode.trim() ||
-              !accountNumber.trim() ||
-              accountNumber !== reEnterAccountNumber
-            }
-          >
-            {isVerifyingBank ? (
-              <View
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <ActivityIndicator size="small" color="#fff" />
-                <Text style={[styles.otpButtonText, { marginLeft: 8 }]}>
-                  Verifying...
-                </Text>
-              </View>
-            ) : (
-              <Text style={styles.otpButtonText}>Verify Account</Text>
-            )}
-          </TouchableOpacity>
+          {!isBankVerified && (
+            <TouchableOpacity
+              style={[
+                styles.otpButton,
+                isVerifyingBank && styles.otpButtonDisabled,
+              ]}
+              onPress={handleVerifyBank}
+              disabled={isVerifyingBank}
+            >
+              {isVerifyingBank ? (
+                <View
+                  style={{
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <ActivityIndicator size="small" color="#fff" />
+                  <Text style={[styles.otpButtonText, { marginLeft: 8 }]}>
+                    Verifying...
+                  </Text>
+                </View>
+              ) : (
+                <Text style={styles.otpButtonText}>Verify Account</Text>
+              )}
+            </TouchableOpacity>
+          )}
         </View>
       ),
     },

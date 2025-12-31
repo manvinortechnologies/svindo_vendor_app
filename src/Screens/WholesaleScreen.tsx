@@ -218,7 +218,7 @@ export default function WholesaleScreen() {
             { name: "Invoice", key: "invoice" },
             { name: "Pro Forma Invoice", key: "proforma" },
             { name: "Quotation", key: "quotation" },
-            { name: "Credit Note", key: "credit_note" },
+            // { name: "Credit Note", key: "credit_note" },
             { name: "Delivery Challan", key: "delivery_challan" },
           ].map((type) => (
             <TouchableOpacity

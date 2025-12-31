@@ -37,6 +37,7 @@ interface Product {
   image: string;
   quantity?: number;
   stock?: number;
+  stock_cached?: number;
   product_type?: string;
   track_stock?: boolean;
 }
@@ -305,7 +306,7 @@ const ProductSelectionScreen: React.FC = () => {
     (itemId: number, text: string) => {
       const quantity = parseInt(text) || 0;
       const product = productList.find((p) => p.id === itemId);
-      const stock = Number(product?.stock ?? 0);
+      const stock = Number(product?.stock_cached ?? 0);
       const trackStock = product?.track_stock !== false; // Default to true if not specified
 
       // If track_stock is false, allow any quantity (no limit)
@@ -322,13 +323,9 @@ const ProductSelectionScreen: React.FC = () => {
 
   const renderQuantityControls = useCallback(
     (item: Product, quantity: number) => {
-      const stock = Number(item?.stock ?? 0);
-      const trackStock = item?.track_stock !== false; // Default to true if not specified
+      const stock = Number(item?.stock_cached ?? 0);
+      const trackStock = item?.track_stock; // Default to true if not specified
       const isPrintProduct = item?.product_type === "print";
-      // If no stock, hide Add/quantity controls entirely
-      // if ((!stock || stock <= 0) && !isPrintProduct) {
-      //   return null;
-      // }
 
       if (quantity === 0) {
         return (
@@ -343,7 +340,7 @@ const ProductSelectionScreen: React.FC = () => {
 
       // If track_stock is false, allow unlimited increments
       // If track_stock is true, check if quantity < stock
-      const canIncrement = trackStock === false ? true : quantity < stock;
+      const canIncrement = !trackStock || isPurchase ? true : quantity < stock;
 
       return (
         <View style={styles.qtyRow}>

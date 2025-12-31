@@ -12,7 +12,6 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Ionicons from "react-native-vector-icons/Ionicons";
 
 import { StackNavigationProp } from "@react-navigation/stack";
-import Header from "./Header";
 import CustomSwitch from "./CustomSwitch";
 import CustomButton from "../CommonComponent/CustomeButton";
 import Loading from "../CommonComponent/Loading";
@@ -333,11 +332,11 @@ const OnlineStore = ({ navigation }: any) => {
             </Text>
           </View>
         </View>
-        <CustomButton
+        {/* <CustomButton
           containerStyle={{ padding: 8 }}
           title="Update Settings"
           onPress={handelUpdateSetting}
-        />
+        /> */}
       </ScrollView>
       <Loading visible={isLoading} />
 

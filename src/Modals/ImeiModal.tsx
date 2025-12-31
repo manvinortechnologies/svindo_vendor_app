@@ -12,21 +12,15 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import MaterialCommunityIcons from "react-native-vector-icons/MaterialCommunityIcons";
-import { HomeNavigation } from "../constants/app-routes.constants";
-import { useNavigation } from "@react-navigation/native";
-import { StackNavigationProp } from "@react-navigation/stack";
+import ScanBarcodeModal from "./ScanBarcodeModal";
 
 const { width } = Dimensions.get("window");
 
 type ScannedItem = {
+  id: string;
   value: string;
   type: string;
-};
-
-type RootStackParamList = {
-  ScanBarcode: {
-    onScanComplete: (scannedItems: ScannedItem[]) => void;
-  };
+  timestamp: number;
 };
 interface ImeiModalProps {
   visible: boolean;
@@ -41,8 +35,8 @@ const ImeiModal: React.FC<ImeiModalProps> = ({
   imeiList,
   setImeiList,
 }) => {
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const [inputValue, setInputValue] = useState("");
+  const [scanBarcodeModalVisible, setScanBarcodeModalVisible] = useState(false);
 
   const handleAdd = () => {
     if (inputValue.trim() !== "") {
@@ -58,79 +52,87 @@ const ImeiModal: React.FC<ImeiModalProps> = ({
   };
 
   const handleScanBarcode = () => {
-    // Navigate to barcode scanner with callback function
-    navigation.navigate(HomeNavigation.SCAN_BARCODE, {
-      onScanComplete: (
-        scannedItems: Array<{ value: string; type: string }>
-      ) => {
-        if (scannedItems && scannedItems.length > 0) {
-          // Add all scanned values to IMEI list
-          const newImeis = scannedItems
-            .map((item) => item.value.trim())
-            .filter(Boolean);
-          if (newImeis.length > 0) {
-            setImeiList([...imeiList, ...newImeis]);
-          }
-        }
-      },
-    });
+    // Open scan barcode modal
+    setScanBarcodeModalVisible(true);
+  };
+
+  const handleScanComplete = (scannedItems: ScannedItem[]) => {
+    if (scannedItems && scannedItems.length > 0) {
+      // Add all scanned values to IMEI list
+      const newImeis = scannedItems
+        .map((item) => item.value.trim())
+        .filter(Boolean);
+      if (newImeis.length > 0) {
+        setImeiList([...imeiList, ...newImeis]);
+      }
+    }
+    setScanBarcodeModalVisible(false);
   };
 
   return (
-    <Modal visible={visible} transparent animationType="slide">
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.title}>Add IMEI / Serial No</Text>
+    <>
+      <Modal visible={visible} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.title}>Add IMEI / Serial No</Text>
 
-          {/* Input + Add Button + Scan Button */}
-          <View style={styles.inputRow}>
-            <TextInput
-              placeholder="Enter serial number"
-              placeholderTextColor="#888"
-              value={inputValue}
-              onChangeText={setInputValue}
-              style={styles.textInput}
-              autoCapitalize="characters"
-              autoFocus
-            />
-            <TouchableOpacity
-              style={styles.scanButton}
-              onPress={handleScanBarcode}
-            >
-              <MaterialCommunityIcons
-                name="barcode-scan"
-                size={20}
-                color="#FCA311"
+            {/* Input + Add Button + Scan Button */}
+            <View style={styles.inputRow}>
+              <TextInput
+                placeholder="Enter serial number"
+                placeholderTextColor="#888"
+                value={inputValue}
+                onChangeText={setInputValue}
+                style={styles.textInput}
+                autoCapitalize="characters"
+                autoFocus
               />
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
-              <Text style={styles.addButtonText}>Add +</Text>
+              <TouchableOpacity
+                style={styles.scanButton}
+                onPress={handleScanBarcode}
+              >
+                <MaterialCommunityIcons
+                  name="barcode-scan"
+                  size={20}
+                  color="#FCA311"
+                />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
+                <Text style={styles.addButtonText}>Add +</Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* List of added IMEIs */}
+            <FlatList
+              data={imeiList}
+              keyExtractor={(_, index) => index.toString()}
+              renderItem={({ item, index }) => (
+                <View style={styles.listItem}>
+                  <Text style={styles.itemText}>
+                    {index + 1}. {item}
+                  </Text>
+                  <TouchableOpacity onPress={() => handleRemove(index)}>
+                    <Icon name="close" size={20} color="#FF5C5C" />
+                  </TouchableOpacity>
+                </View>
+              )}
+            />
+
+            {/* Close Button */}
+            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+              <Text style={styles.closeButtonText}>Close</Text>
             </TouchableOpacity>
           </View>
-
-          {/* List of added IMEIs */}
-          <FlatList
-            data={imeiList}
-            keyExtractor={(_, index) => index.toString()}
-            renderItem={({ item, index }) => (
-              <View style={styles.listItem}>
-                <Text style={styles.itemText}>
-                  {index + 1}. {item}
-                </Text>
-                <TouchableOpacity onPress={() => handleRemove(index)}>
-                  <Icon name="close" size={20} color="#FF5C5C" />
-                </TouchableOpacity>
-              </View>
-            )}
-          />
-
-          {/* Close Button */}
-          <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-            <Text style={styles.closeButtonText}>Close</Text>
-          </TouchableOpacity>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+
+      {/* Scan Barcode Modal */}
+      <ScanBarcodeModal
+        visible={scanBarcodeModalVisible}
+        onClose={() => setScanBarcodeModalVisible(false)}
+        onScanComplete={handleScanComplete}
+      />
+    </>
   );
 };
 
