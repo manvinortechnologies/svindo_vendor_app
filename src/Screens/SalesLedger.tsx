@@ -24,7 +24,7 @@ import { HomeNavigation } from "../constants/app-routes.constants";
 import Icon from "react-native-vector-icons/Ionicons";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import moment from "moment";
-import { ScaledSheet } from "react-native-size-matters";
+import { s, ScaledSheet } from "react-native-size-matters";
 import DeleteModal from "./DeleteModal";
 import Toast from "react-native-toast-message";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -479,7 +479,7 @@ const SalesLedger = () => {
         <Text style={styles.tableHeader}>Paid</Text>
         <Text style={styles.tableHeader}>Balance</Text>
       </View>
-      {groupedSales[date].map((sale) => (
+      {groupedSales[date].map((sale: any) => (
         <TouchableOpacity
           key={sale.id}
           onPress={() => {
@@ -569,6 +569,7 @@ const SalesLedger = () => {
         keyExtractor={(date) => date}
         style={styles.list}
         showsVerticalScrollIndicator={false}
+        contentContainerStyle={{ paddingBottom: insets.bottom + s(10) }}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -591,7 +592,7 @@ const SalesLedger = () => {
 
       {/* Add Sales Button */}
       <TouchableOpacity
-        style={styles.fab}
+        style={[styles.fab, { bottom: insets.bottom + s(20) }]}
         onPress={() =>
           (navigation as any).navigate(HomeNavigation.PRODUCT_SELECTION, {
             navigateScreen: HomeNavigation.SALE_POS,
@@ -1467,7 +1468,6 @@ const styles = ScaledSheet.create({
   },
   fab: {
     position: "absolute",
-    bottom: 30,
     right: 24,
     width: 56,
     height: 56,

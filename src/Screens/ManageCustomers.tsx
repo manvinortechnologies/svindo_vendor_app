@@ -21,7 +21,7 @@ import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import Loading from "../CommonComponent/Loading";
 import { Customer } from "../type/Customers";
 import api from "../services/api/api";
-import { ScaledSheet } from "react-native-size-matters";
+import { s, ScaledSheet } from "react-native-size-matters";
 
 type RootStackParamList = {
   ManageCustomer: undefined;
@@ -132,6 +132,7 @@ const ManageCustomers = ({ navigation }: any) => {
       <FlatList
         data={filteredCustomers}
         keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={{ paddingBottom: insets.bottom + s(30) }}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.customerRow}
@@ -171,7 +172,7 @@ const ManageCustomers = ({ navigation }: any) => {
 
       {/* FAB: Add New Customer */}
       <TouchableOpacity
-        style={styles.fab}
+        style={[styles.fab, { bottom: insets.bottom + s(20) }]}
         activeOpacity={0.9}
         onPress={() => navigation.navigate("AddCustomer")}
       >

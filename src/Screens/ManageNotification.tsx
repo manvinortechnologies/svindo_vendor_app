@@ -23,6 +23,7 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import { s } from "react-native-size-matters";
 
 const { width } = Dimensions.get("window");
 
@@ -355,7 +356,7 @@ const ManageNotification = ({ navigation }: any) => {
         data={notifications}
         keyExtractor={(item) => item.id}
         renderItem={renderCard}
-        contentContainerStyle={{ paddingBottom: 100 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + s(100) }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -380,7 +381,7 @@ const ManageNotification = ({ navigation }: any) => {
 
       {/* Bottom Button */}
       <TouchableOpacity
-        style={styles.sendBtn}
+        style={[styles.sendBtn, { bottom: insets.bottom + s(20) }]}
         onPress={() => navigation.navigate("SendNotifications")}
       >
         <Text style={styles.sendText}>Send Notification</Text>
@@ -497,7 +498,6 @@ const styles = StyleSheet.create({
   },
   sendBtn: {
     position: "absolute",
-    bottom: 15,
     right: width * 0.05,
     width: width * 0.4,
     backgroundColor: "#169729",

@@ -178,7 +178,10 @@ const BankAccounts = ({ navigation }: any) => {
       <Headerwithback title="Bank Account" />
 
       <FlatList
-        contentContainerStyle={styles.contentContainer}
+        contentContainerStyle={[
+          styles.contentContainer,
+          { paddingBottom: insets.bottom + s(10) },
+        ]}
         keyExtractor={(item) => item.id.toString()}
         data={bankList}
         refreshControl={
@@ -321,7 +324,7 @@ const BankAccounts = ({ navigation }: any) => {
         onPress={() => {
           setIsModalVisible(true);
         }}
-        style={styles.button}
+        style={[styles.button, { bottom: insets.bottom + s(20) }]}
       >
         <Text style={styles.buttonText}>Add New Bank</Text>
       </TouchableOpacity>
@@ -489,7 +492,6 @@ const styles = ScaledSheet.create({
   },
   button: {
     position: "absolute",
-    bottom: "20@s",
     left: 0,
     right: 0,
     zIndex: 1000,

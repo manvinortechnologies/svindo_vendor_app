@@ -40,10 +40,12 @@ const CustomHeader: React.FC<CustomHeaderProps> = ({
       )}
 
       {/* Center: Title */}
-      <Text style={[styles.title, titleStyle]}>{title}</Text>
+      <Text style={[styles.title, titleStyle]} numberOfLines={2}>
+        {title}
+      </Text>
 
       {/* Right: Optional */}
-      <View style={styles.rightContainer}>{rightIcon}</View>
+      {<View style={styles.rightContainer}>{rightIcon}</View>}
     </View>
   );
 };

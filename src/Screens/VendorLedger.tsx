@@ -18,7 +18,7 @@ import { HomeNavigation } from "../constants/app-routes.constants";
 import CustomModal from "../Modals/CustomModal";
 import DeleteModal from "./DeleteModal";
 import CustomHeader from "../CommonComponent/CustomHeader";
-import { ScaledSheet } from "react-native-size-matters";
+import { s, ScaledSheet } from "react-native-size-matters";
 import CalendarModal from "../Modals/CalendarModal";
 import moment from "moment";
 import Toast from "react-native-toast-message";
@@ -397,7 +397,7 @@ const VendorLedger = ({ navigation, route }: any) => {
               },
             ]}
           >
-            Rs.{(vendorInfo.creditBalance || 0).toFixed(2)}
+            Rs.{Number(vendorInfo.creditBalance || 0).toFixed(2)}
           </Text>
         </View>
       </View>
@@ -494,7 +494,7 @@ const VendorLedger = ({ navigation, route }: any) => {
 
       {/* Add Transaction Button */}
       <TouchableOpacity
-        style={styles.addButton}
+        style={[styles.addButton, { bottom: insets.bottom }]}
         onPress={() =>
           navigation.navigate(HomeNavigation.PAYMENTSCREEN as never)
         }
@@ -725,6 +725,8 @@ const styles = ScaledSheet.create({
     width: "25%",
   },
   addButton: {
+    position: "absolute",
+
     width: "30%",
     alignSelf: "flex-end",
     backgroundColor: "orange",

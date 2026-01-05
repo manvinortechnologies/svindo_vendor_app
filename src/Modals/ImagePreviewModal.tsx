@@ -15,10 +15,12 @@ export default function ImagePreviewModal({
   isImageModalVisible,
   setIsImageModalVisible,
   selectedImage,
+  showDetails = true,
 }: {
   isImageModalVisible: boolean;
   setIsImageModalVisible: (visible: boolean) => void;
   selectedImage: any;
+  showDetails?: boolean;
 }) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
@@ -106,19 +108,21 @@ export default function ImagePreviewModal({
             ) : null}
           </View>
 
-          <View style={styles.imageInfo}>
-            <Text style={styles.imageProductName}>
-              {selectedImage?.productName}
-            </Text>
-            {selectedImage?.description && (
-              <Text style={styles.imageProductDesc}>
-                {selectedImage.description}
+          {showDetails && (
+            <View style={styles.imageInfo}>
+              <Text style={styles.imageProductName}>
+                {selectedImage?.productName}
               </Text>
-            )}
-            <Text style={styles.imageProductBudget}>
-              Budget: ₹{selectedImage?.budget}
-            </Text>
-          </View>
+              {selectedImage?.description && (
+                <Text style={styles.imageProductDesc}>
+                  {selectedImage.description}
+                </Text>
+              )}
+              <Text style={styles.imageProductBudget}>
+                Budget: ₹{selectedImage?.budget}
+              </Text>
+            </View>
+          )}
         </View>
       </SafeAreaView>
     </Modal>

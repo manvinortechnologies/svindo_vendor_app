@@ -601,12 +601,15 @@ const ProductSelectionScreen: React.FC = () => {
         data={filteredProducts()}
         numColumns={2}
         columnWrapperStyle={{ justifyContent: "space-between" }}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[
+          styles.list,
+          // { paddingBottom: insets.bottom + 10 },
+        ]}
         keyExtractor={(item) => item.id.toString()}
         renderItem={renderItem}
       />
 
-      <View style={styles.footer}>
+      <View style={[styles.footer, { paddingBottom: insets.bottom + 10 }]}>
         <TouchableOpacity style={styles.scanBtn} onPress={handleScanBarcode}>
           <Icon name="qr-code-scanner" size={20} color="#fff" />
           <Text style={styles.scanText}>Scan</Text>
@@ -676,7 +679,7 @@ const styles = ScaledSheet.create({
     color: "#000",
   },
   list: {
-    paddingBottom: 130,
+    paddingBottom: "130@s",
   },
   card: {
     width: "48%",

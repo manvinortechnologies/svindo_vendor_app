@@ -1903,8 +1903,8 @@ const AddProductScreen = ({
                 </View>
 
                 <Text style={styles.warningText}>
-                  * To enable GST details please select as registered business
-                  in company settings
+                  * To enable GST details please enter GST number in company
+                  profile
                 </Text>
               </View>
 

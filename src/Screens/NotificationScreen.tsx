@@ -21,6 +21,7 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { HomeNavigation } from "../constants/app-routes.constants";
+import { s } from "react-native-size-matters";
 
 interface NotificationItem {
   id: string;
@@ -284,7 +285,16 @@ const NotificationScreen = ({ navigation }: any) => {
       ]}
     >
       {/* Header */}
-      <CustomHeader title="Notifications" />
+      <CustomHeader
+        title="Notifications"
+        rightIcon={
+          <TouchableOpacity
+            onPress={() => navigation.navigate(HomeNavigation.SENDNOTIFICATION)}
+          >
+            <Icon name="add-circle" size={s(28)} color="#FCA311" />
+          </TouchableOpacity>
+        }
+      />
 
       {/* Tabs */}
       <View style={styles.tabContainer}>

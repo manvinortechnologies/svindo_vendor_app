@@ -1,7 +1,17 @@
-import React, { useRef, useState } from "react";
-import { Dimensions, StyleProp, ViewStyle, View, Platform } from "react-native";
-import { Dropdown } from "react-native-element-dropdown";
+import React, { useState, useMemo } from "react";
+import {
+  StyleProp,
+  ViewStyle,
+  View,
+  Text,
+  TouchableOpacity,
+  Modal,
+  ScrollView,
+} from "react-native";
 import { ScaledSheet } from "react-native-size-matters";
+import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import SearchBar from "./SearchBar";
+
 export interface DropDownOption {
   name: string;
   id: string | number;
@@ -34,76 +44,147 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   mode = "default",
   onFocus,
 }) => {
-  const containerRef = useRef<View>(null);
-  const [dropdownPosition, setDropdownPosition] = useState<
-    "bottom" | "top" | "auto"
-  >(position);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const handleFocus = () => {
-    // Call the original onFocus if provided
-    onFocus?.();
+  // Get selected option name
+  const selectedOption = options.find(
+    (opt) =>
+      opt.id === selectedValue ||
+      opt.id?.toString() === selectedValue?.toString()
+  );
 
-    // Scroll to show dropdown above keyboard
-    if (containerRef.current) {
-      // Use a delay to ensure the dropdown is rendered
-      setTimeout(() => {
-        containerRef.current?.measureInWindow((x, y, width, height) => {
-          // Approximate keyboard height
-          const keyboardHeight = Platform.OS === "ios" ? 350 : 300;
-          const screenHeight = Dimensions.get("window").height;
-          const dropdownBottom = y + height + 300; // Add dropdown maxHeight (300)
-          const spaceAboveKeyboard = screenHeight - keyboardHeight;
+  // Filter options based on search query
+  const filteredOptions = useMemo(() => {
+    if (!isSearchable || !searchQuery.trim()) {
+      return options;
+    }
+    const query = searchQuery.toLowerCase();
+    return options.filter((option) =>
+      option.name.toLowerCase().includes(query)
+    );
+  }, [options, searchQuery, isSearchable]);
 
-          // If dropdown would be hidden by keyboard, change position to top
-          if (dropdownBottom > spaceAboveKeyboard) {
-            setDropdownPosition("top");
-          } else {
-            setDropdownPosition(position);
-          }
+  const handleSelect = (option: DropDownOption) => {
+    onSelect(option);
+    setModalVisible(false);
+    setSearchQuery("");
+  };
 
-          // Scroll the view to show the dropdown
-          // KeyboardAwareScrollView should handle this, but we help by ensuring visibility
-          containerRef.current?.measure((x, y, width, height, pageX, pageY) => {
-            // The KeyboardAwareScrollView will automatically scroll to focused inputs
-            // We just need to ensure the container is properly positioned
-          });
-        });
-      }, 200); // Delay to ensure keyboard animation has started
+  const handleOpen = () => {
+    if (!disabled) {
+      setModalVisible(true);
+      setSearchQuery("");
+      onFocus?.();
     }
   };
 
-  const handleBlur = () => {
-    // Reset position when dropdown closes
-    setDropdownPosition(position);
+  const handleClose = () => {
+    setModalVisible(false);
+    setSearchQuery("");
   };
 
   return (
-    <View ref={containerRef} collapsable={false}>
-      <Dropdown
+    <View>
+      <TouchableOpacity
         style={[styles.dropdown, dropDownBoxStyle, customStyles]}
-        placeholderStyle={styles.placeholderStyle}
-        selectedTextStyle={styles.selectedTextStyle}
-        inputSearchStyle={styles.inputSearchStyle}
-        iconStyle={styles.iconStyle}
-        itemTextStyle={styles.itemTextStyle}
-        data={options}
-        search={false}
-        maxHeight={300}
-        labelField="name"
-        valueField="id"
-        placeholder={placeholder}
-        mode={mode}
-        searchPlaceholder="Search..."
-        value={selectedValue}
-        onChange={onSelect}
-        renderLeftIcon={() => null}
-        renderRightIcon={() => null}
-        disable={disabled}
-        dropdownPosition={dropdownPosition}
-        keyboardAvoiding={true}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-      />
+        onPress={handleOpen}
+        disabled={disabled}
+        activeOpacity={0.7}
+      >
+        <Text
+          style={[
+            selectedOption ? styles.selectedTextStyle : styles.placeholderStyle,
+            disabled && styles.disabledText,
+          ]}
+          numberOfLines={1}
+        >
+          {selectedOption ? selectedOption.name : placeholder}
+        </Text>
+        <Icon
+          name="chevron-down"
+          size={20}
+          color={disabled ? "#ccc" : "#666"}
+        />
+      </TouchableOpacity>
+
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={handleClose}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={handleClose}
+        >
+          <View
+            style={styles.modalContent}
+            onStartShouldSetResponder={() => true}
+          >
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{placeholder}</Text>
+              <TouchableOpacity
+                onPress={handleClose}
+                style={styles.closeButton}
+              >
+                <Icon name="close" size={24} color="#000" />
+              </TouchableOpacity>
+            </View>
+
+            {isSearchable && (
+              <View style={styles.searchContainer}>
+                <SearchBar
+                  placeholder="Search..."
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                />
+              </View>
+            )}
+
+            <ScrollView
+              style={styles.optionsScrollView}
+              showsVerticalScrollIndicator={true}
+            >
+              {filteredOptions.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No options found</Text>
+                </View>
+              ) : (
+                filteredOptions.map((option) => {
+                  const isSelected =
+                    option.id === selectedValue ||
+                    option.id?.toString() === selectedValue?.toString();
+                  return (
+                    <TouchableOpacity
+                      key={option.id?.toString()}
+                      style={[
+                        styles.optionItem,
+                        isSelected && styles.optionItemSelected,
+                      ]}
+                      onPress={() => handleSelect(option)}
+                      activeOpacity={0.7}
+                    >
+                      <Text
+                        style={[
+                          styles.optionText,
+                          isSelected && styles.optionTextSelected,
+                        ]}
+                      >
+                        {option.name}
+                      </Text>
+                      {isSelected && (
+                        <Icon name="check" size={20} color="#FCA311" />
+                      )}
+                    </TouchableOpacity>
+                  );
+                })
+              )}
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
@@ -119,25 +200,89 @@ const styles = ScaledSheet.create({
     paddingHorizontal: "10@s",
     backgroundColor: "#FAFAFC",
     marginBottom: "1@s",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   placeholderStyle: {
     fontSize: "12@s",
     color: "#888",
+    flex: 1,
   },
   selectedTextStyle: {
     fontSize: "14@s",
     color: "#666",
+    flex: 1,
   },
-  iconStyle: {
-    width: "10@s",
-    height: "10@s",
+  disabledText: {
+    color: "#ccc",
   },
-  inputSearchStyle: {
-    height: "40@s",
-    fontSize: "14@s",
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    width: "85%",
+    maxWidth: 400,
+    maxHeight: "70%",
+    overflow: "hidden",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
     color: "#000",
+    flex: 1,
   },
-  itemTextStyle: {
-    color: "#000",
+  closeButton: {
+    padding: 5,
+  },
+  searchContainer: {
+    paddingHorizontal: 20,
+    paddingTop: 15,
+    paddingBottom: 10,
+  },
+  optionsScrollView: {
+    maxHeight: 400,
+  },
+  optionItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 15,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  optionItemSelected: {
+    backgroundColor: "#FFF4E5",
+  },
+  optionText: {
+    fontSize: 16,
+    color: "#333",
+    flex: 1,
+  },
+  optionTextSelected: {
+    color: "#FCA311",
+    fontWeight: "600",
+  },
+  emptyContainer: {
+    padding: 20,
+    alignItems: "center",
+  },
+  emptyText: {
+    fontSize: 14,
+    color: "#999",
   },
 });

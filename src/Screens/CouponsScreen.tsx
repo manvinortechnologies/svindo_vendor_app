@@ -17,7 +17,7 @@ import api from "../services/api/api"; // Your API service
 import { Coupon } from "../type/Coupan";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { RouteProp, useIsFocused } from "@react-navigation/native";
-import { ScaledSheet } from "react-native-size-matters";
+import { s, ScaledSheet } from "react-native-size-matters";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Icon from "react-native-vector-icons/Ionicons";
@@ -399,14 +399,17 @@ const CouponsScreen: React.FC<CouponsScreenProps> = ({ navigation }: any) => {
             data={coupons}
             keyExtractor={(item) => item.id.toString()}
             renderItem={renderCoupon}
-            contentContainerStyle={{ flexGrow: 1, paddingBottom: 100 }}
+            contentContainerStyle={{
+              flexGrow: 1,
+              paddingBottom: insets.bottom + s(100),
+            }}
           />
         )}
       </ScrollView>
 
       {/* Floating Button */}
       <TouchableOpacity
-        style={styles.addBtn}
+        style={[styles.addBtn, { bottom: insets.bottom + s(60) }]}
         onPress={() => navigation.navigate(HomeNavigation.CREATECOUPON)}
       >
         <Text style={styles.addBtnText}>Add Coupon</Text>

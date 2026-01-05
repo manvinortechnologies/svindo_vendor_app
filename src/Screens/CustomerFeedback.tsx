@@ -24,6 +24,8 @@ import CalendarModal from "../Modals/CalendarModal";
 import moment from "moment";
 import CustomTextInput from "../CommonComponent/CustomeTextInput";
 import Toast from "react-native-toast-message";
+import { s } from "react-native-size-matters";
+import ImagePreviewModal from "../Modals/ImagePreviewModal";
 
 interface ReviewItem {
   id: number;
@@ -54,7 +56,6 @@ interface TransformedReview {
   date: string;
   dateOriginal: string; // Store original ISO date for filtering
   rating: number;
-  profile: any;
   review: string;
   images: string[];
   visible: boolean;
@@ -81,6 +82,8 @@ const CustomerFeedback = () => {
   const [showDateModal, setShowDateModal] = useState(false);
   const [showRatingDropdown, setShowRatingDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [isImageModalVisible, setIsImageModalVisible] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<any>(null);
 
   // Rating filter options
   const ratingFilterOptions = [
@@ -103,7 +106,6 @@ const CustomerFeedback = () => {
           date: formatOrderDate(item.created_at),
           dateOriginal: item.created_at, // Store original ISO date for filtering
           rating: item.rating,
-          profile: require("../assets/user.png"),
           review: item.comment || "",
           images: item.photo ? [item.photo] : [],
           visible: item.is_visible,
@@ -358,7 +360,7 @@ const CustomerFeedback = () => {
           reviews.map((item) => (
             <View key={item.id} style={styles.card}>
               <View style={styles.userRow}>
-                <Image source={item.profile} style={styles.avatar} />
+                <Icon name="account-circle" size={s(24)} color="#000" />
                 <View style={{ marginLeft: 10 }}>
                   <Text style={styles.name}>{item.name}</Text>
                   <View style={styles.dateRow}>
@@ -378,11 +380,20 @@ const CustomerFeedback = () => {
 
               <View style={styles.imageRow}>
                 {item.images.map((img, i) => (
-                  <Image
+                  <TouchableOpacity
                     key={i}
-                    source={{ uri: img }}
-                    style={styles.reviewImage}
-                  />
+                    onPress={() => {
+                      setSelectedImage({
+                        photos: item.images.map((imageUrl: string) => imageUrl),
+                        productName: `${item.name}'s Review`,
+                        description: item.review,
+                      });
+                      setIsImageModalVisible(true);
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Image source={{ uri: img }} style={styles.reviewImage} />
+                  </TouchableOpacity>
                 ))}
               </View>
               <View style={styles.switchRow}>
@@ -457,6 +468,14 @@ const CustomerFeedback = () => {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      {/* Image Preview Modal */}
+      <ImagePreviewModal
+        isImageModalVisible={isImageModalVisible}
+        setIsImageModalVisible={setIsImageModalVisible}
+        selectedImage={selectedImage}
+        showDetails={false}
+      />
     </View>
   );
 };

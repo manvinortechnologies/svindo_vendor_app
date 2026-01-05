@@ -8,6 +8,7 @@ import NotificationService from "./src/services/notification-service";
 import { NotificationProvider } from "./src/contexts/NotificationContext";
 import { NavigationContainerRef } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
+import { StatusBar } from "react-native";
 
 const App = () => {
   const navigationRef = useRef<NavigationContainerRef<any> | null>(null);
@@ -53,6 +54,11 @@ const App = () => {
 
   return (
     <Provider store={store}>
+      <StatusBar
+        translucent
+        backgroundColor="#FFFFFF9B"
+        barStyle="dark-content"
+      />
       <GestureHandlerRootView style={{ flex: 1 }}>
         <NotificationProvider>
           <AppNavigation />

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { View, Text, FlatList, TouchableOpacity } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useRoute, useNavigation } from "@react-navigation/native";
-import { ScaledSheet } from "react-native-size-matters";
+import { s, ScaledSheet } from "react-native-size-matters";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
@@ -190,7 +190,10 @@ const VariantsScreen = () => {
       />
 
       {/* Floating Add Button */}
-      <TouchableOpacity style={styles.addButton} onPress={handleAddProduct}>
+      <TouchableOpacity
+        style={[styles.addButton, { bottom: insets.bottom + s(20) }]}
+        onPress={handleAddProduct}
+      >
         <Text style={styles.addButtonText}>Add Variant</Text>
       </TouchableOpacity>
 

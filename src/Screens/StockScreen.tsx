@@ -69,6 +69,7 @@ const StockScreen = () => {
   const [products, setProducts] = useState<ProductType[]>([]);
   const [addons, setAddons] = useState<Addon[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState({
@@ -225,6 +226,20 @@ const StockScreen = () => {
       console.error("Error fetching categories:", error);
     } finally {
       setIsLoadingCategories(false);
+    }
+  };
+
+  // Handle pull to refresh
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      if (selectedType === "Product/Service") {
+        await fetchProducts();
+      } else if (selectedType === "Add Ons") {
+        await fetchAddons();
+      }
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -534,7 +549,7 @@ const StockScreen = () => {
         borderBottomColor="#ccc"
         paddingTop={s(10)}
       />
-      <ScrollView contentContainerStyle={styles.midcontent}>
+      <View style={styles.midcontent}>
         <SearchBar
           placeholder="Product/Service/Batch Number"
           value={searchQuery}
@@ -587,7 +602,12 @@ const StockScreen = () => {
             data={getFilteredData()}
             numColumns={2}
             keyExtractor={(item) => item.id}
-            contentContainerStyle={styles.productList}
+            contentContainerStyle={[
+              styles.productList,
+              { paddingBottom: insets.bottom + s(100) },
+            ]}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Text style={styles.emptyText}>
@@ -616,7 +636,7 @@ const StockScreen = () => {
             }}
           />
         )}
-      </ScrollView>
+      </View>
 
       {/* Filter Modal */}
       <Modal

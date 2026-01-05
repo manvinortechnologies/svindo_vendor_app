@@ -26,7 +26,7 @@ import { HomeNavigation } from "../constants/app-routes.constants";
 import Icon from "react-native-vector-icons/Ionicons";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import moment from "moment";
-import { ScaledSheet } from "react-native-size-matters";
+import { s, ScaledSheet } from "react-native-size-matters";
 import Toast from "react-native-toast-message";
 import DeleteConfirmationModal from "../Modals/DeleteConfirmationModal";
 import { StackNavigationProp } from "@react-navigation/stack";
@@ -433,7 +433,7 @@ const PurchaseLedger = () => {
         keyExtractor={(date) => date}
         style={styles.list}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={{ paddingBottom: insets.bottom + s(10) }}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -454,7 +454,7 @@ const PurchaseLedger = () => {
 
       {/* Add Purchase Button */}
       <TouchableOpacity
-        style={styles.fab}
+        style={[styles.fab, { bottom: insets.bottom + s(20) }]}
         onPress={() =>
           (navigation as any).navigate(HomeNavigation.CREATE_PURCHASE)
         }
@@ -1260,7 +1260,6 @@ const styles = ScaledSheet.create({
   },
   fab: {
     position: "absolute",
-    bottom: 30,
     right: 24,
     width: 56,
     height: 56,

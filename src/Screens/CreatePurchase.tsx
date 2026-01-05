@@ -809,14 +809,19 @@ const CreatePurchase = ({ navigation }: any) => {
                       style={{
                         flex: 1,
                         flexDirection: "row",
+                        opacity: (item?.purchase_price || 0) === 0 ? 1 : 0.5,
                       }}
                       onPress={() => {
-                        setEditingProductIndex(index);
-                        setEditProductPrice(
-                          (item?.purchase_price || 0).toString()
-                        );
-                        setIsPurchasePlanModalVisible(true);
+                        // Only allow editing if purchase_price is 0
+                        if ((item?.purchase_price || 0) === 0) {
+                          setEditingProductIndex(index);
+                          setEditProductPrice(
+                            (item?.purchase_price || 0).toString()
+                          );
+                          setIsPurchasePlanModalVisible(true);
+                        }
                       }}
+                      disabled={(item?.purchase_price || 0) !== 0}
                     >
                       <Text style={styles.tableText}>
                         {formatNumber(Number(item?.purchase_price || 0))}
@@ -1316,6 +1321,11 @@ const CreatePurchase = ({ navigation }: any) => {
                         placeholder="Enter Purchase Price"
                         keyboardType="decimal-pad"
                         containerStyle={{ marginTop: 10 }}
+                        editable={
+                          editingProductIndex !== null &&
+                          (selectedProducts[editingProductIndex]
+                            ?.purchase_price || 0) === 0
+                        }
                       />
                       <View style={styles.editProductButtons}>
                         <TouchableOpacity

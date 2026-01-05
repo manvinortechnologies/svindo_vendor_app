@@ -13,6 +13,7 @@ import {
   RefreshControl,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
+import Icons from "react-native-vector-icons/Ionicons";
 import NavigationButton from "./NavigationButton";
 import CustomSwitch from "./CustomSwitch";
 import RequestFromBuyers from "../CommonComponent/RequestFromBuyers";
@@ -723,6 +724,12 @@ const StatisticsScreen = ({ navigation }: any) => {
     }
   };
 
+  const handleActivityPress = (user: any) => {
+    navigation.navigate(HomeNavigation.CREATECOUPON, {
+      customer: user,
+    });
+  };
+
   useEffect(() => {
     if (storeData) {
       setdisable(storeData.is_offline);
@@ -801,6 +808,14 @@ const StatisticsScreen = ({ navigation }: any) => {
               style={styles.notificationIcon}
             />
           </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate(HomeNavigation.ALL_CHAT_USER_SCREEN)
+            }
+            style={{ marginLeft: s(10) }}
+          >
+            <Icons name="chatbox-ellipses" size={s(26)} color="#FCA311" />
+          </TouchableOpacity>
         </View>
       </View>
       <ScrollView
@@ -814,31 +829,37 @@ const StatisticsScreen = ({ navigation }: any) => {
           />
         }
       >
-        <RequestFromBuyers
-          requests={dashboardData?.activity?.top_product_requests || []}
-          totalCount={
-            dashboardData?.activity?.total_product_requests_count || 0
-          }
-        />
-        <View style={styles.titleRow}>
-          <Text style={styles.title}>Statistics</Text>
-          <CustomDropdown
-            placeholder="Select Filter"
-            options={filters.map((filter) => ({
-              name: filter,
-              id: filter,
-            }))}
-            onSelect={setSelectedFilter}
-            selectedValue={selectedFilter.id}
-            styles={{ width: s(70), height: s(30), marginRight: 10 }}
-            isSearchable={false}
+        {dashboardData?.activity?.top_product_requests?.length > 0 && (
+          <RequestFromBuyers
+            requests={dashboardData?.activity?.top_product_requests || []}
+            totalCount={
+              dashboardData?.activity?.total_product_requests_count || 0
+            }
           />
-        </View>
-        <View style={styles.chartPlaceholder}>
-          <GroupedBars
-            data={dashboardData?.sales_expense_chart?.combined || []}
-          />
-        </View>
+        )}
+        {dashboardData?.sales_expense_chart?.combined?.length > 0 && (
+          <>
+            <View style={styles.titleRow}>
+              <Text style={styles.title}>Statistics</Text>
+              <CustomDropdown
+                placeholder="Select Filter"
+                options={filters.map((filter) => ({
+                  name: filter,
+                  id: filter,
+                }))}
+                onSelect={setSelectedFilter}
+                selectedValue={selectedFilter.id}
+                styles={{ width: s(70), height: s(30), marginRight: 10 }}
+                isSearchable={false}
+              />
+            </View>
+            <View style={styles.chartPlaceholder}>
+              <GroupedBars
+                data={dashboardData?.sales_expense_chart?.combined || []}
+              />
+            </View>
+          </>
+        )}
 
         <View style={styles.cardsContainer}>
           {getStatisticsCards().map((item, index) => (
@@ -932,180 +953,209 @@ const StatisticsScreen = ({ navigation }: any) => {
           <Icon name="chevron-right" size={20} color="#000" />
         </TouchableOpacity>
 
-        <View style={styles.insightsContainer}>
-          <Text style={styles.insightMainLabel}>Store Insights</Text>
-          <View style={styles.insightCard}>
-            <View style={styles.chartPlaceholder}>
-              <LineCharts
-                color="#FCA311"
-                data={
-                  dashboardData?.store_insights?.recent_visitors
-                    ? (() => {
-                        // Group visitors by date
-                        const groupedData = groupedByDate(
-                          dashboardData?.store_insights?.recent_followers
-                        );
-                        console.log(groupedData);
-                        return Object.keys(groupedData).map((date: string) => ({
-                          value: groupedData[date].length,
-                          label: moment(date).format("MMM"),
-                        }));
-                      })()
-                    : []
-                }
-              />
+        {(dashboardData?.store_insights?.recent_visitors?.length > 0 ||
+          dashboardData?.store_insights?.recent_followers?.length > 0) && (
+          <View style={styles.insightsContainer}>
+            <Text style={styles.insightMainLabel}>Store Insights</Text>
+            <View style={styles.insightCard}>
+              <View style={styles.chartPlaceholder}>
+                <LineCharts
+                  color="#FCA311"
+                  data={
+                    dashboardData?.store_insights?.recent_visitors
+                      ? (() => {
+                          // Group visitors by date
+                          const groupedData = groupedByDate(
+                            dashboardData?.store_insights?.recent_followers
+                          );
+                          console.log(groupedData);
+                          return Object.keys(groupedData).map(
+                            (date: string) => ({
+                              value: groupedData[date].length,
+                              label: moment(date).format("MMM"),
+                            })
+                          );
+                        })()
+                      : []
+                  }
+                />
+              </View>
+              <View style={styles.categoryTitlesection}>
+                <Text style={styles.insightLabel}>Followers</Text>
+                {/* <Text style={styles.viewall}>View all</Text> */}
+              </View>
             </View>
-            <View style={styles.categoryTitlesection}>
-              <Text style={styles.insightLabel}>Followers</Text>
-              {/* <Text style={styles.viewall}>View all</Text> */}
+            <View style={styles.insightCard}>
+              <View style={styles.chartPlaceholder}>
+                <LineCharts
+                  color="#FCA311"
+                  data={
+                    dashboardData?.followers_chart
+                      ? (() => {
+                          const groupedData = groupedByDate(
+                            dashboardData?.store_insights?.recent_visitors || []
+                          );
+                          return Object.keys(groupedData).map(
+                            (date: string) => ({
+                              value: groupedData[date].length,
+                              label: moment(date).format("MMM"),
+                            })
+                          );
+                        })()
+                      : []
+                  }
+                />
+              </View>
+              <View style={styles.categoryTitlesection}>
+                <Text style={styles.insightLabel}>Shop Visits</Text>
+                {/* <Text style={styles.viewall}>View all</Text> */}
+              </View>
             </View>
           </View>
-          <View style={styles.insightCard}>
-            <View style={styles.chartPlaceholder}>
-              <LineCharts
-                color="#FCA311"
-                data={
-                  dashboardData?.followers_chart
-                    ? (() => {
-                        const groupedData = groupedByDate(
-                          dashboardData?.store_insights?.recent_visitors || []
-                        );
-                        return Object.keys(groupedData).map((date: string) => ({
-                          value: groupedData[date].length,
-                          label: moment(date).format("MMM"),
-                        }));
-                      })()
-                    : []
-                }
-              />
-            </View>
-            <View style={styles.categoryTitlesection}>
-              <Text style={styles.insightLabel}>Shop Visits</Text>
-              {/* <Text style={styles.viewall}>View all</Text> */}
-            </View>
-          </View>
-        </View>
+        )}
 
         <View style={styles.productcontainer}>
-          {["Top Liked", "Top Rated", "Most Bought"].map((category) => (
-            <View key={category} style={styles.categoryContainer}>
+          {["Top Liked", "Top Rated", "Most Bought"].map(
+            (category) =>
+              getFilteredProducts(category)?.length > 0 && (
+                <View key={category} style={styles.categoryContainer}>
+                  <View style={styles.productRow}>
+                    {getFilteredProducts(category).map((product) => (
+                      <View key={product.id} style={styles.productCard}>
+                        <Image
+                          source={product.image}
+                          style={styles.productImage}
+                        />
+                        <View style={styles.productDetails}>
+                          <View style={styles.productTextContainer}>
+                            <Text
+                              style={styles.productName}
+                              numberOfLines={1}
+                              ellipsizeMode="tail"
+                            >
+                              {product.name}
+                            </Text>
+                            {product.description && (
+                              <Text
+                                style={styles.productDescription}
+                                numberOfLines={1}
+                              >
+                                {product.description.slice(0, 15)}
+                              </Text>
+                            )}
+                          </View>
+                          <Text style={styles.productPrice}>
+                            Rs {product.price}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                  <View style={styles.categoryTitlesection}>
+                    <Text style={styles.categoryTitle}>
+                      {category} Products
+                    </Text>
+                    {/* <Text style={styles.viewall}>View all</Text> */}
+                  </View>
+                </View>
+              )
+          )}
+        </View>
+
+        {dashboardData?.activity?.activities?.length > 0 && (
+          <View>
+            <Text style={styles.title}>Recent Store Activity</Text>
+            <View style={styles.recentActivityContainer}>
+              <View style={styles.noteContainer}>
+                <Icon name="information-outline" size={18} color="#FCA311" />
+                <Text style={styles.noteText}>
+                  You can generate coupon codes using user id (USR : 4)
+                  mentioned.
+                </Text>
+              </View>
+              {dashboardData?.activity?.activities?.map((activity: any) => (
+                <TouchableOpacity
+                  key={activity.id}
+                  style={styles.activityRow}
+                  onPress={() => handleActivityPress(activity.user)}
+                >
+                  <View style={styles.activityTextContainer}>
+                    {/* <Text style={styles.userid}>{activity.userid}</Text> */}
+                    <Text style={styles.comment}>{activity.message}</Text>
+                  </View>
+                  <Image source={activity.image} style={styles.activityImage} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+        {getFilteredProducts("Low Stock").length > 0 && (
+          <View style={styles.productcontainer}>
+            <View style={styles.categoryContainer}>
+              <Text style={styles.categoryTitle}>Low Stock Products</Text>
               <View style={styles.productRow}>
-                {getFilteredProducts(category).map((product) => (
+                {getFilteredProducts("Low Stock").map((product) => (
                   <View key={product.id} style={styles.productCard}>
                     <Image source={product.image} style={styles.productImage} />
                     <View style={styles.productDetails}>
                       <View style={styles.productTextContainer}>
+                        <Text style={styles.productName}>{product.name}</Text>
                         <Text
-                          style={styles.productName}
+                          style={styles.productDescription}
                           numberOfLines={1}
-                          ellipsizeMode="tail"
                         >
-                          {product.name}
+                          {product.description.slice(0, 15)}...
                         </Text>
-                        {product.description && (
-                          <Text
-                            style={styles.productDescription}
-                            numberOfLines={1}
-                          >
-                            {product.description.slice(0, 15)}
-                          </Text>
-                        )}
                       </View>
-                      <Text style={styles.productPrice}>
-                        Rs {product.price}
-                      </Text>
+                      <Text style={styles.productPrice}>{product.price}</Text>
                     </View>
                   </View>
                 ))}
               </View>
-              <View style={styles.categoryTitlesection}>
-                <Text style={styles.categoryTitle}>{category} Products</Text>
-                {/* <Text style={styles.viewall}>View all</Text> */}
-              </View>
             </View>
-          ))}
-        </View>
-
-        <View>
-          <Text style={styles.title}>Recent Store Activity</Text>
-          <View style={styles.recentActivityContainer}>
-            <View style={styles.noteContainer}>
-              <Icon name="information-outline" size={18} color="#FCA311" />
-              <Text style={styles.noteText}>
-                You can generate coupon codes using user id (USR : 4) mentioned.
-              </Text>
-            </View>
-            {dashboardData?.activity?.activities?.map((activity: any) => (
-              <View key={activity.id} style={styles.activityRow}>
-                <View style={styles.activityTextContainer}>
-                  {/* <Text style={styles.userid}>{activity.userid}</Text> */}
-                  <Text style={styles.comment}>{activity.message}</Text>
-                </View>
-                <Image source={activity.image} style={styles.activityImage} />
-              </View>
-            ))}
           </View>
-        </View>
-        <View style={styles.productcontainer}>
-          <View style={styles.categoryContainer}>
-            <Text style={styles.categoryTitle}>Low Stock Products</Text>
-            <View style={styles.productRow}>
-              {getFilteredProducts("Low Stock").map((product) => (
-                <View key={product.id} style={styles.productCard}>
-                  <Image source={product.image} style={styles.productImage} />
-                  <View style={styles.productDetails}>
-                    <View style={styles.productTextContainer}>
-                      <Text style={styles.productName}>{product.name}</Text>
-                      <Text style={styles.productDescription} numberOfLines={1}>
-                        {product.description.slice(0, 15)}...
+        )}
+
+        {dashboardData?.top_reminders?.length > 0 && (
+          <View>
+            <Text style={styles.title}>Reminders</Text>
+            <View style={styles.recentActivityContainer}>
+              {dashboardData?.top_reminders &&
+              dashboardData?.top_reminders?.length > 0 ? (
+                dashboardData?.top_reminders?.map((reminder: any) => (
+                  <TouchableOpacity
+                    key={reminder.id}
+                    style={styles.notificationcontain}
+                    onPress={() => handleReminderPress(reminder)}
+                  >
+                    <View style={styles.activityTextContainer}>
+                      <Image
+                        source={require("../assets/notification.png")}
+                        style={styles.activityImage}
+                      />
+                      <Text style={styles.notificationtext} numberOfLines={2}>
+                        {reminder.message || reminder.title || "Reminder"}
                       </Text>
                     </View>
-                    <Text style={styles.productPrice}>{product.price}</Text>
-                  </View>
+                    <View style={styles.datesection}>
+                      <Text style={styles.datentext}>
+                        {reminder.created_at
+                          ? moment(reminder.created_at).format("DD MMM YYYY")
+                          : reminder.due_date
+                          ? moment(reminder.due_date).format("DD MMM YYYY")
+                          : "N/A"}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                ))
+              ) : (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No reminders available</Text>
                 </View>
-              ))}
+              )}
             </View>
           </View>
-        </View>
-
-        <View>
-          <Text style={styles.title}>Reminders</Text>
-          <View style={styles.recentActivityContainer}>
-            {dashboardData?.top_reminders &&
-            dashboardData?.top_reminders?.length > 0 ? (
-              dashboardData?.top_reminders?.map((reminder: any) => (
-                <TouchableOpacity
-                  key={reminder.id}
-                  style={styles.notificationcontain}
-                  onPress={() => handleReminderPress(reminder)}
-                >
-                  <View style={styles.activityTextContainer}>
-                    <Image
-                      source={require("../assets/notification.png")}
-                      style={styles.activityImage}
-                    />
-                    <Text style={styles.notificationtext} numberOfLines={2}>
-                      {reminder.message || reminder.title || "Reminder"}
-                    </Text>
-                  </View>
-                  <View style={styles.datesection}>
-                    <Text style={styles.datentext}>
-                      {reminder.created_at
-                        ? moment(reminder.created_at).format("DD MMM YYYY")
-                        : reminder.due_date
-                        ? moment(reminder.due_date).format("DD MMM YYYY")
-                        : "N/A"}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))
-            ) : (
-              <View style={styles.emptyContainer}>
-                <Text style={styles.emptyText}>No reminders available</Text>
-              </View>
-            )}
-          </View>
-        </View>
+        )}
       </ScrollView>
 
       {/* Store Status Confirmation Modal */}
@@ -1243,7 +1293,7 @@ const styles = ScaledSheet.create({
     flex: 1,
   },
   chartPlaceholder: {
-    height: "200@s",
+    height: "180@vs",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
@@ -1513,15 +1563,16 @@ const styles = ScaledSheet.create({
     fontWeight: "bold",
   },
   activityImage: {
-    width: "30@s",
-    height: "30@s",
+    width: "24@s",
+    height: "24@s",
     marginLeft: "10@s",
   },
   notificationtext: {
     fontSize: 12,
     paddingHorizontal: 10,
-    marginRight: 10,
+    // marginRight: 10,
     color: "#000",
+    maxWidth: "90%",
   },
   emptyContainer: {
     padding: 20,

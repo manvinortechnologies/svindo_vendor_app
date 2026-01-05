@@ -14,7 +14,7 @@ import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import { useIsFocused } from "@react-navigation/native";
 import { API_ROUTES } from "../constants/api-routes.constants";
-import { ScaledSheet } from "react-native-size-matters";
+import { s, ScaledSheet } from "react-native-size-matters";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import {
   SafeAreaView,
@@ -290,7 +290,9 @@ const ExpensesScreen = ({ navigation }: any) => {
           </Text>
         </View> */}
       </View>
-      <ScrollView contentContainerStyle={{ paddingBottom: 80 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: insets.bottom + s(70) }}
+      >
         {Object.entries(groupedExpenses).map(([date, expenses]) =>
           renderDateSection(date, expenses)
         )}
@@ -298,7 +300,7 @@ const ExpensesScreen = ({ navigation }: any) => {
 
       {/* Add Expense Button */}
       <TouchableOpacity
-        style={styles.addButton}
+        style={[styles.addButton, { bottom: insets.bottom + s(20) }]}
         onPress={() => {
           navigation.navigate(HomeNavigation.EXPENSES);
         }}
@@ -525,7 +527,6 @@ const styles = ScaledSheet.create({
   },
   addButton: {
     position: "absolute",
-    bottom: 20,
     right: 20,
     backgroundColor: "#FCA311",
     paddingHorizontal: 16,

@@ -19,7 +19,10 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import NavigationButton from "./NavigationButton";
 import { useNavigation } from "@react-navigation/native";
 import Ionicons from "react-native-vector-icons/Ionicons";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
@@ -28,6 +31,8 @@ import { HomeNavigation } from "../constants/app-routes.constants";
 
 const CreateProduct = () => {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+
   const [products, setProducts] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -207,7 +212,7 @@ const CreateProduct = () => {
         )}
       </View>
       <Loading visible={loading} />
-      <View style={styles.floatingButtons}>
+      <View style={[styles.floatingButtons, { bottom: insets.bottom + s(30) }]}>
         <NavigationButton
           screen="AddProductScreen"
           label="Create New"

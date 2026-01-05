@@ -16,7 +16,7 @@ import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import Toast from "react-native-toast-message";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ScaledSheet } from "react-native-size-matters";
+import { s, ScaledSheet } from "react-native-size-matters";
 const SmsScreen = () => {
   const insets = useSafeAreaInsets();
   const [isLoading, setIsLoading] = useState(false);
@@ -222,7 +222,7 @@ const SmsScreen = () => {
 
       {/* Save Button */}
       <TouchableOpacity
-        style={styles.saveButton}
+        style={[styles.saveButton, { marginBottom: insets.bottom }]}
         onPress={handleSaveSettings}
         disabled={isLoading}
       >

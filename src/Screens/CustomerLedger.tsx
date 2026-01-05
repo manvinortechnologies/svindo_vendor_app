@@ -532,7 +532,7 @@ const CustomerLedger = ({ navigation, route }: any) => {
 
       {/* Add Transaction Button */}
       <TouchableOpacity
-        style={styles.addButton}
+        style={[styles.addButton, { bottom: insets.bottom }]}
         onPress={() =>
           navigation.navigate(HomeNavigation.PAYMENTSCREEN, {
             customerId: customerId,
@@ -779,6 +779,7 @@ const styles = StyleSheet.create({
     width: "25%",
   },
   addButton: {
+    position: "absolute",
     width: "30%",
     alignSelf: "flex-end",
     backgroundColor: "orange",

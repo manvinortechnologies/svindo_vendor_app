@@ -63,7 +63,7 @@ const BuyersRequestScreen: React.FC = () => {
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<any>(null);
   const [selectedSubCategory, setSelectedSubCategory] = useState<any>(null);
-  const [selectedNearby, setSelectedNearby] = useState<any>(null);
+  const [selectedCity, setSelectedCity] = useState<any>(null);
   const [isImageModalVisible, setIsImageModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<any>(null);
   const navigation = useNavigation<BuyersRequestScreenNavigationProp>();
@@ -280,6 +280,13 @@ const BuyersRequestScreen: React.FC = () => {
     }
   }, [selectedTab]);
 
+  // Clear city filter when tab changes (keep category and subcategory)
+  useEffect(() => {
+    if (selectedTab !== "Retail") {
+      setSelectedCity(null);
+    }
+  }, [selectedTab]);
+
   // Fetch offers when switching to "Offers for you" toggle
   useEffect(() => {
     if (
@@ -387,6 +394,14 @@ const BuyersRequestScreen: React.FC = () => {
       });
     }
 
+    // Filter by city (only for Retail tab)
+    if (selectedTab === "Retail" && selectedCity) {
+      filtered = filtered.filter((request: any) => {
+        const requestCity = request.city || "Unknown";
+        return requestCity === selectedCity.name;
+      });
+    }
+
     return filtered;
   };
 
@@ -463,13 +478,19 @@ const BuyersRequestScreen: React.FC = () => {
     );
   };
 
-  const nearbyOptions = [
-    { id: 1, name: "Within 5km" },
-    { id: 2, name: "Within 10km" },
-    { id: 3, name: "Within 20km" },
-    { id: 4, name: "Within 50km" },
-    { id: 5, name: "Any distance" },
-  ];
+  // Get unique cities from retailRequests
+  const getCityOptions = () => {
+    const cities = new Set<string>();
+    retailRequests.forEach((request: any) => {
+      const city = request.city;
+      if (city && city !== "Unknown") {
+        cities.add(city);
+      }
+    });
+    return Array.from(cities)
+      .sort()
+      .map((city, index) => ({ id: index + 1, name: city }));
+  };
 
   const handleOfferCoupon = (item: any) => {
     navigation.navigate(HomeNavigation.CREATECOUPON, {
@@ -602,16 +623,18 @@ const BuyersRequestScreen: React.FC = () => {
               />
             </View>
 
-            {/* Nearby Dropdown */}
-            <View style={styles.dropdownContainer}>
-              <Text style={styles.dropdownLabel}>Nearby</Text>
-              <CustomDropdown
-                placeholder="Select Distance"
-                options={nearbyOptions}
-                onSelect={setSelectedNearby}
-                selectedValue={selectedNearby?.id || null}
-              />
-            </View>
+            {/* City Dropdown - Only show for Retail tab */}
+            {selectedTab === "Retail" && (
+              <View style={styles.dropdownContainer}>
+                <Text style={styles.dropdownLabel}>City</Text>
+                <CustomDropdown
+                  placeholder="Select City"
+                  options={getCityOptions()}
+                  onSelect={setSelectedCity}
+                  selectedValue={selectedCity?.id || null}
+                />
+              </View>
+            )}
 
             {/* Action Buttons */}
             <View style={styles.modalActions}>
@@ -620,7 +643,7 @@ const BuyersRequestScreen: React.FC = () => {
                 onPress={() => {
                   setSelectedCategory(null);
                   setSelectedSubCategory(null);
-                  setSelectedNearby(null);
+                  setSelectedCity(null);
                 }}
               >
                 <Text style={styles.clearButtonText}>Clear All</Text>
@@ -650,12 +673,20 @@ const BuyersRequestScreen: React.FC = () => {
         pagingEnabled={true}
         loop={false}
         width={width}
-        height={Dimensions.get("window").height}
+        height={Dimensions.get("window").height - insets.bottom}
         data={getFilteredRequests() || []}
         onProgressChange={() => {}}
         renderItem={({ item }: { item: any }) => {
           return (
-            <View style={styles.fullScreenCard}>
+            <View
+              style={[
+                styles.fullScreenCard,
+                {
+                  height:
+                    Dimensions.get("window").height - (insets.bottom + vs(120)),
+                },
+              ]}
+            >
               {/* Product Image */}
               <View
                 style={[
@@ -879,7 +910,9 @@ const BuyersRequestScreen: React.FC = () => {
 
       {/* Toggle buttons for Your Request & Offers for you */}
       {selectedTab === "Requested" && (
-        <View style={styles.toggleContainer}>
+        <View
+          style={[styles.toggleContainer, { bottom: insets.bottom + s(50) }]}
+        >
           <TouchableOpacity
             style={[
               styles.toggleButton,
@@ -918,7 +951,7 @@ const BuyersRequestScreen: React.FC = () => {
         </View>
       )}
       {/* Request Stock */}
-      <View style={styles.requestStockContainer}>
+      <View style={[styles.requestStockContainer, { bottom: insets.bottom }]}>
         <Text style={styles.swipeText}>
           <Icon name="arrow-up" size={24} color="#FFE8C1" /> Swipe up to see
           more

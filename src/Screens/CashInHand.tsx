@@ -428,7 +428,7 @@ const CashInHand = ({ navigation }: any) => {
       </Modal>
 
       {/* Buttons Container - Fixed at bottom */}
-      <View style={styles.buttonContainer}>
+      <View style={[styles.buttonContainer, { bottom: insets.bottom + s(10) }]}>
         <TouchableOpacity
           style={styles.button}
           onPress={() => setShowBankTransferModal(true)}

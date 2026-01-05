@@ -20,6 +20,7 @@ import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
 import { Vendor } from "../type/Vendor";
 import { API_ROUTES } from "../constants/api-routes.constants";
+import { s } from "react-native-size-matters";
 
 type RootStackParamList = {
   ManageVendor: undefined;
@@ -120,6 +121,7 @@ const ManageVendors = ({ navigation }: any) => {
       <FlatList
         data={filteredVendors}
         keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={{ paddingBottom: insets.bottom + s(30) }}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.customerRow}
@@ -151,7 +153,7 @@ const ManageVendors = ({ navigation }: any) => {
       />
       {/* FAB: Add New Vendor */}
       <TouchableOpacity
-        style={styles.fab}
+        style={[styles.fab, { bottom: insets.bottom + s(20) }]}
         activeOpacity={0.9}
         onPress={() => navigation.navigate("AddVendor")}
       >

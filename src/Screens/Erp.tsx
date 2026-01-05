@@ -327,12 +327,7 @@ const Erp = () => {
   };
 
   return (
-    <View
-      style={[
-        styles.container,
-        { paddingTop: insets.top, paddingBottom: insets.bottom },
-      ]}
-    >
+    <View style={[styles.container]}>
       <Header
         title="ERP"
         backgroundColor="#FFF"
@@ -529,7 +524,11 @@ const Erp = () => {
               key={item.title}
               style={styles.menuItem}
               onPress={() =>
-                item.screen && navigation.navigate(item.screen as any)
+                item.screen === HomeNavigation.RATE_US_SCREEN
+                  ? Linking.openURL(
+                      "https://play.google.com/store/apps/details?id=com.svindovendor"
+                    )
+                  : navigation.navigate(item.screen as any)
               }
             >
               <Icon name={item.icon} size={22} color="#000" />

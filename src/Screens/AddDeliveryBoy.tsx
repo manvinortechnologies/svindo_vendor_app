@@ -7,6 +7,7 @@ import {
   TextInput,
   FlatList,
   Image,
+  ScrollView,
 } from "react-native";
 import Toast from "react-native-toast-message";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -300,7 +301,7 @@ const AddDeliveryBoy = () => {
       <Headerwithback
         title={isEditing ? "Edit Delivery Boy" : "Add Own Delivery Boy"}
       />
-      <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.container}>
         <ModalUpdatePhoto
           isVisible={imageModel}
           onClose={() => {
@@ -497,7 +498,7 @@ const AddDeliveryBoy = () => {
           buttonText="Cancel"
           buttonText2="Delete"
         />
-      </View>
+      </ScrollView>
     </View>
   );
 };

@@ -26,6 +26,8 @@ import { HomeNavigation } from "../constants/app-routes.constants";
 import { useRoute, RouteProp, ParamListBase } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
 import moment from "moment";
+import { s } from "react-native-size-matters";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const { width } = Dimensions.get("window");
 
@@ -34,6 +36,7 @@ interface RootStackParamList extends ParamListBase {
 }
 
 const CreateCouponScreen = ({ navigation }: any) => {
+  const insets = useSafeAreaInsets();
   const route = useRoute<RouteProp<RootStackParamList, "CreateCoupon">>();
   const customer = route.params?.customer;
   const [selectedType, setSelectedType] = useState<string>("discount");
@@ -539,60 +542,57 @@ const CreateCouponScreen = ({ navigation }: any) => {
   );
 
   return (
-    <MainContainer>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0} // Adjust if header overlaps input
-      >
-        <FlatList
-          data={["form"]}
-          keyExtractor={(item, index) => index.toString()}
-          keyboardShouldPersistTaps="handled"
-          ListHeaderComponent={
-            <>
-              {/* Header */}
-              <Headerwithback title={"Create Coupon"} />
-
-              {/* Coupon Types */}
-              <Text
-                style={{
-                  color: "#727272",
-                  fontWeight: "600",
-                  marginHorizontal: 20,
-                  marginVertical: 10,
-                }}
-              >
-                Types
-              </Text>
-              <View style={styles.typeContainer}>
-                {couponTypes.map((type) => (
-                  <TouchableOpacity
-                    key={type.id}
-                    onPress={() => setSelectedType(type.id)}
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: "#fff", paddingTop: insets.top }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0} // Adjust if header overlaps input
+    >
+      <Headerwithback title={"Create Coupon"} />
+      <FlatList
+        data={["form"]}
+        keyExtractor={(item, index) => index.toString()}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: insets.bottom + s(10) }}
+        ListHeaderComponent={
+          <>
+            {/* Coupon Types */}
+            <Text
+              style={{
+                color: "#727272",
+                fontWeight: "600",
+                marginHorizontal: 20,
+                marginVertical: 10,
+              }}
+            >
+              Types
+            </Text>
+            <View style={styles.typeContainer}>
+              {couponTypes.map((type) => (
+                <TouchableOpacity
+                  key={type.id}
+                  onPress={() => setSelectedType(type.id)}
+                  style={[
+                    styles.typeButton,
+                    selectedType === type.id && styles.typeButtonSelected,
+                  ]}
+                >
+                  <Text
                     style={[
-                      styles.typeButton,
-                      selectedType === type.id && styles.typeButtonSelected,
+                      styles.typeText,
+                      selectedType === type.id && styles.typeTextSelected,
                     ]}
                   >
-                    <Text
-                      style={[
-                        styles.typeText,
-                        selectedType === type.id && styles.typeTextSelected,
-                      ]}
-                    >
-                      {type.name}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </>
-          }
-          renderItem={() => renderForm()}
-        />
-        <Loading visible={isLoading} />
-      </KeyboardAvoidingView>
-    </MainContainer>
+                    {type.name}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        }
+        renderItem={() => renderForm()}
+      />
+      <Loading visible={isLoading} />
+    </KeyboardAvoidingView>
   );
 };
 
