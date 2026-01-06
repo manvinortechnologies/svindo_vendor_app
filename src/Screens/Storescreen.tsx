@@ -388,12 +388,7 @@ const Storescreen = ({ navigation }: any) => {
   }
 
   return (
-    <View
-      style={[
-        styles.container,
-        { paddingTop: insets.top, paddingBottom: insets.bottom },
-      ]}
-    >
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <CustomHeader
         title="Store"
         titleStyle={{ textAlign: "left" }}

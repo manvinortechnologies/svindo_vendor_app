@@ -188,7 +188,6 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
     <KeyboardAwareScrollView
       contentContainerStyle={{
         flex: 1,
-        paddingTop: insets.top,
         paddingBottom: insets.bottom,
       }}
       style={styles.container}
@@ -199,7 +198,7 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
       >
         {/* Back Button */}
         <TouchableOpacity
-          style={styles.backButton}
+          style={[styles.backButton, { top: insets.top + s(20) }]}
           onPress={() => navigation.goBack()}
         >
           <Icon name="chevron-back" size={24} color="#fff" />

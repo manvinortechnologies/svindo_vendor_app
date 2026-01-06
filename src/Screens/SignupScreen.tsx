@@ -20,13 +20,15 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import Icon from "react-native-vector-icons/Ionicons";
-import { ScaledSheet } from "react-native-size-matters";
+import { s, ScaledSheet } from "react-native-size-matters";
 import { MaskedTextInput } from "react-native-mask-text";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const SignupScreen: FC<SignUpScreenProps> = () => {
   const navigation =
     useNavigation<NativeStackNavigationProp<THomeNavigation>>();
+  const insets = useSafeAreaInsets();
 
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [confirm, setConfirm] = useState<any>(null);
@@ -102,7 +104,7 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
       <ScrollView style={styles.container}>
         {/* Back Button */}
         <TouchableOpacity
-          style={styles.backButton}
+          style={[styles.backButton, { top: insets.top + s(20) }]}
           onPress={() => navigation.goBack()}
         >
           <Icon name="chevron-back" size={24} color="#fff" />

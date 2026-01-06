@@ -9,6 +9,9 @@ import {
   Platform,
   Linking,
   Alert,
+  Modal,
+  Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import CheckBox from "@react-native-community/checkbox";
@@ -16,17 +19,15 @@ import Headerwithback from "./Headerwithback";
 import api from "../services/api/api";
 import { useRoute } from "@react-navigation/native";
 import { API_ROUTES } from "../constants/api-routes.constants";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Loading from "../CommonComponent/Loading";
 import { ScaledSheet } from "react-native-size-matters";
 import moment from "moment";
 import RNFS from "react-native-fs";
 import Toast from "react-native-toast-message";
-import { StorageUtils } from "../utils/storage";
-import { APP_CONSTANTS } from "../constants/app.constants";
+import { Buffer } from "buffer";
+import Pdf from "react-native-pdf";
+import Share from "react-native-share";
 
 interface BillItem {
   id: number;
@@ -54,6 +55,9 @@ const BillDetails: React.FC = () => {
   const [billData, setBillData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isDownloadingPDF, setIsDownloadingPDF] = useState<boolean>(false);
+  const [showPdfModal, setShowPdfModal] = useState<boolean>(false);
+  const [pdfUri, setPdfUri] = useState<string | null>(null);
+  const [isLoadingPdf, setIsLoadingPdf] = useState<boolean>(false);
 
   useEffect(() => {
     (async () => {
@@ -208,7 +212,92 @@ const BillDetails: React.FC = () => {
     },
   ];
 
+  const downloadInvoiceFile = async (invoice: any) => {
+    try {
+      // Request PDF as arraybuffer (binary data)
+      const response = await api.get(
+        `${API_ROUTES.posSalesInvoice}?id=${invoice.id}`,
+        {
+          responseType: "arraybuffer",
+        }
+      );
+      const headers = (response.headers || {}) as Record<string, string>;
+      const contentType = headers["content-type"] || "application/pdf";
+      const extension = contentType.includes("pdf")
+        ? "pdf"
+        : contentType.includes("zip")
+        ? "zip"
+        : "bin";
+      const fileName = `${`invoice-${invoice.id}`}.${extension}`;
+      const filePath =
+        Platform.OS === "android"
+          ? `${RNFS.DownloadDirectoryPath}/${fileName}`
+          : `${RNFS.DocumentDirectoryPath}/${fileName}`;
+
+      // Convert ArrayBuffer to base64
+      let base64Data: string;
+
+      if (response.data instanceof ArrayBuffer) {
+        // Handle ArrayBuffer response (binary data)
+        const bytes = new Uint8Array(response.data);
+        let binary = "";
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        // Convert binary string to base64 using Buffer
+        base64Data = Buffer.from(binary, "binary").toString("base64");
+      } else if (typeof response.data === "string") {
+        // If response is a string (PDF content as text), convert to base64
+        // First, we need to treat it as binary string
+        base64Data = Buffer.from(response.data, "binary").toString("base64");
+      } else {
+        // Fallback: try to use Buffer directly
+        base64Data = Buffer.from(response.data, "binary").toString("base64");
+      }
+
+      await RNFS.writeFile(filePath, base64Data, "base64");
+      return { filePath, fileName };
+    } catch (error) {
+      console.error("Error downloading invoice:", error);
+      throw error;
+    }
+  };
+
   const handleViewPDF = async () => {
+    if (!params?.id) {
+      Alert.alert("Error", "Invoice ID not found");
+      return;
+    }
+
+    try {
+      setIsLoadingPdf(true);
+      setShowPdfModal(true);
+
+      const invoiceData = {
+        id: params.id,
+        invoice_number:
+          billData?.wholesale_invoice_details?.invoice_number ||
+          billData?.invoice_number,
+      };
+
+      const { filePath } = await downloadInvoiceFile(invoiceData);
+      const fileUrl = `file://${filePath}`;
+      setPdfUri(fileUrl);
+    } catch (error: any) {
+      console.error("Error loading PDF:", error);
+      setShowPdfModal(false);
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        "Failed to load PDF";
+      Alert.alert("Error", errorMessage);
+    } finally {
+      setIsLoadingPdf(false);
+    }
+  };
+
+  const handleShareWhatsApp = async () => {
     if (!params?.id) {
       Alert.alert("Error", "Invoice ID not found");
       return;
@@ -217,93 +306,43 @@ const BillDetails: React.FC = () => {
     try {
       setIsDownloadingPDF(true);
 
-      const apiUrl = `${APP_CONSTANTS.API_BASE_URL}${API_ROUTES.posSalesInvoice}?id=${params.id}`;
-      const token = StorageUtils.getAccessToken();
+      const invoiceData = {
+        id: params.id,
+        invoice_number:
+          billData?.wholesale_invoice_details?.invoice_number ||
+          billData?.invoice_number,
+      };
 
-      // Use axios with responseType: 'arraybuffer' to get binary data
-      const response = await api.get(apiUrl, {
-        responseType: "arraybuffer",
+      const { filePath, fileName } = await downloadInvoiceFile(invoiceData);
+      const fileUrl = `file://${filePath}`;
+
+      // Share via WhatsApp
+      await Share.shareSingle({
+        title: `Invoice ${invoiceData.invoice_number || invoiceData.id}`,
+        message: `Please find the invoice attached.`,
+        url: fileUrl,
+        social: Share.Social.WHATSAPP as any,
+        filename: fileName,
       });
-
-      // Convert ArrayBuffer to base64
-      const arrayBuffer = response.data;
-      const base64String = arrayBufferToBase64(arrayBuffer);
-
-      // Create filename with timestamp
-      const timestamp = moment().format("YYYYMMDD_HHmmss");
-      const invoiceNumber =
-        billData?.wholesale_invoice_details?.invoice_number ||
-        billData?.invoice_number ||
-        params.id;
-      const filename = `Invoice_${invoiceNumber}_${timestamp}.pdf`;
-
-      // Determine save path based on platform
-      const downloadPath =
-        Platform.OS === "ios"
-          ? `${RNFS.DocumentDirectoryPath}/${filename}`
-          : `${RNFS.DownloadDirectoryPath}/${filename}`;
-
-      // Write file to device
-      await RNFS.writeFile(downloadPath, base64String, "base64");
 
       Toast.show({
         type: "success",
         text1: "Success",
-        text2: `PDF downloaded successfully!`,
+        text2: "Invoice shared via WhatsApp!",
       });
-
-      // Try to open the PDF file
-      try {
-        const fileUrl = `file://${downloadPath}`;
-        const canOpen = await Linking.canOpenURL(fileUrl);
-        if (canOpen) {
-          await Linking.openURL(fileUrl);
-        }
-      } catch (openError) {
-        console.log("Could not open PDF automatically");
-      }
     } catch (error: any) {
-      console.error("Error downloading PDF:", error);
-      const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data?.error ||
-        error.message ||
-        "Failed to download PDF";
-      Alert.alert("Error", errorMessage);
+      console.error("Error sharing via WhatsApp:", error);
+      // If WhatsApp is not installed, show error
+      if (error.message?.includes("WhatsApp")) {
+        Alert.alert(
+          "WhatsApp not installed",
+          "Please install WhatsApp to share the invoice."
+        );
+      } else {
+        Alert.alert("Error", "Failed to share invoice via WhatsApp");
+      }
     } finally {
       setIsDownloadingPDF(false);
-    }
-  };
-
-  // Helper function to convert ArrayBuffer to base64
-  const arrayBufferToBase64 = (buffer: ArrayBuffer): string => {
-    const bytes = new Uint8Array(buffer);
-    let binary = "";
-    for (let i = 0; i < bytes.byteLength; i++) {
-      binary += String.fromCharCode(bytes[i]);
-    }
-    // Use btoa if available (React Native polyfill), otherwise use manual conversion
-    if (typeof btoa !== "undefined") {
-      return btoa(binary);
-    } else {
-      // Manual base64 encoding for React Native
-      const chars =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-      let result = "";
-      let i = 0;
-      while (i < binary.length) {
-        const a = binary.charCodeAt(i++);
-        const b = i < binary.length ? binary.charCodeAt(i++) : 0;
-        const c = i < binary.length ? binary.charCodeAt(i++) : 0;
-
-        const bitmap = (a << 16) | (b << 8) | c;
-        result += chars.charAt((bitmap >> 18) & 63);
-        result += chars.charAt((bitmap >> 12) & 63);
-        result +=
-          i - 2 < binary.length ? chars.charAt((bitmap >> 6) & 63) : "=";
-        result += i - 1 < binary.length ? chars.charAt(bitmap & 63) : "=";
-      }
-      return result;
     }
   };
 
@@ -538,15 +577,108 @@ const BillDetails: React.FC = () => {
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.button, { backgroundColor: "#92F1A0" }]}
+            style={[
+              styles.button,
+              { backgroundColor: "#92F1A0" },
+              isDownloadingPDF && { opacity: 0.6 },
+            ]}
+            onPress={async () => {
+              if (!params?.id) {
+                Alert.alert("Error", "Invoice ID not found");
+                return;
+              }
+
+              try {
+                setIsDownloadingPDF(true);
+
+                const invoiceData = {
+                  id: params.id,
+                  invoice_number:
+                    billData?.wholesale_invoice_details?.invoice_number ||
+                    billData?.invoice_number,
+                };
+
+                const { filePath, fileName } = await downloadInvoiceFile(
+                  invoiceData
+                );
+
+                Toast.show({
+                  type: "success",
+                  text1: "Success",
+                  text2: `PDF downloaded: ${fileName}`,
+                });
+              } catch (error: any) {
+                console.error("Error downloading PDF:", error);
+                const errorMessage =
+                  error.response?.data?.message ||
+                  error.response?.data?.error ||
+                  error.message ||
+                  "Failed to download PDF";
+                Alert.alert("Error", errorMessage);
+              } finally {
+                setIsDownloadingPDF(false);
+              }
+            }}
+            disabled={isDownloadingPDF}
           >
-            <Text style={styles.buttonText}>Download</Text>
+            <Text style={styles.buttonText}>
+              {isDownloadingPDF ? "Downloading..." : "Download"}
+            </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={{ margin: 5 }}>
+          <TouchableOpacity
+            style={[{ margin: 5 }, isDownloadingPDF && { opacity: 0.6 }]}
+            onPress={handleShareWhatsApp}
+            disabled={isDownloadingPDF}
+          >
             <Icon name="whatsapp" size={28} color="#25d366" />
           </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* PDF Viewer Modal */}
+      <Modal
+        visible={showPdfModal}
+        animationType="slide"
+        onRequestClose={() => setShowPdfModal(false)}
+      >
+        <View style={styles.pdfModalContainer}>
+          <View style={styles.pdfModalHeader}>
+            <Text style={styles.pdfModalTitle}>Invoice PDF</Text>
+            <TouchableOpacity
+              onPress={() => {
+                setShowPdfModal(false);
+                setPdfUri(null);
+              }}
+              style={styles.pdfCloseButton}
+            >
+              <Icon name="close" size={24} color="#000" />
+            </TouchableOpacity>
+          </View>
+          {isLoadingPdf ? (
+            <View style={styles.pdfLoadingContainer}>
+              <ActivityIndicator size="large" color="#FCA311" />
+              <Text style={styles.pdfLoadingText}>Loading PDF...</Text>
+            </View>
+          ) : pdfUri ? (
+            <Pdf
+              source={{ uri: pdfUri, cache: true }}
+              onLoadComplete={(numberOfPages) => {
+                console.log(`Number of pages: ${numberOfPages}`);
+                setIsLoadingPdf(false);
+              }}
+              onPageChanged={(page, numberOfPages) => {
+                console.log(`Current page: ${page}`);
+              }}
+              onError={(error) => {
+                console.error("PDF Error:", error);
+                Alert.alert("Error", "Failed to load PDF");
+                setShowPdfModal(false);
+              }}
+              style={styles.pdf}
+            />
+          ) : null}
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -750,5 +882,42 @@ const styles = ScaledSheet.create({
     color: "#000",
     fontWeight: "bold",
     fontSize: 16,
+  },
+  pdfModalContainer: {
+    flex: 1,
+    backgroundColor: "#fff",
+  },
+  pdfModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 15,
+    backgroundColor: "#fff",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+    paddingTop: Platform.OS === "ios" ? 50 : 15,
+  },
+  pdfModalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  pdfCloseButton: {
+    padding: 5,
+  },
+  pdfLoadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  pdfLoadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#666",
+  },
+  pdf: {
+    flex: 1,
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height,
   },
 });

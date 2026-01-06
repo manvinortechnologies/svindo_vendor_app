@@ -953,8 +953,8 @@ const StatisticsScreen = ({ navigation }: any) => {
           <Icon name="chevron-right" size={20} color="#000" />
         </TouchableOpacity>
 
-        {(dashboardData?.store_insights?.recent_visitors?.length > 0 ||
-          dashboardData?.store_insights?.recent_followers?.length > 0) && (
+        {(dashboardData?.store_insights?.store_visits_by_month?.length > 0 ||
+          dashboardData?.store_insights?.followers_by_month?.length > 0) && (
           <View style={styles.insightsContainer}>
             <Text style={styles.insightMainLabel}>Store Insights</Text>
             <View style={styles.insightCard}>
@@ -962,20 +962,16 @@ const StatisticsScreen = ({ navigation }: any) => {
                 <LineCharts
                   color="#FCA311"
                   data={
-                    dashboardData?.store_insights?.recent_visitors
-                      ? (() => {
-                          // Group visitors by date
-                          const groupedData = groupedByDate(
-                            dashboardData?.store_insights?.recent_followers
-                          );
-                          console.log(groupedData);
-                          return Object.keys(groupedData).map(
-                            (date: string) => ({
-                              value: groupedData[date].length,
-                              label: moment(date).format("MMM"),
-                            })
-                          );
-                        })()
+                    dashboardData?.store_insights?.followers_by_month
+                      ? dashboardData.store_insights.followers_by_month.map(
+                          (monthData: any) => ({
+                            value: monthData.count || 0,
+                            label: moment(
+                              monthData.month_key || monthData.month,
+                              "YYYY-MM"
+                            ).format("MMM"),
+                          })
+                        )
                       : []
                   }
                 />
@@ -990,18 +986,16 @@ const StatisticsScreen = ({ navigation }: any) => {
                 <LineCharts
                   color="#FCA311"
                   data={
-                    dashboardData?.followers_chart
-                      ? (() => {
-                          const groupedData = groupedByDate(
-                            dashboardData?.store_insights?.recent_visitors || []
-                          );
-                          return Object.keys(groupedData).map(
-                            (date: string) => ({
-                              value: groupedData[date].length,
-                              label: moment(date).format("MMM"),
-                            })
-                          );
-                        })()
+                    dashboardData?.store_insights?.store_visits_by_month
+                      ? dashboardData.store_insights.store_visits_by_month.map(
+                          (monthData: any) => ({
+                            value: monthData.count || 0,
+                            label: moment(
+                              monthData.month_key || monthData.month,
+                              "YYYY-MM"
+                            ).format("MMM"),
+                          })
+                        )
                       : []
                   }
                 />

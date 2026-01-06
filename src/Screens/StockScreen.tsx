@@ -602,6 +602,7 @@ const StockScreen = () => {
             data={getFilteredData()}
             numColumns={2}
             keyExtractor={(item) => item.id}
+            showsVerticalScrollIndicator={false}
             contentContainerStyle={[
               styles.productList,
               { paddingBottom: insets.bottom + s(100) },

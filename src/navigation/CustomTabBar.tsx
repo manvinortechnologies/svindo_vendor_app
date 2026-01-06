@@ -56,7 +56,7 @@ const CustomTabBar = ({
     <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       {/* Store Options Overlay */}
       {isStoreRelatedScreen && (
-        <View style={styles.bottomcontainer}>
+        <View style={[styles.bottomcontainer, { bottom: s(90) }]}>
           <TouchableOpacity
             style={styles.option}
             onPress={() => {
@@ -222,6 +222,10 @@ const styles = ScaledSheet.create({
     position: "relative",
   },
   bottomcontainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: "row",
     borderWidth: 1,
     borderColor: "#ddd",

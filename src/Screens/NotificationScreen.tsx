@@ -4,10 +4,8 @@ import {
   View,
   TouchableOpacity,
   FlatList,
-  ScrollView,
   Image,
   RefreshControl,
-  Alert,
 } from "react-native";
 import React, { useState, useEffect } from "react";
 import Icon from "react-native-vector-icons/Ionicons";
@@ -250,18 +248,14 @@ const NotificationScreen = ({ navigation }: any) => {
     (n) => !["chat", "order"].includes(n.type)
   );
 
-  if (isLoading && notifications.length === 0) {
-    return (
-      <View style={styles.container}>
-        <CustomHeader title="Notifications" />
-        <Loading visible={true} />
-      </View>
-    );
-  }
-
   if (error && notifications.length === 0) {
     return (
-      <View style={styles.container}>
+      <View
+        style={[
+          styles.container,
+          { paddingTop: insets.top, paddingBottom: insets.bottom },
+        ]}
+      >
         <CustomHeader title="Notifications" />
         <View style={styles.errorContainer}>
           <Icon name="alert-circle" size={48} color="#F44336" />
@@ -284,6 +278,7 @@ const NotificationScreen = ({ navigation }: any) => {
         { paddingTop: insets.top, paddingBottom: insets.bottom },
       ]}
     >
+      <Loading visible={isLoading} />
       {/* Header */}
       <CustomHeader
         title="Notifications"
@@ -319,76 +314,60 @@ const NotificationScreen = ({ navigation }: any) => {
         ))}
       </View>
 
-      <ScrollView
-        contentContainerStyle={{ paddingBottom: 30 }}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+      <FlatList
+        data={
+          activeTab === "Reminder"
+            ? reminders
+            : [...orders, ...moreNotifications]
         }
-      >
-        {/* Reminder Section */}
-        {activeTab === "Reminder" && (
-          <View style={styles.section}>
-            {reminders.length > 0 ? (
-              reminders.map((item) => (
-                <TouchableOpacity
-                  key={item.id}
-                  onPress={() => handleReminderPress(item)}
-                >
-                  <View style={styles.moreItem}>
-                    {/* Left Side */}
-                    <View style={styles.reminderCircle}>
-                      <Icon name="notifications" size={18} color="#fff" />
-                    </View>
+        keyExtractor={(item, index) => item.id?.toString() || index.toString()}
+        renderItem={({ item }) => {
+          // Render Reminder items
+          if (activeTab === "Reminder") {
+            return (
+              <TouchableOpacity
+                onPress={() => handleReminderPress(item)}
+                style={styles.listItemContainer}
+              >
+                <View style={styles.moreItem}>
+                  {/* Left Side */}
+                  <View style={styles.reminderCircle}>
+                    <Icon name="notifications" size={18} color="#fff" />
+                  </View>
 
-                    {/* Middle */}
-                    <View style={styles.moreMiddle}>
-                      <Text style={styles.moreTitle}>
-                        {item.reminder_type_display}
-                      </Text>
-                      <Text style={styles.moreMsg}>
-                        {item.title || item.message}
-                      </Text>
-                    </View>
-
-                    {/* Right Side */}
-                    <Text style={styles.moreTime}>
-                      {item.created_at
-                        ? new Date(item.created_at).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        : ""}
+                  {/* Middle */}
+                  <View style={styles.moreMiddle}>
+                    <Text style={styles.moreTitle}>
+                      {item.reminder_type_display}
+                    </Text>
+                    <Text style={styles.moreMsg}>
+                      {item.title || item.message}
                     </Text>
                   </View>
-                </TouchableOpacity>
-              ))
-            ) : (
-              <View style={styles.emptyContainer}>
-                <Icon name="notifications-outline" size={64} color="#ccc" />
-                <Text style={styles.emptyText}>No reminders yet</Text>
-              </View>
-            )}
-          </View>
-        )}
 
-        {/* Other Notifications Section */}
-        {activeTab === "Other" && (
-          <>
-            {/* Chats Section */}
-            {/* {chats.length > 0 && (
-          <View style={styles.section}>
-            <View style={styles.sectionHeader}>
-              <Text style={styles.sectionTitle}>Chats ({chats.length})</Text>
-              <TouchableOpacity style={{ flexDirection: "row", gap: 5 }}>
-                <Text style={styles.viewAll}>View All</Text>
-                <Icon name="chevron-forward" size={16} />
+                  {/* Right Side */}
+                  <Text style={styles.moreTime}>
+                    {item.created_at
+                      ? new Date(item.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                      : ""}
+                  </Text>
+                </View>
               </TouchableOpacity>
-            </View>
-            {chats.map((item) => (
+            );
+          }
+
+          // Render Order items
+          if (item.type === "order") {
+            return (
               <TouchableOpacity
-                key={item.id}
-                style={[styles.card, !item.isRead && styles.unreadCard]}
+                style={[
+                  styles.card,
+                  !item.isRead && styles.unreadCard,
+                  styles.listItemContainer,
+                ]}
                 onPress={() => handleNotificationPress(item)}
               >
                 <View style={styles.cardLeft}>
@@ -405,136 +384,120 @@ const NotificationScreen = ({ navigation }: any) => {
                 </View>
                 <View style={styles.cardRight}>
                   <Text style={styles.cardDate}>{item.date}</Text>
-                  <Text style={styles.cardDate}>{item.time}</Text>
+                  <Text style={styles.cardTime}>{item.time}</Text>
+                  {item.amount && (
+                    <Text style={styles.amount}>{item.amount}</Text>
+                  )}
                   {!item.isRead && <View style={styles.unreadDot} />}
                 </View>
               </TouchableOpacity>
-            ))}
-          </View>
-        )} */}
+            );
+          }
 
-            {/* Order Section */}
-            {orders.length > 0 && (
-              <View style={styles.section}>
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionTitle}>
-                    Orders ({orders.length})
-                  </Text>
-                  <TouchableOpacity style={{ flexDirection: "row", gap: 5 }}>
-                    <Text style={styles.viewAll}>View All</Text>
-                    <Icon name="chevron-forward" size={16} />
-                  </TouchableOpacity>
+          // Render More notifications items
+          return (
+            <TouchableOpacity
+              onPress={() => handleNotificationPress(item)}
+              style={styles.listItemContainer}
+            >
+              <View
+                style={[styles.moreItem, !item.isRead && styles.unreadMoreItem]}
+              >
+                {/* Left Side */}
+                {item.type === "reminder" ? (
+                  <View style={styles.reminderCircle}>
+                    <Icon
+                      name={getNotificationIcon(item.type)}
+                      size={18}
+                      color="#fff"
+                    />
+                  </View>
+                ) : (
+                  <View style={styles.iconContainer}>
+                    <Icon
+                      name={getNotificationIcon(item.type)}
+                      size={20}
+                      color={item.color || "#757575"}
+                    />
+                  </View>
+                )}
+
+                {/* Middle */}
+                <View style={styles.moreMiddle}>
+                  <Text style={styles.moreTitle}>{item.title}</Text>
+                  <Text style={styles.moreMsg}>{item.message}</Text>
                 </View>
-                {orders.map((item) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={[styles.card, !item.isRead && styles.unreadCard]}
-                    onPress={() => handleNotificationPress(item)}
-                  >
-                    <View style={styles.cardLeft}>
-                      <Image
-                        source={
-                          item.image ||
-                          require("../assets/product/storelogo.png")
-                        }
-                        style={{ width: 40, height: 40, borderRadius: 20 }}
-                      />
-                    </View>
-                    <View style={styles.cardMiddle}>
-                      <Text style={styles.cardTitle}>{item.title}</Text>
-                      <Text style={styles.cardMsg}>{item.message}</Text>
-                    </View>
-                    <View style={styles.cardRight}>
-                      <Text style={styles.cardDate}>{item.date}</Text>
-                      <Text style={styles.cardTime}>{item.time}</Text>
-                      {item.amount && (
-                        <Text style={styles.amount}>{item.amount}</Text>
-                      )}
-                      {!item.isRead && <View style={styles.unreadDot} />}
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            )}
 
-            {/* More Section */}
-            {moreNotifications.length > 0 && (
-              <View style={styles.section}>
+                <Text style={styles.moreTime}>{item.time}</Text>
+
+                {/* Right Side */}
+                <View style={styles.rightSide}>
+                  {!item.isRead && <View style={styles.unreadDot} />}
+                  {item.type !== "reminder" && item.color && (
+                    <View
+                      style={[
+                        styles.colorSquare,
+                        { backgroundColor: item.color },
+                      ]}
+                    />
+                  )}
+                </View>
+              </View>
+            </TouchableOpacity>
+          );
+        }}
+        ListHeaderComponent={() => {
+          if (activeTab === "Other" && orders.length > 0) {
+            return (
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>
+                  Orders ({orders.length})
+                </Text>
+                <TouchableOpacity style={{ flexDirection: "row", gap: 5 }}>
+                  <Text style={styles.viewAll}>View All</Text>
+                  <Icon name="chevron-forward" size={16} />
+                </TouchableOpacity>
+              </View>
+            );
+          }
+          if (activeTab === "Other" && moreNotifications.length > 0) {
+            return (
+              <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>
                   More ({moreNotifications.length})
                 </Text>
-                <FlatList
-                  data={moreNotifications}
-                  keyExtractor={(item) => item.id}
-                  renderItem={({ item }) => (
-                    <TouchableOpacity
-                      onPress={() => handleNotificationPress(item)}
-                    >
-                      <View
-                        style={[
-                          styles.moreItem,
-                          !item.isRead && styles.unreadMoreItem,
-                        ]}
-                      >
-                        {/* Left Side */}
-                        {item.type === "reminder" ? (
-                          <View style={styles.reminderCircle}>
-                            <Icon
-                              name={getNotificationIcon(item.type)}
-                              size={18}
-                              color="#fff"
-                            />
-                          </View>
-                        ) : (
-                          <View style={styles.iconContainer}>
-                            <Icon
-                              name={getNotificationIcon(item.type)}
-                              size={20}
-                              color={item.color || "#757575"}
-                            />
-                          </View>
-                        )}
-
-                        {/* Middle */}
-                        <View style={styles.moreMiddle}>
-                          <Text style={styles.moreTitle}>{item.title}</Text>
-                          <Text style={styles.moreMsg}>{item.message}</Text>
-                        </View>
-
-                        <Text style={styles.moreTime}>{item.time}</Text>
-
-                        {/* Right Side */}
-                        <View style={styles.rightSide}>
-                          {!item.isRead && <View style={styles.unreadDot} />}
-                          {item.type !== "reminder" && item.color && (
-                            <View
-                              style={[
-                                styles.colorSquare,
-                                { backgroundColor: item.color },
-                              ]}
-                            />
-                          )}
-                        </View>
-                      </View>
-                    </TouchableOpacity>
-                  )}
-                />
               </View>
-            )}
-
-            {/* Empty State */}
-            {notifications.length === 0 && !isLoading && (
-              <View style={styles.emptyContainer}>
-                <Icon name="notifications-outline" size={64} color="#ccc" />
-                <Text style={styles.emptyText}>No notifications yet</Text>
+            );
+          }
+          return null;
+        }}
+        ListEmptyComponent={() => {
+          if (isLoading) return null;
+          return (
+            <View style={styles.emptyContainer}>
+              <Icon name="notifications-outline" size={64} color="#ccc" />
+              <Text style={styles.emptyText}>
+                {activeTab === "Reminder"
+                  ? "No reminders yet"
+                  : "No notifications yet"}
+              </Text>
+              {activeTab === "Other" && (
                 <Text style={styles.emptySubText}>
                   You'll see notifications here when you receive them
                 </Text>
-              </View>
-            )}
-          </>
-        )}
-      </ScrollView>
+              )}
+            </View>
+          );
+        }}
+        contentContainerStyle={{
+          paddingBottom: 30,
+          paddingHorizontal: 15,
+        }}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      />
     </View>
   );
 };
@@ -557,6 +520,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginBottom: 8,
+    marginTop: 15,
   },
   sectionTitle: { fontSize: 16, fontWeight: "bold" },
   viewAll: {
@@ -680,11 +644,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   emptyContainer: {
-    flex: 1,
     justifyContent: "center",
     alignItems: "center",
     padding: 40,
-    marginTop: 50,
+    marginTop: 100,
+    minHeight: 300,
   },
   emptyText: {
     fontSize: 18,
@@ -722,5 +686,10 @@ const styles = StyleSheet.create({
   activeTabText: {
     color: "#FCA311",
     fontWeight: "600",
+  },
+  listItemContainer: {
+    marginBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
   },
 });

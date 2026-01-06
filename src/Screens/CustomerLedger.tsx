@@ -76,6 +76,10 @@ const CustomerLedger = ({ navigation, route }: any) => {
   const [isFiltered, setIsFiltered] = useState<boolean>(false);
   const [calendarModel, setCalendarModel] = useState<string>("");
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<LedgerTransaction | null>(null);
+  const [showTransactionModal, setShowTransactionModal] =
+    useState<boolean>(false);
 
   const customerId = route?.params?.customer?.id;
 
@@ -469,12 +473,17 @@ const CustomerLedger = ({ navigation, route }: any) => {
               <Text style={styles.dateText}>Date {section.date}</Text>
 
               {section.transactions.map((txn, i) => (
-                <View
+                <TouchableOpacity
                   key={i}
                   style={[
                     styles.transactionRow,
                     { backgroundColor: i % 2 === 0 ? "#fff8f0" : "#fff" },
                   ]}
+                  onPress={() => {
+                    setSelectedTransaction(txn);
+                    setShowTransactionModal(true);
+                  }}
+                  activeOpacity={0.7}
                 >
                   {/* {txn.type === "invoice" ? (
                     <>
@@ -523,7 +532,7 @@ const CustomerLedger = ({ navigation, route }: any) => {
                     </Text>
                   </>
                   {/* )} */}
-                </View>
+                </TouchableOpacity>
               ))}
             </View>
           )
@@ -628,6 +637,130 @@ const CustomerLedger = ({ navigation, route }: any) => {
                   <Text style={styles.applyButtonText}>Apply Filter</Text>
                 </TouchableOpacity>
               </View>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Transaction Details Modal */}
+      <Modal
+        visible={showTransactionModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowTransactionModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.transactionModalContainer}>
+            <View style={styles.transactionModalHeader}>
+              <Text style={styles.transactionModalTitle}>
+                Transaction Details
+              </Text>
+              <TouchableOpacity
+                onPress={() => setShowTransactionModal(false)}
+                style={styles.transactionCloseButton}
+              >
+                <Icon name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.transactionModalContent}>
+              {selectedTransaction && (
+                <>
+                  <View style={styles.transactionDetailRow}>
+                    <Text style={styles.transactionDetailLabel}>
+                      Transaction ID
+                    </Text>
+                    <Text style={styles.transactionDetailValue}>
+                      {selectedTransaction.id}
+                    </Text>
+                  </View>
+
+                  <View style={styles.transactionDetailRow}>
+                    <Text style={styles.transactionDetailLabel}>Type</Text>
+                    <Text style={styles.transactionDetailValue}>
+                      {selectedTransaction.type === "invoice"
+                        ? "Invoice"
+                        : "Payment"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.transactionDetailRow}>
+                    <Text style={styles.transactionDetailLabel}>Medium</Text>
+                    <Text style={styles.transactionDetailValue}>
+                      {selectedTransaction.medium || "N/A"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.transactionDetailRow}>
+                    <Text style={styles.transactionDetailLabel}>Date</Text>
+                    <Text style={styles.transactionDetailValue}>
+                      {selectedTransaction.date}
+                    </Text>
+                  </View>
+
+                  {selectedTransaction.type === "invoice" ? (
+                    <>
+                      <View style={styles.transactionDetailRow}>
+                        <Text style={styles.transactionDetailLabel}>
+                          Amount
+                        </Text>
+                        <Text style={styles.transactionDetailValue}>
+                          ₹{selectedTransaction.amount?.toFixed(2) || "0.00"}
+                        </Text>
+                      </View>
+                      <View style={styles.transactionDetailRow}>
+                        <Text style={styles.transactionDetailLabel}>Paid</Text>
+                        <Text style={styles.transactionDetailValue}>
+                          ₹{selectedTransaction.paid.toFixed(2)}
+                        </Text>
+                      </View>
+                    </>
+                  ) : (
+                    <View style={styles.transactionDetailRow}>
+                      <Text style={styles.transactionDetailLabel}>Amount</Text>
+                      <Text
+                        style={[
+                          styles.transactionDetailValue,
+                          {
+                            color:
+                              (selectedTransaction.amount || 0) < 0
+                                ? "red"
+                                : "green",
+                          },
+                        ]}
+                      >
+                        ₹{Math.abs(selectedTransaction.balance).toFixed(2)}
+                      </Text>
+                    </View>
+                  )}
+
+                  <View style={styles.transactionDetailRow}>
+                    <Text style={styles.transactionDetailLabel}>Balance</Text>
+                    <Text
+                      style={[
+                        styles.transactionDetailValue,
+                        {
+                          color:
+                            (selectedTransaction.amount || 0) < 0
+                              ? "red"
+                              : "green",
+                        },
+                      ]}
+                    >
+                      ₹{(selectedTransaction.amount || 0).toFixed(2)}
+                    </Text>
+                  </View>
+                </>
+              )}
+            </ScrollView>
+
+            <View style={styles.transactionModalFooter}>
+              <TouchableOpacity
+                style={styles.transactionModalButton}
+                onPress={() => setShowTransactionModal(false)}
+              >
+                <Text style={styles.transactionModalButtonText}>Close</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -987,5 +1120,75 @@ const styles = StyleSheet.create({
   },
   deleteButtonIcon: {
     marginRight: 8,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  transactionModalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    width: "90%",
+    maxWidth: 400,
+    maxHeight: "80%",
+  },
+  transactionModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  transactionModalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  transactionCloseButton: {
+    padding: 4,
+  },
+  transactionModalContent: {
+    padding: 20,
+    maxHeight: 400,
+  },
+  transactionDetailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  transactionDetailLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#666",
+    flex: 1,
+  },
+  transactionDetailValue: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#000",
+    flex: 1,
+    textAlign: "right",
+  },
+  transactionModalFooter: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#E0E0E0",
+  },
+  transactionModalButton: {
+    backgroundColor: "#FCA311",
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  transactionModalButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

@@ -203,20 +203,20 @@ const SmsScreen = () => {
         {/* Templates */}
         <View style={styles.templatesBox}>
           <Text style={styles.templatesTitle}>SMS templates used</Text>
-        </View>
-        <View style={styles.templateItem}>
-          <Image
-            source={require("../assets/SMSTemplate1.jpeg")}
-            style={styles.templateImage}
-            resizeMode="cover"
-          />
-        </View>
-        <View style={styles.templateItem}>
-          <Image
-            source={require("../assets/SMSTemplate2.jpeg")}
-            style={styles.templateImage}
-            resizeMode="cover"
-          />
+          <View style={styles.templateItem}>
+            <Image
+              source={require("../assets/SMSTemplate1.png")}
+              style={styles.templateImage}
+              resizeMode="contain"
+            />
+          </View>
+          <View style={styles.templateItem}>
+            <Image
+              source={require("../assets/SMSTemplate2.png")}
+              style={styles.templateImage}
+              resizeMode="contain"
+            />
+          </View>
         </View>
       </ScrollView>
 
@@ -326,16 +326,16 @@ const styles = ScaledSheet.create({
     borderColor: "#ddd",
     borderRadius: 8,
     padding: 12,
-    height: 80,
     marginBottom: 20,
   },
   templatesTitle: {
     fontSize: 14,
     fontWeight: "600",
     color: "#000",
+    marginBottom: 10,
   },
   templateItem: {
-    width: "350@s",
+    width: "100%",
     height: "150@s",
     borderRadius: 8,
     overflow: "hidden",
