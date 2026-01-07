@@ -997,16 +997,10 @@ const Storescreen = ({ navigation }: any) => {
                       onPress={() => handleVideoPress(video)}
                       activeOpacity={0.8}
                     >
-                      <Icon
-                        name="video-outline"
-                        size={s(150)}
-                        color="#FCA311"
-                      />
-                      <Icon
-                        name="play-circle-outline"
-                        size={s(40)}
-                        color="#FCA311"
-                        style={styles.playIcon}
+                      <Image
+                        source={require("../assets/reelThumbnail.jpeg")}
+                        style={styles.videoImage}
+                        resizeMode="cover"
                       />
                       <TouchableOpacity
                         style={[

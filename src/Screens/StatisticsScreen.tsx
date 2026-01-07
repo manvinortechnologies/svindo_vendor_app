@@ -11,6 +11,7 @@ import {
   Modal,
   ActivityIndicator,
   RefreshControl,
+  FlatList,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Icons from "react-native-vector-icons/Ionicons";
@@ -1013,11 +1014,13 @@ const StatisticsScreen = ({ navigation }: any) => {
             (category) =>
               getFilteredProducts(category)?.length > 0 && (
                 <View key={category} style={styles.categoryContainer}>
-                  <View style={styles.productRow}>
-                    {getFilteredProducts(category).map((product) => (
-                      <View key={product.id} style={styles.productCard}>
+                  <FlatList
+                    data={getFilteredProducts(category)}
+                    numColumns={3}
+                    renderItem={({ item }) => (
+                      <View key={item.id} style={styles.productCard}>
                         <Image
-                          source={product.image}
+                          source={item.image}
                           style={styles.productImage}
                         />
                         <View style={styles.productDetails}>
@@ -1027,24 +1030,27 @@ const StatisticsScreen = ({ navigation }: any) => {
                               numberOfLines={1}
                               ellipsizeMode="tail"
                             >
-                              {product.name}
+                              {item.name}
                             </Text>
-                            {product.description && (
+                            {item.description && (
                               <Text
                                 style={styles.productDescription}
                                 numberOfLines={1}
                               >
-                                {product.description.slice(0, 15)}
+                                {item.description.slice(0, 15)}
                               </Text>
                             )}
                           </View>
                           <Text style={styles.productPrice}>
-                            Rs {product.price}
+                            Rs {item.price}
                           </Text>
                         </View>
                       </View>
-                    ))}
-                  </View>
+                    )}
+                    keyExtractor={(item) => item.id}
+                    contentContainerStyle={styles.productRow}
+                  />
+
                   <View style={styles.categoryTitlesection}>
                     <Text style={styles.categoryTitle}>
                       {category} Products
@@ -1287,7 +1293,7 @@ const styles = ScaledSheet.create({
     flex: 1,
   },
   chartPlaceholder: {
-    height: "180@vs",
+    height: "190@vs",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "#fff",
@@ -1414,9 +1420,9 @@ const styles = ScaledSheet.create({
     color: "#FCA311",
   },
   productRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    flexWrap: "wrap",
+    // flexDirection: "row",
+    // justifyContent: "space-between",
+    // flexWrap: "wrap",
   },
   productcontainer: {},
   categoryContainer: {
@@ -1432,7 +1438,8 @@ const styles = ScaledSheet.create({
     padding: 10,
   },
   productCard: {
-    width: screenWidth / 3 - 10,
+    width: "30%",
+    marginHorizontal: "1.5%",
     backgroundColor: "#fff",
     borderRadius: 10,
     padding: 10,

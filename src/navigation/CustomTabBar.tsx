@@ -56,7 +56,9 @@ const CustomTabBar = ({
     <View style={[styles.container, { paddingBottom: insets.bottom }]}>
       {/* Store Options Overlay */}
       {isStoreRelatedScreen && (
-        <View style={[styles.bottomcontainer, { bottom: s(90) }]}>
+        <View
+          style={[styles.bottomcontainer, { bottom: insets.bottom + s(50) }]}
+        >
           <TouchableOpacity
             style={styles.option}
             onPress={() => {
