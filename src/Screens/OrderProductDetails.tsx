@@ -863,7 +863,9 @@ const OrderProductDetails = ({ navigation }: any) => {
                   id: db.id,
                 }))}
                 onSelect={(value) => setSelectedDeliveryBoy(value)}
-                selectedValue={selectedDeliveryBoy ? selectedDeliveryBoy : ""}
+                selectedValue={
+                  selectedDeliveryBoy ? selectedDeliveryBoy?.id : ""
+                }
               />
               {selectedDeliveryBoy && (
                 <TouchableOpacity

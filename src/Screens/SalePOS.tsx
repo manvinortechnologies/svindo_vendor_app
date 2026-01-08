@@ -913,7 +913,7 @@ const SalePOS = () => {
                   <CustomDropdown
                     onSelect={setSelectedBank}
                     placeholder="Select Bank"
-                    selectedValue={selectedBank || null}
+                    selectedValue={selectedBank?.id || null}
                     options={bankList}
                     dropDownBoxStyle={{ marginTop: 10 }}
                   />
@@ -944,7 +944,7 @@ const SalePOS = () => {
               <CustomDropdown
                 onSelect={setSelectedBank}
                 placeholder="Select Bank"
-                selectedValue={selectedBank || null}
+                selectedValue={selectedBank?.id || null}
                 options={bankList}
                 dropDownBoxStyle={{ marginTop: 10 }}
               />

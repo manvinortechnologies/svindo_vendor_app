@@ -65,6 +65,10 @@ const CreatePurchase = ({ navigation }: any) => {
   const [isVendorModalVisible, setIsVendorModalVisible] = useState(false);
   const [isPurchasePlanModalVisible, setIsPurchasePlanModalVisible] =
     useState(false);
+  const [
+    isPurchasePriceWarningModalVisible,
+    setIsPurchasePriceWarningModalVisible,
+  ] = useState(false);
   const [editingProductIndex, setEditingProductIndex] = useState<number | null>(
     null
   );
@@ -788,22 +792,33 @@ const CreatePurchase = ({ navigation }: any) => {
                       onChangeText={(text) => {
                         const newQuantity = parseInt(text) || 0;
                         if (newQuantity >= 0) {
+                          const stock = Number(item?.stock_cached ?? 0);
+                          const trackStock = item?.track_stock !== false;
+                          const boundedQty =
+                            trackStock && stock > 0
+                              ? Math.min(newQuantity, stock)
+                              : newQuantity;
                           const updatedProducts = [...selectedProducts];
-                          if (newQuantity === 0) {
-                            // Remove item if quantity is 0
-                            updatedProducts.splice(index, 1);
-                          } else {
-                            // Update quantity
-                            updatedProducts[index] = {
-                              ...item,
-                              quantity: newQuantity,
-                            };
-                          }
+
+                          // Update quantity
+                          updatedProducts[index] = {
+                            ...item,
+                            quantity: boundedQty,
+                          };
+                          setSelectedProducts(updatedProducts);
+                        }
+                      }}
+                      onBlur={() => {
+                        const updatedProducts = [...selectedProducts];
+                        if (item.quantity === 0) {
+                          updatedProducts.splice(index, 1);
                           setSelectedProducts(updatedProducts);
                         }
                       }}
                       keyboardType="numeric"
                       selectTextOnFocus
+                      submitBehavior="submit"
+                      returnKeyType="done"
                     />
                     <TouchableOpacity
                       style={{
@@ -812,8 +827,12 @@ const CreatePurchase = ({ navigation }: any) => {
                         opacity: (item?.purchase_price || 0) === 0 ? 1 : 0.5,
                       }}
                       onPress={() => {
-                        // Only allow editing if purchase_price is 0
-                        if ((item?.purchase_price || 0) === 0) {
+                        // Check if purchase price already exists (not 0)
+                        if (item?.purchase_price) {
+                          // Show warning modal
+                          setIsPurchasePriceWarningModalVisible(true);
+                        } else {
+                          // Allow editing if purchase_price is 0
                           setEditingProductIndex(index);
                           setEditProductPrice(
                             (item?.purchase_price || 0).toString()
@@ -821,7 +840,6 @@ const CreatePurchase = ({ navigation }: any) => {
                           setIsPurchasePlanModalVisible(true);
                         }
                       }}
-                      disabled={(item?.purchase_price || 0) !== 0}
                     >
                       <Text style={styles.tableText}>
                         {formatNumber(Number(item?.purchase_price || 0))}
@@ -1184,7 +1202,7 @@ const CreatePurchase = ({ navigation }: any) => {
                       <CustomDropdown
                         onSelect={setSelectedBank}
                         placeholder="Select Bank"
-                        selectedValue={selectedBank?.name || ""}
+                        selectedValue={selectedBank?.id || ""}
                         options={bankList}
                         dropDownBoxStyle={{ marginTop: 10 }}
                       />
@@ -1226,7 +1244,7 @@ const CreatePurchase = ({ navigation }: any) => {
                 <CustomDropdown
                   onSelect={setSelectedBank}
                   placeholder="Select Bank"
-                  selectedValue={selectedBank?.name || ""}
+                  selectedValue={selectedBank?.id || ""}
                   options={bankList}
                   dropDownBoxStyle={{ marginTop: 10 }}
                 />
@@ -1363,6 +1381,31 @@ const CreatePurchase = ({ navigation }: any) => {
                       </View>
                     </>
                   )}
+              </View>
+            </CustomModal>
+
+            {/* Purchase Price Warning Modal */}
+            <CustomModal
+              visible={isPurchasePriceWarningModalVisible}
+              onClose={() => setIsPurchasePriceWarningModalVisible(false)}
+              title="Purchase Price Already Exists"
+            >
+              <View style={styles.warningModalContent}>
+                <Icon
+                  name="alert-circle"
+                  size={48}
+                  color="#FCA311"
+                  style={styles.warningIcon}
+                />
+                <Text style={styles.warningModalMessage}>
+                  Please add new product with new purchase price
+                </Text>
+                <TouchableOpacity
+                  style={styles.warningModalButton}
+                  onPress={() => setIsPurchasePriceWarningModalVisible(false)}
+                >
+                  <Text style={styles.warningModalButtonText}>OK</Text>
+                </TouchableOpacity>
               </View>
             </CustomModal>
           </ScrollView>
@@ -1705,5 +1748,32 @@ const styles = ScaledSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     marginVertical: 2,
+  },
+  warningModalContent: {
+    alignItems: "center",
+    padding: 20,
+  },
+  warningIcon: {
+    marginBottom: 15,
+  },
+  warningModalMessage: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  warningModalButton: {
+    backgroundColor: "#FCA311",
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  warningModalButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

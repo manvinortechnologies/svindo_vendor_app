@@ -11,6 +11,7 @@ import {
   TextInput,
   Dimensions,
   Image,
+  ScrollView,
 } from "react-native";
 import {
   SafeAreaView,
@@ -532,10 +533,10 @@ const PaymentsList = () => {
         visible={isModalVisible}
         title="Payment Details"
         onClose={handleCloseModal}
-        modalStyle={{ flex: 1 }}
+        modalStyle={{ flexGrow: 1 }}
       >
         {selectedPayment && (
-          <View style={styles.modalContent}>
+          <ScrollView contentContainerStyle={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalAmount}>
                 {selectedPayment.type === "received" ? "+" : "-"}₹
@@ -673,7 +674,7 @@ const PaymentsList = () => {
                 </Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </ScrollView>
         )}
       </CustomModal>
 
@@ -928,7 +929,7 @@ const styles = StyleSheet.create({
   },
   // Modal styles
   modalContent: {
-    flex: 1,
+    flexGrow: 1,
   },
   modalHeader: {
     alignItems: "center",

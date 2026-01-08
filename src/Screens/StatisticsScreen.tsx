@@ -24,7 +24,6 @@ import { HomeNavigation } from "../constants/app-routes.constants";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { s, ScaledSheet } from "react-native-size-matters";
-import CustomDropdown from "../CommonComponent/CustomDropdown";
 import api from "../services/api/api";
 import { useIsFocused } from "@react-navigation/native";
 import { StorageUtils } from "../utils/storage";
@@ -842,7 +841,7 @@ const StatisticsScreen = ({ navigation }: any) => {
           <>
             <View style={styles.titleRow}>
               <Text style={styles.title}>Statistics</Text>
-              <CustomDropdown
+              {/* <CustomDropdown
                 placeholder="Select Filter"
                 options={filters.map((filter) => ({
                   name: filter,
@@ -852,7 +851,7 @@ const StatisticsScreen = ({ navigation }: any) => {
                 selectedValue={selectedFilter.id}
                 styles={{ width: s(70), height: s(30), marginRight: 10 }}
                 isSearchable={false}
-              />
+              /> */}
             </View>
             <View style={styles.chartPlaceholder}>
               <GroupedBars

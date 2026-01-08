@@ -100,8 +100,8 @@ const VendorLedger = ({ navigation, route }: any) => {
 
         // Update vendor info from API response
         setVendorInfo({
-          name: route?.params?.vendor?.name || "Vendor Name",
-          phone: route?.params?.vendor?.contact || "+91 9999999999",
+          name: route?.params?.vendor?.name || "",
+          phone: route?.params?.vendor?.contact || "",
           outstanding: creditBalance || route?.params?.vendor?.balance || 0,
           totalSale: totalSale,
           creditBalance: creditBalance || route?.params?.vendor?.balance || 0,
@@ -181,7 +181,7 @@ const VendorLedger = ({ navigation, route }: any) => {
   };
 
   const openWhatsApp = async () => {
-    const phoneNumber = vendorInfo.phone.replace(/\D/g, ""); // Remove non-digits
+    const phoneNumber = vendorInfo.phone; // Remove non-digits
     const message = "Hello! I need support with Svindo App.";
     const url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(
       message

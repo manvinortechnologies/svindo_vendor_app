@@ -376,7 +376,7 @@ const Expenses = ({ navigation }: any) => {
                     selectedBank
                       ? bankList.find(
                           (bank) => bank.id.toString() === selectedBank
-                        )?.id || ""
+                        )?.id
                       : ""
                   }
                   options={bankList}

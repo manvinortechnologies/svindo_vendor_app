@@ -472,7 +472,7 @@ const CreateRequestScreen = () => {
             placeholder="Select Category"
             options={categoryList}
             onSelect={handleCategorySelect}
-            selectedValue={selectedCategory || null}
+            selectedValue={selectedCategory?.id || null}
             dropDownBoxStyle={[
               styles.dropdownStyle,
               errors.category && styles.inputError,
@@ -488,7 +488,7 @@ const CreateRequestScreen = () => {
             placeholder="Select Sub-Category"
             options={subCategoryList}
             onSelect={handleSubCategorySelect}
-            selectedValue={selectedSubCategory || null}
+            selectedValue={selectedSubCategory?.id || null}
             dropDownBoxStyle={[
               styles.dropdownStyle,
               errors.subCategory && styles.inputError,

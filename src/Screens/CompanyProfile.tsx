@@ -552,7 +552,8 @@ const CompanyProfile = ({ navigation, route }: any) => {
               }
             }}
             selectedValue={
-              states.find((item) => item.id.toString() === form.state) || null
+              states.find((item) => item.id.toString() === form.state)?.id ||
+              null
             }
             dropDownBoxStyle={[
               styles.dropdown,

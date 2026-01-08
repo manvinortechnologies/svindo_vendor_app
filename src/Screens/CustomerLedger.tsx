@@ -516,7 +516,7 @@ const CustomerLedger = ({ navigation, route }: any) => {
                     <Text
                       style={[
                         styles.txnValue,
-                        { color: txn.balance < 0 ? "red" : "green" },
+                        { color: txn.balance > 0 ? "red" : "green" },
                       ]}
                     >
                       {Math.abs(txn.balance).toFixed(2)}
