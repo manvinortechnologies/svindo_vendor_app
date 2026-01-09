@@ -87,6 +87,7 @@ interface Order {
 
 const OrderProductDetails = ({ navigation }: any) => {
   const swipeableRef = useRef<Swipeable | null>(null);
+  const readyToShipmentRef = useRef<Swipeable | null>(null);
   const route = useRoute();
   const { orderId } = route.params as OrderProductDetailsRouteParams;
   const insets = useSafeAreaInsets();
@@ -204,8 +205,42 @@ const OrderProductDetails = ({ navigation }: any) => {
       });
       setOrder(response.data);
       setLoading(false);
-    } catch (error) {
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Order accepted successfully",
+      });
+    } catch (error: any) {
       console.error("Failed to update order:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.response?.data?.message || "Failed to accept order",
+      });
+      setLoading(false);
+    }
+  };
+
+  const handleReadyToShipment = async () => {
+    try {
+      setLoading(true);
+      const response = await api.patch(`${API_ROUTES.orders}${orderId}/`, {
+        status: "ready_to_shipment",
+      });
+      setOrder(response.data);
+      setLoading(false);
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Order marked as ready to shipment",
+      });
+    } catch (error: any) {
+      console.error("Failed to update order status:", error);
+      Toast.show({
+        type: "error",
+        text1: "Error",
+        text2: error.response?.data?.message || "Failed to update order status",
+      });
       setLoading(false);
     }
   };
@@ -258,8 +293,8 @@ const OrderProductDetails = ({ navigation }: any) => {
     // Determine next status based on current status
     let newStatus: string;
     if (currentStatus === "pending" || !currentStatus) {
-      newStatus = "ready_to_deliver";
-    } else if (currentStatus === "ready_to_deliver") {
+      newStatus = "ready_to_shipment";
+    } else if (currentStatus === "ready_to_shipment") {
       newStatus = "intransit";
     } else if (currentStatus === "intransit") {
       newStatus = "delivered";
@@ -630,58 +665,64 @@ const OrderProductDetails = ({ navigation }: any) => {
         )}
 
         {/* Tracking Link Section - Only for general_delivery */}
-        {order?.delivery_type === "general_delivery" && (
-          <View style={styles.trackingLinkContainer}>
-            {item.tracking_link && (
-              <View style={styles.existingTrackingLink}>
-                <Text style={styles.trackingLinkLabel}>Current Tracking:</Text>
-                <Text
-                  style={styles.trackingLinkValue}
-                  onPress={() => {
-                    if (item.tracking_link) {
-                      Linking.openURL(item.tracking_link);
-                    }
-                  }}
-                >
-                  {item.tracking_link}
-                </Text>
-              </View>
-            )}
-            <TextInput
-              placeholder="Enter Tracking Link"
-              placeholderTextColor="#ccc"
-              style={styles.trackingLinkInput}
-              value={trackingLinks[item.id] || ""}
-              onChangeText={(text) =>
-                setTrackingLinks((prev) => ({ ...prev, [item.id]: text }))
-              }
-            />
-            <TouchableOpacity
-              style={[
-                styles.trackingLinkButton,
-                (!trackingLinks[item.id] || !trackingLinks[item.id].trim()) &&
-                  styles.trackingLinkButtonDisabled,
-              ]}
-              onPress={() => handleUpdateTrackingLink(item.id)}
-              disabled={
-                updatingTrackingLink[item.id] ||
-                !trackingLinks[item.id] ||
-                !trackingLinks[item.id].trim()
-              }
-            >
-              {updatingTrackingLink[item.id] ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.trackingLinkButtonText}>
-                  {item.tracking_link ? "Update" : "Add"} Tracking Link
-                </Text>
+        {order?.delivery_type === "general_delivery" &&
+          item.status === "intransit" && (
+            <View style={styles.trackingLinkContainer}>
+              {item.tracking_link && (
+                <View style={styles.existingTrackingLink}>
+                  <Text style={styles.trackingLinkLabel}>
+                    Current Tracking:
+                  </Text>
+                  <Text
+                    style={styles.trackingLinkValue}
+                    onPress={() => {
+                      if (item.tracking_link) {
+                        Linking.openURL(item.tracking_link);
+                      }
+                    }}
+                  >
+                    {item.tracking_link}
+                  </Text>
+                </View>
               )}
-            </TouchableOpacity>
-          </View>
-        )}
+              <TextInput
+                placeholder="Enter Tracking Link"
+                placeholderTextColor="#ccc"
+                style={styles.trackingLinkInput}
+                value={trackingLinks[item.id] || ""}
+                onChangeText={(text) =>
+                  setTrackingLinks((prev) => ({ ...prev, [item.id]: text }))
+                }
+              />
+              <TouchableOpacity
+                style={[
+                  styles.trackingLinkButton,
+                  (!trackingLinks[item.id] || !trackingLinks[item.id].trim()) &&
+                    styles.trackingLinkButtonDisabled,
+                ]}
+                onPress={() => handleUpdateTrackingLink(item.id)}
+                disabled={
+                  updatingTrackingLink[item.id] ||
+                  !trackingLinks[item.id] ||
+                  !trackingLinks[item.id].trim()
+                }
+              >
+                {updatingTrackingLink[item.id] ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.trackingLinkButtonText}>
+                    {item.tracking_link ? "Update" : "Add"} Tracking Link
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
 
         {/* Status Button */}
-        {order.status === "accepted" &&
+        {((order.delivery_type !== "instant_delivery" &&
+          order.status === "accepted") ||
+          (order.delivery_type === "instant_delivery" &&
+            order.status === "ready_to_shipment")) &&
         item.status !== "delivered" &&
         item.status !== "returned/replaced_requested" ? (
           <View style={styles.statusContainer}>
@@ -698,11 +739,11 @@ const OrderProductDetails = ({ navigation }: any) => {
                 <Text style={styles.statusButtonText}>
                   {item.status === "intransit"
                     ? "Mark as Delivered"
-                    : item.status === "ready_to_deliver"
+                    : item.status === "ready_to_shipment"
                     ? "Mark as In Transit"
                     : item.status === "returned/replaced_approved"
                     ? "Complete Return/Exchange"
-                    : "Mark as Ready to Deliver"}
+                    : "Mark as Ready to Shipment"}
                 </Text>
               )}
             </TouchableOpacity>
@@ -999,10 +1040,40 @@ const OrderProductDetails = ({ navigation }: any) => {
       </ScrollView>
 
       {/* Accept Order - Swipeable */}
-      {
-        order.status === "not_accepted" && (
+      {order.status === "not_accepted" && (
+        <Swipeable
+          ref={swipeableRef}
+          containerStyle={[styles.swipeContainer, { bottom: insets.bottom }]}
+          friction={2}
+          enableTrackpadTwoFingerGesture
+          rightThreshold={60}
+          leftThreshold={60}
+          renderLeftActions={RightAction}
+          onSwipeableOpen={() => {
+            handleAcceptOrder("accepted");
+            swipeableRef.current?.close();
+          }}
+        >
+          <TouchableOpacity
+            style={styles.acceptBtn}
+            // onPress={() => navigation.navigate("ProductDetails")}
+          >
+            <View style={styles.swipeIndicator}>
+              <Icon name="arrow-forward-outline" size={20} color="#FF9800" />
+            </View>
+            <View style={styles.acceptTextContainer}>
+              <Text style={styles.acceptText}>Accept Order</Text>
+              <Text style={styles.acceptSub}>Swipe to change status</Text>
+            </View>
+          </TouchableOpacity>
+        </Swipeable>
+      )}
+
+      {/* Ready to Shipment - Swipeable (Only for instant orders after accepted) */}
+      {order.status === "accepted" &&
+        order.delivery_type === "instant_delivery" && (
           <Swipeable
-            ref={swipeableRef}
+            ref={readyToShipmentRef}
             containerStyle={[styles.swipeContainer, { bottom: insets.bottom }]}
             friction={2}
             enableTrackpadTwoFingerGesture
@@ -1010,41 +1081,21 @@ const OrderProductDetails = ({ navigation }: any) => {
             leftThreshold={60}
             renderLeftActions={RightAction}
             onSwipeableOpen={() => {
-              handleAcceptOrder("accepted");
-              swipeableRef.current?.close();
+              handleReadyToShipment();
+              readyToShipmentRef.current?.close();
             }}
           >
-            <TouchableOpacity
-              style={styles.acceptBtn}
-              // onPress={() => navigation.navigate("ProductDetails")}
-            >
+            <TouchableOpacity style={styles.acceptBtn}>
               <View style={styles.swipeIndicator}>
                 <Icon name="arrow-forward-outline" size={20} color="#FF9800" />
               </View>
               <View style={styles.acceptTextContainer}>
-                <Text style={styles.acceptText}>Accept Order</Text>
+                <Text style={styles.acceptText}>Ready to Shipment</Text>
                 <Text style={styles.acceptSub}>Swipe to change status</Text>
               </View>
             </TouchableOpacity>
           </Swipeable>
-        )
-        //  (
-        //   (order.delivery_type === "general_delivery" ||
-        //     order.delivery_type === "instant_delivery") &&
-        //   order.items.filter((item: OrderItem) => item.status === "delivered")
-        //     .length === order.items.length &&
-        //   order.status !== "completed" && (
-        //     <TouchableOpacity
-        //       style={styles.orderStatusBtn}
-        //       onPress={() => handleAcceptOrder("completed")}
-        //     >
-        //       <View style={styles.acceptTextContainer}>
-        //         <Text style={styles.acceptText}>Mark as Completed</Text>
-        //       </View>
-        //     </TouchableOpacity>
-        //   )
-        // )
-      }
+        )}
 
       {/* Confirmation Modal */}
       <Modal
@@ -1058,7 +1109,7 @@ const OrderProductDetails = ({ navigation }: any) => {
             <Text style={styles.modalTitle}>Confirm Status Update</Text>
             <Text style={styles.modalMessage}>
               Are you sure you want to change the status to{" "}
-              {pendingStatusUpdate?.newStatus === "ready_to_deliver"
+              {pendingStatusUpdate?.newStatus === "ready_to_shipment"
                 ? "Ready to Deliver"
                 : pendingStatusUpdate?.newStatus === "intransit"
                 ? "In Transit"

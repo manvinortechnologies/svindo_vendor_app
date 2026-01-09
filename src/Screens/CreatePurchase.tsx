@@ -44,6 +44,10 @@ interface Product {
   image: string;
   gst?: number | null;
   tax_inclusive?: boolean;
+  track_stock?: boolean;
+  stock?: number;
+  stock_cached?: number;
+  product_type?: string;
 }
 
 type RootStackParamList = {
@@ -473,6 +477,10 @@ const CreatePurchase = ({ navigation }: any) => {
             image: item.product_details?.image || "",
             gst: item.product_details?.gst || null,
             tax_inclusive: item.product_details?.tax_inclusive || false,
+            track_stock: item.product_details?.track_stock || false,
+            stock: item.product_details?.stock || 0,
+            stock_cached: item.product_details?.stock_cached || 0,
+            product_type: item.product_details?.product_type || "",
           })
         );
         setSelectedProducts(mappedProducts);

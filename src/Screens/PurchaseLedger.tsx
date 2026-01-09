@@ -34,6 +34,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 interface PurchaseItem {
   product: number;
+  product_name: string;
   quantity?: number;
   price?: number;
   amount?: number;
@@ -611,7 +612,7 @@ const PurchaseLedger = () => {
                       style={[styles.itemsTableText, { flex: 2 }]}
                       numberOfLines={2}
                     >
-                      {item.product_details?.name || `${item.product}`}
+                      {item.product_name || `${item.product}`}
                     </Text>
                     <Text style={styles.itemsTableText}>
                       {item.quantity || 0}

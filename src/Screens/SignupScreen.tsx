@@ -1,14 +1,11 @@
-import React, { FC, useEffect, useState } from "react";
+import React, { FC, useState } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   Image,
-  StyleSheet,
-  Modal,
   Platform,
-  PermissionsAndroid,
+  SafeAreaView,
   ScrollView,
   KeyboardAvoidingView,
 } from "react-native";
@@ -20,10 +17,11 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import Icon from "react-native-vector-icons/Ionicons";
-import { s, ScaledSheet } from "react-native-size-matters";
+import { s, ScaledSheet, vs } from "react-native-size-matters";
 import { MaskedTextInput } from "react-native-mask-text";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 
 const SignupScreen: FC<SignUpScreenProps> = () => {
   const navigation =
@@ -46,6 +44,7 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
     try {
       const sanitizedPhoneNumber = `+91${phoneNumber.replace(/\D/g, "")}`;
       console.log("sanitizedPhoneNumber-->", sanitizedPhoneNumber);
+      console.log("Firebase Auth instance:", auth().app.name);
 
       // Use the default auth instance - this ensures reCAPTCHA triggers on Android
       const confirmation = await auth().signInWithPhoneNumber(
@@ -60,9 +59,33 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
       });
       // Alert.alert('Verification code sent to your phone.');
     } catch (error: any) {
-      console.log("error-->", error);
+      console.log("Firebase Auth Error Details:", {
+        code: error.code,
+        message: error.message,
+        stack: error.stack,
+        nativeError: error.nativeErrorCode,
+      });
 
-      setError(error.message);
+      let errorMessage = error.message || "Authentication failed";
+
+      // Provide more specific error messages
+      if (error.code === "auth/app-not-authorized") {
+        errorMessage =
+          "App is not authorized. Please verify SHA fingerprints in Firebase Console.";
+      } else if (error.code === "auth/invalid-phone-number") {
+        errorMessage = "Invalid phone number format.";
+      } else if (error.code === "auth/too-many-requests") {
+        errorMessage = "Too many requests. Please try again later.";
+      } else if (error.code === "auth/captcha-check-failed") {
+        errorMessage = "reCAPTCHA verification failed. Please try again.";
+      }
+
+      Toast.show({
+        type: "error",
+        text1: "Authentication Error",
+        text2: errorMessage,
+      });
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -97,83 +120,86 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
   // }, []);
 
   return (
-    <KeyboardAwareScrollView
-      style={styles.container}
-      contentContainerStyle={{ flex: 1 }}
-    >
-      <ScrollView style={styles.container}>
-        {/* Back Button */}
-        <TouchableOpacity
-          style={[styles.backButton, { top: insets.top + s(20) }]}
-          onPress={() => navigation.goBack()}
+    <View style={styles.container}>
+      <Loading visible={loading} />
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1 }}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0} // Adjust offset if needed
         >
-          <Icon name="chevron-back" size={24} color="#fff" />
-        </TouchableOpacity>
-
-        {/* Logo & Title */}
-        <LinearGradient colors={["#F9C313", "#FCA511"]} style={styles.header}>
-          <Image
-            source={require("../assets/logo.png")} // Replace with your logo
-            style={styles.logo}
-          />
-          <Text style={styles.title}> Svindo</Text>
-          <Text style={styles.title}>Business</Text>
-          <Text style={styles.subtitle}>Window to Real Growth</Text>
-        </LinearGradient>
-
-        {/* Content Wrapper - Input & Button Centered */}
-        <View style={styles.contentWrapper}>
-          {/* Phone Number Input */}
-          <Text style={styles.headerText}>Login / Signup</Text>
-          <View style={styles.inputContainer}>
-            {/* <Text style={styles.countryCode}>+91</Text> */}
-            <Text style={styles.countryCode}>+91</Text>
-            <MaskedTextInput
-              mask="999-999-9999"
-              placeholder="999-999-9999"
-              placeholderTextColor="#ccc"
-              keyboardType="phone-pad"
-              onChangeText={setPhoneNumber}
-              value={phoneNumber}
-              style={styles.input}
-            />
-            {/* <TextInput
-            placeholder="Enter Phone Number"
-            keyboardType="phone-pad"
-            style={styles.input}
-            placeholderTextColor={"#909090"}
-            value={phoneNumber}
-            onChangeText={(text) => setPhoneNumber(text)}
-            maxLength={10}
-          /> */}
-          </View>
-
-          {/* Continue Button */}
-          <TouchableOpacity
-            onPress={handleContinue}
-            style={styles.continueButtonWrapper}
-            disabled={!phoneNumber}
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
           >
+            {/* Back Button */}
+            <TouchableOpacity
+              style={[styles.backButton, { top: insets.top + s(20) }]}
+              onPress={() => navigation.goBack()}
+            >
+              <Icon name="chevron-back" size={24} color="#fff" />
+            </TouchableOpacity>
+
+            {/* Logo & Title */}
             <LinearGradient
               colors={["#F9C313", "#FCA511"]}
-              style={styles.continueButtonGradient}
+              style={styles.header}
             >
-              <Text style={styles.continueText}>Continue</Text>
+              <Image
+                source={require("../assets/logo.png")}
+                style={styles.logo}
+              />
+              <Text style={styles.title}> Svindo</Text>
+              <Text style={styles.title}>Business</Text>
+              <Text style={styles.subtitle}>Window to Real Growth</Text>
             </LinearGradient>
-          </TouchableOpacity>
-        </View>
 
-        {/* Terms & Privacy - Pinned to Bottom */}
-        <View style={styles.footer}>
-          <Text style={styles.termsText}>
-            By continuing, you agree to our {"\n"}
-            <Text style={styles.linkText}>Terms of Service</Text> and{" "}
-            <Text style={styles.linkText}>Privacy Policy</Text>.
-          </Text>
-        </View>
-        <Loading visible={loading} />
-      </ScrollView>
-    </KeyboardAwareScrollView>
+            {/* Content Wrapper - Input & Button Centered */}
+            <View style={styles.contentWrapper}>
+              <Text style={styles.headerText}>Login / Signup</Text>
+              {/* Phone Number Input */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.countryCode}>+91</Text>
+                <MaskedTextInput
+                  mask="999-999-9999"
+                  placeholder="999-999-9999"
+                  placeholderTextColor="#ccc"
+                  keyboardType="phone-pad"
+                  onChangeText={(text) =>
+                    setPhoneNumber(text.replace(/[^0-9]/g, ""))
+                  }
+                  onSubmitEditing={handleContinue}
+                  value={phoneNumber}
+                  style={styles.input}
+                />
+              </View>
+
+              {/* Continue Button */}
+              <TouchableOpacity
+                onPress={handleContinue}
+                style={styles.continueButtonWrapper}
+                disabled={!phoneNumber}
+              >
+                <LinearGradient
+                  colors={["#F9C313", "#FCA511"]}
+                  style={styles.continueButtonGradient}
+                >
+                  <Text style={styles.continueText}>Continue</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+
+            {/* Terms & Privacy - Pinned to Bottom */}
+            <View style={styles.footer}>
+              <Text style={styles.termsText}>
+                By continuing, you agree to our {"\n"}
+                <Text style={styles.linkText}>Terms of Service</Text> and{" "}
+                <Text style={styles.linkText}>Privacy Policy</Text>.
+              </Text>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
   );
 };
 
@@ -237,15 +263,15 @@ const styles = ScaledSheet.create({
   },
   inputContainer: {
     flexDirection: "row",
-    // backgroundColor: "#FFF7DD",
+    backgroundColor: "#FFF7DD",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: 20,
-    // paddingHorizontal: 10,
-    // paddingVertical: 10,
+    borderRadius: "30@s",
+    paddingHorizontal: "10@s",
+    paddingVertical: "4@s",
     width: "90%",
     marginBottom: 20,
-    // borderWidth: 1,
+    borderWidth: 1,
     borderColor: "#FCA511",
   },
   countryCode: {
@@ -258,6 +284,7 @@ const styles = ScaledSheet.create({
     flex: 1,
     fontSize: "18@s",
     color: "#000",
+    letterSpacing: "3@s",
   },
   continueButtonWrapper: {
     width: "90%",
@@ -287,7 +314,7 @@ const styles = ScaledSheet.create({
   },
 
   contentWrapper: {
-    flex: 1,
+    // flex: 1,
     justifyContent: "center",
     alignItems: "center",
     width: "100%",
@@ -298,7 +325,11 @@ const styles = ScaledSheet.create({
     // bottom: "30@s",
     // width: "100%",
     alignItems: "center",
+    marginTop: "auto",
     marginBottom: "20@s",
+  },
+  scrollViewContent: {
+    flexGrow: 1,
   },
 });
 
