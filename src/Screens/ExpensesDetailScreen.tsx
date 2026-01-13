@@ -7,6 +7,8 @@ import {
   ScrollView,
   Switch,
   Image,
+  Modal,
+  Dimensions,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 import { ScaledSheet } from "react-native-size-matters";
@@ -17,6 +19,7 @@ import DeleteConfirmationModal from "../Modals/DeleteConfirmationModal";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { APP_CONSTANTS } from "../constants/app.constants";
 
 const ExpensesDetailScreen = () => {
   const navigation = useNavigation();
@@ -27,6 +30,8 @@ const ExpensesDetailScreen = () => {
   const [error, setError] = useState<string | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [imageUri, setImageUri] = useState<string | null>(null);
 
   useEffect(() => {
     if (routeExpenseData) {
@@ -215,16 +220,32 @@ const ExpensesDetailScreen = () => {
 
         {/* Attachments */}
         <Text style={styles.label}>Attachments</Text>
-        <View style={styles.attachmentBox}>
+
+        <TouchableOpacity
+          onPress={() => {
+            const uri = expenseData?.attachment?.includes("http")
+              ? expenseData.attachment
+              : `${APP_CONSTANTS.API_BASE_URL}${expenseData.attachment}`;
+            setImageUri(uri);
+            setShowImageModal(true);
+          }}
+          activeOpacity={0.8}
+          disabled={!expenseData?.attachment}
+          style={styles.attachmentBox}
+        >
           {expenseData?.attachment ? (
             <Image
               style={styles.attachmentImage}
-              source={{ uri: expenseData.attachment }}
+              source={{
+                uri: expenseData?.attachment?.includes("http")
+                  ? expenseData.attachment
+                  : `${APP_CONSTANTS.API_BASE_URL}${expenseData.attachment}`,
+              }}
             />
           ) : (
             <Text style={styles.noAttachmentText}>No attachment</Text>
           )}
-        </View>
+        </TouchableOpacity>
       </ScrollView>
 
       {/* Delete Confirmation Modal */}
@@ -236,6 +257,32 @@ const ExpensesDetailScreen = () => {
         message="Are you sure you want to delete this expense? This action cannot be undone."
         isLoading={isDeleting}
       />
+
+      {/* Image Modal */}
+      <Modal
+        visible={showImageModal}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setShowImageModal(false)}
+      >
+        <View style={styles.imageModalOverlay}>
+          <TouchableOpacity
+            style={[styles.imageModalCloseButton, { top: insets.top + 20 }]}
+            onPress={() => setShowImageModal(false)}
+          >
+            <Icon name="close" size={28} color="#fff" />
+          </TouchableOpacity>
+          <View style={styles.imageModalContent}>
+            {imageUri && (
+              <Image
+                source={{ uri: imageUri }}
+                style={styles.fullImage}
+                resizeMode="contain"
+              />
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -370,5 +417,34 @@ const styles = ScaledSheet.create({
     color: "#fff",
     fontWeight: "600",
     fontSize: "14@s",
+  },
+
+  // Image Modal styles
+  imageModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imageModalCloseButton: {
+    position: "absolute",
+    right: 20,
+    zIndex: 1000,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  imageModalContent: {
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  fullImage: {
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height,
   },
 });

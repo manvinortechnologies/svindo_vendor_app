@@ -15,14 +15,9 @@ import Loading from "../CommonComponent/Loading";
 import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import { useNotificationContext } from "../contexts/NotificationContext";
-import { useNotifications } from "../hooks/useNotifications";
-import { NotificationType } from "../services/notification-service";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Toast from "react-native-toast-message";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { s } from "react-native-size-matters";
 
 const { width } = Dimensions.get("window");
@@ -55,17 +50,8 @@ const ManageNotification = ({ navigation }: any) => {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { showError } = useNotificationContext();
-  const { sendNotification } = useNotifications();
   useEffect(() => {
     fetchNotifications();
-    // sendNotification({
-    //   title: "Manage Notification",
-    //   body: "Manage Notification",
-    //   type: NotificationType.GENERAL,
-    //   data: {
-    //     notification: "Manage Notification",
-    //   },
-    // });
   }, []);
 
   const fetchNotifications = async () => {

@@ -40,6 +40,7 @@ interface Product {
   desc: string;
   price: number;
   purchase_price?: number;
+  ogPurchasePrice?: number;
   quantity: number;
   image: string;
   gst?: number | null;
@@ -326,7 +327,12 @@ const CreatePurchase = ({ navigation }: any) => {
   // Handle selectedProducts and form data from ProductSelectionScreen
   useEffect(() => {
     if (route.params?.selectedProducts) {
-      setSelectedProducts(route.params.selectedProducts);
+      setSelectedProducts(
+        route.params.selectedProducts.map((p) => ({
+          ...p,
+          ogPurchasePrice: p.purchase_price,
+        }))
+      );
     }
 
     // Restore form data if coming back from ProductSelectionScreen
@@ -473,6 +479,7 @@ const CreatePurchase = ({ navigation }: any) => {
             desc: item.product_details?.desc || "",
             price: item.price || 0,
             purchase_price: item.price || 0,
+            ogPurchasePrice: item.price || 0,
             quantity: item.quantity || 1,
             image: item.product_details?.image || "",
             gst: item.product_details?.gst || null,
@@ -836,7 +843,7 @@ const CreatePurchase = ({ navigation }: any) => {
                       }}
                       onPress={() => {
                         // Check if purchase price already exists (not 0)
-                        if (item?.purchase_price) {
+                        if (item?.ogPurchasePrice) {
                           // Show warning modal
                           setIsPurchasePriceWarningModalVisible(true);
                         } else {
@@ -1350,7 +1357,7 @@ const CreatePurchase = ({ navigation }: any) => {
                         editable={
                           editingProductIndex !== null &&
                           (selectedProducts[editingProductIndex]
-                            ?.purchase_price || 0) === 0
+                            ?.ogPurchasePrice || 0) === 0
                         }
                       />
                       <View style={styles.editProductButtons}>

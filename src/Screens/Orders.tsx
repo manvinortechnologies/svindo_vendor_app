@@ -346,7 +346,7 @@ const Orders = ({ navigation }: any) => {
                   <Text style={styles.orderDetails}>
                     {getDiliveryType(item.delivery_type)}
                   </Text>
-                  <Text style={styles.orderAmount}>$ {item.total_amount}</Text>
+                  <Text style={styles.orderAmount}>₹ {item.total_amount}</Text>
                 </View>
               </View>
               <View style={styles.statusRow}>

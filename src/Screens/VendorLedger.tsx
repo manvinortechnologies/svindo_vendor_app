@@ -182,7 +182,7 @@ const VendorLedger = ({ navigation, route }: any) => {
 
   const openWhatsApp = async () => {
     const phoneNumber = vendorInfo.phone; // Remove non-digits
-    const message = "Hello! I need support with Svindo App.";
+    const message = "Hello!";
     const url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(
       message
     )}`;

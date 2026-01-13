@@ -8,6 +8,7 @@ import {
   Image,
   Alert,
   Linking,
+  Platform,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import Headerwithback from "./Headerwithback";
@@ -375,6 +376,29 @@ const CreateRequestScreen = () => {
     }
   };
 
+  const openPersonalUse = async () => {
+    const packageName = "in.webgrid.svindo"; // target app id
+
+    const intentUrl = `svindo://`;
+    const storeUrl = Platform.select({
+      android: `market://details?id=${packageName}`,
+      ios: `https://apps.apple.com/app/id${packageName}`,
+    });
+    try {
+      const canOpen = await Linking.canOpenURL(storeUrl || "");
+      if (canOpen) {
+        await Linking.openURL(intentUrl); // 🎯 App installed → open it
+      } else {
+        await Linking.openURL(storeUrl || ""); // 🛒 Not installed → Play Store
+      }
+    } catch (e) {
+      // Fallback in rare cases → open Play Store web link
+      await Linking.openURL(
+        `https://play.google.com/store/apps/details?id=${packageName}`
+      );
+    }
+  };
+
   return (
     <View
       style={[
@@ -432,15 +456,7 @@ const CreateRequestScreen = () => {
                 styles.typeButton,
                 selectedType === "Personal" && styles.typeButtonSelected,
               ]}
-              onPress={async () => {
-                const url = "https://svindo.com/store/";
-                const supported = await Linking.canOpenURL(url);
-                if (supported) {
-                  await Linking.openURL(url);
-                } else {
-                  Alert.alert("Error", "Unable to open the link");
-                }
-              }}
+              onPress={openPersonalUse}
             >
               <Text
                 style={[

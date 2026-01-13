@@ -53,7 +53,9 @@ const CreateCouponScreen = ({ navigation }: any) => {
   const [valiDate, setValidDate] = useState<string>(
     moment().format("YYYY-MM-DD")
   );
-  const [valiTime, setValidTime] = useState<string>(moment().format("HH:mm"));
+  const [valiTime, setValidTime] = useState<string>(
+    moment().add(5, "hours").format("HH:mm")
+  );
   const [startDate, setstartdDate] = useState<string>(
     moment().format("YYYY-MM-DD")
   );
@@ -101,7 +103,9 @@ const CreateCouponScreen = ({ navigation }: any) => {
       );
       formData.append("only_followers", onlyFollowers); // Booleans must be strings
       formData.append("is_active", isActive); // Same here
-      formData.append("customer_id", customerId || "");
+      if (customerIdEnabled) {
+        formData.append("customer_id", customer?.id || "");
+      }
 
       // If you have an image file to include:
       if (imageFile) {
@@ -522,7 +526,7 @@ const CreateCouponScreen = ({ navigation }: any) => {
       )}
       {endTimeCallModel && (
         <DateTimePicker
-          value={new Date()}
+          value={new Date(moment().add(5, "hours").toDate())}
           mode="time"
           is24Hour={false}
           display={Platform.OS === "ios" ? "spinner" : "default"}
