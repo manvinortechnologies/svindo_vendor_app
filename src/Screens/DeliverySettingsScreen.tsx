@@ -75,7 +75,6 @@ const DeliverySettingsScreen = () => {
         instant_min_base_fare: parseFloat(settings.baseFare || "0").toFixed(2),
       };
       const res = await api.post("vendor/deliverysettings/", payload);
-      console.log(res);
       Toast.show({
         type: "success",
         text1: "Success",

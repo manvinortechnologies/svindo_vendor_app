@@ -66,7 +66,6 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({
         includeBase64: false,
       });
 
-      console.log("ImageCropPicker response--->", result);
 
       // Validate that we have a valid path
       if (!result.path) {
@@ -96,8 +95,6 @@ const SignupDetailScreen: React.FC<SignUpDetailScreenProps> = ({
           "profile_image.jpg",
       });
     } catch (error: any) {
-      console.log("ImageCropPicker error--->", error);
-
       // Check if user cancelled
       if (error.code === "E_PICKER_CANCELLED") {
         return; // User cancelled, don't show error

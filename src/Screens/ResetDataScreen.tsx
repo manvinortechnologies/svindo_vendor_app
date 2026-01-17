@@ -64,7 +64,6 @@ const ResetDataScreen = () => {
       if (companyId) {
         try {
           await api.delete(`${API_ROUTES.companyProfle}/${companyId}/`);
-          console.log("Company profile deleted successfully");
         } catch (apiError) {
           console.error("Error deleting company profile:", apiError);
           // Continue with reset even if API call fails

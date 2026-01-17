@@ -47,8 +47,6 @@ const ProductAddedSuccess: React.FC<ProductAddedSuccessProps> = ({
       productId: payload.parent || payload.id,
     });
     // Navigate to add variant screen
-    console.log("Add Variant pressed");
-    console.log("payload--->", payload);
   };
 
   const handleContinue = async () => {

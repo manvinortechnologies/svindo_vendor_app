@@ -48,7 +48,6 @@ const AddDeliveryBoy = () => {
     try {
       setIsLoading(true);
       const res = await api.get(API_ROUTES.deliveryBoys);
-      console.log(res);
       setDeliveryBoys(res.data);
     } catch (error) {
       console.error("Error fetching delivery boys:", error);

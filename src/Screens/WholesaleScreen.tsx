@@ -158,7 +158,6 @@ export default function WholesaleScreen() {
       setIsLoading(true);
 
       const res = await api.post(API_ROUTES.posSales, data);
-      console.log(res);
       navigation.reset({
         index: 0,
         routes: [

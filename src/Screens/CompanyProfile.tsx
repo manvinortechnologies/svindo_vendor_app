@@ -75,12 +75,6 @@ const CompanyProfile = ({ navigation, route }: any) => {
         const response = await api.get("masters/get-state/");
         if (Array.isArray(response?.data)) {
           setStates(response.data);
-          console.log(
-            "response.data",
-            response.data
-              .find((item: any) => item.id.toString() === form.state)
-              ?.id.toString()
-          );
           setForm((prev) => ({
             ...prev,
             state:
@@ -175,7 +169,6 @@ const CompanyProfile = ({ navigation, route }: any) => {
       setImageFile({ uri: data.profile_image });
       setSignatureFile({ uri: data.signature });
     } catch (error) {
-      console.log("getProfileData error:", error);
       Toast.show({
         type: "error",
         text1: "Error",
@@ -236,7 +229,6 @@ const CompanyProfile = ({ navigation, route }: any) => {
       newErrors.companyName = "Company name is required";
     }
     if (!form.contact.trim()) {
-      console.log("form.contact", form.contact);
       newErrors.contact = "Contact number is required";
     } else if (form.contact.length !== 10) {
       newErrors.contact = "Contact number must be 10 digits";

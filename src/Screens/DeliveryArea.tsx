@@ -90,7 +90,6 @@ const DeliveryArea = () => {
 
         setSelectedPincodes(selectedIds);
         setInitialSelectedPincodes(selectedIds);
-        console.log("Fetched selected pincodes:", selectedIds);
       }
     } catch (error) {
       console.error("Error fetching selected pincodes:", error);
@@ -167,8 +166,6 @@ const DeliveryArea = () => {
       };
 
       const response = await api.post("/vendor/coverage/", payload);
-
-      console.log("Save pincodes response:", response.data);
 
       if (response.status === 200 || response.status === 201) {
         // Update initial selection after successful save

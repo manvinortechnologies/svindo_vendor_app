@@ -47,7 +47,6 @@ class NotificationService {
       try {
         const hasPermission = await this.requestPermission();
         if (!hasPermission) {
-          console.log("Notification permission denied or not available");
           // Continue without permission - don't crash
           return;
         }
@@ -61,7 +60,6 @@ class NotificationService {
       try {
         const token = await this.getToken();
         if (token) {
-          console.log("FCM Token:", token);
           // Send token to server
           await this.sendTokenToServer(token);
         }
@@ -193,14 +191,9 @@ class NotificationService {
         try {
           const hasPermission = await messaging().hasPermission();
           if (hasPermission === messaging.AuthorizationStatus.AUTHORIZED) {
-            console.log("Notification permission already granted");
             return true;
           }
         } catch (checkError: any) {
-          console.log(
-            "Could not check existing permission, will request:",
-            checkError
-          );
         }
       }
 
@@ -238,7 +231,6 @@ class NotificationService {
     try {
       // Check if Firebase messaging is available
       if (!messaging || !messaging().getToken) {
-        console.log("Firebase messaging not available for token");
         return null;
       }
 

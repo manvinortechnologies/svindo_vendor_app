@@ -16,10 +16,8 @@ class FirebaseMessagingService {
         authStatus === messaging.AuthorizationStatus.PROVISIONAL;
 
       if (enabled) {
-        console.log("Authorization status:", authStatus);
         return true;
       } else {
-        console.log("Permission denied");
         return false;
       }
     } catch (error) {
@@ -33,7 +31,6 @@ class FirebaseMessagingService {
     try {
       const token = await messaging().getToken();
       this.fcmToken = token;
-      console.log("FCM Token:", token);
 
       // Store token in storage for API calls
       StorageUtils.setFCMToken(token);
@@ -51,7 +48,6 @@ class FirebaseMessagingService {
       // Request permission
       const hasPermission = await this.requestPermission();
       if (!hasPermission) {
-        console.log("Notification permission denied");
         return;
       }
 
@@ -63,7 +59,6 @@ class FirebaseMessagingService {
 
       // Listen for token refresh
       messaging().onTokenRefresh(async (token) => {
-        console.log("FCM Token refreshed:", token);
         this.fcmToken = token;
         StorageUtils.setFCMToken(token);
         // Send updated token to server
@@ -72,7 +67,6 @@ class FirebaseMessagingService {
 
       // Handle background messages
       messaging().setBackgroundMessageHandler(async (remoteMessage) => {
-        console.log("Message handled in the background!", remoteMessage);
         // Handle background message here
       });
 
@@ -86,10 +80,6 @@ class FirebaseMessagingService {
 
       // Handle notification press when app is in background/closed
       messaging().onNotificationOpenedApp((remoteMessage) => {
-        console.log(
-          "Notification caused app to open from background state:",
-          remoteMessage
-        );
         this.handleNotificationPress(remoteMessage);
       });
 
@@ -98,10 +88,6 @@ class FirebaseMessagingService {
         .getInitialNotification()
         .then((remoteMessage) => {
           if (remoteMessage) {
-            console.log(
-              "Notification caused app to open from quit state:",
-              remoteMessage
-            );
             // this.handleNotificationPress(remoteMessage);
           }
         });
@@ -119,18 +105,14 @@ class FirebaseMessagingService {
       switch (data.type) {
         case "order":
           // Navigate to orders screen
-          console.log("Navigate to orders:", data.orderId);
           break;
         case "payment":
           // Navigate to payments screen
-          console.log("Navigate to payments:", data.paymentId);
           break;
         case "expense":
-          // Navigate to expenses screen
-          console.log("Navigate to expenses:", data.expenseId);
+          // Navigate to expenses screen  
           break;
         default:
-          console.log("Unknown notification type:", data.type);
       }
     }
   }
@@ -140,26 +122,20 @@ class FirebaseMessagingService {
     try {
       // Only send token if user is authenticated
       if (!StorageUtils.isAuthenticated()) {
-        console.log(
-          "User not authenticated, skipping device token registration"
-        );
         return;
       }
 
       const token = this.fcmToken || (await this.getToken());
       if (!token) {
-        console.log("No FCM token available");
         return;
       }
 
-      console.log("Sending FCM token to server:", token);
 
       // Send token to server with the correct payload format
       await api.post(API_ROUTES.registerDeviceToken, {
         token: token,
       });
 
-      console.log("FCM token sent to server successfully");
     } catch (error) {
       console.error("Error sending token to server:", error);
     }
@@ -169,7 +145,6 @@ class FirebaseMessagingService {
   async subscribeToTopic(topic: string): Promise<void> {
     try {
       await messaging().subscribeToTopic(topic);
-      console.log(`Subscribed to topic: ${topic}`);
     } catch (error) {
       console.error(`Error subscribing to topic ${topic}:`, error);
     }
@@ -179,7 +154,6 @@ class FirebaseMessagingService {
   async unsubscribeFromTopic(topic: string): Promise<void> {
     try {
       await messaging().unsubscribeFromTopic(topic);
-      console.log(`Unsubscribed from topic: ${topic}`);
     } catch (error) {
       console.error(`Error unsubscribing from topic ${topic}:`, error);
     }

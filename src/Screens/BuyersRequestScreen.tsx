@@ -779,7 +779,6 @@ const BuyersRequestScreen: React.FC = () => {
                         userId: item.userId,
                         otherUserId: item.seller_user_details.id,
                       });
-                      console.log("Buy now:", item.id);
                     } else if (selectedTab !== "Requested") {
                       // Sell now for other tabs
                       navigation.navigate(HomeNavigation.CREATEOFFER, {

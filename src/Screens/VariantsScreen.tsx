@@ -134,7 +134,6 @@ const VariantsScreen = () => {
 
   const handleVariantPress = (product: ProductVariant) => {
     // Handle variant press - could navigate to edit screen or show details
-    console.log("Variant pressed:", product);
     // You can add navigation logic here if needed
   };
 

@@ -126,7 +126,6 @@ const AddBannerScreen = ({ navigation }: any) => {
       if (boost) {
         formData.append("budget", amount || "0");
       }
-      console.log(imageFile, "imageFile");
       if (imageFile?.name) {
         formData.append("banner_image", {
           uri: imageFile.uri,

@@ -173,7 +173,6 @@ export default function RequestOffers() {
                   style={styles.sellButton}
                   onPress={() => {
                     // Buy now for offers
-                    console.log("Buy now:", item.id);
                   }}
                 >
                   <Text style={styles.sellButtonText}>Chat</Text>

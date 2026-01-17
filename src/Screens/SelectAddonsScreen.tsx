@@ -134,7 +134,6 @@ const SelectAddonsScreen = () => {
     const selectedAddonData = addons.filter((addon) =>
       selectedAddons.includes(addon.id)
     );
-    console.log("Selected addons:", selectedAddonData);
     // Navigate to next screen or handle selection
     navigation.goBack();
   };

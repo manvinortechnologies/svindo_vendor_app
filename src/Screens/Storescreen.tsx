@@ -346,7 +346,6 @@ const Storescreen = ({ navigation }: any) => {
     });
     try {
       const canOpen = await Linking.canOpenURL(storeUrl || "");
-      console.log("canOpen", canOpen);
       if (canOpen) {
         await Linking.openURL(intentUrl); // 🎯 App installed → open it
       } else {

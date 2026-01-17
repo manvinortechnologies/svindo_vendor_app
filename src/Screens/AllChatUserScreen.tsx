@@ -51,7 +51,6 @@ const AllChatUserScreen = () => {
       const response = await StorageUtils.getUserData();
       const initResponse = await api.post("/customer/stream/chatinit/");
       const token = initResponse?.data?.token;
-      // console.log("Token response:", response);
       setUserData({
         token: token,
         vendor_user_id: initResponse?.data?.user?.id.toString(),
@@ -89,12 +88,6 @@ const AllChatUserScreen = () => {
     const otherUser = Object.values(channel.state.members)
       .map((m: any) => m.user)
       .find((u: any) => u?.id !== userData.vendor_user_id);
-    console.log("otherUser", {
-      userId: userData.vendor_user_id,
-      token: userData.token,
-      channelId: channel.id, // Optional - will be determined in ChatScreenStream
-      otherUserId: otherUser?.id || "",
-    });
     navigation.navigate(HomeNavigation.CHAT_SCREEN_STREAM, {
       userId: userData.vendor_user_id,
       token: userData.token,

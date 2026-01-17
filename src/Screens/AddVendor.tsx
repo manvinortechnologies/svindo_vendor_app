@@ -85,7 +85,6 @@ const AddVendor = ({ navigation }: any) => {
 
   useEffect(() => {
     if (isEdit && vendor) {
-      console.log("vendor-->", vendor);
       // Set basic details
       setBasicDetails({
         name: vendor.name || "",

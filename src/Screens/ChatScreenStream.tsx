@@ -42,7 +42,6 @@ const ChatScreenStream = () => {
     const setupChat = async () => {
       try {
         const initResponse = await api.post("/customer/stream/chatinit/");
-        console.log("initResponse", initResponse.data);
         const userData = await StorageUtils.getUserData();
         const token = initResponse.data.token;
         const userId = userData?.id;
@@ -63,8 +62,6 @@ const ChatScreenStream = () => {
                   other_user_id: parseInt(otherUserId, 10),
                 }
               );
-
-              console.log("Chat init response:", initResponse.data);
 
               // After initialization, check again for the channel
               existingChannel = await getChatChannel(userId, otherUserId);

@@ -168,7 +168,6 @@ const SalePOS = () => {
       if (item.tax_inclusive) {
         // GST is included in price, extract it from discounted amount
         const gstValue = (itemTotalAfterDiscount * gstRate) / (100 + gstRate);
-        console.log(gstValue, "gstValue");
         return sum + gstValue;
       } else {
         // GST is exclusive, add it on top of discounted amount
@@ -419,7 +418,6 @@ const SalePOS = () => {
       tempErrors.advanceBank = "Please select bank";
     }
     setErrors(tempErrors);
-    console.log(tempErrors, "tempErrors");
     return Object.keys(tempErrors).length > 0; // Everything OK
   };
 
@@ -478,7 +476,6 @@ const SalePOS = () => {
           }`,
           data
         );
-        console.log(res);
         navigation.reset({
           index: 0,
           routes: [

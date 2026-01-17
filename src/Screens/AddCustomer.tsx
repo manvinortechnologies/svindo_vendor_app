@@ -42,7 +42,6 @@ const AddCustomer = ({ navigation }: any) => {
   // useEffect(() => {
   //   const user = StorageUtils.getUserData();
   //   setCurrentUser(user);
-  //   console.log("currentUser-->", currentUser);
   // }, []);
 
   const [basicDetails, setBasicDetails] = useState({

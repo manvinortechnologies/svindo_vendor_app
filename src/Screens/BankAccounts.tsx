@@ -78,7 +78,6 @@ const BankAccounts = ({ navigation }: any) => {
     try {
       setIsLoading(true);
       const res = await api.post(API_ROUTES.vendorAddBank, details);
-      console.log("res-->", res);
       getCash();
     } catch (error) {
       console.log("bank api Error 41--", error);

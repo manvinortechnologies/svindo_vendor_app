@@ -43,8 +43,6 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
     setError("");
     try {
       const sanitizedPhoneNumber = `+91${phoneNumber.replace(/\D/g, "")}`;
-      console.log("sanitizedPhoneNumber-->", sanitizedPhoneNumber);
-      console.log("Firebase Auth instance:", auth().app.name);
 
       // Use the default auth instance - this ensures reCAPTCHA triggers on Android
       const confirmation = await auth().signInWithPhoneNumber(
@@ -59,12 +57,6 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
       });
       // Alert.alert('Verification code sent to your phone.');
     } catch (error: any) {
-      console.log("Firebase Auth Error Details:", {
-        code: error.code,
-        message: error.message,
-        stack: error.stack,
-        nativeError: error.nativeErrorCode,
-      });
 
       let errorMessage = error.message || "Authentication failed";
 

@@ -613,8 +613,6 @@ const CreatePurchase = ({ navigation }: any) => {
             }
           : baseData;
 
-      console.log("Sending purchase data:", data);
-
       let res;
       if (isEditMode && purchaseId) {
         // Update existing purchase

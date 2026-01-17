@@ -64,8 +64,6 @@ const DownloadQRCode = () => {
           setStoreId(stores.id.toString());
         }
 
-        console.log("Vendor stores response:", response.data);
-        console.log("Using store ID:", storeId);
       }
     } catch (error: any) {
       console.error("Error fetching vendor stores:", error);

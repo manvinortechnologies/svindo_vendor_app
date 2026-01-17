@@ -96,8 +96,6 @@ const AddAddOns = () => {
   };
 
   const handleImageSelect = (file: any) => {
-    console.log(file);
-
     setFormData((prev) => ({
       ...prev,
       image: {

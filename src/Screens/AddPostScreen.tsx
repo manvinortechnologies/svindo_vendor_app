@@ -140,8 +140,6 @@ const AddPostScreen = ({ navigation }: any) => {
         includeBase64: false,
       });
 
-      // console.log("ImageCropPicker response--->", result);
-
       // Validate file size (max 100MB)
       const maxSize = 10 * 1024 * 1024; // 10MB in bytes
       if (result.size && result.size > maxSize) {
@@ -161,7 +159,6 @@ const AddPostScreen = ({ navigation }: any) => {
         result.duration
       ) {
         const maxDuration = 60000; // 1 minutes in seconds
-        console.log("result.duration--->", result.duration, maxDuration);
         if (result.duration > maxDuration) {
           setErrors((prev) => ({
             ...prev,
@@ -208,7 +205,6 @@ const AddPostScreen = ({ navigation }: any) => {
         setMediaType("image");
       }
     } catch (error: any) {
-      console.log("ImageCropPicker error--->", error);
 
       // Check if user cancelled
       if (error.code === "E_PICKER_CANCELLED") {
@@ -390,7 +386,6 @@ const AddPostScreen = ({ navigation }: any) => {
         });
       }
     } catch (error: any) {
-      console.log("error--->", error);
       Toast.show({
         type: "error",
         text1: "Error",

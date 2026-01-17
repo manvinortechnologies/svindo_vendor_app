@@ -110,7 +110,6 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
     try {
       const userCredential = await confirm.confirm(otp);
       const idToken = await userCredential.user.getIdToken();
-      console.log(idToken);
       // if (authType === 'login') {
       //   const response = await login({ idToken: idToken, user_type: "vendor" }).unwrap();
       //   if (response.status === DEFAULT_STATUS_CODE_SUCCESS) {

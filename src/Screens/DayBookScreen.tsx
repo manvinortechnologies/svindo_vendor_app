@@ -187,7 +187,7 @@ const DayBookScreen = () => {
     >
       <ReportHeader
         title="Day Book "
-        onBack={() => console.log("Back pressed")}
+        onBack={() => {}}
         // onPdfPress={() => console.log('Download PDF')}
         // onXlsPress={() => console.log('Download XLS')}
       />

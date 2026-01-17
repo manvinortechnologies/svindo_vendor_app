@@ -153,19 +153,16 @@ const ProductSetting = ({ navigation }: any) => {
     try {
       setIsLoading(true);
       const payload = buildPayload();
-      console.log("Sending payload:", payload);
 
       // Uncomment this when API is ready
       const response = await api.post(API_ROUTES.productSettings, payload);
       if (response.status === 200 || response.status === 201) {
-        console.log("Settings updated successfully:", response.data);
         Toast.show({
           type: "success",
           text1: "Success",
           text2: "Product Settings updated successfully",
         });
       } else {
-        console.warn("Unexpected response:", response);
       }
     } catch (error) {
       console.error("Failed to update settings:", error);

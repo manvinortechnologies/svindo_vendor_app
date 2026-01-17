@@ -1397,7 +1397,6 @@ const AddProductScreen = ({
       const companyData = StorageUtils.getCompanyProfile();
       if (companyData) {
         const isGstRegistered = companyData?.is_gst_registered === true;
-        console.log(isGstRegistered, "isGstRegistered");
 
         setHasCompanyGst(isGstRegistered);
         if (!isGstRegistered) {

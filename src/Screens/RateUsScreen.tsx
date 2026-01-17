@@ -27,8 +27,6 @@ const RateUsScreen = () => {
 
   const handleSubmit = () => {
     // Submit logic here
-    console.log("Rating:", rating);
-    console.log("Comment:", comment);
   };
 
   return (

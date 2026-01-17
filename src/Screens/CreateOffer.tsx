@@ -124,8 +124,6 @@ const CreateOffer = () => {
         includeBase64: false,
       });
 
-      console.log("ImageCropPicker response--->", result);
-
       // Validate that we have a valid path
       if (!result.path) {
         setErrors((prev) => ({
@@ -158,8 +156,6 @@ const CreateOffer = () => {
 
       setSelectedImage(asset);
     } catch (error: any) {
-      console.log("ImageCropPicker error--->", error);
-
       // Check if user cancelled
       if (error.code === "E_PICKER_CANCELLED") {
         return; // User cancelled, don't show error

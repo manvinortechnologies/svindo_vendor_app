@@ -134,9 +134,7 @@ const OnlineStore = ({ navigation }: any) => {
         display_as_catalog: display,
         private_catalog: isPrivate,
       };
-      console.log("data-->", data);
       const res = await api.post(API_ROUTES.storeOnlineSetting, data);
-      console.log("ressss->", res);
       Toast.show({
         type: "success",
         text1: "Success",

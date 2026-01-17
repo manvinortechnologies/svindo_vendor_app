@@ -501,7 +501,7 @@ const CreateCouponScreen = ({ navigation }: any) => {
           setImageFile(file);
           setImageUrl(file.uri);
         }}
-        onChange={(image) => console.log("Full crop picker image:", image)}
+        onChange={(image) => {}}
       />
       <CalendarModal
         visible={startDateCallModel}

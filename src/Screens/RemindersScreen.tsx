@@ -39,12 +39,6 @@ const ReminderScreen = () => {
 
   const handleSave = () => {
     // You can replace this with your actual API logic
-    console.log({
-      weekly,
-      monthly,
-      monthlyGSTR1,
-      daily,
-    });
   };
 
   return (

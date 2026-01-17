@@ -58,12 +58,10 @@ const ManageCompanies = ({ navigation }: any) => {
   };
 
   const handleDelete = async (id: number) => {
-    console.log("delete id--->", id);
     try {
       setIsLoading(true);
       const apiEnd = `${API_ROUTES.companyProfle}/${id}/`;
       const res = await api.delete(apiEnd);
-      console.log("res-->", res);
 
       // Refresh the list after successful deletion
       await getAllCompanyData();

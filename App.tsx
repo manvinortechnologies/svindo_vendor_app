@@ -30,7 +30,6 @@ const App = () => {
         // Initialize notification service with error handling
         try {
           await NotificationService.initialize();
-          console.log("Push notifications initialized successfully");
         } catch (initError: any) {
           console.error("Error initializing push notifications:", initError);
           // Don't crash the app - just log the error
@@ -93,7 +92,6 @@ export default App;
 //     try {
 //       const fullPhoneNumber = `+91${phoneNumber}`;
 //       const confirmation = await auth().signInWithPhoneNumber(fullPhoneNumber);
-//       console.log(confirmation)
 
 //       setConfirm(confirmation);
 //       Alert.alert('Verification code sent to your phone.');
@@ -109,9 +107,7 @@ export default App;
 //     setError('');
 //     try {
 //       const userCredential = await confirm.confirm(verificationCode);
-//     console.log('User info:', userCredential?.user);
 //      const idToken = await userCredential.user.getIdToken();
-//      console.log('Firebase ID Token:', idToken);
 //       // await AsyncStorage.setItem('isLoggedIn', 'true');
 
 //       navigation.replace('Home');

@@ -141,8 +141,6 @@ export default function ChatScreen() {
           }
         );
 
-        console.log("Message sent successfully:", response);
-
         // Update the message with the response data if needed
         // The message is already in the UI, so we don't need to update it
       } catch (error) {

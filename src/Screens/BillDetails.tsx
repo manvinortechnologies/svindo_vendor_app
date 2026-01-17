@@ -663,11 +663,9 @@ const BillDetails: React.FC = () => {
             <Pdf
               source={{ uri: pdfUri, cache: true }}
               onLoadComplete={(numberOfPages) => {
-                console.log(`Number of pages: ${numberOfPages}`);
                 setIsLoadingPdf(false);
               }}
               onPageChanged={(page, numberOfPages) => {
-                console.log(`Current page: ${page}`);
               }}
               onError={(error) => {
                 console.error("PDF Error:", error);

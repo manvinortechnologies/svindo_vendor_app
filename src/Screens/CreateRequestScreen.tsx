@@ -118,7 +118,6 @@ const CreateRequestScreen = () => {
         setSelectedImages((prev) => [...prev, result.path]);
       }
     } catch (error: any) {
-      console.log("ImageCropPicker camera error--->", error);
 
       // Check if user cancelled
       if (error.code === "E_PICKER_CANCELLED") {
@@ -186,7 +185,6 @@ const CreateRequestScreen = () => {
         setSelectedImages((prev) => [...prev, ...validImages]);
       }
     } catch (error: any) {
-      console.log("ImageCropPicker library error--->", error);
 
       // Check if user cancelled
       if (error.code === "E_PICKER_CANCELLED") {
