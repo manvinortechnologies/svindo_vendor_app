@@ -114,9 +114,23 @@ const ProductItem: React.FC<ProductItemProps> = ({
           <Text style={styles.productName} numberOfLines={1}>
             {product.name}
           </Text>
-          <Text style={styles.variantsText}>
-            {product.variants?.length} Variants
-          </Text>
+          <View style={styles.variantInfoRow}>
+            {product.variants && product.variants.length > 0 && (
+              <Text style={styles.variantsText}>
+                {product.variants.length} Variants
+              </Text>
+            )}
+            {product.color && (
+              <View style={styles.colorBadge}>
+                <Text style={styles.colorText}>Color: {product.color}</Text>
+              </View>
+            )}
+            {product.size && (
+              <View style={styles.sizeBadge}>
+                <Text style={styles.sizeText}>Size: {product.size}</Text>
+              </View>
+            )}
+          </View>
           <Text style={styles.productDesc} numberOfLines={1}>
             {product.description || "-------"}
           </Text>
@@ -200,6 +214,35 @@ const styles = ScaledSheet.create({
     fontSize: 8,
     color: "#000",
     fontWeight: "bold",
+  },
+  variantInfoRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: s(4),
+    marginTop: s(4),
+    marginBottom: s(2),
+  },
+  colorBadge: {
+    backgroundColor: "#FFF7DD",
+    borderRadius: 8,
+    paddingHorizontal: s(6),
+    paddingVertical: s(2),
+  },
+  colorText: {
+    color: "#FCA311",
+    fontWeight: "600",
+    fontSize: s(8),
+  },
+  sizeBadge: {
+    backgroundColor: "#EDF4FF",
+    borderRadius: 8,
+    paddingHorizontal: s(6),
+    paddingVertical: s(2),
+  },
+  sizeText: {
+    color: "#163881",
+    fontWeight: "600",
+    fontSize: s(8),
   },
   productImage: {
     width: "140@s",

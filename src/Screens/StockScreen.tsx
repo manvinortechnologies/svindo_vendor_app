@@ -390,7 +390,6 @@ const StockScreen = () => {
           item?.batch_number?.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
-    console.log(data, "data");
     return data;
   };
 
@@ -702,7 +701,7 @@ const StockScreen = () => {
                     ) : (
                       <CustomDropdown
                         placeholder="Select Subcategory"
-                        options={subCategoryList}
+                        options={subCategoryList.filter((sub) => sub.id === selectedFilters.category)}
                         onSelect={(option) =>
                           handleFilterSelect("subcategory", option.id)
                         }

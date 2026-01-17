@@ -40,6 +40,8 @@ interface Product {
   stock_cached?: number;
   product_type?: string;
   track_stock?: boolean;
+  color?: string;
+  size?: string;
 }
 
 interface CartItem {
@@ -384,7 +386,21 @@ const ProductSelectionScreen: React.FC = () => {
         <View style={styles.card}>
           <Image source={{ uri: item.image }} style={styles.image} />
           <Text style={styles.title}>{item.name}</Text>
-          {item.desc && <Text style={styles.desc}>{item.desc}</Text>}
+          {item.desc && <Text style={styles.desc} numberOfLines={1} ellipsizeMode="tail">{item.desc}</Text>}
+          {(item.color || item.size) && (
+            <View style={styles.variantInfoRow}>
+              {item.color && (
+                <View style={styles.colorBadge}>
+                  <Text style={styles.colorText}>Color: {item.color}</Text>
+                </View>
+              )}
+              {item.size && (
+                <View style={styles.sizeBadge}>
+                  <Text style={styles.sizeText}>Size: {item.size}</Text>
+                </View>
+              )}
+            </View>
+          )}
           <View style={styles.bottomRow}>
             {renderQuantityControls(item, quantity)}
             <Text style={styles.price}>
@@ -800,5 +816,34 @@ const styles = ScaledSheet.create({
   proceedText: {
     fontWeight: "bold",
     color: "#000",
+  },
+  variantInfoRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 4,
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  colorBadge: {
+    backgroundColor: "#FFF7DD",
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  colorText: {
+    color: "#FCA311",
+    fontWeight: "600",
+    fontSize: 10,
+  },
+  sizeBadge: {
+    backgroundColor: "#EDF4FF",
+    borderRadius: 8,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  sizeText: {
+    color: "#163881",
+    fontWeight: "600",
+    fontSize: 10,
   },
 });

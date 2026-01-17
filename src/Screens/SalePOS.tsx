@@ -467,7 +467,6 @@ const SalePOS = () => {
               credit_date: new Date(dueDate).toISOString(),
             }
           : baseData;
-      console.log(data, "data");
       if (wholesale) {
         navigation.navigate(HomeNavigation.WHOLESALE, data);
       } else {

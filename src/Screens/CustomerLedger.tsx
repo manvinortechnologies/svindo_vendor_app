@@ -199,8 +199,10 @@ const CustomerLedger = ({ navigation, route }: any) => {
   };
 
   const openWhatsApp = async () => {
-    const phoneNumber = "+918377935333";
-    const message = "Hello! I need support with Svindo App.";
+    const phoneNumber = customerInfo.phone.includes("+")
+      ? customerInfo.phone
+      : `+91${customerInfo.phone}`;
+    const message = "Hello!";
     const url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(
       message
     )}`;

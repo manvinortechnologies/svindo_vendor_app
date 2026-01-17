@@ -339,7 +339,7 @@ const Storescreen = ({ navigation }: any) => {
   const openAndroidApp = async () => {
     const packageName = "in.webgrid.svindo"; // target app id
 
-    const intentUrl = `svindo://`;
+    const intentUrl = `svindo://store/${storeData?.id}`;
     const storeUrl = Platform.select({
       android: `market://details?id=${packageName}`,
       ios: `https://apps.apple.com/app/id${packageName}`,
@@ -419,7 +419,7 @@ const Storescreen = ({ navigation }: any) => {
             titleColor="#666" // iOS
           />
         }
-        contentContainerStyle={{ paddingBottom: 20 }}
+        contentContainerStyle={{ paddingBottom: insets.bottom + s(20)}}
       >
         {/* Top Header */}
 

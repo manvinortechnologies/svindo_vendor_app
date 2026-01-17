@@ -181,7 +181,9 @@ const VendorLedger = ({ navigation, route }: any) => {
   };
 
   const openWhatsApp = async () => {
-    const phoneNumber = vendorInfo.phone; // Remove non-digits
+    const phoneNumber = vendorInfo.phone.includes("+")
+      ? vendorInfo.phone
+      : `+91${vendorInfo.phone}`;
     const message = "Hello!";
     const url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(
       message

@@ -173,7 +173,7 @@ const CompanyProfile = ({ navigation, route }: any) => {
       setSameAsBilling(data.shipping_same_as_billing || false);
 
       setImageFile({ uri: data.profile_image });
-      setSignatureFile({ uri: data.signature_image });
+      setSignatureFile({ uri: data.signature });
     } catch (error) {
       console.log("getProfileData error:", error);
       Toast.show({
@@ -386,7 +386,7 @@ const CompanyProfile = ({ navigation, route }: any) => {
       }
 
       if (signatureFile?.uri) {
-        formData.append("signature_image", {
+        formData.append("signature", {
           uri: signatureFile.uri,
           name: signatureFile.name || "signature.jpg",
           type: signatureFile.type || "image/jpeg",
@@ -694,9 +694,7 @@ const CompanyProfile = ({ navigation, route }: any) => {
           {/* Save */}
           <TouchableOpacity
             style={styles.saveButton}
-            onPress={() => {
-              handleSaveCompany();
-            }}
+            onPress={handleSaveCompany}
           >
             <Text style={styles.saveText}>Save & Update</Text>
           </TouchableOpacity>

@@ -84,7 +84,6 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
     setSearchQuery("");
   };
 
-  console.log("selectedOption", selectedOption);
   return (
     <View>
       <TouchableOpacity

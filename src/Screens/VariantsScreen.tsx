@@ -74,10 +74,13 @@ const VariantsScreen = () => {
     if (!searchQuery.trim()) {
       setFilteredVariants(variants);
     } else {
+      const query = searchQuery.toLowerCase();
       const filtered = variants.filter(
         (variant) =>
-          variant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          variant.description.toLowerCase().includes(searchQuery.toLowerCase())
+          variant.name.toLowerCase().includes(query) ||
+          variant.description.toLowerCase().includes(query) ||
+          (variant.color && variant.color.toLowerCase().includes(query)) ||
+          (variant.size && variant.size.toLowerCase().includes(query))
       );
       setFilteredVariants(filtered);
     }

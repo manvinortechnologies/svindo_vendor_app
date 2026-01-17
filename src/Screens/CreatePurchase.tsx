@@ -809,16 +809,16 @@ const CreatePurchase = ({ navigation }: any) => {
                         if (newQuantity >= 0) {
                           const stock = Number(item?.stock_cached ?? 0);
                           const trackStock = item?.track_stock !== false;
-                          const boundedQty =
-                            trackStock && stock > 0
-                              ? Math.min(newQuantity, stock)
-                              : newQuantity;
+                          // const boundedQty =
+                          //   trackStock && stock > 0
+                          //     ? Math.min(newQuantity, stock)
+                          //     : newQuantity;
                           const updatedProducts = [...selectedProducts];
 
                           // Update quantity
                           updatedProducts[index] = {
                             ...item,
-                            quantity: boundedQty,
+                            quantity: newQuantity,
                           };
                           setSelectedProducts(updatedProducts);
                         }
