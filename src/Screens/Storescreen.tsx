@@ -17,7 +17,7 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import MaterialIcon from "react-native-vector-icons/MaterialIcons";
 import CustomSwitch from "./CustomSwitch";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { s, ScaledSheet } from "react-native-size-matters";
+import { s, ScaledSheet, vs } from "react-native-size-matters";
 import {
   useGetVendorStoresQuery,
   useUpdateVendorStoreMutation,
@@ -307,7 +307,7 @@ const Storescreen = ({ navigation }: any) => {
       Toast.show({
         type: "success",
         text1: "Success",
-        text2: "Store disabled successfully",
+        text2: "Store Location " + (!disabletab ? "disabled" : "enabled") + " successfully",
       });
       setdisable(!disabletab);
     } catch (error) {
@@ -418,7 +418,7 @@ const Storescreen = ({ navigation }: any) => {
             titleColor="#666" // iOS
           />
         }
-        contentContainerStyle={{ paddingBottom: insets.bottom + s(20)}}
+        contentContainerStyle={{ paddingBottom: insets.bottom + s(200) }}
       >
         {/* Top Header */}
 
@@ -428,8 +428,8 @@ const Storescreen = ({ navigation }: any) => {
             source={
               storeData?.banner_image
                 ? {
-                    uri: APP_CONSTANTS.API_BASE_URL + storeData.banner_image,
-                  }
+                  uri: APP_CONSTANTS.API_BASE_URL + storeData.banner_image,
+                }
                 : require("../assets/product/product2.png")
             }
             style={styles.banner}
@@ -568,7 +568,7 @@ const Storescreen = ({ navigation }: any) => {
                       onValueChange={toggleDisable}
                       activeColor="#006EB2"
                       inactiveColor="#999"
-                      // borderColor="#4CAF50"
+                    // borderColor="#4CAF50"
                     />
                   )}
                 </View>
@@ -734,7 +734,7 @@ const Storescreen = ({ navigation }: any) => {
             contentContainerStyle={styles.productcontainer}
           >
             {storeData?.spotlight_products &&
-            storeData.spotlight_products.length > 0 ? (
+              storeData.spotlight_products.length > 0 ? (
               storeData.spotlight_products.map((product) => (
                 <View key={product.id} style={styles.productCard}>
                   <View style={{ position: "relative" }}>
@@ -1222,11 +1222,11 @@ const Storescreen = ({ navigation }: any) => {
         initialLocation={
           (storeData as any)?.latitude && (storeData as any)?.longitude
             ? {
-                latitude: parseFloat((storeData as any).latitude.toString()),
-                longitude: parseFloat((storeData as any).longitude.toString()),
-                address: (storeData as any).address || "",
-                pincode: (storeData as any).pincode || "",
-              }
+              latitude: parseFloat((storeData as any).latitude.toString()),
+              longitude: parseFloat((storeData as any).longitude.toString()),
+              address: (storeData as any).address || "",
+              pincode: (storeData as any).pincode || "",
+            }
             : null
         }
       />

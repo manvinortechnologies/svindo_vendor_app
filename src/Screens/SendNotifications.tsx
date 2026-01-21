@@ -99,42 +99,42 @@ const SendNotifications = ({ navigation }: any) => {
     }
   };
 
-  const onStartTimeChange = (
-    event: DateTimePickerEvent,
-    selectedTime?: Date
-  ) => {
-    if (Platform.OS === "android") {
-      setStartTimeCallModel(false);
-    }
+  // const onStartTimeChange = (
+  //   event: DateTimePickerEvent,
+  //   selectedTime?: Date
+  // ) => {
+  //   if (Platform.OS === "android") {
+  //     setStartTimeCallModel(false);
+  //   }
 
-    if (selectedTime) {
-      const hours = selectedTime.getHours().toString().padStart(2, "0");
-      const minutes = selectedTime.getMinutes().toString().padStart(2, "0");
-      const formatted = `${hours}:${minutes}`;
-      setStartTime(formatted);
-      // Clear error when time is selected
-      if (errors.start_time) {
-        setErrors((prev: any) => ({ ...prev, start_time: "" }));
-      }
-    }
-  };
+  //   if (selectedTime) {
+  //     const hours = selectedTime.getHours().toString().padStart(2, "0");
+  //     const minutes = selectedTime.getMinutes().toString().padStart(2, "0");
+  //     const formatted = `${hours}:${minutes}`;
+  //     setStartTime(formatted);
+  //     // Clear error when time is selected
+  //     if (errors.start_time) {
+  //       setErrors((prev: any) => ({ ...prev, start_time: "" }));
+  //     }
+  //   }
+  // };
 
-  const onEndTimeChange = (event: DateTimePickerEvent, selectedTime?: Date) => {
-    if (Platform.OS === "android") {
-      setEndTimeCallModel(false);
-    }
+  // const onEndTimeChange = (event: DateTimePickerEvent, selectedTime?: Date) => {
+  //   if (Platform.OS === "android") {
+  //     setEndTimeCallModel(false);
+  //   }
 
-    if (selectedTime) {
-      const hours = selectedTime.getHours().toString().padStart(2, "0");
-      const minutes = selectedTime.getMinutes().toString().padStart(2, "0");
-      const formatted = `${hours}:${minutes}`;
-      setEndTime(formatted);
-      // Clear error when time is selected
-      if (errors.end_time) {
-        setErrors((prev: any) => ({ ...prev, end_time: "" }));
-      }
-    }
-  };
+  //   if (selectedTime) {
+  //     const hours = selectedTime.getHours().toString().padStart(2, "0");
+  //     const minutes = selectedTime.getMinutes().toString().padStart(2, "0");
+  //     const formatted = `${hours}:${minutes}`;
+  //     setEndTime(formatted);
+  //     // Clear error when time is selected
+  //     if (errors.end_time) {
+  //       setErrors((prev: any) => ({ ...prev, end_time: "" }));
+  //     }
+  //   }
+  // };
 
   const handleImagePicker = async () => {
     try {
@@ -223,37 +223,37 @@ const SendNotifications = ({ navigation }: any) => {
     //   newErrors.budget = "Please enter a valid budget amount";
     // }
 
-    if (!startDate.trim()) {
-      newErrors.start_time = "Start date is required";
-    }
+    // if (!startDate.trim()) {
+    //   newErrors.start_time = "Start date is required";
+    // }
 
-    if (!startTime.trim()) {
-      newErrors.start_time = "Start time is required";
-    }
+    // if (!startTime.trim()) {
+    //   newErrors.start_time = "Start time is required";
+    // }
 
-    if (!endDate.trim()) {
-      newErrors.end_time = "End date is required";
-    }
+    // if (!endDate.trim()) {
+    //   newErrors.end_time = "End date is required";
+    // }
 
-    if (!endTime.trim()) {
-      newErrors.end_time = "End time is required";
-    }
+    // if (!endTime.trim()) {
+    //   newErrors.end_time = "End time is required";
+    // }
 
-    if (startDate && startTime && endDate && endTime) {
-      const startDateTime = formatToISOString(
-        startDate,
-        convert24To12Hour(startTime)
-      );
-      const endDateTime = formatToISOString(
-        endDate,
-        convert24To12Hour(endTime)
-      );
-      const startDateObj = new Date(startDateTime);
-      const endDateObj = new Date(endDateTime);
-      if (endDateObj <= startDateObj) {
-        newErrors.end_time = "End date/time must be after start date/time";
-      }
-    }
+    // if (startDate && startTime && endDate && endTime) {
+    //   const startDateTime = formatToISOString(
+    //     startDate,
+    //     convert24To12Hour(startTime)
+    //   );
+    //   const endDateTime = formatToISOString(
+    //     endDate,
+    //     convert24To12Hour(endTime)
+    //   );
+    //   const startDateObj = new Date(startDateTime);
+    //   const endDateObj = new Date(endDateTime);
+    //   if (endDateObj <= startDateObj) {
+    //     newErrors.end_time = "End date/time must be after start date/time";
+    //   }
+    // }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -279,14 +279,14 @@ const SendNotifications = ({ navigation }: any) => {
       formDataPayload.append("rejection_reason", "");
       formDataPayload.append("views", "0");
       formDataPayload.append("clicks", "0");
-      formDataPayload.append(
-        "start_time",
-        formatToISOString(startDate, convert24To12Hour(startTime))
-      );
-      formDataPayload.append(
-        "end_time",
-        formatToISOString(endDate, convert24To12Hour(endTime))
-      );
+      // formDataPayload.append(
+      //   "start_time",
+      //   formatToISOString(startDate, convert24To12Hour(startTime))
+      // );
+      // formDataPayload.append(
+      //   "end_time",
+      //   formatToISOString(endDate, convert24To12Hour(endTime))
+      // );
 
       // Append product if redirect_to is product
       if (formData.redirect_to === "product" && selectedProduct?.id) {
@@ -462,8 +462,8 @@ const SendNotifications = ({ navigation }: any) => {
         {errors.budget && <Text style={styles.errorText}>{errors.budget}</Text>} */}
 
         {/* Start Date and Time */}
-        <Text style={styles.label}>Start Date & Time *</Text>
-        <View style={styles.row}>
+        {/* <Text style={styles.label}>Start Date & Time *</Text> */}
+        {/* <View style={styles.row}>
           <View style={styles.halfWidth}>
             <TouchableOpacity
               style={[
@@ -510,17 +510,16 @@ const SendNotifications = ({ navigation }: any) => {
               >
                 {startTime ? convert24To12Hour(startTime) : "Time (HH:MM AM)"}
               </Text>
-              {/* <Icon name="access-time" size={20} color="#FCA311" /> */}
             </TouchableOpacity>
           </View>
         </View>
         {errors.start_time && (
           <Text style={styles.errorText}>{errors.start_time}</Text>
-        )}
+        )} */}
 
         {/* End Date and Time */}
-        <Text style={styles.label}>End Date & Time *</Text>
-        <View style={styles.row}>
+        {/* <Text style={styles.label}>End Date & Time *</Text> */}
+        {/* <View style={styles.row}>
           <View style={styles.halfWidth}>
             <TouchableOpacity
               style={[
@@ -567,13 +566,12 @@ const SendNotifications = ({ navigation }: any) => {
               >
                 {endTime ? convert24To12Hour(endTime) : "Time (HH:MM AM)"}
               </Text>
-              {/* <Icon name="access-time" size={20} color="#FCA311" /> */}
             </TouchableOpacity>
           </View>
         </View>
         {errors.end_time && (
           <Text style={styles.errorText}>{errors.end_time}</Text>
-        )}
+        )} */}
 
         {/* Note */}
         <View style={styles.noteBox}>
@@ -603,7 +601,7 @@ const SendNotifications = ({ navigation }: any) => {
       <Loading visible={isLoading} />
 
       {/* Date Pickers */}
-      <CalendarModal
+      {/* <CalendarModal
         visible={startDateCallModel}
         initialDate={startDate}
         onClose={() => setStartDateCallModel(false)}
@@ -616,10 +614,10 @@ const SendNotifications = ({ navigation }: any) => {
         onClose={() => setEndDateCallModel(false)}
         onSelect={setEndDate}
         minDate={startDate || moment().format("YYYY-MM-DD")}
-      />
+      /> */}
 
       {/* Time Pickers */}
-      {startTimeCallModel && (
+      {/* {startTimeCallModel && (
         <DateTimePicker
           value={new Date()}
           mode="time"
@@ -627,8 +625,8 @@ const SendNotifications = ({ navigation }: any) => {
           display={Platform.OS === "ios" ? "spinner" : "default"}
           onChange={onStartTimeChange}
         />
-      )}
-      {endTimeCallModel && (
+      )} */}
+      {/* {endTimeCallModel && (
         <DateTimePicker
           value={new Date()}
           mode="time"
@@ -636,7 +634,7 @@ const SendNotifications = ({ navigation }: any) => {
           display={Platform.OS === "ios" ? "spinner" : "default"}
           onChange={onEndTimeChange}
         />
-      )}
+      )} */}
 
       {/* Product Picker Modal */}
       <Modal visible={showProductModal} animationType="slide" transparent>

@@ -467,9 +467,9 @@ const AddDeliveryBoy = () => {
                 <View style={{ flex: 1, marginLeft: 10 }}>
                   <Text style={styles.nameText}>Name: {item.name}</Text>
                   <Text style={styles.subText}>Mobile: {item.mobile}</Text>
-                  <Text style={styles.subText}>
+                  {/* <Text style={styles.subText}>
                     Total Deliveries - {item.total_deliveries}
-                  </Text>
+                  </Text> */}
                   {/* <Text style={styles.subText}>Earnings - {item.earnings}</Text> */}
                   {/* <Text style={styles.subText}>Rating</Text>
                   <View style={styles.ratingRow}>

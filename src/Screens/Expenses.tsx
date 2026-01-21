@@ -171,7 +171,7 @@ const Expenses = ({ navigation }: any) => {
         formData.append("payment_date", paymentData);
       }
 
-      if (selectedBank) {
+      if (selectedType.toLowerCase() !== "cash" && selectedBank) {
         formData.append("bank", selectedBank);
       }
 
@@ -191,7 +191,7 @@ const Expenses = ({ navigation }: any) => {
       if (editMode) {
         // Update existing expense
         res = await api.put(
-          `${API_ROUTES.expense}/${expenseData.id}/`,
+          `${API_ROUTES.expense}${expenseData.id}/`,
           formData,
           {
             headers: {
@@ -375,8 +375,8 @@ const Expenses = ({ navigation }: any) => {
                   selectedValue={
                     selectedBank
                       ? bankList.find(
-                          (bank) => bank.id.toString() === selectedBank
-                        )?.id
+                        (bank) => bank.id.toString() === selectedBank
+                      )?.id
                       : ""
                   }
                   options={bankList}

@@ -80,14 +80,12 @@ const CreatePurchase = ({ navigation }: any) => {
   const [editProductPrice, setEditProductPrice] = useState<string>("");
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
   const [allVendorList, setAllVendorList] = useState<Vendor[]>();
-  const [allProductList, setAllProductList] = useState<Product[]>();
   const [bankList, setBankList] = useState<DropDownOption[]>([]);
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [purchasecode, setPurchasecode] = useState("");
   const [purchaseDate, setPurchaseDate] = useState(
     moment().format("YYYY-MM-DD")
   );
-  const [openCalendarModel, setOpenCalendarModel] = useState<boolean>(false);
   const [discount, setDiscount] = useState({ amount: "", pr: "" });
   const [dueDate, setDueDate] = useState<string>("");
   const [dueDateCallModel, setDueDateCallModel] = useState<boolean>(false);
@@ -100,28 +98,15 @@ const CreatePurchase = ({ navigation }: any) => {
   const [supplierDateCallModel, setSupplierDateCallModel] =
     useState<boolean>(false);
   const [packingCharges, setPackingCharges] = useState<string>("");
-  const [packingChargesModel, setPackingChargesModel] =
-    useState<boolean>(false);
-  // New states for optional fields
   const [dispatchAddress, setDispatchAddress] = useState<string>("");
-  const [dispatchAddressModel, setDispatchAddressModel] =
-    useState<boolean>(false);
   const [bank, setBank] = useState<string>("");
-  const [bankModel, setBankModel] = useState<boolean>(false);
   const [signature, setSignature] = useState<string>("");
   const [signatureModel, setSignatureModel] = useState<boolean>(false);
   const [references, setReferences] = useState<string>("");
-  const [referencesModel, setReferencesModel] = useState<boolean>(false);
   const [notes, setNotes] = useState<string>("");
-  const [notesModel, setNotesModel] = useState<boolean>(false);
   const [terms, setTerms] = useState<string>("");
-  const [termsModel, setTermsModel] = useState<boolean>(false);
   const [extraDiscount, setExtraDiscount] = useState<string>("");
-  const [extraDiscountModel, setExtraDiscountModel] = useState<boolean>(false);
   const [deliveryCharges, setDeliveryCharges] = useState<string>("");
-  const [deliveryChargesModel, setDeliveryChargesModel] =
-    useState<boolean>(false);
-  const [showProductModal, setShowProductModal] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [purchaseId, setPurchaseId] = useState<number | null>(null);
@@ -142,6 +127,7 @@ const CreatePurchase = ({ navigation }: any) => {
       parcels: "",
       gstNumber: "",
       reverseCharge: false,
+      bank: "",
     }
   );
 
@@ -169,7 +155,7 @@ const CreatePurchase = ({ navigation }: any) => {
       }
     }
     if (
-      (selectedPayment === "Cheques" || selectedPayment === "UPI") &&
+      (selectedPayment === "Cheque" || selectedPayment === "UPI") &&
       !selectedBank
     ) {
       tempErrors.selectedBank = "Please select bank for cheque or UPI payment";
@@ -361,13 +347,14 @@ const CreatePurchase = ({ navigation }: any) => {
         setPackingCharges(preservedData.packingCharges);
       if (preservedData.dispatchAddress)
         setDispatchAddress(preservedData.dispatchAddress);
-      if (preservedData.bank) setBank(preservedData.bank);
       if (preservedData.signature) setSignature(preservedData.signature);
       if (preservedData.references) setReferences(preservedData.references);
       if (preservedData.notes) setNotes(preservedData.notes);
       if (preservedData.terms) setTerms(preservedData.terms);
       if (preservedData.extraDiscount)
         setExtraDiscount(preservedData.extraDiscount);
+      if (preservedData.selectedBank)
+        setSelectedBank(preservedData.selectedBank);
       if (preservedData.deliveryCharges)
         setDeliveryCharges(preservedData.deliveryCharges);
       if (preservedData.formData) setFormData(preservedData.formData);
@@ -409,11 +396,16 @@ const CreatePurchase = ({ navigation }: any) => {
         setSerialNo(purchaseData.serial_number);
       }
 
+      if (purchaseData.bank_details) {
+        setBank(purchaseData.bank_details.name);
+        setSelectedBank(bankList.find((b) => b.name === purchaseData.bank_details.name));
+      }
+
       // Set payment method
       if (purchaseData.payment_method) {
         const paymentMap: { [key: string]: string } = {
           credit: "In Credit",
-          cheques: "Cheques",
+          cheque: "Cheque",
           upi: "UPI",
           cash: "Cash",
         };
@@ -572,13 +564,13 @@ const CreatePurchase = ({ navigation }: any) => {
         payment_method:
           selectedPayment === "In Credit"
             ? "credit"
-            : selectedPayment === "Cheques"
-            ? "cheques"
-            : selectedPayment === "UPI"
-            ? "upi"
-            : selectedPayment === "Cash"
-            ? "cash"
-            : "other",
+            : selectedPayment === "Cheque"
+              ? "cheque"
+              : selectedPayment === "UPI"
+                ? "upi"
+                : selectedPayment === "Cash"
+                  ? "cash"
+                  : "other",
         discount_percentage: discount.pr || "0",
         discount_amount: discount.amount || "0",
 
@@ -595,6 +587,7 @@ const CreatePurchase = ({ navigation }: any) => {
         transport_name: formData.transportName || "",
         number_of_parcels: Number(formData.parcels) || null,
         reverse_charges: formData.reverseCharge || false,
+        bank: selectedPayment !== "Cash" && selectedPayment !== "In Credit" ? selectedBank?.id : '',
         items: selectedProducts.map((p) => ({
           product: p.id,
           quantity: p.quantity,
@@ -605,12 +598,12 @@ const CreatePurchase = ({ navigation }: any) => {
       const data =
         selectedPayment === "In Credit"
           ? {
-              ...baseData,
-              advance_amount: Number(advanceAmount) || 0,
-              advance_mode: selectedAdvanceType.toLowerCase(), // bank / cash
-              due_date: dueDate || null,
-              advance_bank: selectedBank?.id || null,
-            }
+            ...baseData,
+            advance_amount: Number(advanceAmount) || 0,
+            advance_mode: selectedAdvanceType.toLowerCase(), // bank / cash
+            due_date: dueDate || null,
+            advance_bank: selectedBank?.id || null,
+          }
           : baseData;
 
       let res;
@@ -692,9 +685,9 @@ const CreatePurchase = ({ navigation }: any) => {
                     {purchaseDate}
                   </Text>
                 </View>
-                <TouchableOpacity onPress={() => setIsEditModalVisible(true)}>
+                {/* <TouchableOpacity onPress={() => setIsEditModalVisible(true)}>
                   <Text style={styles.editText}>Edit</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> */}
               </View>
               {errors?.purchasecode && (
                 <Text style={{ color: "red" }}>{errors?.purchasecode}</Text>
@@ -1146,7 +1139,7 @@ const CreatePurchase = ({ navigation }: any) => {
                   Payment
                 </Text>
                 <View style={styles.optionsRow}>
-                  {["UPI", "Cheques", "Cash", "In Credit"].map((method) => (
+                  {["UPI", "Cheque", "Cash", "In Credit"].map((method) => (
                     <TouchableOpacity
                       key={method}
                       style={[
@@ -1188,7 +1181,7 @@ const CreatePurchase = ({ navigation }: any) => {
                           style={[
                             styles.optionButton,
                             selectedAdvanceType === type &&
-                              styles.selectedButton,
+                            styles.selectedButton,
                           ]}
                           onPress={() => setSelectedAdvanceType(type)}
                         >
@@ -1196,7 +1189,7 @@ const CreatePurchase = ({ navigation }: any) => {
                             style={[
                               styles.optionText,
                               selectedAdvanceType === type &&
-                                styles.selectedText,
+                              styles.selectedText,
                             ]}
                           >
                             {type}

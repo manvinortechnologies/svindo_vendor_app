@@ -6,6 +6,8 @@ import {
   TouchableOpacity,
   FlatList,
   Dimensions,
+  Modal,
+  ScrollView,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import {
@@ -51,6 +53,8 @@ const DayBookScreen = () => {
     moment().format("YYYY-MM-DD")
   );
   const [endDate, setEndDate] = useState<string>(moment().format("YYYY-MM-DD"));
+  const [selectedEntry, setSelectedEntry] = useState<any | null>(null);
+  const [showEntryModal, setShowEntryModal] = useState<boolean>(false);
   useEffect(() => {
     fetchDaybookData();
   }, [selectedDate]);
@@ -187,9 +191,9 @@ const DayBookScreen = () => {
     >
       <ReportHeader
         title="Day Book "
-        onBack={() => {}}
-        // onPdfPress={() => console.log('Download PDF')}
-        // onXlsPress={() => console.log('Download XLS')}
+        onBack={() => { }}
+      // onPdfPress={() => console.log('Download PDF')}
+      // onXlsPress={() => console.log('Download XLS')}
       />
 
       {/* Date Selector */}
@@ -279,7 +283,14 @@ const DayBookScreen = () => {
             const amount = Number(item.debit) > 0 ? item.debit : item.credit;
 
             return (
-              <View style={styles.transItem}>
+              <TouchableOpacity
+                style={styles.transItem}
+                onPress={() => {
+                  setSelectedEntry(item);
+                  setShowEntryModal(true);
+                }}
+                activeOpacity={0.7}
+              >
                 {item.time && (
                   <Text style={styles.transTime}>
                     {moment(item.time).format("HH:mm:ss")}
@@ -315,7 +326,7 @@ const DayBookScreen = () => {
                     </Text>
                   </View>
                 </View>
-              </View>
+              </TouchableOpacity>
             );
           }}
           ListEmptyComponent={
@@ -333,6 +344,118 @@ const DayBookScreen = () => {
         maxDate={moment().format("YYYY-MM-DD")}
         initialDate={moment(selectedDate).format("YYYY-MM-DD")}
       />
+
+      {/* Entry Details Modal */}
+      <Modal
+        visible={showEntryModal}
+        transparent={true}
+        animationType="slide"
+        onRequestClose={() => setShowEntryModal(false)}
+      >
+        <View style={styles.entryModalOverlay}>
+          <View style={styles.entryModalContainer}>
+            <View style={styles.entryModalHeader}>
+              <Text style={styles.entryModalTitle}>Transaction Details</Text>
+              <TouchableOpacity
+                onPress={() => setShowEntryModal(false)}
+                style={styles.entryModalCloseButton}
+              >
+                <Icon name="close" size={24} color="#666" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.entryModalContent}>
+              {selectedEntry && (
+                <>
+                  <View style={styles.entryDetailRow}>
+                    <Text style={styles.entryDetailLabel}>Type</Text>
+                    <Text style={styles.entryDetailValue}>
+                      {selectedEntry.type}
+                    </Text>
+                  </View>
+
+                  <View style={styles.entryDetailRow}>
+                    <Text style={styles.entryDetailLabel}>Detail</Text>
+                    <Text style={styles.entryDetailValue}>
+                      {selectedEntry.detail || "N/A"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.entryDetailRow}>
+                    <Text style={styles.entryDetailLabel}>Medium</Text>
+                    <Text style={styles.entryDetailValue}>
+                      {selectedEntry.medium || "N/A"}
+                    </Text>
+                  </View>
+
+                  {selectedEntry.time && (
+                    <View style={styles.entryDetailRow}>
+                      <Text style={styles.entryDetailLabel}>Time</Text>
+                      <Text style={styles.entryDetailValue}>
+                        {moment(selectedEntry.time).format("DD/MM/YYYY HH:mm:ss")}
+                      </Text>
+                    </View>
+                  )}
+
+                  {Number(selectedEntry.debit) > 0 && (
+                    <View style={styles.entryDetailRow}>
+                      <Text style={styles.entryDetailLabel}>Debit</Text>
+                      <Text
+                        style={[
+                          styles.entryDetailValue,
+                          { color: "#FF0000" },
+                        ]}
+                      >
+                        ₹{Number(selectedEntry.debit).toFixed(2)}
+                      </Text>
+                    </View>
+                  )}
+
+                  {Number(selectedEntry.credit) > 0 && (
+                    <View style={styles.entryDetailRow}>
+                      <Text style={styles.entryDetailLabel}>Credit</Text>
+                      <Text
+                        style={[
+                          styles.entryDetailValue,
+                          { color: "#163881" },
+                        ]}
+                      >
+                        ₹{Number(selectedEntry.credit).toFixed(2)}
+                      </Text>
+                    </View>
+                  )}
+
+                  <View style={styles.entryDetailRow}>
+                    <Text style={styles.entryDetailLabel}>Amount</Text>
+                    <Text
+                      style={[
+                        styles.entryDetailValue,
+                        {
+                          color:
+                            Number(selectedEntry.credit) > 0
+                              ? "#163881"
+                              : "#FF0000",
+                        },
+                      ]}
+                    >
+                      ₹{Number(selectedEntry.credit || selectedEntry.debit).toFixed(2)}
+                    </Text>
+                  </View>
+                </>
+              )}
+            </ScrollView>
+
+            <View style={styles.entryModalFooter}>
+              <TouchableOpacity
+                style={styles.entryModalButton}
+                onPress={() => setShowEntryModal(false)}
+              >
+                <Text style={styles.entryModalButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -535,5 +658,75 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 14,
     color: "#999",
+  },
+  entryModalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  entryModalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    width: "90%",
+    maxWidth: 400,
+    maxHeight: "80%",
+  },
+  entryModalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  entryModalTitle: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#000",
+  },
+  entryModalCloseButton: {
+    padding: 4,
+  },
+  entryModalContent: {
+    padding: 20,
+    maxHeight: 400,
+  },
+  entryDetailRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F0F0F0",
+  },
+  entryDetailLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#666",
+    flex: 1,
+  },
+  entryDetailValue: {
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#000",
+    flex: 1,
+    textAlign: "right",
+  },
+  entryModalFooter: {
+    padding: 20,
+    borderTopWidth: 1,
+    borderTopColor: "#E0E0E0",
+  },
+  entryModalButton: {
+    backgroundColor: "#FCA311",
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  entryModalButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

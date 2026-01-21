@@ -115,4 +115,5 @@ export const API_ROUTES = {
   vendorDashboard: "/vendor/vendor-dashboard/dashboard",
   onlineOrderLedger: "/vendor/online-order-ledger/",
   topRatedProducts: "/vendor/top-rated-products/",
+  activityFeed: "/vendor/activity-feed/",
 };

@@ -42,6 +42,10 @@ interface Product {
   track_stock?: boolean;
   color?: string;
   size?: string;
+  size_details?: {
+    name: string;
+    id: string;
+  };
 }
 
 interface CartItem {
@@ -387,16 +391,16 @@ const ProductSelectionScreen: React.FC = () => {
           <Image source={{ uri: item.image }} style={styles.image} />
           <Text style={styles.title}>{item.name}</Text>
           {item.desc && <Text style={styles.desc} numberOfLines={1} ellipsizeMode="tail">{item.desc}</Text>}
-          {(item.color || item.size) && (
+          {(item.color || item.size_details) && (
             <View style={styles.variantInfoRow}>
               {item.color && (
                 <View style={styles.colorBadge}>
                   <Text style={styles.colorText}>Color: {item.color}</Text>
                 </View>
               )}
-              {item.size && (
+              {item.size_details && (
                 <View style={styles.sizeBadge}>
-                  <Text style={styles.sizeText}>Size: {item.size}</Text>
+                  <Text style={styles.sizeText}>Size: {item.size_details.name}</Text>
                 </View>
               )}
             </View>

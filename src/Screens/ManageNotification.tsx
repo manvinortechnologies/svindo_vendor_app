@@ -26,7 +26,7 @@ interface NotificationCampaign {
   id: string;
   title: string;
   message: string;
-  status: "Active" | "Ended" | "Pending" | "Rejected";
+  status: "Approved" | "Ended" | "Pending" | "Rejected";
   statusColor: string;
   boxColor: string;
   campaignName: string;
@@ -39,6 +39,16 @@ interface NotificationCampaign {
   image_url?: string;
   created_at?: string;
   updated_at?: string;
+}
+
+interface ActivityFeedItem {
+  id: string;
+  title: string;
+  message: string;
+  activity_type?: string;
+  created_at?: string;
+  updated_at?: string;
+  image_url?: string;
 }
 
 const ManageNotification = ({ navigation }: any) => {
@@ -67,9 +77,9 @@ const ManageNotification = ({ navigation }: any) => {
           title: item.title || item.subject || "Notification Campaign",
           message:
             item.message || item.body || item.description || "No message",
-          status: getStatusFromApi(item.status || item.state || "pending"),
-          statusColor: getStatusColor(item.status || item.state || "pending"),
-          boxColor: getBoxColor(item.status || item.state || "pending"),
+          status: getStatusFromApi(item.status ),
+          statusColor: getStatusColor(item.status ),
+          boxColor: getBoxColor(item.status ),
           campaignName:
             item.campaign_name ||
             item.title ||
@@ -101,7 +111,7 @@ const ManageNotification = ({ navigation }: any) => {
             : null,
           reason: item.reason || item.rejection_reason || null,
           budget: item.budget ? `₹${item.budget}` : null,
-          image_url: item.image_url,
+          image_url: item.banner,
           created_at: item.created_at,
           updated_at: item.updated_at,
         }));
@@ -152,12 +162,12 @@ const ManageNotification = ({ navigation }: any) => {
 
   const getStatusFromApi = (
     apiStatus: string
-  ): "Active" | "Ended" | "Pending" | "Rejected" => {
+  ): "Approved" | "Ended" | "Pending" | "Rejected" => {
     switch (apiStatus.toLowerCase()) {
-      case "active":
+      case "approved":
       case "running":
       case "live":
-        return "Active";
+        return "Approved";
       case "ended":
       case "completed":
       case "finished":
@@ -222,15 +232,17 @@ const ManageNotification = ({ navigation }: any) => {
     <View style={[styles.card, { backgroundColor: item.boxColor }]}>
       {/* Image with floating status */}
       <View style={styles.imageWrapper}>
-        <Image
+        {item.image_url ? <Image
           source={
-            item.image_url
-              ? { uri: item.image_url }
-              : require("../assets/notification_img.png")
+            { uri: item.image_url }
           }
           style={styles.image}
           resizeMode="cover"
-        />
+        />:
+        <View style={styles.imagePlaceholder}>
+          <Icon name="image" size={20} color="#000" />
+        </View>
+        }
         <View style={[styles.statusTag, { backgroundColor: item.statusColor }]}>
           <Text style={styles.statusText}>{item.status}</Text>
         </View>
@@ -279,7 +291,7 @@ const ManageNotification = ({ navigation }: any) => {
 
   // Calculate summary statistics
   const activeNotifications = notifications.filter(
-    (n) => n.status === "Active"
+    (n) => n.status === "Approved"
   ).length;
   const totalNotifications = notifications.length;
   const availableNotifications = Math.max(0, 3 - totalNotifications); // Assuming 3 notifications per month limit
@@ -431,6 +443,14 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     overflow: "hidden",
     marginBottom: 10,
+  },
+  imagePlaceholder: {
+    width: "100%",
+    height: "100%",
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f5f5f5",
+    borderRadius: 6,
   },
   image: {
     width: "100%",

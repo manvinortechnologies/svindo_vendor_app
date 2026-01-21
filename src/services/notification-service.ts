@@ -122,8 +122,8 @@ class NotificationService {
       // Should the initial notification be popped automatically
       popInitialNotification: true,
 
-      // Request permissions on init
-      requestPermissions: Platform.OS === "ios",
+      // Request permissions on init - enable for both iOS and Android
+      requestPermissions: true,
     });
 
     // Create default channel for Android
@@ -333,37 +333,27 @@ class NotificationService {
 
     // Generate a unique notification ID to prevent duplicates
     // Use a combination of messageId, timestamp, and data to ensure uniqueness
-    const messageId =
-      remoteMessage.messageId ||
-      data?.messageId ||
-      data?.id ||
-      `${remoteMessage.sentTime || Date.now()}_${JSON.stringify(data || {})}`;
-
-    // Create a more unique key by combining messageId with title/body hash
-    const title = notification?.title || data?.title || "";
-    const body = notification?.body || data?.body || data?.message || "";
-    const uniqueKey = `${messageId}_${title}_${body}`.substring(0, 200); // Limit length
-
+    const messageId = remoteMessage.messageId;
     // Check if we're already processing this message
-    if (this.processingMessages.has(uniqueKey)) {
+    if (this.processingMessages.has(messageId)) {
       console.log(
         "Notification already being processed, skipping duplicate:",
-        uniqueKey
+        messageId
       );
       return;
     }
 
     // Check if we've already shown this notification
-    if (this.notificationIds.has(uniqueKey)) {
-      console.log("Notification already shown, skipping duplicate:", uniqueKey);
+    if (this.notificationIds.has(messageId)) {
+      console.log("Notification already shown, skipping duplicate:", messageId);
       return;
     }
 
     // Mark as processing
-    this.processingMessages.add(uniqueKey);
+    this.processingMessages.add(messageId);
 
     // Mark this notification as shown
-    this.notificationIds.add(uniqueKey);
+    this.notificationIds.add(messageId);
 
     // Clean up old IDs (keep only last 100)
     if (this.notificationIds.size > 100) {
@@ -372,7 +362,6 @@ class NotificationService {
         .slice(0, idsArray.length - 100)
         .forEach((id) => this.notificationIds.delete(id));
     }
-
     if (Platform.OS === "android") {
       // Show local notification for Android in foreground
       const notificationData: NotificationData = {
@@ -389,41 +378,21 @@ class NotificationService {
       };
 
       // Show local notification
-      PushNotification.localNotification({
-        id: uniqueKey.substring(0, 50), // Use unique key as notification ID to prevent duplicates
-        title: notificationData.title,
-        message: notificationData.body,
-        channelId: "default-channel-id",
-        playSound: true,
-        soundName: "default",
-        smallIcon: "ic_notification",
-        largeIcon: "ic_notification_large",
-        color: "#FCA311",
-        priority: "high",
-        visibility: "public",
-        importance: "high",
-        vibrate: true,
-        userInfo: {
-          type: notificationData.type,
-          data: notificationData.data,
-          messageId: messageId,
-          remoteMessage: remoteMessage,
-          isLocalNotification: true, // Flag to identify our local notifications
-        },
-      });
+      this.sendLocalNotification(notificationData);
+
 
       // Remove from processing set after a short delay
-      setTimeout(() => {
-        this.processingMessages.delete(uniqueKey);
-      }, 1000);
+      // setTimeout(() => {
+      //   this.processingMessages.delete(messageId);
+      // }, 1000);
     } else {
       // Show alert for iOS
       Alert.alert(
         notification?.title || data?.title || "New Notification",
         notification?.body ||
-          data?.body ||
-          data?.message ||
-          "You have a new message",
+        data?.body ||
+        data?.message ||
+        "You have a new message",
         [
           {
             text: "Dismiss",
@@ -431,7 +400,7 @@ class NotificationService {
             onPress: () => {
               // Remove from processing set
               setTimeout(() => {
-                this.processingMessages.delete(uniqueKey);
+                this.processingMessages.delete(messageId);
               }, 100);
             },
           },
@@ -441,7 +410,7 @@ class NotificationService {
               this.handleNotificationPress(remoteMessage);
               // Remove from processing set
               setTimeout(() => {
-                this.processingMessages.delete(uniqueKey);
+                this.processingMessages.delete(messageId);
               }, 100);
             },
           },
@@ -579,34 +548,8 @@ class NotificationService {
         priority: "high",
         visibility: "public",
         importance: "high",
-      }),
-    });
-  }
-
-  // Schedule local notification
-  public scheduleLocalNotification(
-    notification: NotificationData,
-    date: Date
-  ): void {
-    PushNotification.localNotificationSchedule({
-      title: notification.title,
-      message: notification.body,
-      date: date,
-      channelId: "default-channel-id",
-      playSound: true,
-      soundName: "default",
-      smallIcon: "ic_notification", // Small icon (drawable resource)
-      largeIcon: "ic_notification_large", // Large icon (drawable resource) - shows app logo
-      color: "#FCA311", // Notification color
-      userInfo: {
-        type: notification.type,
-        data: notification.data,
-      },
-      ...(Platform.OS === "android" && {
-        // Android specific options
-        priority: "high",
-        visibility: "public",
-        importance: "high",
+        ongoing: false, // Allow notification to be dismissed
+        showWhen: true, // Show timestamp
       }),
     });
   }

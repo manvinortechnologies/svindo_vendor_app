@@ -337,7 +337,7 @@ const PurchaseLedger = () => {
   }, {} as Record<string, PurchaseEntry[]>);
 
   const totalBalance = currentPurchaseData.reduce((sum, purchase) => {
-    return sum + calculatePurchaseTotal(purchase);
+    return sum + Number(purchase.total_amount);
   }, 0);
 
   const renderPurchaseEntry = ({ item }: { item: PurchaseEntry }) => {
@@ -584,6 +584,12 @@ const PurchaseLedger = () => {
                     selectedPurchase.payment_method.slice(1)}
                 </Text>
               </View>
+              {selectedPurchase.bank_details && <View style={styles.detailRow}>
+                <Text style={styles.detailLabel}>Bank:</Text>
+                <Text style={styles.detailValue}>
+                  {selectedPurchase.bank_details.name}
+                </Text>
+              </View>}
             </View>
 
             {/* Items Details */}
@@ -703,58 +709,58 @@ const PurchaseLedger = () => {
               selectedPurchase.eway_bill_no ||
               selectedPurchase.lr_no ||
               selectedPurchase.vehicle_no) && (
-              <View style={styles.sectionContainer}>
-                <Text style={styles.sectionTitle}>Additional Details</Text>
-                {selectedPurchase.notes && (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Notes:</Text>
-                    <Text style={styles.detailValue}>
-                      {selectedPurchase.notes}
-                    </Text>
-                  </View>
-                )}
-                {selectedPurchase.references && (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>References:</Text>
-                    <Text style={styles.detailValue}>
-                      {selectedPurchase.references}
-                    </Text>
-                  </View>
-                )}
-                {selectedPurchase.eway_bill_no && (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>E-Way Bill No:</Text>
-                    <Text style={styles.detailValue}>
-                      {selectedPurchase.eway_bill_no}
-                    </Text>
-                  </View>
-                )}
-                {selectedPurchase.lr_no && (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>LR No:</Text>
-                    <Text style={styles.detailValue}>
-                      {selectedPurchase.lr_no}
-                    </Text>
-                  </View>
-                )}
-                {selectedPurchase.vehicle_no && (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Vehicle No:</Text>
-                    <Text style={styles.detailValue}>
-                      {selectedPurchase.vehicle_no}
-                    </Text>
-                  </View>
-                )}
-                {selectedPurchase.transport_name && (
-                  <View style={styles.detailRow}>
-                    <Text style={styles.detailLabel}>Transport Name:</Text>
-                    <Text style={styles.detailValue}>
-                      {selectedPurchase.transport_name}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            )}
+                <View style={styles.sectionContainer}>
+                  <Text style={styles.sectionTitle}>Additional Details</Text>
+                  {selectedPurchase.notes && (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>Notes:</Text>
+                      <Text style={styles.detailValue}>
+                        {selectedPurchase.notes}
+                      </Text>
+                    </View>
+                  )}
+                  {selectedPurchase.references && (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>References:</Text>
+                      <Text style={styles.detailValue}>
+                        {selectedPurchase.references}
+                      </Text>
+                    </View>
+                  )}
+                  {selectedPurchase.eway_bill_no && (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>E-Way Bill No:</Text>
+                      <Text style={styles.detailValue}>
+                        {selectedPurchase.eway_bill_no}
+                      </Text>
+                    </View>
+                  )}
+                  {selectedPurchase.lr_no && (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>LR No:</Text>
+                      <Text style={styles.detailValue}>
+                        {selectedPurchase.lr_no}
+                      </Text>
+                    </View>
+                  )}
+                  {selectedPurchase.vehicle_no && (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>Vehicle No:</Text>
+                      <Text style={styles.detailValue}>
+                        {selectedPurchase.vehicle_no}
+                      </Text>
+                    </View>
+                  )}
+                  {selectedPurchase.transport_name && (
+                    <View style={styles.detailRow}>
+                      <Text style={styles.detailLabel}>Transport Name:</Text>
+                      <Text style={styles.detailValue}>
+                        {selectedPurchase.transport_name}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+              )}
           </ScrollView>
         )}
       </CustomModal>

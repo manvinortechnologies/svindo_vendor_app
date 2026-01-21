@@ -50,6 +50,7 @@ interface CustomerInfo {
   outstanding: number;
   totalSale?: number;
   creditBalance?: number;
+  email?: string;
 }
 
 const CustomerLedger = ({ navigation, route }: any) => {
@@ -106,7 +107,7 @@ const CustomerLedger = ({ navigation, route }: any) => {
         // Calculate total sale from ledger transactions
         const totalSale = response.data.total_sales || 0;
         const creditBalance =
-          response.data.balance ||
+          response.data.balance.toString() ||
           route?.params?.customer?.opening_balance ||
           0;
 
@@ -114,9 +115,10 @@ const CustomerLedger = ({ navigation, route }: any) => {
         setCustomerInfo({
           name: route?.params?.customer?.name || "Customer Name",
           phone: route?.params?.customer?.contact || "+91 9999999999",
-          outstanding: creditBalance,
+          outstanding: Number(creditBalance),
           totalSale: totalSale,
-          creditBalance: creditBalance,
+          creditBalance: Number(creditBalance),
+          email: route?.params?.customer?.email || "info@svindo.com",
         });
       }
     } catch (error: any) {
@@ -246,18 +248,18 @@ const CustomerLedger = ({ navigation, route }: any) => {
   };
 
   const openMessage = async () => {
-    const phoneNumber = customerInfo.phone;
-    const message = "Hello! I need support with Svindo App.";
-    const url = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`;
+    const email = customerInfo.email;
+    const subject = "Hello!";
+    const url = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
 
     try {
       await Linking.openURL(url);
     } catch (error) {
-      console.error("Error opening SMS app:", error);
+      console.error("Error opening email:", error);
       Toast.show({
         type: "error",
         text1: "Error",
-        text2: "Unable to open SMS app. Please try again.",
+        text2: "Unable to open email. Please try again.",
       });
     }
   };
@@ -415,7 +417,7 @@ const CustomerLedger = ({ navigation, route }: any) => {
                 },
               ]}
             >
-              {customerInfo.outstanding.toFixed(2)}
+              {customerInfo?.outstanding?.toFixed(2)}
             </Text>
           </View>
         </View>
@@ -510,8 +512,8 @@ const CustomerLedger = ({ navigation, route }: any) => {
                   ) : 
                   ( */}
                   <>
-                    <Text style={styles.txnText}>Transaction</Text>
-                    <Text style={styles.txnValue}>{txn.id}</Text>
+                    {/* <Text style={styles.txnText}>Transaction</Text>
+                    <Text style={styles.txnValue}>{txn.id}</Text> */}
                     <Text style={styles.txnText}>Type</Text>
                     <Text style={styles.txnValue}>{txn.medium}</Text>
                     <Text style={styles.txnText}>Amount</Text>
@@ -668,14 +670,14 @@ const CustomerLedger = ({ navigation, route }: any) => {
             <ScrollView style={styles.transactionModalContent}>
               {selectedTransaction && (
                 <>
-                  <View style={styles.transactionDetailRow}>
+                  {/* <View style={styles.transactionDetailRow}>
                     <Text style={styles.transactionDetailLabel}>
                       Transaction ID
                     </Text>
                     <Text style={styles.transactionDetailValue}>
                       {selectedTransaction.id}
                     </Text>
-                  </View>
+                  </View> */}
 
                   <View style={styles.transactionDetailRow}>
                     <Text style={styles.transactionDetailLabel}>Type</Text>
@@ -897,7 +899,7 @@ const styles = StyleSheet.create({
   transactionRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between",
+    // justifyContent: "space-between",
     padding: 8,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",

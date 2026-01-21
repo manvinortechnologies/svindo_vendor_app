@@ -59,7 +59,7 @@ const DeleteAccountScreen = () => {
         });
         (navigation as any).reset({
           index: 0,
-          routes: [{ name: HomeNavigation.WELCOME_SCREEN }],
+          routes: [{ name: HomeNavigation.SIGNUP_SCREEN }],
         });
       } else {
         throw new Error("Failed to delete account");

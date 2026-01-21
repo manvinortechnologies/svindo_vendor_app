@@ -907,7 +907,7 @@ const StatisticsScreen = ({ navigation }: any) => {
                 <View style={styles.cardText}>
                   <Text style={styles.cardTitle}>{item.title}</Text>
                   <Text style={styles.cardValue}>Rs {item.value}</Text>
-                  <View style={styles.changeContainer}>
+                  {/* <View style={styles.changeContainer}>
                     <Icon
                       name={item.changeIcon}
                       size={16}
@@ -918,7 +918,7 @@ const StatisticsScreen = ({ navigation }: any) => {
                     >
                       {item.change}
                     </Text>
-                  </View>
+                  </View> */}
                 </View>
               </View>
               <View style={styles.cardFooter}>
@@ -1063,7 +1063,16 @@ const StatisticsScreen = ({ navigation }: any) => {
 
         {dashboardData?.activity?.activities?.length > 0 && (
           <View>
-            <Text style={styles.title}>Recent Store Activity</Text>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.title}>Recent Store Activity</Text>
+              <TouchableOpacity
+                onPress={() => navigation.navigate(HomeNavigation.NOTIFICATION_SCREEN)}
+                style={styles.viewAllButton}
+              >
+                <Text style={styles.viewAllText}>View All</Text>
+                <Icons name="chevron-forward" size={16} color="#FCA311" />
+              </TouchableOpacity>
+            </View>
             <View style={styles.recentActivityContainer}>
               <View style={styles.noteContainer}>
                 <Icon name="information-outline" size={18} color="#FCA311" />
@@ -1290,6 +1299,22 @@ const styles = ScaledSheet.create({
     // marginBottom: 10,
     color: "#000",
     flex: 1,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  viewAllButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  viewAllText: {
+    fontSize: 14,
+    color: "#FCA311",
+    fontWeight: "600",
   },
   chartPlaceholder: {
     height: "190@vs",

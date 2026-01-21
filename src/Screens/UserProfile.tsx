@@ -143,7 +143,7 @@ const UserProfile = ({ navigation }: any) => {
       // Reset navigation to welcome screen
       navigation.reset({
         index: 0,
-        routes: [{ name: HomeNavigation.WELCOME_SCREEN }],
+        routes: [{ name: HomeNavigation.SIGNUP_SCREEN }],
       });
     } catch (error) {
       console.error("Logout error:", error);

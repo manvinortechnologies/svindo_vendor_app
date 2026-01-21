@@ -164,12 +164,19 @@ const PaymentsScreen = () => {
           })
         );
         setPartyList(transformedParties);
-        if (route.params?.customerId) {
+        if (route.params.paymentData.customer) {
           const customer = transformedParties.find(
-            (party) => party.id === Number(route.params?.customerId)
+            (party) => party.id === Number(route.params.paymentData.customer)
           );
           if (customer) {
             setSelectedPartyId(Number(customer.id));
+          }
+        } else if (route.params.paymentData.vendor) {
+          const vendor = transformedParties.find(
+            (party) => party.id === Number(route.params.paymentData.vendor)
+          );
+          if (vendor) {
+            setSelectedPartyId(Number(vendor.id));
           }
         }
       }
@@ -423,7 +430,7 @@ const PaymentsScreen = () => {
                 style={[
                   styles.paymentMethodText,
                   selectedPaymentMethod === method &&
-                    styles.paymentMethodTextActive,
+                  styles.paymentMethodTextActive,
                 ]}
               >
                 {method}

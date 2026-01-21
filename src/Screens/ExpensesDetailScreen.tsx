@@ -207,10 +207,12 @@ const ExpensesDetailScreen = () => {
         </Text>
 
         {/* Bank Name */}
-        <Text style={styles.label}>Bank Name</Text>
-        <Text style={styles.value}>
-          {expenseData?.bank_details?.name || "N/A"}
-        </Text>
+        {expenseData?.payment_method !== "cash" && <>
+          <Text style={styles.label}>Bank Name</Text>
+          <Text style={styles.value}>
+            {expenseData?.bank_details?.name || "N/A"}
+          </Text>
+        </>}
 
         {/* Description */}
         <Text style={styles.label}>Description</Text>

@@ -102,7 +102,7 @@ const SalePOS = () => {
 
   const paymentMethods = [
     { key: "upi", value: "UPI" },
-    { key: "card", value: "Cheque" },
+    { key: "cheque", value: "Cheque" },
     { key: "cash", value: "Cash" },
     { key: "credit", value: "In Credit" },
   ];
@@ -356,7 +356,7 @@ const SalePOS = () => {
       (sum, item) =>
         sum +
         (wholesale ? item.wholesale_price || item.price : item.price) *
-          item.quantity,
+        item.quantity,
       0
     );
     setDiscount((p) => ({ ...p, pr: value }));
@@ -374,7 +374,7 @@ const SalePOS = () => {
       (sum, item) =>
         sum +
         (wholesale ? item.wholesale_price || item.price : item.price) *
-          item.quantity,
+        item.quantity,
       0
     );
     setDiscount((p) => ({ ...p, amount: value }));
@@ -452,18 +452,19 @@ const SalePOS = () => {
             ? Number(totalDiscountedAmount - Number(advanceAmount)).toFixed(2)
             : 0,
         wholesale_invoice_details: null,
+        bank: paymentMode !== "cash" && paymentMode !== "credit" ? selectedBank?.id : "",
       };
 
       const data =
         paymentMode === "credit"
           ? {
-              ...baseData,
-              advance_bank: selectedBank?.id || "",
-              advance_amount: advanceAmount,
-              advance_payment_method:
-                advancePaymentMode === 1 ? "bank" : "cash",
-              credit_date: new Date(dueDate).toISOString(),
-            }
+            ...baseData,
+            advance_bank: selectedBank?.id || "",
+            advance_amount: advanceAmount,
+            advance_payment_method:
+              advancePaymentMode === 1 ? "bank" : "cash",
+            credit_date: new Date(dueDate).toISOString(),
+          }
           : baseData;
       if (wholesale) {
         navigation.navigate(HomeNavigation.WHOLESALE, data);
@@ -471,8 +472,7 @@ const SalePOS = () => {
         setIsLoading(true);
 
         const res = await api[route.params?.editMode ? "put" : "post"](
-          `${API_ROUTES.posSales}${
-            route.params?.editMode ? `${route.params?.saleData?.id}/` : ""
+          `${API_ROUTES.posSales}${route.params?.editMode ? `${route.params?.saleData?.id}/` : ""
           }`,
           data
         );
@@ -702,14 +702,14 @@ const SalePOS = () => {
                 }}
                 keyboardType="numeric"
                 selectTextOnFocus
-                // onSubmitEditing={() => {
-                //   const updatedProducts = [...products];
-                //   if (item.quantity === 0) {
-                //     // Remove item if quantity is 0
-                //     updatedProducts.splice(index, 1);
-                //     setProducts(updatedProducts);
-                //   }
-                // }}
+              // onSubmitEditing={() => {
+              //   const updatedProducts = [...products];
+              //   if (item.quantity === 0) {
+              //     // Remove item if quantity is 0
+              //     updatedProducts.splice(index, 1);
+              //     setProducts(updatedProducts);
+              //   }
+              // }}
               />
               <Text style={styles.tableText}>
                 {formatNumber(

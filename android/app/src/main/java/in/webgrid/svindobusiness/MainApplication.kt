@@ -1,6 +1,7 @@
-package com.svindovender
+package `in`.webgrid.svindobusiness
 
 import android.app.Application
+import `in`.webgrid.svindobusiness.BuildConfig
 import com.facebook.react.PackageList
 import com.facebook.react.ReactApplication
 import com.facebook.react.ReactHost

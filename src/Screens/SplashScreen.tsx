@@ -92,7 +92,7 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
         // On error, go to welcome screen
         navigation.reset({
           index: 0,
-          routes: [{ name: HomeNavigation.WELCOME_SCREEN }],
+          routes: [{ name: HomeNavigation.SIGNUP_SCREEN }],
         });
       } finally {
         setIsLoading(false);

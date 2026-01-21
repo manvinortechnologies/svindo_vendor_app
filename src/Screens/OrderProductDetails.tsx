@@ -11,6 +11,7 @@ import {
   TextInput,
   Modal,
   Alert,
+  Platform,
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import CustomHeader from "../CommonComponent/CustomHeader";
@@ -26,6 +27,8 @@ import Icon from "react-native-vector-icons/Ionicons";
 import { s, ScaledSheet } from "react-native-size-matters";
 import { formatOrderDate } from "../utils/dateandTime";
 import Toast from "react-native-toast-message";
+import { APP_CONSTANTS } from "../constants/app.constants";
+import RNBlobUtil from 'react-native-blob-util';
 
 type OrderProductDetailsRouteParams = {
   orderId: string;
@@ -40,6 +43,11 @@ interface OrderItem {
     image: string;
     mrp: number;
     sales_price: number;
+    size_details: {
+      name: string;
+      id: string;
+    };
+    color: string;
   };
   quantity: number;
   sales_price: number;
@@ -50,6 +58,8 @@ interface OrderItem {
 }
 
 interface Order {
+  instruction: string;
+  print_summary: any;
   user_details: {
     first_name: string;
     mobile: string;
@@ -72,7 +82,6 @@ interface Order {
   created_at: string;
   delivery_boy: number | null;
   items: OrderItem[];
-  instructions: string;
   address_details: {
     full_name: string;
     flat_building: string;
@@ -83,6 +92,11 @@ interface Order {
     pincode: string;
     mobile_number?: string;
   };
+  coupon_details: {
+    code: string;
+    discount_amount: number;
+  };
+  delivery_discount_amount: number;
 }
 
 const OrderProductDetails = ({ navigation }: any) => {
@@ -113,6 +127,9 @@ const OrderProductDetails = ({ navigation }: any) => {
     is_auto_assign_enabled: boolean;
     is_self_delivery_enabled: boolean;
   } | null>(null);
+  const [downloadingFileId, setDownloadingFileId] = useState<number | null>(
+    null,
+  );
 
   const fetchOrderDetails = async () => {
     try {
@@ -191,6 +208,11 @@ const OrderProductDetails = ({ navigation }: any) => {
       });
       setOrder(response.data);
       setLoading(false);
+      Toast.show({
+        type: "success",
+        text1: "Success",
+        text2: "Order cancelled successfully",
+      });
     } catch (error) {
       console.error("Failed to cancel order:", error);
       setLoading(false);
@@ -415,6 +437,81 @@ const OrderProductDetails = ({ navigation }: any) => {
     }
   };
 
+  const handleDownloadFile = async (file: any) => {
+    try {
+      setDownloadingFileId(file.id);
+
+      // Request storage permission
+      // const hasPermission = await requestStoragePermission();
+      // if (!hasPermission) {
+      //   Toast.show({
+      //     type: 'error',
+      //     text1: 'Permission Denied',
+      //     text2: 'Storage permission is required to download files',
+      //   });
+      //   return;
+      // }
+
+      // Construct file URL
+      let fileUrl = file.file;
+      if (!fileUrl.startsWith('http://') && !fileUrl.startsWith('https://')) {
+        // If it's a relative URL, prepend the base URL
+        fileUrl = `${APP_CONSTANTS.API_BASE_URL}${fileUrl.startsWith('/') ? '' : '/'
+          }${fileUrl}`;
+      }
+
+      // Get file extension and name
+      const fileName = file.file.split('/').pop() || `file_${file.id}`;
+      const fileExtension = fileName.split('.').pop() || 'pdf';
+      const downloadFileName = `${fileName}`;
+
+      // Set download path
+      const { config, fs } = RNBlobUtil;
+      const downloadDir =
+        Platform.OS === 'ios' ? fs.dirs.DocumentDir : fs.dirs.DownloadDir;
+      const downloadPath = `${downloadDir}/${downloadFileName}`;
+
+      // Download file
+      const response = await config({
+        fileCache: true,
+        path: downloadPath,
+        addAndroidDownloads: {
+          useDownloadManager: true,
+          notification: true,
+          title: downloadFileName,
+          description: 'Downloading file...',
+          mime: `application/${fileExtension}`,
+          mediaScannable: true,
+        },
+      }).fetch('GET', fileUrl);
+
+      // Show success message
+      Toast.show({
+        type: 'success',
+        text1: 'Download Complete',
+        text2: `File saved to ${Platform.OS === 'ios' ? 'Documents' : 'Downloads'
+          }`,
+      });
+
+      // For Android, open the file
+      // if (Platform.OS === 'android') {
+      //   RNBlobUtil.android.actionViewIntent(
+      //     response.path(),
+      //     `application/${fileExtension}`,
+      //   );
+      // }
+    } catch (error: any) {
+      console.log('Error downloading file:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Download Failed',
+        text2: error.message || 'Failed to download file. Please try again.',
+      });
+    } finally {
+      setDownloadingFileId(null);
+    }
+  };
+
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -455,11 +552,10 @@ const OrderProductDetails = ({ navigation }: any) => {
     if (value === undefined || value === null || value === "") return "₹0";
     const numberValue = Number(value);
     if (isNaN(numberValue)) return "₹0";
-    return `₹${
-      Number.isInteger(numberValue)
-        ? numberValue.toFixed(0)
-        : numberValue.toFixed(2)
-    }`;
+    return `₹${Number.isInteger(numberValue)
+      ? numberValue.toFixed(0)
+      : numberValue.toFixed(2)
+      }`;
   };
 
   const extractFileName = (path: string | null | undefined) => {
@@ -532,14 +628,14 @@ const OrderProductDetails = ({ navigation }: any) => {
               {variant?.sided_display || "Single Side"}
             </Text>
           </View>
-          <View style={styles.printSummaryRow}>
+          {/* <View style={styles.printSummaryRow}>
             <Text style={styles.printSummaryLabel}>Instructions:</Text>
             <Text style={styles.printSummaryValue}>
               {printJob?.instructions
                 ? printJob.instructions
                 : "No additional instructions"}
             </Text>
-          </View>
+          </View> */}
         </View>
 
         <View style={styles.printSection}>
@@ -553,9 +649,22 @@ const OrderProductDetails = ({ navigation }: any) => {
           ) : (
             files.map((file: any) => (
               <View style={styles.printFileCard} key={file?.id || file?.file}>
-                <Text style={styles.printFileName}>
-                  File: {extractFileName(file?.file)}
-                </Text>
+                <View style={styles.printFileHeader}>
+                  <Text style={styles.printFileName}>
+                    File: {extractFileName(file?.file)}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.downloadFileButton}
+                    onPress={() => handleDownloadFile(file)}
+                    disabled={downloadingFileId === file.id}
+                  >
+                    {downloadingFileId === file.id ? (
+                      <ActivityIndicator size="small" color="#FCA311" />
+                    ) : (
+                      <Icon name="download-outline" size={20} color="#FCA311" />
+                    )}
+                  </TouchableOpacity>
+                </View>
                 <Text style={styles.printFileMeta}>
                   Number of copies: {file?.number_of_copies || 0}
                 </Text>
@@ -603,9 +712,8 @@ const OrderProductDetails = ({ navigation }: any) => {
             <Text style={styles.printSummaryLabel}>Variant Selected:</Text>
             <Text style={styles.printSummaryValue}>
               {variant
-                ? `${variant?.min_quantity || 0} - ${
-                    variant?.max_quantity || 0
-                  }`
+                ? `${variant?.min_quantity || 0} - ${variant?.max_quantity || 0
+                }`
                 : "-"}
             </Text>
           </View>
@@ -647,7 +755,7 @@ const OrderProductDetails = ({ navigation }: any) => {
           {item?.product_details?.name} | {item.quantity} Qty
         </Text>
         <Text style={styles.itemDesc}>
-          {item?.product_details?.description}
+          {/* {item?.product_details?.description} */}
           <View style={styles.priceRow}>
             <Text style={styles.price}>
               Rs {item?.product_details.sales_price}
@@ -659,6 +767,8 @@ const OrderProductDetails = ({ navigation }: any) => {
             )}
           </View>
         </Text>
+        <Text style={styles.price}>Size: {item?.product_details?.size_details?.name}</Text>
+        <Text style={styles.price}>Color: {item?.product_details?.color}</Text>
 
         {item.status === "returned/replaced_requested" && (
           <Text style={styles.pickup}>Requested Return/Exchange</Text>
@@ -698,7 +808,7 @@ const OrderProductDetails = ({ navigation }: any) => {
                 style={[
                   styles.trackingLinkButton,
                   (!trackingLinks[item.id] || !trackingLinks[item.id].trim()) &&
-                    styles.trackingLinkButtonDisabled,
+                  styles.trackingLinkButtonDisabled,
                 ]}
                 onPress={() => handleUpdateTrackingLink(item.id)}
                 disabled={
@@ -723,8 +833,8 @@ const OrderProductDetails = ({ navigation }: any) => {
           order.status === "accepted") ||
           (order.delivery_type === "instant_delivery" &&
             order.status === "ready_to_shipment")) &&
-        item.status !== "delivered" &&
-        item.status !== "returned/replaced_requested" ? (
+          item.status !== "delivered" &&
+          item.status !== "returned/replaced_requested" ? (
           <View style={styles.statusContainer}>
             <TouchableOpacity
               style={styles.statusButton}
@@ -740,10 +850,10 @@ const OrderProductDetails = ({ navigation }: any) => {
                   {item.status === "intransit"
                     ? "Mark as Delivered"
                     : item.status === "ready_to_shipment"
-                    ? "Mark as In Transit"
-                    : item.status === "returned/replaced_approved"
-                    ? "Complete Return/Exchange"
-                    : "Mark as Ready to Shipment"}
+                      ? "Mark as In Transit"
+                      : item.status === "returned/replaced_approved"
+                        ? "Complete Return/Exchange"
+                        : "Mark as Ready to Shipment"}
                 </Text>
               )}
             </TouchableOpacity>
@@ -800,17 +910,17 @@ const OrderProductDetails = ({ navigation }: any) => {
         {/* Header */}
         <CustomHeader
           title={order?.user_details?.first_name || order?.customer_name}
-          // rightIcon={
-          //   <TouchableOpacity
-          //     onPress={() => {
-          //       // Handle chat functionality
-          //       console.log("Chat button pressed");
-          //     }}
-          //     style={styles.chatButton}
-          //   >
-          //     <Icon name="chatbox-ellipses" size={s(22)} color="#FCA511" />
-          //   </TouchableOpacity>
-          // }
+        // rightIcon={
+        //   <TouchableOpacity
+        //     onPress={() => {
+        //       // Handle chat functionality
+        //       console.log("Chat button pressed");
+        //     }}
+        //     style={styles.chatButton}
+        //   >
+        //     <Icon name="chatbox-ellipses" size={s(22)} color="#FCA511" />
+        //   </TouchableOpacity>
+        // }
         />
 
         {/* Order status */}
@@ -830,14 +940,14 @@ const OrderProductDetails = ({ navigation }: any) => {
               .split("_")
               .join(" ")}
           </Text>
-          {/* {order.status !== "not_accepted" && (
+          {order.status !== "not_accepted" && (
             <TouchableOpacity
               style={styles.cancelBtn}
               onPress={handleCancelOrder}
             >
               <Text style={styles.cancelText}>Cancel</Text>
             </TouchableOpacity>
-          )} */}
+          )}
         </View>
 
         {/* Order details */}
@@ -866,9 +976,9 @@ const OrderProductDetails = ({ navigation }: any) => {
               </TouchableOpacity>
             )}
           </View>
-          {order.instructions && (
+          {order.instruction && (
             <Text style={styles.instructionsText}>
-              Instructions: {order.instructions}
+              Instructions: {order.instruction}
             </Text>
           )}
         </View>
@@ -893,9 +1003,9 @@ const OrderProductDetails = ({ navigation }: any) => {
         <View style={[styles.card, { zIndex: 3000 }]}>
           <Text style={styles.sectionTitle}>DELIVERY ASSIGNMENT</Text>
           {order?.delivery_type === "on_shop_order" ||
-          order?.delivery_type === "self_pickup" ||
-          (order?.delivery_type === "instant_delivery" &&
-            deliveryMode?.is_auto_assign_enabled) ? null : (
+            order?.delivery_type === "self_pickup" ||
+            (order?.delivery_type === "instant_delivery" &&
+              deliveryMode?.is_auto_assign_enabled) ? null : (
             <View>
               <CustomDropdown
                 placeholder="Select Delivery Boy"
@@ -956,9 +1066,14 @@ const OrderProductDetails = ({ navigation }: any) => {
             </Text>
           </View> */}
           <View style={styles.paymentRow}>
-            <Text style={styles.paymentLabel}>Cashback</Text>
+            <Text style={[styles.paymentLabel, { maxWidth: s(200) }]} numberOfLines={1} ellipsizeMode="tail">
+              Cashback{" "}
+              {order.coupon_details && <Text style={{ borderWidth: 1, borderColor: "red", backgroundColor: "#f0f0f0", }}>
+                Coupon Code: {order?.coupon_details?.code}
+              </Text>}
+            </Text>
             <Text style={styles.paymentValue}>
-              Rs {Number(order.cashback || 0).toFixed(2)}
+              Rs {Math.round(Number(order.delivery_discount_amount || 0)).toFixed(2)}
             </Text>
           </View>
           <View style={styles.paymentRow}>
@@ -1056,7 +1171,7 @@ const OrderProductDetails = ({ navigation }: any) => {
         >
           <TouchableOpacity
             style={styles.acceptBtn}
-            // onPress={() => navigation.navigate("ProductDetails")}
+          // onPress={() => navigation.navigate("ProductDetails")}
           >
             <View style={styles.swipeIndicator}>
               <Icon name="arrow-forward-outline" size={20} color="#FF9800" />
@@ -1112,8 +1227,8 @@ const OrderProductDetails = ({ navigation }: any) => {
               {pendingStatusUpdate?.newStatus === "ready_to_shipment"
                 ? "Ready to Deliver"
                 : pendingStatusUpdate?.newStatus === "intransit"
-                ? "In Transit"
-                : "Delivered"}
+                  ? "In Transit"
+                  : "Delivered"}
               ?
             </Text>
             <View style={styles.modalButtons}>
@@ -1133,7 +1248,7 @@ const OrderProductDetails = ({ navigation }: any) => {
                 }
               >
                 {pendingStatusUpdate?.itemId &&
-                updatingStatus[pendingStatusUpdate.itemId] ? (
+                  updatingStatus[pendingStatusUpdate.itemId] ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
                   <Text style={styles.confirmButtonText}>Confirm</Text>
@@ -1608,7 +1723,7 @@ const styles = ScaledSheet.create({
     alignItems: "center",
   },
   cancelButtonText: {
-    color: "#333",
+    color: "#fff",
     fontSize: 14,
     fontWeight: "600",
   },
@@ -1699,10 +1814,20 @@ const styles = ScaledSheet.create({
     marginBottom: 10,
     backgroundColor: "#fff",
   },
+  printFileHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 6,
+  },
   printFileName: {
     fontWeight: "700",
     color: "#1F1F1F",
-    marginBottom: 6,
+    flex: 1,
+  },
+  downloadFileButton: {
+    padding: 6,
+    marginLeft: 8,
   },
   printFileMeta: {
     fontSize: 12,

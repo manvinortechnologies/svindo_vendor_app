@@ -563,7 +563,7 @@ const StockScreen = () => {
                   style={[
                     styles.filterButton,
                     (selectedFilter === "both" ? "Online" : selectedFilter) ===
-                      filter && styles.selectedFilter,
+                    filter && styles.selectedFilter,
                   ]}
                   onPress={() =>
                     setSelectedFilter(filter === "Online" ? "both" : filter)
@@ -575,7 +575,7 @@ const StockScreen = () => {
                       (selectedFilter === "both"
                         ? "Online"
                         : selectedFilter) === filter &&
-                        styles.selectedFilterText,
+                      styles.selectedFilterText,
                     ]}
                   >
                     {filter}
@@ -604,7 +604,7 @@ const StockScreen = () => {
             showsVerticalScrollIndicator={false}
             contentContainerStyle={[
               styles.productList,
-              { paddingBottom: insets.bottom + s(100) },
+              { paddingBottom: insets.bottom + s(300) },
             ]}
             refreshing={refreshing}
             onRefresh={onRefresh}

@@ -81,12 +81,12 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.svindovender"
+    namespace "in.webgrid.svindobusiness"
     defaultConfig {
-        applicationId "com.svindovender"
+        applicationId "in.webgrid.svindobusiness"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 20
+        versionCode 23
         versionName "1.0"
     }
 
@@ -94,7 +94,8 @@ android {
         abi {
             enable true
             reset()
-            include 'armeabi-v7a', 'arm64-v8a', 'x86'
+            include 'armeabi-v7a', 'arm64-v8a'
+            exclude 'x86', 'x86_64'
             universalApk false
         }
     }
@@ -127,6 +128,15 @@ android {
     }
 
     packaging {
+        jniLibs {
+            useLegacyPackaging = false
+            excludes += [
+                '**/lib/x86_64/libbarhopper_v3.so',
+                '**/lib/x86_64/libreactnativemmkv.so',
+                '**/lib/x86/libbarhopper_v3.so',
+                '**/lib/x86/libreactnativemmkv.so'
+            ]
+        }
         pickFirst '**/libc++_shared.so'
         pickFirst '**/libjsc.so'
         resources {
@@ -151,8 +161,8 @@ dependencies {
     implementation("com.facebook.react:react-android")
     implementation project(':react-native-vector-icons')
     
-    // Google ML Kit Barcode Scanning
-    implementation 'com.google.mlkit:barcode-scanning:17.2.0'
+    // Google ML Kit Barcode Scanning (updated for 16KB page size support)
+    implementation 'com.google.mlkit:barcode-scanning:17.3.0'
     implementation 'com.google.mlkit:vision-common:17.3.0'
     implementation 'com.google.android.gms:play-services-base:18.0.1'
     implementation 'com.google.android.gms:play-services-location:19.0.1'

@@ -28,6 +28,10 @@ export interface ProductType {
   sub_category?: string;
   color?: string;
   size?: string;
+  size_details?: {
+    id: string;
+    name: string;
+  };
   sale_type?: string;
   is_active?: boolean;
   parent?: string | null;
@@ -125,9 +129,9 @@ const ProductItem: React.FC<ProductItemProps> = ({
                 <Text style={styles.colorText}>Color: {product.color}</Text>
               </View>
             )}
-            {product.size && (
+            {product.size_details && (
               <View style={styles.sizeBadge}>
-                <Text style={styles.sizeText}>Size: {product.size}</Text>
+                <Text style={styles.sizeText}>Size: {product.size_details?.name}</Text>
               </View>
             )}
           </View>

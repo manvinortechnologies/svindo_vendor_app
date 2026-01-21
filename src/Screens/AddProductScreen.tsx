@@ -139,13 +139,13 @@ const getValidationSchema = (selectedType: string) =>
     opening_stock:
       selectedType === "product"
         ? Yup.number().when("is_stock_enabled", {
-            is: true,
-            then: (schema) =>
-              schema
-                .required("Opening stock is required")
-                .min(1, "Opening stock must be greater than 0"),
-            otherwise: (schema) => schema.notRequired(),
-          })
+          is: true,
+          then: (schema) =>
+            schema
+              .required("Opening stock is required")
+              .min(1, "Opening stock must be greater than 0"),
+          otherwise: (schema) => schema.notRequired(),
+        })
         : Yup.number().notRequired(),
     low_stock_quantity: Yup.number().when("low_stock_alert", {
       is: true,
@@ -310,8 +310,8 @@ const ForSelector = ({
             disabled[option] && styles.disabledButton,
             selectedFor === option && styles.selectedOrange,
             option === "offline" &&
-              selectedType === "print" &&
-              styles.disabledButton,
+            selectedType === "print" &&
+            styles.disabledButton,
           ]}
           onPress={() => onSelect(option)}
           disabled={
@@ -337,7 +337,7 @@ const SectionHeader = ({
   title,
   showSwitch,
   switchValue = false,
-  onSwitchChange = () => {},
+  onSwitchChange = () => { },
   showAddButton,
   onAddPress,
 }: {
@@ -476,9 +476,9 @@ const PrintVariant = ({
 }: PrintVariantProps) => {
   const isVariantComplete = Boolean(
     variant?.sided &&
-      variant?.price &&
-      variant?.min_quantity &&
-      variant?.max_quantity
+    variant?.price &&
+    variant?.min_quantity &&
+    variant?.max_quantity
   );
 
   return (
@@ -730,10 +730,10 @@ const AddProductScreen = ({
           color: product.color || "",
           image1: product.image
             ? {
-                uri: product.image.includes("http")
-                  ? product.image
-                  : `https://syndobackend.pythonanywhere.com${product.image}`,
-              }
+              uri: product.image.includes("http")
+                ? product.image
+                : `https://syndobackend.pythonanywhere.com${product.image}`,
+            }
             : null,
           image2: null,
           image3: null,
@@ -1543,14 +1543,14 @@ const AddProductScreen = ({
             image1: existingProduct.image
               ? { uri: existingProduct.image }
               : null,
-            image2: existingProduct.image2
-              ? { uri: existingProduct.image2 }
+            image2: existingProduct.gallery_images_details[0]?.image
+              ? { uri: existingProduct.gallery_images_details[0]?.image }
               : null,
-            image3: existingProduct.image3
-              ? { uri: existingProduct.image3 }
+            image3: existingProduct.gallery_images_details[1]?.image
+              ? { uri: existingProduct.gallery_images_details[1]?.image }
               : null,
-            image4: existingProduct.image4
-              ? { uri: existingProduct.image4 }
+            image4: existingProduct.gallery_images_details[2]?.image
+              ? { uri: existingProduct.gallery_images_details[2]?.image }
               : null,
             instant_delivery: existingProduct.instant_delivery || false,
             self_pickup: existingProduct.self_pickup || false,
@@ -1627,10 +1627,10 @@ const AddProductScreen = ({
             disabled={
               existingProduct
                 ? {
-                    print: existingProduct?.product_type !== "print",
-                    service: existingProduct?.product_type !== "service",
-                    product: existingProduct?.product_type !== "product",
-                  }
+                  print: existingProduct?.product_type !== "print",
+                  service: existingProduct?.product_type !== "service",
+                  product: existingProduct?.product_type !== "product",
+                }
                 : {}
             }
           />
@@ -1642,9 +1642,9 @@ const AddProductScreen = ({
             disabled={
               existingProduct
                 ? {
-                    offline: existingProduct?.sale_type !== "offline",
-                    both: existingProduct?.sale_type !== "both",
-                  }
+                  offline: existingProduct?.sale_type !== "offline",
+                  both: existingProduct?.sale_type !== "both",
+                }
                 : {}
             }
           />
@@ -1869,7 +1869,7 @@ const AddProductScreen = ({
                         onSelect={(val) => setFieldValue("unit", val.id)}
                         selectedValue={values.unit}
                         dropDownBoxStyle={styles.dropdownStyle}
-                        // position="top"
+                      // position="top"
                       />
                     </FormField>
                   </View>
@@ -2269,7 +2269,7 @@ const AddProductScreen = ({
                                   style={[
                                     styles.submittedVariantCard,
                                     isActive &&
-                                      styles.submittedVariantCardActive,
+                                    styles.submittedVariantCardActive,
                                   ]}
                                   onPress={() =>
                                     handleShowSubmittedVariant(variantIndex)
@@ -2297,7 +2297,7 @@ const AddProductScreen = ({
                       )}
                       {values.print_variants?.map((variant, index) =>
                         submittedPrintVariants.includes(index) &&
-                        activePrintVariantIndex !== index ? null : (
+                          activePrintVariantIndex !== index ? null : (
                           <PrintVariant
                             key={index}
                             variant={variant}
@@ -2320,13 +2320,13 @@ const AddProductScreen = ({
                             isSubmitted={submittedPrintVariants.includes(index)}
                             errors={
                               errors.print_variants?.[index] &&
-                              typeof errors.print_variants[index] === "object"
+                                typeof errors.print_variants[index] === "object"
                                 ? errors.print_variants[index]
                                 : undefined
                             }
                             touched={
                               (touched.print_variants as any)?.[index] &&
-                              typeof (touched.print_variants as any)[index] ===
+                                typeof (touched.print_variants as any)[index] ===
                                 "object"
                                 ? (touched.print_variants as any)[index]
                                 : undefined

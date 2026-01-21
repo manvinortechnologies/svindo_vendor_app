@@ -21,9 +21,11 @@ import { ScaledSheet } from "react-native-size-matters";
 import CustomHeader from "../CommonComponent/CustomHeader";
 import { s } from "react-native-size-matters";
 import CalendarModal from "../Modals/CalendarModal";
+import { useIsFocused } from "@react-navigation/native";
 
 const Orders = ({ navigation }: any) => {
   const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
   const [selectedStatus, setSelectedStatus] = useState("All");
   const [selectedType, setSelectedType] = useState("");
   const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -70,8 +72,8 @@ const Orders = ({ navigation }: any) => {
     }
   };
   useEffect(() => {
-    fetchOrders();
-  }, []);
+    isFocused && fetchOrders();
+  }, [isFocused]);
 
   useEffect(() => {
     let filtered = [...orders];

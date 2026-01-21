@@ -74,7 +74,7 @@ const CustomerFeedback = () => {
 
   // Filter states
   const [selectedDate, setSelectedDate] = useState<string | null>(
-    moment().format("YYYY-MM-DD")
+    null
   );
   const [selectedRatingFilter, setSelectedRatingFilter] = useState<
     string | null
@@ -325,15 +325,25 @@ const CustomerFeedback = () => {
             <Text style={styles.filterLabel}>Filters</Text>
           </View>
           <View style={styles.filters}>
-            <TouchableOpacity
-              style={styles.dropdownContainer}
-              onPress={() => setShowDateModal(true)}
-            >
-              <Text style={styles.dropdownLabel}>Date : </Text>
-              <Text style={styles.dropdownValue}>
-                {formatDateDisplay(selectedDate)}
-              </Text>
-            </TouchableOpacity>
+            <View style={styles.dateFilterContainer}>
+              <TouchableOpacity
+                style={styles.dropdownContainer}
+                onPress={() => setShowDateModal(true)}
+              >
+                <Text style={styles.dropdownLabel}>Date : </Text>
+                <Text style={styles.dropdownValue}>
+                  {formatDateDisplay(selectedDate)}
+                </Text>
+              </TouchableOpacity>
+              {selectedDate && (
+                <TouchableOpacity
+                  style={styles.clearDateButton}
+                  onPress={() => setSelectedDate(null)}
+                >
+                  <Icon name="close-circle" size={20} color="#FCA311" />
+                </TouchableOpacity>
+              )}
+            </View>
             <TouchableOpacity
               style={styles.dropdownContainer}
               onPress={() => setShowRatingDropdown(true)}
@@ -446,7 +456,7 @@ const CustomerFeedback = () => {
                   style={[
                     styles.ratingOption,
                     selectedRatingFilter === option.id &&
-                      styles.ratingOptionSelected,
+                    styles.ratingOptionSelected,
                   ]}
                   onPress={() => handleRatingFilterSelect(option)}
                 >
@@ -454,7 +464,7 @@ const CustomerFeedback = () => {
                     style={[
                       styles.ratingOptionText,
                       selectedRatingFilter === option.id &&
-                        styles.ratingOptionTextSelected,
+                      styles.ratingOptionTextSelected,
                     ]}
                   >
                     {option.name}
@@ -565,16 +575,25 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#000",
   },
+  dateFilterContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    minWidth: "45%",
+    marginVertical: 6,
+  },
   dropdownContainer: {
     backgroundColor: "#fff",
     elevation: 4,
     padding: 10,
     borderRadius: 6,
-    minWidth: "45%",
-    marginVertical: 6,
+    // flex: 1,
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+  },
+  clearDateButton: {
+    marginLeft: 8,
+    padding: 4,
   },
   dropdownLabel: {
     fontWeight: "bold",

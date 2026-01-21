@@ -1,6 +1,6 @@
-import { MMKV } from "react-native-mmkv";
+import { createMMKV } from "react-native-mmkv";
 
-export const storage = new MMKV();
+export const storage = createMMKV();
 
 // Storage keys constants
 export const STORAGE_KEYS = {
@@ -67,17 +67,17 @@ export const StorageUtils = {
   },
 
   // Remove methods
-  removeAccessToken: () => storage.delete(STORAGE_KEYS.ACCESS_TOKEN),
-  removeRefreshToken: () => storage.delete(STORAGE_KEYS.REFRESH_TOKEN),
-  removeSignupStatus: () => storage.delete(STORAGE_KEYS.SIGNUP_STATUS),
-  removeAdminProfile: () => storage.delete(STORAGE_KEYS.ADMIN_PROFILE),
-  removeUserData: () => storage.delete(STORAGE_KEYS.USER_DATA),
-  removeBusinessProfile: () => storage.delete(STORAGE_KEYS.BUSINESS_PROFILE),
-  removeLocationData: () => storage.delete(STORAGE_KEYS.LOCATION_DATA),
-  removeIsLoggedIn: () => storage.delete(STORAGE_KEYS.IS_LOGGED_IN),
+  removeAccessToken: () => storage.remove(STORAGE_KEYS.ACCESS_TOKEN),
+  removeRefreshToken: () => storage.remove(STORAGE_KEYS.REFRESH_TOKEN),
+  removeSignupStatus: () => storage.remove(STORAGE_KEYS.SIGNUP_STATUS),
+  removeAdminProfile: () => storage.remove(STORAGE_KEYS.ADMIN_PROFILE),
+  removeUserData: () => storage.remove(STORAGE_KEYS.USER_DATA),
+  removeBusinessProfile: () => storage.remove(STORAGE_KEYS.BUSINESS_PROFILE),
+  removeLocationData: () => storage.remove(STORAGE_KEYS.LOCATION_DATA),
+  removeIsLoggedIn: () => storage.remove(STORAGE_KEYS.IS_LOGGED_IN),
   removeOnboardingCompleted: () =>
-    storage.delete(STORAGE_KEYS.ONBOARDING_COMPLETED),
-  removeCompanyProfile: () => storage.delete(STORAGE_KEYS.COMPANY_PROFILE),
+    storage.remove(STORAGE_KEYS.ONBOARDING_COMPLETED),
+  removeCompanyProfile: () => storage.remove(STORAGE_KEYS.COMPANY_PROFILE),
 
   // Clear all
   clearAll: () => storage.clearAll(),
@@ -116,7 +116,7 @@ export const StorageUtils = {
   // FCM Token methods
   setFCMToken: (token: string) => storage.set(STORAGE_KEYS.FCM_TOKEN, token),
   getFCMToken: () => storage.getString(STORAGE_KEYS.FCM_TOKEN),
-  removeFCMToken: () => storage.delete(STORAGE_KEYS.FCM_TOKEN),
+  removeFCMToken: () => storage.remove(STORAGE_KEYS.FCM_TOKEN),
 
   // Company Profile methods
   hasCompanyProfile: () => {

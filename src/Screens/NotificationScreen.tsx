@@ -25,7 +25,7 @@ interface NotificationItem {
   id: string;
   title: string;
   message: string;
-  type: "chat" | "order" | "like" | "rating" | "visit" | "reminder" | "general";
+  type: "chat" | "order" | "like" | "rating" | "visit" | "reminder" | "general" | "product_like" | "store_visit" | "follow";
   date?: string;
   time?: string;
   amount?: string;
@@ -34,6 +34,7 @@ interface NotificationItem {
   isRead?: boolean;
   created_at?: string;
   updated_at?: string;
+  user?: any;
 }
 
 const NotificationScreen = ({ navigation }: any) => {
@@ -58,46 +59,65 @@ const NotificationScreen = ({ navigation }: any) => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await api.get(API_ROUTES.notificationCampaign);
+      const response = await api.get(API_ROUTES.activityFeed);
 
-      if (response.data && Array.isArray(response.data)) {
-        // Transform API data to match our interface
-        const transformedNotifications = response.data.map((item: any) => ({
-          id: item.id?.toString() || Math.random().toString(),
-          title: item.title || item.subject || "Notification",
-          message:
-            item.message || item.body || item.description || "No message",
-          type: item.type || "general",
-          date: item.created_at
-            ? new Date(item.created_at).toLocaleDateString()
-            : new Date().toLocaleDateString(),
-          time: item.created_at
-            ? new Date(item.created_at).toLocaleTimeString([], {
+      if (response.data && response.data.activities && Array.isArray(response.data.activities)) {
+        // Transform activity feed data to match our interface
+        const transformedNotifications = response.data.activities.map((item: any) => {
+          // Map activity types to notification types
+          let notificationType: NotificationItem["type"] = item.type;
+
+
+
+          // Get user name for title
+          const userName = item.user
+            ? `${item.user.first_name || ""} ${item.user.last_name || ""}`.trim() || item.user.email || `User #${item.user.id}`
+            : "Unknown User";
+
+          // Get product image if available (for product_like)
+          let imageSource = require("../assets/product/storelogo.png");
+          if (item.product && item.product.image) {
+            imageSource = { uri: item.product.image };
+          } else if (item.user) {
+            // Could use user avatar if available in future
+            imageSource = require("../assets/product/storelogo.png");
+          }
+
+          return {
+            id: `${item.type}_${item.user?.id || 'unknown'}_${item.created_at || Math.random()}`,
+            title: item.message || `${userName} - ${item.type}`,
+            user: item.user,
+            message: item.message || "Store activity",
+            type: notificationType,
+            date: item.created_at
+              ? new Date(item.created_at).toLocaleDateString()
+              : new Date().toLocaleDateString(),
+            time: item.created_at
+              ? new Date(item.created_at).toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
               })
-            : new Date().toLocaleTimeString([], {
+              : new Date().toLocaleTimeString([], {
                 hour: "2-digit",
                 minute: "2-digit",
               }),
-          amount: item.amount || item.price,
-          image: item.image_url
-            ? { uri: item.image_url }
-            : require("../assets/product/storelogo.png"),
-          color: item.color || getDefaultColor(item.type),
-          isRead: item.is_read || false,
-          created_at: item.created_at,
-          updated_at: item.updated_at,
-        }));
+            amount: undefined,
+            image: imageSource,
+            color: getDefaultColor(notificationType),
+            isRead: false,
+            created_at: item.created_at,
+            updated_at: item.created_at,
+          };
+        });
 
         setNotifications(transformedNotifications);
       } else {
         setNotifications([]);
       }
     } catch (error) {
-      console.error("Error fetching notifications:", error);
-      setError("Failed to load notifications");
-      showError("Error", "Failed to load notifications. Please try again.");
+      console.error("Error fetching activity feed:", error);
+      setError("Failed to load store activity");
+      showError("Error", "Failed to load store activity. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -222,6 +242,7 @@ const NotificationScreen = ({ navigation }: any) => {
     //   markAsRead(notification.id);
     // }
 
+    console.log("notification-->", notification);
     // Handle different notification types
     switch (notification.type) {
       case "reminder":
@@ -232,9 +253,11 @@ const NotificationScreen = ({ navigation }: any) => {
       case "order":
         navigation.navigate("Orders", { orderId: notification.id });
         break;
-      // case "chat":
-      //   // Navigate to chat screen
-      //   break;
+      case "product_like":
+      case "store_visit":
+      case "follow":
+        navigation.navigate(HomeNavigation.CREATECOUPON, { customer: notification.user });
+        break;
       default:
         // Handle general notifications
         break;
@@ -245,7 +268,7 @@ const NotificationScreen = ({ navigation }: any) => {
   // const chats = notifications.filter((n) => n.type === "chat");
   const orders = notifications.filter((n) => n.type === "order");
   const moreNotifications = notifications.filter(
-    (n) => !["chat", "order"].includes(n.type)
+    (n) => !["chat", "order", "store_visit", "like", "visit"].includes(n.type)
   );
 
   if (error && notifications.length === 0) {
@@ -349,9 +372,9 @@ const NotificationScreen = ({ navigation }: any) => {
                   <Text style={styles.moreTime}>
                     {item.created_at
                       ? new Date(item.created_at).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
                       : ""}
                   </Text>
                 </View>
@@ -388,7 +411,7 @@ const NotificationScreen = ({ navigation }: any) => {
                   {item.amount && (
                     <Text style={styles.amount}>{item.amount}</Text>
                   )}
-                  {!item.isRead && <View style={styles.unreadDot} />}
+                  {/* {!item.isRead && <View style={styles.unreadDot} />} */}
                 </View>
               </TouchableOpacity>
             );
@@ -401,7 +424,7 @@ const NotificationScreen = ({ navigation }: any) => {
               style={styles.listItemContainer}
             >
               <View
-                style={[styles.moreItem, !item.isRead && styles.unreadMoreItem]}
+                style={[styles.moreItem]}
               >
                 {/* Left Side */}
                 {item.type === "reminder" ? (
@@ -431,8 +454,7 @@ const NotificationScreen = ({ navigation }: any) => {
                 <Text style={styles.moreTime}>{item.time}</Text>
 
                 {/* Right Side */}
-                <View style={styles.rightSide}>
-                  {!item.isRead && <View style={styles.unreadDot} />}
+                {/* <View style={styles.rightSide}>
                   {item.type !== "reminder" && item.color && (
                     <View
                       style={[
@@ -441,7 +463,7 @@ const NotificationScreen = ({ navigation }: any) => {
                       ]}
                     />
                   )}
-                </View>
+                </View> */}
               </View>
             </TouchableOpacity>
           );

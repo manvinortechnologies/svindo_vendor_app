@@ -526,8 +526,8 @@ const Erp = () => {
               onPress={() =>
                 item.screen === HomeNavigation.RATE_US_SCREEN
                   ? Linking.openURL(
-                      "https://play.google.com/store/apps/details?id=com.svindovendor"
-                    )
+                    "https://play.google.com/store/apps/details?id=in.webgrid.svindobusiness"
+                  )
                   : navigation.navigate(item.screen as any)
               }
             >

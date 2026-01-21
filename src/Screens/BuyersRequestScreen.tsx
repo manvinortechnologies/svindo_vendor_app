@@ -9,6 +9,7 @@ import {
   Modal,
   Alert,
   Linking,
+  Platform,
 } from "react-native";
 import React, { useRef, useState, useEffect } from "react";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -317,10 +318,10 @@ const BuyersRequestScreen: React.FC = () => {
       budget: request.budget,
       image: request.photo
         ? {
-            uri: request.photo.includes("http")
-              ? request.photo
-              : APP_CONSTANTS.API_BASE_URL + request.photo,
-          }
+          uri: request.photo.includes("http")
+            ? request.photo
+            : APP_CONSTANTS.API_BASE_URL + request.photo,
+        }
         : require("../assets/product/product4.png"),
       photos: request.photos.map((photo: any) => ({
         uri: photo.includes("http")
@@ -352,10 +353,10 @@ const BuyersRequestScreen: React.FC = () => {
       discount: offer.discount || "0%",
       image: offer.media
         ? {
-            uri: offer.media.includes("http")
-              ? offer.media
-              : APP_CONSTANTS.API_BASE_URL + offer.media,
-          }
+          uri: offer.media.includes("http")
+            ? offer.media
+            : APP_CONSTANTS.API_BASE_URL + offer.media,
+        }
         : require("../assets/product/product1.png"),
       rating: offer.rating || 4.5,
       reviews: offer.reviews_count || 0,
@@ -496,6 +497,29 @@ const BuyersRequestScreen: React.FC = () => {
     navigation.navigate(HomeNavigation.CREATECOUPON, {
       customer: item.user_details,
     });
+  };
+
+  const openAndroidApp = async (storeId: string) => {
+    const packageName = "in.webgrid.svindo"; // target app id
+
+    const intentUrl = `svindo://store/${storeId}`;
+    const storeUrl = Platform.select({
+      android: `market://details?id=${packageName}`,
+      ios: `https://apps.apple.com/app/id${packageName}`,
+    });
+    try {
+      const canOpen = await Linking.canOpenURL(storeUrl || "");
+      if (canOpen) {
+        await Linking.openURL(intentUrl); // 🎯 App installed → open it
+      } else {
+        await Linking.openURL(storeUrl || ""); // 🛒 Not installed → Play Store
+      }
+    } catch (e) {
+      // Fallback in rare cases → open Play Store web link
+      await Linking.openURL(
+        `https://play.google.com/store/apps/details?id=${packageName}`
+      );
+    }
   };
 
   return (
@@ -675,7 +699,7 @@ const BuyersRequestScreen: React.FC = () => {
         width={width}
         height={Dimensions.get("window").height - insets.bottom}
         data={getFilteredRequests() || []}
-        onProgressChange={() => {}}
+        onProgressChange={() => { }}
         renderItem={({ item }: { item: any }) => {
           return (
             <View
@@ -704,7 +728,7 @@ const BuyersRequestScreen: React.FC = () => {
                         ...item,
                         budget:
                           selectedTab === "Requested" &&
-                          selectedToggle === "Offers for you"
+                            selectedToggle === "Offers for you"
                             ? item.offerPrice
                             : item.budget,
                       })
@@ -794,8 +818,8 @@ const BuyersRequestScreen: React.FC = () => {
                         ? "Show offers"
                         : "Chat"
                       : selectedTab === "Retail"
-                      ? "Offer now"
-                      : "Sell now"}
+                        ? "Offer now"
+                        : "Sell now"}
                   </Text>
                   {/* <Text style={styles.sellButtonText}>
                   {selectedTab === "Requested" &&
@@ -833,7 +857,7 @@ const BuyersRequestScreen: React.FC = () => {
                     <Text style={styles.budgetText}>
                       ₹
                       {selectedTab === "Requested" &&
-                      selectedToggle === "Offers for you"
+                        selectedToggle === "Offers for you"
                         ? item.offerPrice
                         : item.budget}
                     </Text>
@@ -868,9 +892,7 @@ const BuyersRequestScreen: React.FC = () => {
                       <Text style={styles.label}>User</Text>
                       <TouchableOpacity
                         onPress={() =>
-                          Linking.openURL(
-                            `https://svindo.com/store/${item.storeId}`
-                          )
+                          openAndroidApp(item.storeId)
                         }
                         disabled={selectedTab === "Retail"}
                       >
@@ -923,7 +945,7 @@ const BuyersRequestScreen: React.FC = () => {
               style={[
                 styles.toggleButtonText,
                 selectedToggle === "Your Request" &&
-                  styles.toggleButtonTextSelected,
+                styles.toggleButtonTextSelected,
               ]}
             >
               Your Request
@@ -933,7 +955,7 @@ const BuyersRequestScreen: React.FC = () => {
             style={[
               styles.toggleButton,
               selectedToggle === "Offers for you" &&
-                styles.toggleButtonSelected,
+              styles.toggleButtonSelected,
             ]}
             onPress={() => setSelectedToggle("Offers for you")}
           >
@@ -941,7 +963,7 @@ const BuyersRequestScreen: React.FC = () => {
               style={[
                 styles.toggleButtonText,
                 selectedToggle === "Offers for you" &&
-                  styles.toggleButtonTextSelected,
+                styles.toggleButtonTextSelected,
               ]}
             >
               Offers for you

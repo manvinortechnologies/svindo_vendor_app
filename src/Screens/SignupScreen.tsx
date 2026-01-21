@@ -1,4 +1,4 @@
-import React, { FC, useState } from "react";
+import React, { FC, useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -22,6 +22,7 @@ import { MaskedTextInput } from "react-native-mask-text";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
+import { StorageUtils } from "../utils/storage";
 
 const SignupScreen: FC<SignUpScreenProps> = () => {
   const navigation =
@@ -111,6 +112,17 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
   //   requestSmsPermission();
   // }, []);
 
+  const checkAuthState = async () => {
+    if (auth().currentUser) {
+      auth().signOut();
+      await StorageUtils.clearAll();
+    }
+  };
+
+  useEffect(() => {
+    checkAuthState();
+  }, []);
+
   return (
     <View style={styles.container}>
       <Loading visible={loading} />
@@ -184,8 +196,8 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
             <View style={styles.footer}>
               <Text style={styles.termsText}>
                 By continuing, you agree to our {"\n"}
-                <Text style={styles.linkText}>Terms of Service</Text> and{" "}
-                <Text style={styles.linkText}>Privacy Policy</Text>.
+                <Text onPress={() => navigation.navigate(HomeNavigation.TERMS_SCREEN)} style={styles.linkText}>Terms of Service</Text> and{" "}
+                <Text onPress={() => navigation.navigate(HomeNavigation.PRIVACY_POLICY_SCREEN)} style={styles.linkText}>Privacy Policy</Text>.
               </Text>
             </View>
           </ScrollView>

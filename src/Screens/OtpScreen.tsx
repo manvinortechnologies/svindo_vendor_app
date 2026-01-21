@@ -46,12 +46,92 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
   const [error, setError] = useState<string>("");
   const [confirm, setConfirm] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [isAutoVerified, setIsAutoVerified] = useState(false);
 
   useEffect(() => {
     if (route.params?.confirmAuth) {
       setConfirm(route.params.confirmAuth);
     }
   }, [route.params]);
+
+  const handleAuthStateChanged = useCallback(
+    (user: any) => {
+      if (user && !isAutoVerified && !loading) {
+        if (user.phoneNumber !== phoneNumber) {
+          return;
+        }
+        setIsAutoVerified(true);
+        setLoading(true);
+        user
+          .getIdToken()
+          .then(async (idToken: string) => {
+            try {
+              const response = await login({
+                idToken: idToken,
+                user_type: "vendor",
+              }).unwrap();
+
+              if (
+                response.status === DEFAULT_STATUS_CODE_SUCCESS ||
+                response.status === DEFAULT_STATUS_CODE_CREATED
+              ) {
+                StorageUtils.setSignupStatus("SIGNUP");
+                StorageUtils.setAccessToken(response.access);
+                StorageUtils.setRefreshToken(response.refresh);
+                StorageUtils.setIsLoggedIn(true);
+                await NotificationService.initialize();
+
+                Toast.show({
+                  type: "success",
+                  text1: "Success",
+                  text2: "You have successfully logged in!",
+                });
+
+                if (
+                  !response.user_details.first_name ||
+                  !response.user_details.last_name ||
+                  !response.user_details.email
+                ) {
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: HomeNavigation.ADMINPROFILE }],
+                  });
+                  return;
+                } else {
+                  navigation.reset({
+                    index: 0,
+                    routes: [{ name: HomeNavigation.BOTTOM_NAVIGATION }],
+                  });
+                  return;
+                }
+              }
+              navigation.reset({
+                index: 0,
+                routes: [{ name: HomeNavigation.SIGNUP_DETAIL_SCREEN }],
+              });
+            } catch (error) {
+              console.log("Login error:", error);
+              setError("Failed to complete login. Please try again.");
+              setIsAutoVerified(false);
+            } finally {
+              setLoading(false);
+            }
+          })
+          .catch((error: any) => {
+            console.log("Token error:", error);
+            setError("Failed to get authentication token.");
+            setIsAutoVerified(false);
+            setLoading(false);
+          });
+      }
+    },
+    [login, navigation]
+  );
+
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged(handleAuthStateChanged);
+    return subscriber;
+  }, [handleAuthStateChanged]);
 
   const handleChange = (text: string) => {
     setOtp(text);
@@ -103,6 +183,7 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
 
   const handleConfirmCode = async (otp: string) => {
     setLoading(true);
+    setIsAutoVerified(true);
     if (!confirm) {
       setError("Confirmation failed. Please try again.");
       return;
@@ -214,57 +295,76 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
         {/* OTP Verification Section */}
         <Text style={styles.otpText}>OTP Verification</Text>
 
-        {/* OTP Input Fields */}
-        <View style={styles.otpContainer}>
-          <OtpInput
-            numberOfDigits={6}
-            focusColor="#FCA511"
-            focusStickBlinkingDuration={500}
-            onTextChange={handleChange}
-            onFilled={(otp) => handleConfirmCode(otp)}
-            textInputProps={{
-              accessibilityLabel: "One-Time Password",
-            }}
-            theme={{
-              containerStyle: { paddingHorizontal: s(30) },
-              pinCodeContainerStyle: {
-                width: s(45),
-                height: s(45),
-                borderWidth: 1,
-                borderColor: "#FCA511",
-                backgroundColor: "#FFF7DD",
-                alignItems: "center",
-                justifyContent: "center",
-                marginHorizontal: s(3),
-                borderRadius: s(16),
-              },
-              pinCodeTextStyle: {
-                fontSize: s(18),
-                textAlign: "center",
-                color: "#000",
-              },
-              focusStickStyle: { height: s(25), backgroundColor: "#FCA511" },
-            }}
-          />
-        </View>
+        {/* OTP Input Fields - Hide if auto-verified */}
+        {!isAutoVerified && (
+          <View style={styles.otpContainer}>
+            <OtpInput
+              numberOfDigits={6}
+              focusColor="#FCA511"
+              focusStickBlinkingDuration={500}
+              onTextChange={handleChange}
+              onFilled={(otp) => handleConfirmCode(otp)}
+              textInputProps={{
+                accessibilityLabel: "One-Time Password",
+              }}
+              theme={{
+                containerStyle: { paddingHorizontal: s(30) },
+                pinCodeContainerStyle: {
+                  width: s(45),
+                  height: s(45),
+                  borderWidth: 1,
+                  borderColor: "#FCA511",
+                  backgroundColor: "#FFF7DD",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginHorizontal: s(3),
+                  borderRadius: s(16),
+                },
+                pinCodeTextStyle: {
+                  fontSize: s(18),
+                  textAlign: "center",
+                  color: "#000",
+                },
+                focusStickStyle: { height: s(25), backgroundColor: "#FCA511" },
+              }}
+            />
+          </View>
+        )}
 
-        {/* Timer & Resend Option */}
-        <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
-        <Text style={styles.resendText}>Didn’t receive it?</Text>
+        {/* Show message when auto-verified */}
+        {isAutoVerified && (
+          <View style={styles.autoVerifiedContainer}>
+            <Icon name="checkmark-circle" size={48} color="#4CAF50" />
+            <Text style={styles.autoVerifiedText}>
+              Verification successful!
+            </Text>
+            <Text style={styles.autoVerifiedSubText}>
+              Please wait while we complete your login...
+            </Text>
+          </View>
+        )}
 
-        <TouchableOpacity
-          onPress={resetTimer}
-          style={styles.resendButtonWrapper}
-        >
-          <LinearGradient
-            colors={["#F9C313", "#FCA511"]}
-            style={styles.resendButtonGradient}
-            start={{ x: 0, y: 0 }} // Optional - Direction for the gradient
-            end={{ x: 1, y: 1 }} // Optional - Diagonal gradient
-          >
-            <Text style={styles.resendButtonText}>Resend SMS</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+        {/* Timer & Resend Option - Hide if auto-verified */}
+        {!isAutoVerified && (
+          <>
+            <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
+            <Text style={styles.resendText}>Didn’t receive it?</Text>
+
+            <TouchableOpacity
+              onPress={resetTimer}
+              style={styles.resendButtonWrapper}
+            >
+              <LinearGradient
+                colors={["#F9C313", "#FCA511"]}
+                style={styles.resendButtonGradient}
+                start={{ x: 0, y: 0 }} // Optional - Direction for the gradient
+                end={{ x: 1, y: 1 }} // Optional - Diagonal gradient
+              >
+                <Text style={styles.resendButtonText}>Resend SMS</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          </>
+        )}
 
         <Loading visible={loading} />
         {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -422,5 +522,25 @@ const styles = ScaledSheet.create({
   },
   loading: {
     marginTop: "15%",
+  },
+  autoVerifiedContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: "30@s",
+    paddingHorizontal: "20@s",
+    marginTop: "20@s",
+  },
+  autoVerifiedText: {
+    fontSize: "18@s",
+    fontWeight: "bold",
+    color: "#4CAF50",
+    marginTop: "15@s",
+    textAlign: "center",
+  },
+  autoVerifiedSubText: {
+    fontSize: "14@s",
+    color: "#666",
+    marginTop: "8@s",
+    textAlign: "center",
   },
 });

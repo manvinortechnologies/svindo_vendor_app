@@ -107,7 +107,7 @@
 -keep public class * extends java.lang.Exception
 
 # Keep custom model classes (adjust package name as needed)
--keep class com.svindovender.** { *; }
+-keep class in.webgrid.svindobusiness.** { *; }
 
 # Keep JavaScript interface
 -keepclassmembers class * {
