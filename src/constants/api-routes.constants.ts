@@ -97,6 +97,7 @@ export const API_ROUTES = {
   autoDeliveryBoysHistory:
     "/vendor/deliveryboys/auto-assigned-delivery-history/",
   orders: "/vendor/orders/",
+  ordersCancel: "/vendor/orders/:id/cancel-by-vendor/",
   orderItemTracking: "/vendor/order-item-tracking/",
   assignDeliveryBoy: "/vendor/orders/:id/assign-delivery-boy/",
   supportTickets: "/customer/support/tickets/",

@@ -104,7 +104,7 @@ const PaymentsList = () => {
   const [allPayments, setAllPayments] = useState<Payment[]>([]);
   const [showImageModal, setShowImageModal] = useState<boolean>(false);
   const [selectedAttachment, setSelectedAttachment] = useState<string | null>(
-    null
+    null,
   );
   // Fetch payments data from API
   const fetchPayments = async (isRefresh = false) => {
@@ -239,7 +239,7 @@ const PaymentsList = () => {
 
       // Remove payment from local state
       setPayments((prevPayments) =>
-        prevPayments.filter((payment) => payment.id !== selectedPayment?.id)
+        prevPayments.filter((payment) => payment.id !== selectedPayment?.id),
       );
 
       // Close modal
@@ -311,7 +311,7 @@ const PaymentsList = () => {
   const groupedPayments = payments
     .sort(
       (a, b) =>
-        new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime()
+        new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime(),
     )
     .reduce((groups, payment) => {
       const date = formatDate(payment.payment_date);
@@ -329,7 +329,7 @@ const PaymentsList = () => {
         ?.sort(
           (a, b) =>
             new Date(a.payment_date).getTime() -
-            new Date(b.payment_date).getTime()
+            new Date(b.payment_date).getTime(),
         )
         .map((payment) => (
           <View key={payment.id}>{renderPaymentItem({ item: payment })}</View>
@@ -578,6 +578,15 @@ const PaymentsList = () => {
                   {selectedPayment.payment_type.toUpperCase()}
                 </Text>
               </View>
+
+              {selectedPayment.payment_type !== "cash" && (
+                <View style={styles.modalDetailRow}>
+                  <Text style={styles.modalLabel}>Bank Name:</Text>
+                  <Text style={styles.modalValue}>
+                    {selectedPayment?.bank_details?.name?.toUpperCase()}
+                  </Text>
+                </View>
+              )}
 
               <View style={styles.modalDetailRow}>
                 <Text style={styles.modalLabel}>Party Type:</Text>

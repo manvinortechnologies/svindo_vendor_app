@@ -108,6 +108,7 @@ interface SalesEntry {
   total_amount: number;
   wholesale_invoice_details: any | null;
   created_at?: string;
+  bank_details: any | null;
 }
 
 interface OnlineOrderLedgerItem {
@@ -341,8 +342,8 @@ const SalesLedger = () => {
   const groupedSales = currentSalesData.reduce((groups, sale) => {
     const date = formatDate(
       (sale as SalesEntry).created_at ||
-        (sale as OnlineOrderLedgerItem).created_at ||
-        ""
+      (sale as OnlineOrderLedgerItem).created_at ||
+      ""
     );
     if (!groups[date]) {
       groups[date] = [];
@@ -385,8 +386,8 @@ const SalesLedger = () => {
               ₹
               {item.payment_method === "credit"
                 ? Number(
-                    item.total_amount - (item.balance_amount || 0)
-                  ).toFixed(2)
+                  item.total_amount - (item.balance_amount || 0)
+                ).toFixed(2)
                 : Number(item.total_amount).toFixed(2)}
             </Text>
           </View>
@@ -488,7 +489,7 @@ const SalesLedger = () => {
           style={[
             styles.saleEntryTouchable,
             sale?.wholesale_invoice_details?.invoice_type === "quotation" &&
-              styles.quotationEntryTouchable,
+            styles.quotationEntryTouchable,
           ]}
         >
           {activeTab === "Online Sales"
@@ -648,7 +649,7 @@ const SalesLedger = () => {
                     {
                       color:
                         selectedOnlineSale.status === "recorded" ||
-                        selectedOnlineSale.status === "completed"
+                          selectedOnlineSale.status === "completed"
                           ? "#4CAF50"
                           : "#F44336",
                     },
@@ -934,6 +935,14 @@ const SalesLedger = () => {
                     <Text style={styles.detailLabel}>Credit Date:</Text>
                     <Text style={styles.detailValue}>
                       {formatDate(selectedSale.credit_date || "")}
+                    </Text>
+                  </View>
+                )}
+                {(selectedSale.advance_bank_details || selectedSale.bank_details) && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Bank Name:</Text>
+                    <Text style={styles.detailValue}>
+                      {selectedSale.advance_bank_details?.name || selectedSale.bank_details?.name}
                     </Text>
                   </View>
                 )}
