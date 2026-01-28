@@ -29,6 +29,7 @@ import { formatOrderDate } from "../utils/dateandTime";
 import Toast from "react-native-toast-message";
 import { APP_CONSTANTS } from "../constants/app.constants";
 import RNFS from "react-native-fs";
+import { Buffer } from "buffer";
 
 type OrderProductDetailsRouteParams = {
   orderId: string;
@@ -146,6 +147,79 @@ const OrderProductDetails = ({ navigation }: any) => {
   const [downloadingFileId, setDownloadingFileId] = useState<number | null>(
     null,
   );
+  const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
+
+  const handleDownloadInvoice = async () => {
+    if (!order) return;
+
+    try {
+      setIsDownloadingInvoice(true);
+
+      // Request PDF as arraybuffer (binary data)
+      const response = await api.get(`/customer/order-invoice/${order.id}/`, {
+        responseType: "arraybuffer",
+      });
+
+      const headers = (response.headers || {}) as Record<string, string>;
+      const contentType = headers["content-type"] || "application/pdf";
+      const extension = contentType.includes("pdf")
+        ? "pdf"
+        : contentType.includes("zip")
+        ? "zip"
+        : "bin";
+      const fileName = `Invoice_${order.order_id}.${extension}`;
+      console.log("fileName", fileName);
+      const filePath =
+        Platform.OS === "android"
+          ? `${RNFS.DownloadDirectoryPath}/${fileName.replaceAll("/", "_")}`
+          : `${RNFS.DocumentDirectoryPath}/${fileName}`;
+
+      // Convert ArrayBuffer to base64
+      let base64Data: string;
+
+      if (response.data instanceof ArrayBuffer) {
+        // Handle ArrayBuffer response (binary data)
+        const bytes = new Uint8Array(response.data);
+        let binary = "";
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        // Convert binary string to base64 using Buffer
+        base64Data = Buffer.from(binary, "binary").toString("base64");
+      } else if (typeof response.data === "string") {
+        // If response is a string (PDF content as text), convert to base64
+        // First, we need to treat it as binary string
+        base64Data = Buffer.from(response.data, "binary").toString("base64");
+      } else {
+        // Fallback: try to use Buffer directly
+        base64Data = Buffer.from(response.data, "binary").toString("base64");
+      }
+
+      await RNFS.writeFile(filePath, base64Data, "base64");
+
+      if (Platform.OS === "android") {
+        await RNFS.scanFile(filePath);
+      }
+
+      // Show success message
+      Toast.show({
+        type: "success",
+        text1: "Download Complete",
+        text2: `Invoice saved to ${
+          Platform.OS === "ios" ? "Documents" : "Downloads"
+        }`,
+      });
+    } catch (error: any) {
+      console.error("Error downloading invoice:", error);
+      Toast.show({
+        type: "error",
+        text1: "Download Failed",
+        text2: error.message || "Failed to download invoice. Please try again.",
+      });
+    } finally {
+      setIsDownloadingInvoice(false);
+    }
+  };
 
   const fetchOrderDetails = async () => {
     try {
@@ -340,7 +414,29 @@ const OrderProductDetails = ({ navigation }: any) => {
       newStatus = "intransit";
     } else if (currentStatus === "intransit") {
       newStatus = "delivered";
-    } else if (currentStatus === "returned/replaced_approved") {
+    }
+    // Return Flow
+    else if (currentStatus === "return_approved") {
+      newStatus = "return_ready_to_shipment";
+    } else if (currentStatus === "return_ready_to_shipment") {
+      newStatus = "return_in_transit";
+    } else if (currentStatus === "return_in_transit") {
+      newStatus = "return_ready_to_deliver";
+    } else if (currentStatus === "return_ready_to_deliver") {
+      newStatus = "return_completed";
+    }
+    // Exchange Flow
+    else if (currentStatus === "exchange_approved") {
+      newStatus = "exchange_ready_to_shipment";
+    } else if (currentStatus === "exchange_ready_to_shipment") {
+      newStatus = "exchange_in_transit";
+    } else if (currentStatus === "exchange_in_transit") {
+      newStatus = "exchange_ready_to_deliver";
+    } else if (currentStatus === "exchange_ready_to_deliver") {
+      newStatus = "exchange_completed";
+    }
+    // Legacy / Fallback
+    else if (currentStatus === "returned/replaced_approved") {
       newStatus = "completed";
     } else {
       return; // Already delivered, no button should show
@@ -391,10 +487,12 @@ const OrderProductDetails = ({ navigation }: any) => {
     try {
       setUpdatingStatus((prev) => ({ ...prev, [itemId]: true }));
 
-      const response = await api.post(API_ROUTES.returnExchange, {
-        id: itemId,
-        action: action,
-      });
+      const response = await api.patch(
+        API_ROUTES.returnExchange + itemId + "/",
+        {
+          action: action,
+        },
+      );
 
       // Refresh order details to get updated status
       fetchOrderDetails();
@@ -835,12 +933,29 @@ const OrderProductDetails = ({ navigation }: any) => {
           )}
 
         {/* Status Button */}
-        {((order.delivery_type !== "instant_delivery" &&
+        {/* Status Button */}
+        {(((order.delivery_type !== "instant_delivery" &&
           order.status === "accepted") ||
           (order.delivery_type === "instant_delivery" &&
             order.status === "ready_to_shipment")) &&
-        item.status !== "delivered" &&
-        item.status !== "returned/replaced_requested" ? (
+          item.status !== "delivered" &&
+          item.status !== "exchange_requested" &&
+          item.status !== "return_requested" &&
+          item.status !== "return_completed" &&
+          item.status !== "exchange_completed" &&
+          item.status !== "return_rejected" &&
+          item.status !== "exchange_rejected" &&
+          item.status !== "return_cancelled" &&
+          item.status !== "exchange_cancelled") ||
+        item.status === "return_approved" ||
+        item.status === "return_ready_to_shipment" ||
+        item.status === "return_in_transit" ||
+        item.status === "return_ready_to_deliver" ||
+        item.status === "exchange_approved" ||
+        item.status === "exchange_ready_to_shipment" ||
+        item.status === "exchange_in_transit" ||
+        item.status === "exchange_ready_to_deliver" ||
+        item.status === "returned/replaced_approved" ? (
           <View style={styles.statusContainer}>
             <TouchableOpacity
               style={styles.statusButton}
@@ -857,6 +972,24 @@ const OrderProductDetails = ({ navigation }: any) => {
                     ? "Mark as Delivered"
                     : item.status === "ready_to_shipment"
                     ? "Mark as In Transit"
+                    : // Return Flow
+                    item.status === "return_approved"
+                    ? "Mark as Return Ready to Ship"
+                    : item.status === "return_ready_to_shipment"
+                    ? "Mark as Return In Transit"
+                    : item.status === "return_in_transit"
+                    ? "Mark as Return Ready to Deliver"
+                    : item.status === "return_ready_to_deliver"
+                    ? "Mark as Return Completed"
+                    : // Exchange Flow
+                    item.status === "exchange_approved"
+                    ? "Mark as Exchange Ready to Ship"
+                    : item.status === "exchange_ready_to_shipment"
+                    ? "Mark as Exchange In Transit"
+                    : item.status === "exchange_in_transit"
+                    ? "Mark as Exchange Ready to Deliver"
+                    : item.status === "exchange_ready_to_deliver"
+                    ? "Mark as Exchange Completed"
                     : item.status === "returned/replaced_approved"
                     ? "Complete Return/Exchange"
                     : "Mark as Ready to Shipment"}
@@ -865,7 +998,9 @@ const OrderProductDetails = ({ navigation }: any) => {
             </TouchableOpacity>
           </View>
         ) : (
-          item.status === "returned/replaced_requested" && (
+          (item.status === "returned/replaced_requested" ||
+            item.status === "return_requested" ||
+            item.status === "exchange_requested") && (
             <View
               style={[
                 styles.statusContainer,
@@ -895,7 +1030,7 @@ const OrderProductDetails = ({ navigation }: any) => {
                 {updatingStatus[item.id] ? (
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
-                  <Text style={styles.statusButtonText}>Cancel</Text>
+                  <Text style={styles.statusButtonText}>Reject</Text>
                 )}
               </TouchableOpacity>
             </View>
@@ -967,8 +1102,16 @@ const OrderProductDetails = ({ navigation }: any) => {
               {order.is_paid ? "Paid" : "Unpaid"} / {order.payment_mode}
             </Text>
             {order.status === "completed" && (
-              <TouchableOpacity style={styles.downloadBtn}>
-                <Text style={styles.downloadText}>Download Bill</Text>
+              <TouchableOpacity
+                style={styles.downloadBtn}
+                onPress={handleDownloadInvoice}
+                disabled={isDownloadingInvoice}
+              >
+                {isDownloadingInvoice ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.downloadText}>Download Bill</Text>
+                )}
               </TouchableOpacity>
             )}
           </View>
@@ -1287,11 +1430,10 @@ const OrderProductDetails = ({ navigation }: any) => {
             <Text style={styles.modalTitle}>Confirm Status Update</Text>
             <Text style={styles.modalMessage}>
               Are you sure you want to change the status to{" "}
-              {pendingStatusUpdate?.newStatus === "ready_to_shipment"
-                ? "Ready to Deliver"
-                : pendingStatusUpdate?.newStatus === "intransit"
-                ? "In Transit"
-                : "Delivered"}
+              {pendingStatusUpdate?.newStatus
+                ?.split("_")
+                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(" ")}
               ?
             </Text>
             <View style={styles.modalButtons}>

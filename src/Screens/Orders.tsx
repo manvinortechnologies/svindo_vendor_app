@@ -85,8 +85,8 @@ const Orders = ({ navigation }: any) => {
           (order: any) =>
             !!order.items.find(
               (item: any) =>
-                item.status.toLowerCase() === "returned/replaced_requested"
-            )
+                item.status.toLowerCase() === "returned/replaced_requested",
+            ),
         );
       } else {
         filtered = filtered.filter(
@@ -94,7 +94,7 @@ const Orders = ({ navigation }: any) => {
             order.status.toLowerCase() ===
             (selectedStatus === "Pending"
               ? "not_accepted"
-              : selectedStatus.toLowerCase())
+              : selectedStatus.toLowerCase()),
         );
       }
     }
@@ -102,30 +102,30 @@ const Orders = ({ navigation }: any) => {
     // Type filter
     if (selectedType && selectedType !== "") {
       filtered = filtered.filter(
-        (order: any) => order.delivery_type === selectedType
+        (order: any) => order.delivery_type === selectedType,
       );
     }
 
     // Sorting filter
     if (selectedFilter === "Price: Low to High") {
       filtered.sort(
-        (a: any, b: any) => (a.total_amount ?? 0) - (b.total_amount ?? 0)
+        (a: any, b: any) => (a.total_amount ?? 0) - (b.total_amount ?? 0),
       );
     } else if (selectedFilter === "Price: High to Low") {
       filtered.sort(
-        (a: any, b: any) => (b.total_amount ?? 0) - (a.total_amount ?? 0)
+        (a: any, b: any) => (b.total_amount ?? 0) - (a.total_amount ?? 0),
       );
     } else if (selectedFilter === "Newest First") {
       filtered.sort(
         (a: any, b: any) =>
           new Date(b.created_at ?? 0).getTime() -
-          new Date(a.created_at ?? 0).getTime()
+          new Date(a.created_at ?? 0).getTime(),
       );
     } else if (selectedFilter === "Oldest First") {
       filtered.sort(
         (a: any, b: any) =>
           new Date(a.created_at ?? 0).getTime() -
-          new Date(b.created_at ?? 0).getTime()
+          new Date(b.created_at ?? 0).getTime(),
       );
     }
 
