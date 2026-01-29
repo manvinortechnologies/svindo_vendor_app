@@ -139,13 +139,13 @@ const getValidationSchema = (selectedType: string) =>
     opening_stock:
       selectedType === "product"
         ? Yup.number().when("is_stock_enabled", {
-          is: true,
-          then: (schema) =>
-            schema
-              .required("Opening stock is required")
-              .min(1, "Opening stock must be greater than 0"),
-          otherwise: (schema) => schema.notRequired(),
-        })
+            is: true,
+            then: (schema) =>
+              schema
+                .required("Opening stock is required")
+                .min(1, "Opening stock must be greater than 0"),
+            otherwise: (schema) => schema.notRequired(),
+          })
         : Yup.number().notRequired(),
     low_stock_quantity: Yup.number().when("low_stock_alert", {
       is: true,
@@ -182,7 +182,7 @@ const getValidationSchema = (selectedType: string) =>
             price: Yup.string().required("Price per page is required"),
             min_quantity: Yup.string().required("Minimum quantity is required"),
             max_quantity: Yup.string().required("Maximum quantity is required"),
-          })
+          }),
         ),
       otherwise: (schema) => schema.notRequired(),
     }),
@@ -194,7 +194,7 @@ const getValidationSchema = (selectedType: string) =>
         then: (schema) =>
           schema.min(1, "At least one customize variant is required"),
         otherwise: (schema) => schema.notRequired(),
-      }
+      },
     ),
   });
 
@@ -310,8 +310,8 @@ const ForSelector = ({
             disabled[option] && styles.disabledButton,
             selectedFor === option && styles.selectedOrange,
             option === "offline" &&
-            selectedType === "print" &&
-            styles.disabledButton,
+              selectedType === "print" &&
+              styles.disabledButton,
           ]}
           onPress={() => onSelect(option)}
           disabled={
@@ -337,7 +337,7 @@ const SectionHeader = ({
   title,
   showSwitch,
   switchValue = false,
-  onSwitchChange = () => { },
+  onSwitchChange = () => {},
   showAddButton,
   onAddPress,
 }: {
@@ -476,9 +476,9 @@ const PrintVariant = ({
 }: PrintVariantProps) => {
   const isVariantComplete = Boolean(
     variant?.sided &&
-    variant?.price &&
-    variant?.min_quantity &&
-    variant?.max_quantity
+      variant?.price &&
+      variant?.min_quantity &&
+      variant?.max_quantity,
   );
 
   return (
@@ -652,7 +652,7 @@ const AddProductScreen = ({
     useState<DropDownOption | null>(null);
   const [selectedAddons, setSelectedAddons] = useState<DropDownOption[]>([]);
   const [selectedVariants, setSelectedVariants] = useState<DropDownOption[]>(
-    []
+    [],
   );
   const [submittedPrintVariants, setSubmittedPrintVariants] = useState<
     number[]
@@ -678,7 +678,7 @@ const AddProductScreen = ({
   const getSidedLabel = (value: string) => {
     if (!value) return "-";
     const match = variantData?.sided_choices?.find(
-      (choice: any) => choice?.value?.toString() === value?.toString()
+      (choice: any) => choice?.value?.toString() === value?.toString(),
     );
     return match?.label || value;
   };
@@ -730,10 +730,10 @@ const AddProductScreen = ({
           color: product.color || "",
           image1: product.image
             ? {
-              uri: product.image.includes("http")
-                ? product.image
-                : `https://syndobackend.pythonanywhere.com${product.image}`,
-            }
+                uri: product.image.includes("http")
+                  ? product.image
+                  : `https://syndobackend.pythonanywhere.com${product.image}`,
+              }
             : null,
           image2: null,
           image3: null,
@@ -791,7 +791,7 @@ const AddProductScreen = ({
     try {
       setIsLoading(true);
       const response = await api.get(
-        `${API_ROUTES.vendorProduct}${productId}/`
+        `${API_ROUTES.vendorProduct}${productId}/`,
       );
       const product = response.data;
       setExistingProduct(product);
@@ -913,7 +913,7 @@ const AddProductScreen = ({
           addonData.length > 0
         ) {
           const addons = addonData.filter((addon: any) =>
-            product.addons.includes(addon.id)
+            product.addons.includes(addon.id),
           );
           setSelectedAddons(addons);
         }
@@ -926,7 +926,7 @@ const AddProductScreen = ({
           variantData?.print_variants?.length > 0
         ) {
           const variants = variantData?.print_variants?.filter((variant: any) =>
-            product.print_variants.includes(variant.id)
+            product.print_variants.includes(variant.id),
           );
           setSelectedVariants(variants);
         }
@@ -937,7 +937,7 @@ const AddProductScreen = ({
           if (product.print_variants && Array.isArray(product.print_variants)) {
             formikRef.current?.setFieldValue(
               "print_variants",
-              product.print_variants
+              product.print_variants,
             );
           }
 
@@ -948,7 +948,7 @@ const AddProductScreen = ({
           ) {
             formikRef.current?.setFieldValue(
               "customize_print_variants",
-              product.customize_print_variants
+              product.customize_print_variants,
             );
           }
         }
@@ -1077,13 +1077,13 @@ const AddProductScreen = ({
 
       formData.append(
         "low_stock_alert",
-        values.low_stock_alert?.toString() || "false"
+        values.low_stock_alert?.toString() || "false",
       );
 
       if (values.low_stock_quantity) {
         formData.append(
           "low_stock_quantity",
-          values.low_stock_quantity?.toString() || "0"
+          values.low_stock_quantity?.toString() || "0",
         );
       }
 
@@ -1119,7 +1119,7 @@ const AddProductScreen = ({
       formData.append("is_food", (selectedType === "food")?.toString());
       formData.append(
         "tax_inclusive",
-        values.tax_inclusive?.toString() || "false"
+        values.tax_inclusive?.toString() || "false",
       );
       formData.append("is_popular", (values.is_popular || false)?.toString());
       formData.append("is_featured", (values.is_featured || false)?.toString());
@@ -1185,7 +1185,7 @@ const AddProductScreen = ({
           : values.customize_print_variants;
         formData.append(
           `customize_print_variants`,
-          JSON.stringify(customizePrintVariants)
+          JSON.stringify(customizePrintVariants),
         );
       }
 
@@ -1209,7 +1209,7 @@ const AddProductScreen = ({
             headers: {
               "Content-Type": "multipart/form-data",
             },
-          }
+          },
         );
       } else {
         // Create new product
@@ -1249,7 +1249,7 @@ const AddProductScreen = ({
   // Helper Functions
   const addPrintVariant = (
     setFieldValue: (field: string, value: any) => void,
-    values: FormValues
+    values: FormValues,
   ) => {
     const newVariant = {
       paper: "",
@@ -1266,7 +1266,7 @@ const AddProductScreen = ({
 
   const addCustomizeVariant = (
     setFieldValue: (field: string, value: any) => void,
-    values: FormValues
+    values: FormValues,
   ) => {
     const newVariant = { size: "", price: "" };
     setFieldValue("customize_print_variants", [
@@ -1278,7 +1278,7 @@ const AddProductScreen = ({
   const removePrintVariant = (
     setFieldValue: (field: string, value: any) => void,
     values: FormValues,
-    index: number
+    index: number,
   ) => {
     const updatedVariants = values.print_variants.filter((_, i) => i !== index);
     setFieldValue("print_variants", updatedVariants);
@@ -1286,8 +1286,8 @@ const AddProductScreen = ({
       prev
         .filter((submittedIndex) => submittedIndex !== index)
         .map((submittedIndex) =>
-          submittedIndex > index ? submittedIndex - 1 : submittedIndex
-        )
+          submittedIndex > index ? submittedIndex - 1 : submittedIndex,
+        ),
     );
     setActivePrintVariantIndex((prev) => {
       if (prev === null) return null;
@@ -1298,7 +1298,7 @@ const AddProductScreen = ({
 
   const handleSubmitPrintVariant = (index: number) => {
     setSubmittedPrintVariants((prev) =>
-      prev.includes(index) ? prev : [...prev, index]
+      prev.includes(index) ? prev : [...prev, index],
     );
     setActivePrintVariantIndex(null);
   };
@@ -1310,17 +1310,17 @@ const AddProductScreen = ({
   const removeCustomizeVariant = (
     setFieldValue: (field: string, value: any) => void,
     values: FormValues,
-    index: number
+    index: number,
   ) => {
     const updatedVariants = values.customize_print_variants.filter(
-      (_, i) => i !== index
+      (_, i) => i !== index,
     );
     setFieldValue("customize_print_variants", updatedVariants);
   };
 
   const addSelectedAddons = (
     setFieldValue: (field: string, value: any) => void,
-    values: FormValues
+    values: FormValues,
   ) => {
     const newVariant = { id: "", name: "" };
     setFieldValue("selectedAddons", [
@@ -1332,7 +1332,7 @@ const AddProductScreen = ({
   const removeSelectedAddons = (
     setFieldValue: (field: string, value: any) => void,
     values: FormValues,
-    index: number
+    index: number,
   ) => {
     const updatedVariants = values.selectedAddons.filter((_, i) => i !== index);
     setFieldValue("selectedAddons", updatedVariants);
@@ -1360,7 +1360,7 @@ const AddProductScreen = ({
     scannedItems: Array<{
       value: string;
       type: string;
-    }>
+    }>,
   ) => {
     if (scannedItems && scannedItems.length > 0) {
       // Only allow one barcode - take the first one
@@ -1444,7 +1444,7 @@ const AddProductScreen = ({
   useEffect(() => {
     formikRef.current?.setFieldValue(
       "opening_stock",
-      imeiList.length.toString()
+      imeiList.length.toString(),
     );
   }, [imeiList]);
 
@@ -1453,14 +1453,14 @@ const AddProductScreen = ({
     if (isEditMode && existingProduct && categoryList && subCategoryList) {
       if (existingProduct.category) {
         const category = categoryList.find(
-          (cat) => cat.id === existingProduct.category
+          (cat) => cat.id === existingProduct.category,
         );
         if (category) formikRef.current?.setFieldValue("category", category.id);
       }
 
       if (existingProduct.subcategory) {
         const subCategory = subCategoryList.find(
-          (sub) => sub.id === existingProduct.subcategory
+          (sub) => sub.id === existingProduct.subcategory,
         );
         if (subCategory)
           formikRef.current?.setFieldValue("sub_category", subCategory.id);
@@ -1471,7 +1471,7 @@ const AddProductScreen = ({
       const product = route.params.product;
       if (product.category) {
         const category = categoryList.find(
-          (cat) => cat.id.toString() === product.category.toString()
+          (cat) => cat.id.toString() === product.category.toString(),
         );
         if (category) formikRef.current?.setFieldValue("category", category.id);
       }
@@ -1479,7 +1479,7 @@ const AddProductScreen = ({
         const subCategory = subCategoryList.find(
           (sub: any) =>
             sub.name.toLowerCase() === product.sub_category.toLowerCase() &&
-            sub?.category?.toString() === product.category.toString()
+            sub?.category?.toString() === product.category.toString(),
         );
         if (subCategory)
           formikRef.current?.setFieldValue("sub_category", subCategory.id);
@@ -1494,13 +1494,14 @@ const AddProductScreen = ({
     ) {
       if (existingProduct.category) {
         const category = categoryList.find(
-          (cat) => cat.id.toString() === existingProduct.category.toString()
+          (cat) => cat.id.toString() === existingProduct.category.toString(),
         );
         if (category) formikRef.current?.setFieldValue("category", category.id);
       }
       if (existingProduct.sub_category) {
         const subCategory = subCategoryList.find(
-          (sub) => sub.id.toString() === existingProduct.sub_category.toString()
+          (sub) =>
+            sub.id.toString() === existingProduct.sub_category.toString(),
         );
         if (subCategory)
           formikRef.current?.setFieldValue("sub_category", subCategory.id);
@@ -1625,12 +1626,12 @@ const AddProductScreen = ({
             selectedType={selectedType}
             onSelect={handleTypeSelect}
             disabled={
-              existingProduct
+              existingProduct && route.params?.isEdit
                 ? {
-                  print: existingProduct?.product_type !== "print",
-                  service: existingProduct?.product_type !== "service",
-                  product: existingProduct?.product_type !== "product",
-                }
+                    print: existingProduct?.product_type !== "print",
+                    service: existingProduct?.product_type !== "service",
+                    product: existingProduct?.product_type !== "product",
+                  }
                 : {}
             }
           />
@@ -1640,11 +1641,11 @@ const AddProductScreen = ({
             selectedType={selectedType}
             onSelect={setSelectedFor}
             disabled={
-              existingProduct
+              existingProduct && route.params?.isEdit
                 ? {
-                  offline: existingProduct?.sale_type !== "offline",
-                  both: existingProduct?.sale_type !== "both",
-                }
+                    offline: existingProduct?.sale_type !== "offline",
+                    both: existingProduct?.sale_type !== "both",
+                  }
                 : {}
             }
           />
@@ -1833,7 +1834,7 @@ const AddProductScreen = ({
                           if (wholesalePrice === "" || wholesalePrice === "0") {
                             setFieldValue(
                               "wholesale_price",
-                              values.sales_price
+                              values.sales_price,
                             );
                           }
                         }}
@@ -1869,7 +1870,7 @@ const AddProductScreen = ({
                         onSelect={(val) => setFieldValue("unit", val.id)}
                         selectedValue={values.unit}
                         dropDownBoxStyle={styles.dropdownStyle}
-                      // position="top"
+                        // position="top"
                       />
                     </FormField>
                   </View>
@@ -2048,7 +2049,7 @@ const AddProductScreen = ({
                     selectedValue={values.sub_category}
                     placeholder="Select Sub Category"
                     options={subCategoryList?.filter(
-                      (sub: any) => sub.category === values.category
+                      (sub: any) => sub.category === values.category,
                     )}
                     disabled={!isEditMode && !!route.params?.productId}
                   />
@@ -2269,7 +2270,7 @@ const AddProductScreen = ({
                                   style={[
                                     styles.submittedVariantCard,
                                     isActive &&
-                                    styles.submittedVariantCardActive,
+                                      styles.submittedVariantCardActive,
                                   ]}
                                   onPress={() =>
                                     handleShowSubmittedVariant(variantIndex)
@@ -2297,7 +2298,7 @@ const AddProductScreen = ({
                       )}
                       {values.print_variants?.map((variant, index) =>
                         submittedPrintVariants.includes(index) &&
-                          activePrintVariantIndex !== index ? null : (
+                        activePrintVariantIndex !== index ? null : (
                           <PrintVariant
                             key={index}
                             variant={variant}
@@ -2306,11 +2307,11 @@ const AddProductScreen = ({
                             onUpdate={(field, value) => {
                               setFieldValue(
                                 `print_variants.${index}.${field}`,
-                                value
+                                value,
                               );
                               setFieldTouched(
                                 `print_variants.${index}.${field}`,
-                                true
+                                true,
                               );
                             }}
                             onRemove={() =>
@@ -2320,19 +2321,19 @@ const AddProductScreen = ({
                             isSubmitted={submittedPrintVariants.includes(index)}
                             errors={
                               errors.print_variants?.[index] &&
-                                typeof errors.print_variants[index] === "object"
+                              typeof errors.print_variants[index] === "object"
                                 ? errors.print_variants[index]
                                 : undefined
                             }
                             touched={
                               (touched.print_variants as any)?.[index] &&
-                                typeof (touched.print_variants as any)[index] ===
+                              typeof (touched.print_variants as any)[index] ===
                                 "object"
                                 ? (touched.print_variants as any)[index]
                                 : undefined
                             }
                           />
-                        )
+                        ),
                       )}
 
                       {errors?.print_variants &&
@@ -2364,7 +2365,7 @@ const AddProductScreen = ({
                                   removeCustomizeVariant(
                                     setFieldValue,
                                     values,
-                                    index
+                                    index,
                                   )
                                 }
                                 style={styles.removeButton}
@@ -2385,7 +2386,7 @@ const AddProductScreen = ({
                                     onChangeText={(text) =>
                                       setFieldValue(
                                         `customize_print_variants.${index}.size`,
-                                        text
+                                        text,
                                       )
                                     }
                                   />
@@ -2401,7 +2402,7 @@ const AddProductScreen = ({
                                     onChangeText={(text) =>
                                       setFieldValue(
                                         `customize_print_variants.${index}.price`,
-                                        text
+                                        text,
                                       )
                                     }
                                   />
@@ -2409,7 +2410,7 @@ const AddProductScreen = ({
                               </View>
                             </View>
                           </View>
-                        )
+                        ),
                       )}
 
                       {touched.customize_print_variants &&
@@ -2461,7 +2462,7 @@ const AddProductScreen = ({
                             onSelect={(opt) =>
                               setFieldValue(
                                 `selectedAddons.${index}.id`,
-                                opt.id
+                                opt.id,
                               )
                             }
                             selectedValue={addon.id}

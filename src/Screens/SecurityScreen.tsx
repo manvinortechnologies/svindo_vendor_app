@@ -24,6 +24,8 @@ type RootStackParamList = {
   TermsScreen: undefined;
   Support: undefined;
   DeleteAccountScreen: undefined;
+  VendorAgreement: undefined;
+  VendorSettlementPolicy: undefined;
 };
 
 export type SecurityScreenNavigationProp = NativeStackNavigationProp<
@@ -57,6 +59,16 @@ const menuItems: MenuItemType[] = [
     title: "Terms & Conditions",
     icon: "book-check",
     screen: "TermsScreen",
+  },
+  {
+    title: "Vendor Service Agreement",
+    icon: "file-document-outline",
+    screen: "VendorAgreement",
+  },
+  {
+    title: "Vendor Settlement Policy",
+    icon: "bank-outline",
+    screen: "VendorSettlementPolicy",
   },
   //   {
   //     title: "Help & Support",

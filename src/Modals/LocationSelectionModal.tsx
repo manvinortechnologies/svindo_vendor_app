@@ -67,7 +67,7 @@ const LocationSelectionModal: React.FC<LocationSelectionModalProps> = ({
   const mapRef = useRef<MapView>(null);
 
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(
-    initialLocation || null
+    initialLocation || null,
   );
   const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
   const [loading, setLoading] = useState(false);
@@ -81,7 +81,7 @@ const LocationSelectionModal: React.FC<LocationSelectionModalProps> = ({
 
   // Google Places states
   const [searchQuery, setSearchQuery] = useState(
-    initialLocation?.address || ""
+    initialLocation?.address || "",
   );
   const [predictions, setPredictions] = useState<PlacePrediction[]>([]);
   const [showPredictions, setShowPredictions] = useState(false);
@@ -100,7 +100,7 @@ const LocationSelectionModal: React.FC<LocationSelectionModalProps> = ({
             buttonNeutral: "Ask Me Later",
             buttonNegative: "Cancel",
             buttonPositive: "OK",
-          }
+          },
         );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
           setLocationPermission(true);
@@ -134,7 +134,7 @@ const LocationSelectionModal: React.FC<LocationSelectionModalProps> = ({
     // Get address for the selected coordinates
     const locationDetails = await getLocationDetails(
       roundedLatitude,
-      roundedLongitude
+      roundedLongitude,
     );
     const location: Location = {
       latitude: roundedLatitude,
@@ -173,8 +173,8 @@ const LocationSelectionModal: React.FC<LocationSelectionModalProps> = ({
     try {
       const response = await fetch(
         `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
-          query
-        )}&key=${GOOGLE_PLACES_API_KEY}&components=country:in`
+          query,
+        )}&key=${GOOGLE_PLACES_API_KEY}&components=country:in`,
       );
       const data = await response.json();
 
@@ -198,7 +198,7 @@ const LocationSelectionModal: React.FC<LocationSelectionModalProps> = ({
   const getPlaceDetails = async (placeId: string) => {
     try {
       const response = await fetch(
-        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=geometry,formatted_address,address_components&key=${GOOGLE_PLACES_API_KEY}`
+        `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=geometry,formatted_address,address_components&key=${GOOGLE_PLACES_API_KEY}`,
       );
       const data = await response.json();
 
@@ -215,7 +215,7 @@ const LocationSelectionModal: React.FC<LocationSelectionModalProps> = ({
         let pincode = "";
         if (place.address_components) {
           const postalCodeComponent = place.address_components.find(
-            (component: any) => component.types.includes("postal_code")
+            (component: any) => component.types.includes("postal_code"),
           );
           if (postalCodeComponent) {
             pincode = postalCodeComponent.long_name;
@@ -326,7 +326,7 @@ const LocationSelectionModal: React.FC<LocationSelectionModalProps> = ({
         // Get address for current location
         const locationDetails = await getLocationDetails(
           roundedLatitude,
-          roundedLongitude
+          roundedLongitude,
         );
 
         const newLocation: Location = {
@@ -364,7 +364,7 @@ const LocationSelectionModal: React.FC<LocationSelectionModalProps> = ({
         });
         console.log(error);
       },
-      { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 }
+      { enableHighAccuracy: false, timeout: 15000, maximumAge: 10000 },
     );
   };
 

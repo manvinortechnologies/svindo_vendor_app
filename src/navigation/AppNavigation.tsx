@@ -138,6 +138,8 @@ import ReturnExchangeScreen from "../Screens/ReturnExchangeScreen";
 import ShippingDeliveryScreen from "../Screens/ShippingDeliveryScreen";
 import TermsScreen from "../Screens/TermsScreen";
 import PurchaseLedger from "../Screens/PurchaseLedger";
+import VendorAgreementScreen from "../Screens/VendorAgreementScreen";
+import VendorSettlementPolicyScreen from "../Screens/VendorSettlementPolicyScreen";
 
 const Stack = createNativeStackNavigator();
 
@@ -615,6 +617,14 @@ const AppNavigation = () => {
         <Stack.Screen
           name={HomeNavigation.DELIVERY_AREA}
           component={DeliveryArea}
+        />
+        <Stack.Screen
+          name={HomeNavigation.VENDOR_AGREEMENT}
+          component={VendorAgreementScreen}
+        />
+        <Stack.Screen
+          name={HomeNavigation.VENDOR_SETTLEMENT_POLICY}
+          component={VendorSettlementPolicyScreen}
         />
       </Stack.Navigator>
     </NavigationContainer>

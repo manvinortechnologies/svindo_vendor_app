@@ -12,6 +12,7 @@ import {
   Modal,
   Alert,
   Platform,
+  RefreshControl,
 } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import CustomHeader from "../CommonComponent/CustomHeader";
@@ -56,6 +57,14 @@ interface OrderItem {
   status?: string;
   tracking_link?: string;
   delivery_boy?: number | null;
+  return_exchange?: {
+    id: number;
+    type: string;
+    reason: string;
+    image: string;
+    created_at: string;
+    updated_at: string;
+  };
 }
 
 interface Order {
@@ -148,6 +157,8 @@ const OrderProductDetails = ({ navigation }: any) => {
     null,
   );
   const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   const handleDownloadInvoice = async () => {
     if (!order) return;
@@ -221,9 +232,9 @@ const OrderProductDetails = ({ navigation }: any) => {
     }
   };
 
-  const fetchOrderDetails = async () => {
+  const fetchOrderDetails = async (isRefreshing = false) => {
     try {
-      setLoading(true);
+      if (!isRefreshing) setLoading(true);
       const response = await api.get(`${API_ROUTES.orders}${orderId}/`);
       setOrder(response.data);
 
@@ -248,11 +259,17 @@ const OrderProductDetails = ({ navigation }: any) => {
         setTrackingLinks(initialTrackingLinks);
       }
 
-      setLoading(false);
+      if (!isRefreshing) setLoading(false);
     } catch (error) {
       console.error("Failed to fetch order details:", error);
-      setLoading(false);
+      if (!isRefreshing) setLoading(false);
     }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchOrderDetails(true);
+    setRefreshing(false);
   };
 
   useEffect(() => {
@@ -408,6 +425,7 @@ const OrderProductDetails = ({ navigation }: any) => {
   const handleStatusButtonPress = (itemId: number, currentStatus: string) => {
     // Determine next status based on current status
     let newStatus: string;
+    console.log("currentStatus", currentStatus);
     if (currentStatus === "pending" || !currentStatus) {
       newStatus = "ready_to_shipment";
     } else if (currentStatus === "ready_to_shipment") {
@@ -417,12 +435,8 @@ const OrderProductDetails = ({ navigation }: any) => {
     }
     // Return Flow
     else if (currentStatus === "return_approved") {
-      newStatus = "return_ready_to_shipment";
-    } else if (currentStatus === "return_ready_to_shipment") {
-      newStatus = "return_in_transit";
-    } else if (currentStatus === "return_in_transit") {
-      newStatus = "return_ready_to_deliver";
-    } else if (currentStatus === "return_ready_to_deliver") {
+      newStatus = "return_picked_up";
+    } else if (currentStatus === "return_picked_up") {
       newStatus = "return_completed";
     }
     // Exchange Flow
@@ -431,13 +445,9 @@ const OrderProductDetails = ({ navigation }: any) => {
     } else if (currentStatus === "exchange_ready_to_shipment") {
       newStatus = "exchange_in_transit";
     } else if (currentStatus === "exchange_in_transit") {
-      newStatus = "exchange_ready_to_deliver";
-    } else if (currentStatus === "exchange_ready_to_deliver") {
+      newStatus = "exchange_picked_up";
+    } else if (currentStatus === "exchange_picked_up") {
       newStatus = "exchange_completed";
-    }
-    // Legacy / Fallback
-    else if (currentStatus === "returned/replaced_approved") {
-      newStatus = "completed";
     } else {
       return; // Already delivered, no button should show
     }
@@ -873,9 +883,14 @@ const OrderProductDetails = ({ navigation }: any) => {
           Size: {item?.product_details?.size_details?.name}
         </Text>
         <Text style={styles.price}>Color: {item?.product_details?.color}</Text>
-
-        {item.status === "returned/replaced_requested" && (
-          <Text style={styles.pickup}>Requested Return/Exchange</Text>
+        {(item.status?.toLowerCase().includes("return") ||
+          item.status?.toLowerCase().includes("exchange")) && (
+          <Text style={styles.pickup}>
+            {item.status
+              .split("_")
+              .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(" ")}
+          </Text>
         )}
 
         {/* Tracking Link Section - Only for general_delivery */}
@@ -950,11 +965,14 @@ const OrderProductDetails = ({ navigation }: any) => {
         item.status === "return_approved" ||
         item.status === "return_ready_to_shipment" ||
         item.status === "return_in_transit" ||
+        item.status === "return_approved" ||
+        item.status === "return_picked_up" ||
+        item.status === "return_in_transit" ||
         item.status === "return_ready_to_deliver" ||
         item.status === "exchange_approved" ||
         item.status === "exchange_ready_to_shipment" ||
+        item.status === "exchange_picked_up" ||
         item.status === "exchange_in_transit" ||
-        item.status === "exchange_ready_to_deliver" ||
         item.status === "returned/replaced_approved" ? (
           <View style={styles.statusContainer}>
             <TouchableOpacity
@@ -974,22 +992,18 @@ const OrderProductDetails = ({ navigation }: any) => {
                     ? "Mark as In Transit"
                     : // Return Flow
                     item.status === "return_approved"
-                    ? "Mark as Return Ready to Ship"
-                    : item.status === "return_ready_to_shipment"
-                    ? "Mark as Return In Transit"
-                    : item.status === "return_in_transit"
-                    ? "Mark as Return Ready to Deliver"
-                    : item.status === "return_ready_to_deliver"
+                    ? "Mark as Return Picked Up"
+                    : item.status === "return_picked_up"
                     ? "Mark as Return Completed"
                     : // Exchange Flow
                     item.status === "exchange_approved"
                     ? "Mark as Exchange Ready to Ship"
                     : item.status === "exchange_ready_to_shipment"
                     ? "Mark as Exchange In Transit"
-                    : item.status === "exchange_in_transit"
-                    ? "Mark as Exchange Ready to Deliver"
-                    : item.status === "exchange_ready_to_deliver"
+                    : item.status === "exchange_picked_up"
                     ? "Mark as Exchange Completed"
+                    : item.status === "exchange_in_transit"
+                    ? "Mark as Exchange Picked Up"
                     : item.status === "returned/replaced_approved"
                     ? "Complete Return/Exchange"
                     : "Mark as Ready to Shipment"}
@@ -1036,6 +1050,40 @@ const OrderProductDetails = ({ navigation }: any) => {
             </View>
           )
         )}
+
+        {/* Return/Exchange Details */}
+        {(item.status === "returned/replaced_requested" ||
+          item.status === "return_requested" ||
+          item.status === "exchange_requested") &&
+          item.return_exchange && (
+            <View style={styles.returnDetailsContainer}>
+              <Text style={styles.returnDetailsTitle}>
+                {item.return_exchange.type === "return"
+                  ? "Return Reason"
+                  : "Exchange Reason"}
+                :
+              </Text>
+              <Text style={styles.returnReason}>
+                {item.return_exchange.reason}
+              </Text>
+              {item.return_exchange.image && (
+                <View style={styles.returnImageContainer}>
+                  <Text style={styles.returnDetailsTitle}>Proof Image:</Text>
+                  <TouchableOpacity
+                    onPress={() =>
+                      setPreviewImage(item.return_exchange?.image || null)
+                    }
+                  >
+                    <Image
+                      source={{ uri: item.return_exchange.image }}
+                      style={styles.returnImage}
+                      resizeMode="cover"
+                    />
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
       </View>
     </View>
   );
@@ -1047,7 +1095,12 @@ const OrderProductDetails = ({ navigation }: any) => {
         { paddingTop: insets.top, paddingBottom: insets.bottom },
       ]}
     >
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 100 }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        }
+      >
         {/* Header */}
         <CustomHeader
           title={order?.user_details?.first_name || order?.customer_name}
@@ -1360,6 +1413,29 @@ const OrderProductDetails = ({ navigation }: any) => {
         </View>
       </ScrollView>
 
+      {/* Image Preview Modal */}
+      <Modal
+        visible={!!previewImage}
+        transparent={true}
+        onRequestClose={() => setPreviewImage(null)}
+      >
+        <View style={styles.imageModalContainer}>
+          <TouchableOpacity
+            style={styles.closeImageButton}
+            onPress={() => setPreviewImage(null)}
+          >
+            <Icon name="close" size={30} color="#fff" />
+          </TouchableOpacity>
+          {previewImage && (
+            <Image
+              source={{ uri: previewImage }}
+              style={styles.fullImage}
+              resizeMode="contain"
+            />
+          )}
+        </View>
+      </Modal>
+
       {/* Accept Order - Swipeable */}
       {order.status === "not_accepted" && (
         <Swipeable
@@ -1602,11 +1678,56 @@ const styles = ScaledSheet.create({
     fontSize: 14,
     color: "#000",
   },
+  returnDetailsContainer: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: "#f9f9f9",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#eee",
+  },
+  returnDetailsTitle: {
+    fontSize: 14,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 5,
+  },
+  returnReason: {
+    fontSize: 14,
+    color: "#555",
+    marginBottom: 10,
+  },
+  returnImageContainer: {
+    marginTop: 5,
+  },
+  returnImage: {
+    width: "100%",
+    height: 150,
+    borderRadius: 8,
+    marginTop: 5,
+  },
   noItemsText: {
     textAlign: "center",
     color: "#666",
     fontStyle: "italic",
     padding: 20,
+  },
+  imageModalContainer: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.9)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  fullImage: {
+    width: "100%",
+    height: "80%",
+  },
+  closeImageButton: {
+    position: "absolute",
+    top: 50,
+    right: 20,
+    zIndex: 1,
+    padding: 10,
   },
   itemRow: {
     flexDirection: "row",

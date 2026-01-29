@@ -81,11 +81,14 @@ const Orders = ({ navigation }: any) => {
     // Status filter
     if (selectedStatus !== "All") {
       if (selectedStatus === "Return/Exchange") {
+        console.log(filtered, "filtered");
+
         filtered = filtered.filter(
           (order: any) =>
             !!order.items.find(
               (item: any) =>
-                item.status.toLowerCase() === "returned/replaced_requested",
+                item.status.toLowerCase().includes("return") ||
+                item.status.toLowerCase().includes("exchange"),
             ),
         );
       } else {
@@ -321,51 +324,73 @@ const Orders = ({ navigation }: any) => {
             paddingBottom: s(150),
           }}
           keyExtractor={(item: any) => item.id.toString()}
-          renderItem={({ item }: { item: any }) => (
-            <TouchableOpacity
-              style={styles.orderCard}
-              onPress={() =>
-                navigation.navigate("OrderProductDetails", { orderId: item.id })
-              }
-            >
-              <View style={styles.orderHeaderContainer}>
-                <View style={styles.orderHeader}>
-                  <Text style={styles.customerName}>
-                    {item?.user_details?.first_name || item.customer_name}
+          renderItem={({ item }: { item: any }) => {
+            const itemStatus = item.items[0].status;
+            return (
+              <TouchableOpacity
+                style={styles.orderCard}
+                onPress={() =>
+                  navigation.navigate("OrderProductDetails", {
+                    orderId: item.id,
+                  })
+                }
+              >
+                <View style={styles.orderHeaderContainer}>
+                  <View style={styles.orderHeader}>
+                    <Text style={styles.customerName}>
+                      {item?.user_details?.first_name || item.customer_name}
+                    </Text>
+                    <Text style={styles.orderDate}>
+                      {formatOrderDate(item.created_at)}
+                    </Text>
+                  </View>
+                  <Text style={styles.orderDetails}>
+                    <Text style={styles.boldText}>Order #{item.order_id}</Text>
+                    {"\n"}
+                    <Text style={styles.orderDetails}>
+                      {item.items.length} Item
+                    </Text>
                   </Text>
-                  <Text style={styles.orderDate}>
-                    {formatOrderDate(item.created_at)}
+                  <View style={styles.onshop}>
+                    <Text style={styles.orderDetails}>
+                      {getDiliveryType(item.delivery_type)}
+                    </Text>
+                    <Text style={styles.orderAmount}>
+                      ₹ {item.total_amount}
+                    </Text>
+                  </View>
+                </View>
+                <View style={styles.statusRow}>
+                  <Text style={styles.orderStatus}>
+                    {(
+                      item.status.charAt(0).toUpperCase() +
+                      item.status.slice(1).toLowerCase()
+                    )
+                      .split("_")
+                      .join(" ")}{" "}
+                    {(itemStatus?.toLowerCase().includes("return") ||
+                      itemStatus?.toLowerCase().includes("exchange")) &&
+                    selectedStatus === "Return/Exchange" ? (
+                      <Text style={styles.pickup}>
+                        (
+                        {itemStatus
+                          .split("_")
+                          .map(
+                            (word) =>
+                              word.charAt(0).toUpperCase() + word.slice(1),
+                          )
+                          .join(" ")}
+                        )
+                      </Text>
+                    ) : null}
+                  </Text>
+                  <Text style={styles.paymentStatus}>
+                    {item.is_paid ? "Paid" : "Unpaid"} ➜
                   </Text>
                 </View>
-                <Text style={styles.orderDetails}>
-                  <Text style={styles.boldText}>Order #{item.order_id}</Text>
-                  {"\n"}
-                  <Text style={styles.orderDetails}>
-                    {item.items.length} Item
-                  </Text>
-                </Text>
-                <View style={styles.onshop}>
-                  <Text style={styles.orderDetails}>
-                    {getDiliveryType(item.delivery_type)}
-                  </Text>
-                  <Text style={styles.orderAmount}>₹ {item.total_amount}</Text>
-                </View>
-              </View>
-              <View style={styles.statusRow}>
-                <Text style={styles.orderStatus}>
-                  {(
-                    item.status.charAt(0).toUpperCase() +
-                    item.status.slice(1).toLowerCase()
-                  )
-                    .split("_")
-                    .join(" ")}
-                </Text>
-                <Text style={styles.paymentStatus}>
-                  {item.is_paid ? "Paid" : "Unpaid"} ➜
-                </Text>
-              </View>
-            </TouchableOpacity>
-          )}
+              </TouchableOpacity>
+            );
+          }}
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>No orders found</Text>

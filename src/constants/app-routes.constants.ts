@@ -135,4 +135,6 @@ export enum HomeNavigation {
   SHIPPING_DELIVERY = "ShippingDelivery",
   TERMS_SCREEN = "TermsScreen",
   SCAN_PRODUCT = "ScanProduct",
+  VENDOR_AGREEMENT = "VendorAgreement",
+  VENDOR_SETTLEMENT_POLICY = "VendorSettlementPolicy",
 }
