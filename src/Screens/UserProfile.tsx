@@ -264,7 +264,7 @@ const UserProfile = ({ navigation }: any) => {
           </Text>
         </TouchableOpacity> */}
         <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutButtonText}>Logout of all devices</Text>
+          <Text style={styles.logoutButtonText}>Logout</Text>
         </TouchableOpacity>
       </ScrollView>
       <Modal

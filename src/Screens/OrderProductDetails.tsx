@@ -579,19 +579,22 @@ const OrderProductDetails = ({ navigation }: any) => {
       }
 
       // Get file extension and name
-      const fileName = file.file.split("/").pop() || `file_${file.id}`;
+      const fileName =
+        file.file
+          .split("/")
+          .pop()
+          ?.replace(/[^a-zA-Z0-9._-]/g, "_") || `file_${file.id}`;
 
       const downloadDest = `${RNFS.DownloadDirectoryPath}/${fileName}`;
-
+      const exists = await RNFS.exists(downloadDest);
+      if (!exists) {
+        await RNFS.mkdir(downloadDest);
+      }
       const download = RNFS.downloadFile({
         fromUrl: fileUrl,
         toFile: downloadDest,
         background: true,
         discretionary: true,
-        progress: (res) => {
-          const progress = (res.bytesWritten / res.contentLength) * 100;
-          console.log(`Progress: ${progress.toFixed(2)}%`);
-        },
       });
 
       const result = await download.promise;

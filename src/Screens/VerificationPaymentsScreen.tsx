@@ -40,6 +40,7 @@ const VerificationPaymentsScreen = () => {
 
   // GSTIN Verification State
   const [gstin, setGstin] = useState("");
+  const [initialGstin, setInitialGstin] = useState(""); // Track initial GSTIN from server
   const [isGstinVerified, setIsGstinVerified] = useState(false);
   const [isVerifyingGstin, setIsVerifyingGstin] = useState(false);
   const [gstinVerificationData, setGstinVerificationData] = useState<{
@@ -66,6 +67,7 @@ const VerificationPaymentsScreen = () => {
   const [ifscCode, setIfscCode] = useState("");
   const [bankName, setBankName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
+  const [initialAccountNumber, setInitialAccountNumber] = useState("");
   const [reEnterAccountNumber, setReEnterAccountNumber] = useState("");
   const [isBankVerified, setIsBankVerified] = useState(false);
   const [isVerifyingBank, setIsVerifyingBank] = useState(false);
@@ -116,6 +118,7 @@ const VerificationPaymentsScreen = () => {
 
             // Update GSTIN verification status and value
             setGstin(storeData.gstin || "");
+            setInitialGstin(storeData.gstin || "");
             setIsGstinVerified(storeData.is_gstin_verified);
 
             // Update FSSAI verification status and value
@@ -125,6 +128,7 @@ const VerificationPaymentsScreen = () => {
             // Update Bank verification status
             setIsBankVerified(storeData.is_bank_verified);
             setAccountNumber(storeData.bank_account_number || "");
+            setInitialAccountNumber(storeData.bank_account_number || "");
             setIfscCode(storeData.bank_ifsc || "");
           }
         }
@@ -511,7 +515,34 @@ const VerificationPaymentsScreen = () => {
           {/* GSTIN */}
           <View style={styles.verificationBlock}>
             <View style={styles.rowBetween}>
-              <Text style={styles.label}>GSTIN</Text>
+              <View style={{ flexDirection: "row", alignItems: "center" }}>
+                <Text style={styles.label}>GSTIN</Text>
+                {isGstinVerified && (
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      backgroundColor: "#E8F5E9",
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                      borderRadius: 12,
+                      marginLeft: 8,
+                    }}
+                  >
+                    <Icon name="check-circle" size={12} color="#4CAF50" />
+                    <Text
+                      style={{
+                        color: "#2E7D32",
+                        fontSize: 10,
+                        marginLeft: 4,
+                        fontWeight: "700",
+                      }}
+                    >
+                      VERIFIED
+                    </Text>
+                  </View>
+                )}
+              </View>
               <CustomSwitch
                 value={isGstinVerified}
                 onValueChange={() => {}}
@@ -558,32 +589,51 @@ const VerificationPaymentsScreen = () => {
             <Text style={[styles.note, { marginVertical: 5 }]}>
               Note: GSTIN will be verified instantly using government database.
             </Text>
-            {!isGstinVerified && (
-              <TouchableOpacity
-                style={[
-                  styles.otpButton,
-                  isVerifyingGstin && styles.otpButtonDisabled,
-                ]}
-                onPress={handleVerifyGSTIN}
-                disabled={isVerifyingGstin || !gstin.trim()}
+            {!isGstinVerified && gstin && gstin === initialGstin ? (
+              <View
+                style={{
+                  marginTop: 8,
+                  padding: 10,
+                  backgroundColor: "#FFF3CD",
+                  borderRadius: 6,
+                  borderLeftWidth: 3,
+                  borderLeftColor: "#FFC107",
+                }}
               >
-                {isVerifyingGstin ? (
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <ActivityIndicator size="small" color="#fff" />
-                    <Text style={[styles.otpButtonText, { marginLeft: 8 }]}>
-                      Verifying...
-                    </Text>
-                  </View>
-                ) : (
-                  <Text style={styles.otpButtonText}>Verify GSTIN</Text>
-                )}
-              </TouchableOpacity>
+                <Text
+                  style={{ color: "#856404", fontSize: 13, fontWeight: "500" }}
+                >
+                  Your request is under review
+                </Text>
+              </View>
+            ) : (
+              !isGstinVerified && (
+                <TouchableOpacity
+                  style={[
+                    styles.otpButton,
+                    isVerifyingGstin && styles.otpButtonDisabled,
+                  ]}
+                  onPress={handleVerifyGSTIN}
+                  disabled={isVerifyingGstin || !gstin.trim()}
+                >
+                  {isVerifyingGstin ? (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <ActivityIndicator size="small" color="#fff" />
+                      <Text style={[styles.otpButtonText, { marginLeft: 8 }]}>
+                        Verifying...
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.otpButtonText}>Verify GSTIN</Text>
+                  )}
+                </TouchableOpacity>
+              )
             )}
           </View>
 
@@ -776,158 +826,221 @@ const VerificationPaymentsScreen = () => {
     },
     {
       key: "bankDetails",
-      title: "Bank Details",
       content: (
-        <View style={styles.sectionContent}>
-          <View style={styles.inputWrapper}>
-            <Text style={{ marginBottom: 5, fontWeight: "500", color: "#000" }}>
-              Account Holder Name
-            </Text>
-            <TextInput
-              placeholder="Enter here"
-              placeholderTextColor="#999"
-              style={styles.input}
-              value={accountHolderName}
-              onChangeText={setAccountHolderName}
-              // editable={!isBankVerified}
-            />
-          </View>
-          <View style={styles.inputWrapper}>
-            <Text style={{ marginBottom: 5, fontWeight: "500", color: "#000" }}>
-              Bank IFSC code
-            </Text>
-            <TextInput
-              placeholder="Enter IFSC code"
-              placeholderTextColor="#999"
-              style={[
-                styles.input,
-                isBankVerified && { borderColor: "#4CAF50" },
-              ]}
-              value={ifscCode}
-              onChangeText={(text) => {
-                setIfscCode(text.toUpperCase());
-                setIsBankVerified(false);
-                setBankVerificationData(null);
-              }}
-              maxLength={11}
-              // editable={!isVerifyingBank || !isBankVerified}
-            />
-          </View>
-          <View style={styles.inputWrapper}>
-            <Text style={{ marginBottom: 5, fontWeight: "500", color: "#000" }}>
-              Bank Name
-            </Text>
-            <TextInput
-              placeholder="Enter here"
-              placeholderTextColor="#999"
-              style={styles.input}
-              value={bankName}
-              onChangeText={setBankName}
-              // editable={!isVerifyingBank || !isBankVerified}
-            />
-          </View>
-          <View style={styles.inputWrapper}>
-            <Text style={{ marginBottom: 5, fontWeight: "500", color: "#000" }}>
-              Opening Balance
-            </Text>
-            <TextInput
-              placeholder="Enter here"
-              placeholderTextColor="#999"
-              style={styles.input}
-              value={openingBalance}
-              onChangeText={setOpeningBalance}
-              keyboardType="numeric"
-              // editable={!isVerifyingBank || !isBankVerified}
-            />
-          </View>
-          <View style={styles.inputWrapper}>
-            <Text style={{ marginBottom: 5, fontWeight: "500", color: "#000" }}>
-              Account Number
-            </Text>
-            <TextInput
-              placeholder="Enter account number"
-              placeholderTextColor="#999"
-              style={[
-                styles.input,
-                isBankVerified && { borderColor: "#4CAF50" },
-              ]}
-              value={accountNumber}
-              onChangeText={(text) => {
-                setAccountNumber(text);
-                setIsBankVerified(false);
-                setBankVerificationData(null);
-              }}
-              keyboardType="numeric"
-              // editable={!isVerifyingBank || !isBankVerified}
-            />
-          </View>
-          <View style={styles.inputWrapper}>
-            <Text style={{ marginBottom: 5, fontWeight: "500", color: "#000" }}>
-              Re-enter Account Number
-            </Text>
-            <TextInput
-              placeholder="Re-enter account number"
-              placeholderTextColor="#999"
-              style={styles.input}
-              value={reEnterAccountNumber}
-              onChangeText={setReEnterAccountNumber}
-              keyboardType="numeric"
-              // editable={!isVerifyingBank || !isBankVerified}
-            />
-          </View>
-          {isBankVerified && bankVerificationData && (
-            <View style={styles.verifiedInfo}>
-              <View style={styles.verifiedRow}>
-                <Icon name="check-circle" size={16} color="#4CAF50" />
-                <Text style={styles.verifiedText}>
-                  Verified:{" "}
-                  {bankVerificationData.full_name || "Bank account verified"}
-                </Text>
-              </View>
-              {bankVerificationData.category && (
-                <Text style={styles.verifiedDetail}>
-                  Category: {bankVerificationData.category}
-                </Text>
-              )}
-              {bankVerificationData.pan_number && (
-                <Text style={styles.verifiedDetail}>
-                  PAN: {bankVerificationData.pan_number}
-                </Text>
-              )}
-            </View>
-          )}
-          <Text style={[styles.note, { marginVertical: 5 }]}>
-            Note: Bank account will be verified instantly using government
-            database.
-          </Text>
-          {!isBankVerified && (
-            <TouchableOpacity
-              style={[
-                styles.otpButton,
-                isVerifyingBank && styles.otpButtonDisabled,
-              ]}
-              onPress={handleVerifyBank}
-              disabled={isVerifyingBank}
-            >
-              {isVerifyingBank ? (
-                <View
+        <>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={styles.sectionTitle}>Bank Details</Text>
+            {isBankVerified && (
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  backgroundColor: "#E8F5E9",
+                  paddingHorizontal: 8,
+                  paddingVertical: 4,
+                  borderRadius: 12,
+                  marginLeft: 8,
+                  marginBottom: 10,
+                }}
+              >
+                <Icon name="check-circle" size={12} color="#4CAF50" />
+                <Text
                   style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "center",
+                    color: "#2E7D32",
+                    fontSize: 10,
+                    marginLeft: 4,
+                    fontWeight: "700",
                   }}
                 >
-                  <ActivityIndicator size="small" color="#fff" />
-                  <Text style={[styles.otpButtonText, { marginLeft: 8 }]}>
-                    Verifying...
+                  VERIFIED
+                </Text>
+              </View>
+            )}
+          </View>
+          <View style={styles.sectionContent}>
+            <View style={styles.inputWrapper}>
+              <Text
+                style={{ marginBottom: 5, fontWeight: "500", color: "#000" }}
+              >
+                Account Holder Name
+              </Text>
+              <TextInput
+                placeholder="Enter here"
+                placeholderTextColor="#999"
+                style={styles.input}
+                value={accountHolderName}
+                onChangeText={setAccountHolderName}
+                // editable={!isBankVerified}
+              />
+            </View>
+            <View style={styles.inputWrapper}>
+              <Text
+                style={{ marginBottom: 5, fontWeight: "500", color: "#000" }}
+              >
+                Bank IFSC code
+              </Text>
+              <TextInput
+                placeholder="Enter IFSC code"
+                placeholderTextColor="#999"
+                style={[
+                  styles.input,
+                  isBankVerified && { borderColor: "#4CAF50" },
+                ]}
+                value={ifscCode}
+                onChangeText={(text) => {
+                  setIfscCode(text.toUpperCase());
+                  setIsBankVerified(false);
+                  setBankVerificationData(null);
+                }}
+                maxLength={11}
+                // editable={!isVerifyingBank || !isBankVerified}
+              />
+            </View>
+            <View style={styles.inputWrapper}>
+              <Text
+                style={{ marginBottom: 5, fontWeight: "500", color: "#000" }}
+              >
+                Bank Name
+              </Text>
+              <TextInput
+                placeholder="Enter here"
+                placeholderTextColor="#999"
+                style={styles.input}
+                value={bankName}
+                onChangeText={setBankName}
+                // editable={!isVerifyingBank || !isBankVerified}
+              />
+            </View>
+            <View style={styles.inputWrapper}>
+              <Text
+                style={{ marginBottom: 5, fontWeight: "500", color: "#000" }}
+              >
+                Opening Balance
+              </Text>
+              <TextInput
+                placeholder="Enter here"
+                placeholderTextColor="#999"
+                style={styles.input}
+                value={openingBalance}
+                onChangeText={setOpeningBalance}
+                keyboardType="numeric"
+                // editable={!isVerifyingBank || !isBankVerified}
+              />
+            </View>
+            <View style={styles.inputWrapper}>
+              <Text
+                style={{ marginBottom: 5, fontWeight: "500", color: "#000" }}
+              >
+                Account Number
+              </Text>
+              <TextInput
+                placeholder="Enter account number"
+                placeholderTextColor="#999"
+                style={[
+                  styles.input,
+                  isBankVerified && { borderColor: "#4CAF50" },
+                ]}
+                value={accountNumber}
+                onChangeText={(text) => {
+                  setAccountNumber(text);
+                  setIsBankVerified(false);
+                  setBankVerificationData(null);
+                }}
+                keyboardType="numeric"
+                // editable={!isVerifyingBank || !isBankVerified}
+              />
+            </View>
+            <View style={styles.inputWrapper}>
+              <Text
+                style={{ marginBottom: 5, fontWeight: "500", color: "#000" }}
+              >
+                Re-enter Account Number
+              </Text>
+              <TextInput
+                placeholder="Re-enter account number"
+                placeholderTextColor="#999"
+                style={styles.input}
+                value={reEnterAccountNumber}
+                onChangeText={setReEnterAccountNumber}
+                keyboardType="numeric"
+                // editable={!isVerifyingBank || !isBankVerified}
+              />
+            </View>
+            {isBankVerified && bankVerificationData && (
+              <View style={styles.verifiedInfo}>
+                <View style={styles.verifiedRow}>
+                  <Icon name="check-circle" size={16} color="#4CAF50" />
+                  <Text style={styles.verifiedText}>
+                    Verified:{" "}
+                    {bankVerificationData.full_name || "Bank account verified"}
                   </Text>
                 </View>
-              ) : (
-                <Text style={styles.otpButtonText}>Verify Account</Text>
-              )}
-            </TouchableOpacity>
-          )}
-        </View>
+                {bankVerificationData.category && (
+                  <Text style={styles.verifiedDetail}>
+                    Category: {bankVerificationData.category}
+                  </Text>
+                )}
+                {bankVerificationData.pan_number && (
+                  <Text style={styles.verifiedDetail}>
+                    PAN: {bankVerificationData.pan_number}
+                  </Text>
+                )}
+              </View>
+            )}
+            <Text style={[styles.note, { marginVertical: 5 }]}>
+              Note: Bank account will be verified instantly using government
+              database.
+            </Text>
+            {!isBankVerified &&
+            accountNumber &&
+            accountNumber === initialAccountNumber ? (
+              <View
+                style={{
+                  marginTop: 8,
+                  padding: 10,
+                  backgroundColor: "#FFF3CD",
+                  borderRadius: 6,
+                  borderLeftWidth: 3,
+                  borderLeftColor: "#FFC107",
+                }}
+              >
+                <Text
+                  style={{ color: "#856404", fontSize: 13, fontWeight: "500" }}
+                >
+                  Your request is under review
+                </Text>
+              </View>
+            ) : (
+              !isBankVerified && (
+                <TouchableOpacity
+                  style={[
+                    styles.otpButton,
+                    isVerifyingBank && styles.otpButtonDisabled,
+                  ]}
+                  onPress={handleVerifyBank}
+                  disabled={isVerifyingBank}
+                >
+                  {isVerifyingBank ? (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <ActivityIndicator size="small" color="#fff" />
+                      <Text style={[styles.otpButtonText, { marginLeft: 8 }]}>
+                        Verifying...
+                      </Text>
+                    </View>
+                  ) : (
+                    <Text style={styles.otpButtonText}>Verify Account</Text>
+                  )}
+                </TouchableOpacity>
+              )
+            )}
+          </View>
+        </>
       ),
     },
     // {
