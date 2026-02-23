@@ -81,15 +81,8 @@ const Orders = ({ navigation }: any) => {
     // Status filter
     if (selectedStatus !== "All") {
       if (selectedStatus === "Return/Exchange") {
-        console.log(filtered, "filtered");
-
         filtered = filtered.filter(
-          (order: any) =>
-            !!order.items.find(
-              (item: any) =>
-                item.status.toLowerCase().includes("return") ||
-                item.status.toLowerCase().includes("exchange"),
-            ),
+          (order: any) => !!order.items.find((item: any) => item.print_job),
         );
       } else {
         filtered = filtered.filter(

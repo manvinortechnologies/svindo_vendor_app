@@ -691,10 +691,7 @@ const OrderProductDetails = ({ navigation }: any) => {
           addon?.addon_details?.id || addon?.addon,
         ),
       )
-      .map(
-        (addon: any) =>
-          addon?.addon_details?.name || addon?.addon_details?.title || "Add-on",
-      );
+      .map((addon: any) => addon?.addon_details);
 
     const variant =
       (productDetails?.print_variants || []).find(
@@ -788,6 +785,9 @@ const OrderProductDetails = ({ navigation }: any) => {
                 <Text style={styles.printFileMeta}>
                   Page count: {file?.page_count || 0}
                 </Text>
+                <Text style={styles.printFileMeta}>
+                  Instructions: {file?.instructions || "-"}
+                </Text>
               </View>
             ))
           )}
@@ -801,9 +801,11 @@ const OrderProductDetails = ({ navigation }: any) => {
             <Text style={styles.printSummaryValue}>No add-ons selected</Text>
           ) : (
             <View style={styles.addonChipContainer}>
-              {selectedAddonNames.map((addonName: string, index: number) => (
-                <View style={styles.addonChip} key={`${addonName}-${index}`}>
-                  <Text style={styles.addonChipText}>{addonName}</Text>
+              {selectedAddonNames.map((addon: any, index: number) => (
+                <View style={styles.addonChip} key={`${addon?.id}-${index}`}>
+                  <Text style={styles.addonChipText}>
+                    {addon?.name} - {addon?.price_per_unit}
+                  </Text>
                 </View>
               ))}
             </View>
@@ -845,6 +847,123 @@ const OrderProductDetails = ({ navigation }: any) => {
             </Text>
           </View>
         </View>
+
+        {/* Tracking Link Section - Only for general_delivery */}
+        {order?.delivery_type === "general_delivery" &&
+          item.status === "intransit" && (
+            <View style={styles.trackingLinkContainer}>
+              {item.tracking_link && (
+                <View style={styles.existingTrackingLink}>
+                  <Text style={styles.trackingLinkLabel}>
+                    Current Tracking:
+                  </Text>
+                  <Text
+                    style={styles.trackingLinkValue}
+                    onPress={() => {
+                      if (item.tracking_link) {
+                        Linking.openURL(item.tracking_link);
+                      }
+                    }}
+                  >
+                    {item.tracking_link}
+                  </Text>
+                </View>
+              )}
+              <TextInput
+                placeholder="Enter Tracking Link"
+                placeholderTextColor="#ccc"
+                style={styles.trackingLinkInput}
+                value={trackingLinks[item.id] || ""}
+                onChangeText={(text) =>
+                  setTrackingLinks((prev) => ({ ...prev, [item.id]: text }))
+                }
+              />
+              <TouchableOpacity
+                style={[
+                  styles.trackingLinkButton,
+                  (!trackingLinks[item.id] || !trackingLinks[item.id].trim()) &&
+                    styles.trackingLinkButtonDisabled,
+                ]}
+                onPress={() => handleUpdateTrackingLink(item.id)}
+                disabled={
+                  updatingTrackingLink[item.id] ||
+                  !trackingLinks[item.id] ||
+                  !trackingLinks[item.id].trim()
+                }
+              >
+                {updatingTrackingLink[item.id] ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.trackingLinkButtonText}>
+                    {item.tracking_link ? "Update" : "Add"} Tracking Link
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
+
+        {/* Status Button */}
+        {((order.delivery_type !== "instant_delivery" &&
+          order.status === "accepted") ||
+          (order.delivery_type === "instant_delivery" &&
+            order.status === "ready_to_shipment")) &&
+          item.status !== "delivered" && (
+            <View style={styles.statusContainer}>
+              <TouchableOpacity
+                style={styles.statusButton}
+                onPress={() =>
+                  handleStatusButtonPress(item.id, item.status || "")
+                }
+                disabled={updatingStatus[item.id]}
+              >
+                {updatingStatus[item.id] ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <Text style={styles.statusButtonText}>
+                    {item.status === "intransit"
+                      ? "Mark as Delivered"
+                      : item.status === "ready_to_shipment"
+                      ? "Mark as In Transit"
+                      : "Mark as Ready to Shipment"}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          )}
+
+        {/* Return/Exchange Details */}
+        {(item.status === "returned/replaced_requested" ||
+          item.status === "return_requested" ||
+          item.status === "exchange_requested") &&
+          item.return_exchange && (
+            <View style={styles.returnDetailsContainer}>
+              <Text style={styles.returnDetailsTitle}>
+                {item.return_exchange.type === "return"
+                  ? "Return Reason"
+                  : "Exchange Reason"}
+                :
+              </Text>
+              <Text style={styles.returnReason}>
+                {item.return_exchange.reason}
+              </Text>
+              {item.return_exchange.image && (
+                <View style={styles.returnImageContainer}>
+                  <Text style={styles.returnDetailsTitle}>Proof Image:</Text>
+                  <TouchableOpacity
+                    onPress={() =>
+                      setPreviewImage(item.return_exchange?.image || null)
+                    }
+                  >
+                    <Image
+                      source={{ uri: item.return_exchange.image }}
+                      style={styles.returnImage}
+                      resizeMode="cover"
+                    />
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
+          )}
       </View>
     );
   };
