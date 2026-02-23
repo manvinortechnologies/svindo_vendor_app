@@ -76,7 +76,12 @@ const AdminProfile = ({ navigation }: any) => {
   };
 
   const onSubmit = async (data: FormData) => {
-    const isValid = await trigger();
+    const isValid = await trigger([
+      "firstName",
+      "email",
+      "password",
+      "confirmPassword",
+    ]);
 
     if (!isValid) return;
 

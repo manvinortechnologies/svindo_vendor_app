@@ -29,7 +29,7 @@ import NotificationService from "../services/notification-service";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-const OtpScreen: React.FC<OtpScreenProps> = () => {
+export default function OtpScreen() {
   const insets = useSafeAreaInsets();
   const navigation =
     useNavigation<NativeStackNavigationProp<THomeNavigation>>();
@@ -125,7 +125,7 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
           });
       }
     },
-    [login, navigation]
+    [login, navigation],
   );
 
   useEffect(() => {
@@ -177,7 +177,7 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
     const seconds = time % 60;
     return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
       2,
-      "0"
+      "0",
     )}`;
   };
 
@@ -212,14 +212,15 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
         StorageUtils.setRefreshToken(response.refresh);
         StorageUtils.setIsLoggedIn(true);
         await NotificationService.initialize();
-        if (
-          !response.user_details.first_name ||
-          !response.user_details.last_name ||
-          !response.user_details.email
-        ) {
+        if (!response.user_details.first_name || !response.user_details.email) {
           navigation.reset({
             index: 0,
-            routes: [{ name: HomeNavigation.ADMINPROFILE }],
+            routes: [
+              {
+                name: HomeNavigation.ADMINPROFILE,
+                params: { ...response.user_details },
+              },
+            ],
           });
           return;
         } else {
@@ -379,9 +380,7 @@ const OtpScreen: React.FC<OtpScreenProps> = () => {
       </ScrollView>
     </KeyboardAwareScrollView>
   );
-};
-
-export default OtpScreen;
+}
 
 const styles = ScaledSheet.create({
   container: {

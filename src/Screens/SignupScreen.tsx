@@ -47,7 +47,7 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
 
       // Use the default auth instance - this ensures reCAPTCHA triggers on Android
       const confirmation = await auth().signInWithPhoneNumber(
-        sanitizedPhoneNumber
+        sanitizedPhoneNumber,
       );
 
       setConfirm(confirmation);
@@ -58,7 +58,6 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
       });
       // Alert.alert('Verification code sent to your phone.');
     } catch (error: any) {
-
       let errorMessage = error.message || "Authentication failed";
 
       // Provide more specific error messages
@@ -176,6 +175,7 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
                   style={styles.input}
                 />
               </View>
+              <Text style={styles.errorText}>{error}</Text>
 
               {/* Continue Button */}
               <TouchableOpacity
@@ -196,8 +196,24 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
             <View style={styles.footer}>
               <Text style={styles.termsText}>
                 By continuing, you agree to our {"\n"}
-                <Text onPress={() => navigation.navigate(HomeNavigation.TERMS_SCREEN)} style={styles.linkText}>Terms of Service</Text> and{" "}
-                <Text onPress={() => navigation.navigate(HomeNavigation.PRIVACY_POLICY_SCREEN)} style={styles.linkText}>Privacy Policy</Text>.
+                <Text
+                  onPress={() =>
+                    navigation.navigate(HomeNavigation.TERMS_SCREEN)
+                  }
+                  style={styles.linkText}
+                >
+                  Terms of Service
+                </Text>{" "}
+                and{" "}
+                <Text
+                  onPress={() =>
+                    navigation.navigate(HomeNavigation.PRIVACY_POLICY_SCREEN)
+                  }
+                  style={styles.linkText}
+                >
+                  Privacy Policy
+                </Text>
+                .
               </Text>
             </View>
           </ScrollView>
@@ -274,7 +290,7 @@ const styles = ScaledSheet.create({
     paddingHorizontal: "10@s",
     paddingVertical: "4@s",
     width: "90%",
-    marginBottom: 20,
+
     borderWidth: 1,
     borderColor: "#FCA511",
   },
@@ -290,12 +306,17 @@ const styles = ScaledSheet.create({
     color: "#000",
     letterSpacing: "3@s",
   },
+  errorText: {
+    fontSize: "12@s",
+    color: "#FF0000",
+    textAlign: "center",
+  },
   continueButtonWrapper: {
     width: "90%",
     borderRadius: 30,
     overflow: "hidden", // Ensures the gradient stays within rounded corners
     alignSelf: "center",
-    marginBottom: 20,
+    marginVertical: "20@s",
   },
   continueButtonGradient: {
     paddingVertical: 15,

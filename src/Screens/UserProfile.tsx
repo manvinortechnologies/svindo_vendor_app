@@ -31,6 +31,9 @@ const UserProfile = ({ navigation }: any) => {
   const [isFormModified, setIsFormModified] = useState<boolean>(false);
   const [originalData, setOriginalData] = useState<any>({});
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [firstNameError, setFirstNameError] = useState<string>("");
+  const [lastNameError, setLastNameError] = useState<string>("");
+  const [emailError, setEmailError] = useState<string>("");
 
   useEffect(() => {
     getUserData();
@@ -82,6 +85,31 @@ const UserProfile = ({ navigation }: any) => {
 
   // Update profile function
   const updateProfile = async () => {
+    let isValid = true;
+
+    if (!firstName.trim()) {
+      setFirstNameError("First name can't be empty");
+      isValid = false;
+    } else {
+      setFirstNameError("");
+    }
+
+    // if (!lastName.trim()) {
+    //   setLastNameError("Last name can't be empty");
+    //   isValid = false;
+    // } else {
+    //   setLastNameError("");
+    // }
+
+    if (!email.trim()) {
+      setEmailError("Email id can't be empty");
+      isValid = false;
+    } else {
+      setEmailError("");
+    }
+
+    if (!isValid) return;
+
     try {
       setIsLoading(true);
       const formData = new FormData();
@@ -181,22 +209,34 @@ const UserProfile = ({ navigation }: any) => {
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>First Name</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, firstNameError ? styles.inputError : null]}
               value={firstName}
               placeholder="Your first name"
               placeholderTextColor="#999"
-              onChangeText={setFirstName}
+              onChangeText={(text) => {
+                setFirstName(text);
+                if (firstNameError) setFirstNameError("");
+              }}
             />
+            {firstNameError ? (
+              <Text style={styles.errorText}>{firstNameError}</Text>
+            ) : null}
           </View>
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Last Name</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, lastNameError ? styles.inputError : null]}
               value={lastName}
               placeholder="Your last name"
               placeholderTextColor="#999"
-              onChangeText={setLasttName}
+              onChangeText={(text) => {
+                setLasttName(text);
+                if (lastNameError) setLastNameError("");
+              }}
             />
+            {lastNameError ? (
+              <Text style={styles.errorText}>{lastNameError}</Text>
+            ) : null}
           </View>
 
           <View style={styles.inputContainer}>
@@ -214,13 +254,19 @@ const UserProfile = ({ navigation }: any) => {
           <View style={styles.inputContainer}>
             <Text style={styles.inputLabel}>Email id</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, emailError ? styles.inputError : null]}
               value={email}
               placeholder="Tarunkumar@gmail.com"
               placeholderTextColor="#999"
               keyboardType="email-address"
-              onChangeText={setemail}
+              onChangeText={(text) => {
+                setemail(text);
+                if (emailError) setEmailError("");
+              }}
             />
+            {emailError ? (
+              <Text style={styles.errorText}>{emailError}</Text>
+            ) : null}
           </View>
         </View>
 
@@ -362,6 +408,15 @@ const styles = StyleSheet.create({
   readonlyInput: {
     backgroundColor: "#f5f5f5",
     color: "#666",
+  },
+  inputError: {
+    borderColor: "red",
+  },
+  errorText: {
+    color: "red",
+    fontSize: 12,
+    marginTop: 4,
+    marginLeft: 4,
   },
   // Update Profile Button
   updateButton: {
