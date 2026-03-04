@@ -36,7 +36,7 @@ const VariantsScreen = () => {
   const insets = useSafeAreaInsets();
   const [variants, setVariants] = useState<ProductVariant[]>([]);
   const [filteredVariants, setFilteredVariants] = useState<ProductVariant[]>(
-    []
+    [],
   );
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -80,7 +80,7 @@ const VariantsScreen = () => {
           variant.name.toLowerCase().includes(query) ||
           variant.description.toLowerCase().includes(query) ||
           (variant.color && variant.color.toLowerCase().includes(query)) ||
-          (variant.size && variant.size.toLowerCase().includes(query))
+          (variant.size && variant.size.toLowerCase().includes(query)),
       );
       setFilteredVariants(filtered);
     }
@@ -91,8 +91,8 @@ const VariantsScreen = () => {
       prevVariants.map((variant) =>
         variant.id === id
           ? { ...variant, is_active: !variant.is_active }
-          : variant
-      )
+          : variant,
+      ),
     );
   };
 
@@ -112,7 +112,7 @@ const VariantsScreen = () => {
       if (response.status === 200 || response.status === 204) {
         // Remove variant from local state
         setVariants((prevVariants) =>
-          prevVariants.filter((variant) => variant.id !== id)
+          prevVariants.filter((variant) => variant.id !== id),
         );
       } else {
         throw new Error("Failed to delete variant");
@@ -234,7 +234,7 @@ const styles = ScaledSheet.create({
     width: 32, // Same width as back button to center the title
   },
   gridContainer: {
-    paddingHorizontal: 10,
+    // paddingHorizontal: 10,
     paddingBottom: 80,
   },
   priceText: {

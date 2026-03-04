@@ -131,7 +131,9 @@ const ProductItem: React.FC<ProductItemProps> = ({
             )}
             {product.size_details && (
               <View style={styles.sizeBadge}>
-                <Text style={styles.sizeText}>Size: {product.size_details?.name}</Text>
+                <Text style={styles.sizeText}>
+                  Size: {product.size_details?.name}
+                </Text>
               </View>
             )}
           </View>
