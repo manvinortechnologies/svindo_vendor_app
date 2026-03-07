@@ -199,9 +199,7 @@ configurations.all {
 
 apply from: file("../../node_modules/react-native-vector-icons/fonts.gradle")
 
-// Fix for duplicate Glide classes between react-native-blasted-image and react-native-fast-image
-// This task removes all duplicate Glide-generated classes from react-native-blasted-image
-// before DEX merging and R8 minification, keeping only the ones from react-native-fast-image
+// Fix for duplicate Glide classes between react-native-blasted-image 
 afterEvaluate {
     // Remove duplicates before DEX merging
     tasks.matching { it.name == 'mergeLibDexDebug' || it.name == 'mergeLibDexRelease' }.configureEach { task ->

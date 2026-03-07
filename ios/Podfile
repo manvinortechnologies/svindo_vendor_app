@@ -5,14 +5,25 @@ require Pod::Executable.execute_command('node', ['-p',
     {paths: [process.argv[1]]},
   )', __dir__]).strip
 
-platform :ios, min_ios_version_supported
+require_relative '../node_modules/react-native-permissions/scripts/setup'
+
+setup_permissions([
+  'Camera',
+  'PhotoLibrary',
+  'LocationWhenInUse',
+  'Microphone',
+])
+
+platform :ios, '15.1'
 prepare_react_native_project!
 
-linkage = ENV['USE_FRAMEWORKS']
-if linkage != nil
-  Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
-  use_frameworks! :linkage => linkage.to_sym
-end
+use_frameworks! :linkage => :static
+
+# linkage = ENV['USE_FRAMEWORKS']
+# if linkage != nil
+#   Pod::UI.puts "Configuring Pod with #{linkage}ally linked Frameworks".green
+#   use_frameworks! :linkage => linkage.to_sym
+# end
 
 target 'Svindovender' do
   config = use_native_modules!
@@ -20,7 +31,6 @@ target 'Svindovender' do
   use_react_native!(
     :path => config[:reactNativePath],
     # An absolute path to your application root.
-    :app_path => "#{Pod::Config.instance.installation_root}/.."
   )
 
   post_install do |installer|
@@ -31,5 +41,55 @@ target 'Svindovender' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.1'
+      end
+    end
+
+    # Patch SDWebImageAVIFCoder to resolve build errors on older SDWebImage versions
+    avif_coder_path = File.join(installer.sandbox.root, 'SDWebImageAVIFCoder/SDWebImageAVIFCoder/Classes/SDImageAVIFCoder.m')
+    if File.exist?(avif_coder_path)
+      content = File.read(avif_coder_path)
+      unless content.include?('AVIFPatch')
+        Pod::UI.puts "Patching SDWebImageAVIFCoder...".green
+        FileUtils.chmod(0664, avif_coder_path)
+        content.gsub!(/#import "Private\/Conversion\.h"/, "#import \"Private/Conversion.h\"\n#import <SDWebImage/SDImageCoderHelper.h>")
+        patch = <<~PATCH
+          
+          @interface SDImageCoderHelper (AVIFPatch)
+          + (CGSize)scaledSizeWithImageSize:(CGSize)imageSize scaleSize:(CGSize)scaleSize preserveAspectRatio:(BOOL)preserveAspectRatio shouldScaleUp:(BOOL)shouldScaleUp;
+          @end
+          
+          @implementation SDImageCoderHelper (AVIFPatch)
+          + (CGSize)scaledSizeWithImageSize:(CGSize)imageSize scaleSize:(CGSize)scaleSize preserveAspectRatio:(BOOL)preserveAspectRatio shouldScaleUp:(BOOL)shouldScaleUp {
+              if (imageSize.width <= 0 || imageSize.height <= 0 || scaleSize.width <= 0 || scaleSize.height <= 0) {
+                  return imageSize;
+              }
+              if (!shouldScaleUp) {
+                  if (imageSize.width <= scaleSize.width && imageSize.height <= scaleSize.height) {
+                      return imageSize;
+                  }
+              }
+              if (preserveAspectRatio) {
+                  CGFloat pixelRatio = imageSize.width / imageSize.height;
+                  CGFloat scaleRatio = scaleSize.width / scaleSize.height;
+                  if (pixelRatio > scaleRatio) {
+                      return CGSizeMake(scaleSize.width, MAX(1.0, round(scaleSize.width / pixelRatio)));
+                  } else {
+                      return CGSizeMake(MAX(1.0, round(scaleSize.height * pixelRatio)), scaleSize.height);
+                  }
+              } else {
+                  return scaleSize;
+              }
+          }
+          @end
+          
+        PATCH
+        content.gsub!(/@implementation SDImageAVIFCoder/, patch + "\n@implementation SDImageAVIFCoder")
+        File.write(avif_coder_path, content)
+      end
+    end
   end
 end
