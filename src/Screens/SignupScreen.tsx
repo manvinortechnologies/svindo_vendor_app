@@ -59,7 +59,7 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
       // Alert.alert('Verification code sent to your phone.');
     } catch (error: any) {
       let errorMessage = error.message || "Authentication failed";
-
+      console.log("error", errorMessage);
       // Provide more specific error messages
       if (error.code === "auth/app-not-authorized") {
         errorMessage =
@@ -125,7 +125,7 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
   return (
     <View style={styles.container}>
       <Loading visible={loading} />
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1 }}
@@ -135,25 +135,27 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
             contentContainerStyle={{ flexGrow: 1, justifyContent: "center" }}
           >
             {/* Back Button */}
-            <TouchableOpacity
+            {/* <TouchableOpacity
               style={[styles.backButton, { top: insets.top + s(20) }]}
               onPress={() => navigation.goBack()}
             >
               <Icon name="chevron-back" size={24} color="#fff" />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
 
             {/* Logo & Title */}
             <LinearGradient
               colors={["#F9C313", "#FCA511"]}
               style={styles.header}
             >
-              <Image
-                source={require("../assets/logo.png")}
-                style={styles.logo}
-              />
-              <Text style={styles.title}> Svindo</Text>
-              <Text style={styles.title}>Business</Text>
-              <Text style={styles.subtitle}>Window to Real Growth</Text>
+              <View style={styles.headerContent}>
+                <Image
+                  source={require("../assets/logo.png")}
+                  style={styles.logo}
+                />
+                <Text style={styles.title}> Svindo</Text>
+                <Text style={styles.title}>Business</Text>
+                <Text style={styles.subtitle}>Window to Real Growth</Text>
+              </View>
             </LinearGradient>
 
             {/* Content Wrapper - Input & Button Centered */}
@@ -218,7 +220,7 @@ const SignupScreen: FC<SignUpScreenProps> = () => {
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
-      </SafeAreaView>
+      </View>
     </View>
   );
 };
@@ -253,12 +255,17 @@ const styles = ScaledSheet.create({
   header: {
     // width: "100%",
     // height: "50%",
-    paddingTop: "60@s",
-    paddingBottom: "20@s",
+
     alignItems: "center",
     justifyContent: "center",
     borderBottomLeftRadius: 60,
     borderBottomRightRadius: 60,
+  },
+  headerContent: {
+    paddingTop: "80@vs",
+    paddingBottom: "20@s",
+    alignItems: "center",
+    justifyContent: "center",
   },
   logo: {
     width: "140@s",
@@ -315,12 +322,14 @@ const styles = ScaledSheet.create({
     width: "90%",
     borderRadius: 30,
     overflow: "hidden", // Ensures the gradient stays within rounded corners
+
     alignSelf: "center",
     marginVertical: "20@s",
   },
   continueButtonGradient: {
-    paddingVertical: 15,
+    height: "40@s",
     alignItems: "center",
+    justifyContent: "center",
   },
   continueText: {
     color: "#fff",

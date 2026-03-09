@@ -113,7 +113,7 @@ export const API_ROUTES = {
   storeReviews: "/vendor/store-reviews/",
   deliveryDiscount: "/vendor/delivery-discount/",
   purchase: "/vendor/purchase/",
-  vendorDashboard: "/vendor/vendor-dashboard/dashboard",
+  vendorDashboard: "/vendor/vendor-dashboard/dashboard/",
   onlineOrderLedger: "/vendor/online-order-ledger/",
   topRatedProducts: "/vendor/top-rated-products/",
   activityFeed: "/vendor/activity-feed/",
