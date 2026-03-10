@@ -92,7 +92,9 @@ export default function RequestOffers() {
   const fetchOffers = async () => {
     try {
       setLoadingOffers(true);
-      const response = await api.get(`${API_ROUTES.getOffersById}${requestId}`);
+      const response = await api.get(
+        `${API_ROUTES.getOffersById}${requestId}/`,
+      );
       const offersData = response.data || [];
       setOffers(offersData.map(transformOfferData));
     } catch (error) {

@@ -16,7 +16,7 @@ import api from "../services/api/api";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import { ScaledSheet } from "react-native-size-matters";
 
-const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
+function SplashScreen({ navigation }: SplashScreenProps) {
   const [isLoading, setIsLoading] = useState(true);
 
   // Check if company profile exists
@@ -103,28 +103,26 @@ const SplashScreen: React.FC<SplashScreenProps> = ({ navigation }) => {
   }, [navigation]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
-      <LinearGradient colors={["#F9C313", "#FCA511"]} style={styles.container}>
-        {/* <StatusBar
+    <LinearGradient colors={["#F9C313", "#FCA511"]} style={styles.container}>
+      {/* <StatusBar
           translucent={true}
           backgroundColor="transparent"
           barStyle="dark-content"
         /> */}
-        <Image source={require("../assets/logo.png")} style={styles.logo} />
-        <Text style={styles.logoTitle}>Svindo</Text>
-        <Text style={styles.logoTitle}>Business</Text>
-        <Text style={styles.logoText}>Window to Real Growth</Text>
+      <Image source={require("../assets/logo.png")} style={styles.logo} />
+      <Text style={styles.logoTitle}>Svindo</Text>
+      <Text style={styles.logoTitle}>Business</Text>
+      <Text style={styles.logoText}>Window to Real Growth</Text>
 
-        {isLoading && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#fff" />
-            <Text style={styles.loadingText}>Loading...</Text>
-          </View>
-        )}
-      </LinearGradient>
-    </SafeAreaView>
+      {isLoading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#fff" />
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      )}
+    </LinearGradient>
   );
-};
+}
 
 export default SplashScreen;
 

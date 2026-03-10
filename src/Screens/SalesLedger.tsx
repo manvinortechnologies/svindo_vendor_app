@@ -740,7 +740,7 @@ const SalesLedger = () => {
                 <View style={styles.headerActions}>
                   <Text style={styles.invoiceTitle}>
                     {selectedSale.wholesale_invoice_details?.invoice_number ||
-                      selectedSale.invoice_number}
+                      selectedSale.invoice_number}{" "}
                   </Text>
                   <Text style={styles.paymentMethod}>
                     {selectedSale.payment_method.charAt(0).toUpperCase() +
@@ -967,17 +967,6 @@ const SalesLedger = () => {
         )}
       </CustomModal>
 
-      {/* Calendar Modal */}
-      <CalendarModal
-        visible={calendarModel !== ""}
-        onClose={() => setCalendarModel("")}
-        onSelect={(e) =>
-          calendarModel === "start" ? setStartDate(e) : setEndDate(e)
-        }
-        maxDate={moment().format("YYYY-MM-DD")}
-        initialDate={calendarModel === "start" ? startDate : endDate}
-      />
-
       {/* Date Range Filter Modal */}
       <Modal
         visible={showCalendarModal}
@@ -1000,27 +989,35 @@ const SalesLedger = () => {
             <View style={styles.filterModalContent}>
               <View style={styles.dateInputContainer}>
                 <Text style={styles.dateLabel}>Start Date</Text>
-                <TouchableOpacity onPress={() => setCalendarModel("start")}>
-                  <TextInput
-                    style={styles.dateInput}
-                    value={startDate}
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#999"
-                    editable={false}
-                  />
+                <TouchableOpacity
+                  style={styles.dateInput}
+                  onPress={() => setCalendarModel("start")}
+                >
+                  <Text
+                    style={{
+                      color: startDate ? "#000" : "#999",
+                      fontSize: s(14),
+                    }}
+                  >
+                    {startDate || "YYYY-MM-DD"}
+                  </Text>
                 </TouchableOpacity>
               </View>
 
               <View style={styles.dateInputContainer}>
                 <Text style={styles.dateLabel}>End Date</Text>
-                <TouchableOpacity onPress={() => setCalendarModel("end")}>
-                  <TextInput
-                    style={styles.dateInput}
-                    value={endDate}
-                    editable={false}
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#999"
-                  />
+                <TouchableOpacity
+                  style={styles.dateInput}
+                  onPress={() => setCalendarModel("end")}
+                >
+                  <Text
+                    style={{
+                      color: endDate ? "#000" : "#999",
+                      fontSize: s(14),
+                    }}
+                  >
+                    {endDate || "YYYY-MM-DD"}
+                  </Text>
                 </TouchableOpacity>
               </View>
 
@@ -1056,6 +1053,16 @@ const SalesLedger = () => {
             </View>
           </View>
         </View>
+        {/* Calendar Modal */}
+        <CalendarModal
+          visible={calendarModel !== ""}
+          onClose={() => setCalendarModel("")}
+          onSelect={(e) =>
+            calendarModel === "start" ? setStartDate(e) : setEndDate(e)
+          }
+          maxDate={moment().format("YYYY-MM-DD")}
+          initialDate={calendarModel === "start" ? startDate : endDate}
+        />
       </Modal>
 
       <DeleteModal
@@ -1225,9 +1232,9 @@ const styles = ScaledSheet.create({
     flex: 1,
   },
   modalHeader: {
-    flexDirection: "row",
+    // flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    // justifyContent: "space-between",
     marginBottom: 20,
     paddingBottom: 15,
     borderBottomWidth: 1,

@@ -219,7 +219,7 @@ const BillDetails: React.FC = () => {
         `${API_ROUTES.posSalesInvoice}?id=${invoice.id}`,
         {
           responseType: "arraybuffer",
-        }
+        },
       );
       const headers = (response.headers || {}) as Record<string, string>;
       const contentType = headers["content-type"] || "application/pdf";
@@ -233,6 +233,8 @@ const BillDetails: React.FC = () => {
         Platform.OS === "android"
           ? `${RNFS.DownloadDirectoryPath}/${fileName}`
           : `${RNFS.DocumentDirectoryPath}/${fileName}`;
+
+      console.log(filePath, "filePath");
 
       // Convert ArrayBuffer to base64
       let base64Data: string;
@@ -336,7 +338,7 @@ const BillDetails: React.FC = () => {
       if (error.message?.includes("WhatsApp")) {
         Alert.alert(
           "WhatsApp not installed",
-          "Please install WhatsApp to share the invoice."
+          "Please install WhatsApp to share the invoice.",
         );
       } else {
         Alert.alert("Error", "Failed to share invoice via WhatsApp");
@@ -549,11 +551,25 @@ const BillDetails: React.FC = () => {
             <View style={styles.checkboxRow}>
               {printOptions.map((opt, idx) => (
                 <View key={idx} style={styles.checkboxItem}>
-                  <CheckBox
+                  <TouchableOpacity
+                    onPress={() => toggleOption(idx)}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {opt.checked ? (
+                      <Icon name="checkbox-marked" size={24} color="#ff9800" />
+                    ) : (
+                      <Icon name="checkbox-blank" size={24} color="#ccc" />
+                    )}
+                  </TouchableOpacity>
+                  {/* <CheckBox
                     value={opt.checked}
                     onValueChange={() => toggleOption(idx)}
                     tintColors={{ true: "#ff9800", false: "#ccc" }}
-                  />
+                  /> */}
                   <Text style={{ color: "#000" }}>{opt.label}</Text>
                 </View>
               ))}
@@ -599,7 +615,7 @@ const BillDetails: React.FC = () => {
                 };
 
                 const { filePath, fileName } = await downloadInvoiceFile(
-                  invoiceData
+                  invoiceData,
                 );
 
                 Toast.show({
@@ -665,8 +681,7 @@ const BillDetails: React.FC = () => {
               onLoadComplete={(numberOfPages) => {
                 setIsLoadingPdf(false);
               }}
-              onPageChanged={(page, numberOfPages) => {
-              }}
+              onPageChanged={(page, numberOfPages) => {}}
               onError={(error) => {
                 console.error("PDF Error:", error);
                 Alert.alert("Error", "Failed to load PDF");

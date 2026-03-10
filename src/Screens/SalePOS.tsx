@@ -93,7 +93,7 @@ const SalePOS = () => {
   const [discount, setDiscount] = useState({ pr: "", amount: "" });
   const [paymentMode, setPaymentMode] = useState("cash");
   const [advancePaymentMode, setAdvancePaymentMode] = useState<number | null>(
-    null
+    null,
   );
   const [advanceAmount, setAdvanceAmount] = useState("0");
   const [callenderModel, setCallenderModel] = useState<boolean>(false);
@@ -212,7 +212,7 @@ const SalePOS = () => {
 
   const advanceNumeric = useMemo(
     () => Number(advanceAmount) || 0,
-    [advanceAmount]
+    [advanceAmount],
   );
   const dueAmount = useMemo(() => {
     const due = discountedTotal - advanceNumeric;
@@ -221,7 +221,7 @@ const SalePOS = () => {
 
   const getSaleData = async () => {
     const res = await api.get(
-      `${API_ROUTES.posSales}${route.params?.saleData?.id}/`
+      `${API_ROUTES.posSales}${route.params?.saleData?.id}/`,
     );
     return res.data;
   };
@@ -282,14 +282,14 @@ const SalePOS = () => {
       setPaymentMode(
         paymentMethods.find(
           (method) =>
-            method.key.toLowerCase() === saleData.payment_method.toLowerCase()
-        )?.key || "cash"
+            method.key.toLowerCase() === saleData.payment_method.toLowerCase(),
+        )?.key || "cash",
       );
       handlePercentChange(saleData.discount_percentage || "");
       setDueDate(
         saleData.credit_date
           ? moment(saleData.credit_date).format("YYYY-MM-DD")
-          : ""
+          : "",
       );
     } catch (error) {
       console.error("Error populating form with sale data:", error);
@@ -312,7 +312,7 @@ const SalePOS = () => {
         (item: any) => ({
           id: item.id,
           name: item.company_name,
-        })
+        }),
       );
       setCompanyList(transformedCompany);
       setCompanySelected(transformedCompany[0]);
@@ -322,7 +322,7 @@ const SalePOS = () => {
           id: item.id,
           name: item.name || item.customer_name,
           ...item,
-        })
+        }),
       );
       setCustomerList(transformedCustomer);
       setSelectedCustomer(transformedCustomer[0]);
@@ -341,7 +341,7 @@ const SalePOS = () => {
           id: item.id,
           name: item.name || item.vendor_name,
           ...item,
-        })
+        }),
       );
       setBankList(transformedBank);
     } catch (error) {
@@ -356,8 +356,8 @@ const SalePOS = () => {
       (sum, item) =>
         sum +
         (wholesale ? item.wholesale_price || item.price : item.price) *
-        item.quantity,
-      0
+          item.quantity,
+      0,
     );
     setDiscount((p) => ({ ...p, pr: value }));
     const percent = Number(value);
@@ -374,8 +374,8 @@ const SalePOS = () => {
       (sum, item) =>
         sum +
         (wholesale ? item.wholesale_price || item.price : item.price) *
-        item.quantity,
-      0
+          item.quantity,
+      0,
     );
     setDiscount((p) => ({ ...p, amount: value }));
     const amount = parseFloat(value);
@@ -452,19 +452,22 @@ const SalePOS = () => {
             ? Number(totalDiscountedAmount - Number(advanceAmount)).toFixed(2)
             : 0,
         wholesale_invoice_details: null,
-        bank: paymentMode !== "cash" && paymentMode !== "credit" ? selectedBank?.id : "",
+        bank:
+          paymentMode !== "cash" && paymentMode !== "credit"
+            ? selectedBank?.id
+            : "",
       };
 
       const data =
         paymentMode === "credit"
           ? {
-            ...baseData,
-            advance_bank: selectedBank?.id || "",
-            advance_amount: advanceAmount,
-            advance_payment_method:
-              advancePaymentMode === 1 ? "bank" : "cash",
-            credit_date: new Date(dueDate).toISOString(),
-          }
+              ...baseData,
+              advance_bank: selectedBank?.id || "",
+              advance_amount: advanceAmount,
+              advance_payment_method:
+                advancePaymentMode === 1 ? "bank" : "cash",
+              credit_date: new Date(dueDate).toISOString(),
+            }
           : baseData;
       if (wholesale) {
         navigation.navigate(HomeNavigation.WHOLESALE, data);
@@ -472,9 +475,10 @@ const SalePOS = () => {
         setIsLoading(true);
 
         const res = await api[route.params?.editMode ? "put" : "post"](
-          `${API_ROUTES.posSales}${route.params?.editMode ? `${route.params?.saleData?.id}/` : ""
+          `${API_ROUTES.posSales}${
+            route.params?.editMode ? `${route.params?.saleData?.id}/` : ""
           }`,
-          data
+          data,
         );
         navigation.reset({
           index: 0,
@@ -511,6 +515,7 @@ const SalePOS = () => {
       <ScrollView
         keyboardShouldPersistTaps="always"
         contentContainerStyle={styles.scrollContent}
+        keyboardDismissMode="on-drag"
       >
         {/* Company Section */}
         {/* <View style={styles.companyRow}>
@@ -702,18 +707,18 @@ const SalePOS = () => {
                 }}
                 keyboardType="numeric"
                 selectTextOnFocus
-              // onSubmitEditing={() => {
-              //   const updatedProducts = [...products];
-              //   if (item.quantity === 0) {
-              //     // Remove item if quantity is 0
-              //     updatedProducts.splice(index, 1);
-              //     setProducts(updatedProducts);
-              //   }
-              // }}
+                // onSubmitEditing={() => {
+                //   const updatedProducts = [...products];
+                //   if (item.quantity === 0) {
+                //     // Remove item if quantity is 0
+                //     updatedProducts.splice(index, 1);
+                //     setProducts(updatedProducts);
+                //   }
+                // }}
               />
               <Text style={styles.tableText}>
                 {formatNumber(
-                  (wholesale ? item?.wholesale_price ?? 0 : item?.price) ?? 0
+                  (wholesale ? item?.wholesale_price ?? 0 : item?.price) ?? 0,
                 )}
               </Text>
               <Text style={styles.tableText}>
@@ -732,12 +737,12 @@ const SalePOS = () => {
                     const gstValue =
                       (itemTotalAfterDiscount * gstRate) / (100 + gstRate);
                     return formatNumber(
-                      Number((itemTotalAfterDiscount - gstValue).toFixed(2))
+                      Number((itemTotalAfterDiscount - gstValue).toFixed(2)),
                     );
                   }
                   // Otherwise show amount after discount
                   return formatNumber(
-                    Number(itemTotalAfterDiscount.toFixed(2))
+                    Number(itemTotalAfterDiscount.toFixed(2)),
                   );
                 })()}
               </Text>

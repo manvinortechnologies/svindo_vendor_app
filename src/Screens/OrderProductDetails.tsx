@@ -178,7 +178,10 @@ const OrderProductDetails = ({ navigation }: any) => {
         : contentType.includes("zip")
         ? "zip"
         : "bin";
-      const fileName = `Invoice_${order.order_id}.${extension}`;
+      const fileName = `Invoice_${order.order_id.replaceAll(
+        "/",
+        "_",
+      )}.${extension}`;
       console.log("fileName", fileName);
       const filePath =
         Platform.OS === "android"

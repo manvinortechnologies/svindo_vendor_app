@@ -5,15 +5,17 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  Modal,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { ScaledSheet } from "react-native-size-matters";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { API_ROUTES } from "../constants/api-routes.constants";
 import api from "../services/api/api";
 import Toast from "react-native-toast-message";
+import Modal from "react-native-modal";
 
 interface AdjustCashModalProps {
   visible: boolean;
@@ -75,71 +77,73 @@ const AdjustCashModal: React.FC<AdjustCashModalProps> = ({
 
   return (
     <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={handleClose}
+      isVisible={visible}
+      animationIn="fadeIn"
+      animationOut="fadeOut"
+      onBackdropPress={handleClose}
+      onBackButtonPress={handleClose}
     >
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Adjust Cash Balance</Text>
-            <TouchableOpacity onPress={handleClose} disabled={isLoading}>
-              <Icon name="close" size={24} color="#666" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.content}>
-            <Text style={styles.label}>Enter Amount</Text>
-            <TextInput
-              style={styles.input}
-              value={amount}
-              onChangeText={setAmount}
-              placeholder="Enter amount (e.g., 10500.00)"
-              keyboardType="numeric"
-              editable={!isLoading}
-              placeholderTextColor="#999"
-            />
-
-            <Text style={styles.label}>Enter Note</Text>
-            <TextInput
-              style={styles.input}
-              value={note}
-              onChangeText={setNote}
-              placeholder="Enter note"
-              keyboardType="default"
-              editable={!isLoading}
-              placeholderTextColor="#999"
-            />
-          </View>
-
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={[styles.button, styles.cancelButton]}
-              onPress={handleClose}
-              disabled={isLoading}
-            >
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.button,
-                styles.confirmButton,
-                isLoading && styles.disabledButton,
-              ]}
-              onPress={handleConfirm}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.confirmButtonText}>Confirm</Text>
-              )}
-            </TouchableOpacity>
-          </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.modalContainer}
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Adjust Cash Balance</Text>
+          <TouchableOpacity onPress={handleClose} disabled={isLoading}>
+            <Icon name="close" size={24} color="#666" />
+          </TouchableOpacity>
         </View>
-      </View>
+
+        <View style={styles.content}>
+          <Text style={styles.label}>Enter Amount</Text>
+          <TextInput
+            style={styles.input}
+            value={amount}
+            onChangeText={setAmount}
+            placeholder="Enter amount (e.g., 10500.00)"
+            keyboardType="numeric"
+            editable={!isLoading}
+            placeholderTextColor="#999"
+          />
+
+          <Text style={styles.label}>Enter Note</Text>
+          <TextInput
+            style={styles.input}
+            value={note}
+            onChangeText={setNote}
+            placeholder="Enter note"
+            keyboardType="default"
+            editable={!isLoading}
+            placeholderTextColor="#999"
+          />
+        </View>
+
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={[styles.button, styles.cancelButton]}
+            onPress={handleClose}
+            disabled={isLoading}
+          >
+            <Text style={styles.cancelButtonText}>Cancel</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.button,
+              styles.confirmButton,
+              isLoading && styles.disabledButton,
+            ]}
+            onPress={handleConfirm}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#fff" />
+            ) : (
+              <Text style={styles.confirmButtonText}>Confirm</Text>
+            )}
+          </TouchableOpacity>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };

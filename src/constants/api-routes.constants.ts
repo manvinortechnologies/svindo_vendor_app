@@ -66,7 +66,7 @@ export const API_ROUTES = {
   customerBaseData: "/customers/base-data",
   customerRequests: "/customer/requests/",
   deleteCustomerRequest: "/customer/requests/:id/",
-  wholesaleRetailRequests: "vendor/request-list",
+  wholesaleRetailRequests: "vendor/request-list/",
   createOffer: "/vendor/offer/",
   getOffers: "/customer/all-request-offer",
   getOffersById: "/customer/request-offer/",

@@ -14,17 +14,9 @@ import { useNavigation } from "@react-navigation/native";
 
 interface ReportHeaderProps {
   title: string;
-  onBack?: () => void;
-  onPdfPress?: () => void;
-  onXlsPress?: () => void;
 }
 
-const ReportHeader: React.FC<ReportHeaderProps> = ({
-  title,
-  onBack,
-  onPdfPress,
-  onXlsPress,
-}) => {
+const ReportHeader: React.FC<ReportHeaderProps> = ({ title }) => {
   const navigation = useNavigation();
   return (
     <View style={styles.header}>

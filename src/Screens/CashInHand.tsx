@@ -69,7 +69,7 @@ const CashInHand = ({ navigation }: any) => {
         // Transform ledger data if available
         if (res.data && Array.isArray(res.data.ledger)) {
           const transformedTransactions = transformCashLedgerData(
-            res.data.ledger || []
+            res.data.ledger || [],
           );
           setAllTransactions(transformedTransactions);
           setTransactions(transformedTransactions);
@@ -127,7 +127,7 @@ const CashInHand = ({ navigation }: any) => {
 
     // Sort dates in descending order (newest first)
     const sortedDates = Object.keys(grouped).sort(
-      (a, b) => new Date(b).getTime() - new Date(a).getTime()
+      (a, b) => new Date(b).getTime() - new Date(a).getTime(),
     );
 
     const sortedGrouped: { [key: string]: CashTransaction[] } = {};
@@ -164,7 +164,7 @@ const CashInHand = ({ navigation }: any) => {
   // Filter transactions by date range
   const filterTransactionsByDateRange = (
     start: string,
-    end: string
+    end: string,
   ): CashTransaction[] => {
     if (!start || !end) return allTransactions;
 
@@ -321,7 +321,7 @@ const CashInHand = ({ navigation }: any) => {
         showsVerticalScrollIndicator={false}
       >
         {Object.entries(groupedTransactions).map(([date, transactions]) =>
-          renderDateSection(date, transactions)
+          renderDateSection(date, transactions),
         )}
 
         {Object.keys(groupedTransactions).length === 0 && !isLoading && (
@@ -333,17 +333,6 @@ const CashInHand = ({ navigation }: any) => {
           </View>
         )}
       </ScrollView>
-
-      {/* Calendar Modal */}
-      <CalendarModal
-        initialDate={calendarModel === "start" ? startDate : endDate}
-        visible={calendarModel !== ""}
-        onClose={() => setCalendarModel("")}
-        onSelect={(e) =>
-          calendarModel === "start" ? setStartDate(e) : setEndDate(e)
-        }
-        maxDate={moment().format("YYYY-MM-DD")}
-      />
 
       {/* Filter Modal */}
       <Modal
@@ -367,27 +356,35 @@ const CashInHand = ({ navigation }: any) => {
             <View style={styles.modalContent}>
               <View style={styles.dateInputContainer}>
                 <Text style={styles.dateLabel}>Start Date</Text>
-                <TouchableOpacity onPress={() => setCalendarModel("start")}>
-                  <TextInput
-                    style={styles.dateInput}
-                    value={startDate}
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#999"
-                    editable={false}
-                  />
+                <TouchableOpacity
+                  style={styles.dateInput}
+                  onPress={() => setCalendarModel("start")}
+                >
+                  <Text
+                    style={{
+                      color: startDate ? "#000" : "#999",
+                      fontSize: s(14),
+                    }}
+                  >
+                    {startDate || "YYYY-MM-DD"}
+                  </Text>
                 </TouchableOpacity>
               </View>
 
               <View style={styles.dateInputContainer}>
                 <Text style={styles.dateLabel}>End Date</Text>
-                <TouchableOpacity onPress={() => setCalendarModel("end")}>
-                  <TextInput
-                    style={styles.dateInput}
-                    value={endDate}
-                    editable={false}
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#999"
-                  />
+                <TouchableOpacity
+                  style={styles.dateInput}
+                  onPress={() => setCalendarModel("end")}
+                >
+                  <Text
+                    style={{
+                      color: endDate ? "#000" : "#999",
+                      fontSize: s(14),
+                    }}
+                  >
+                    {endDate || "YYYY-MM-DD"}
+                  </Text>
                 </TouchableOpacity>
               </View>
 
@@ -425,6 +422,16 @@ const CashInHand = ({ navigation }: any) => {
             </View>
           </View>
         </View>
+        {/* Calendar Modal */}
+        <CalendarModal
+          initialDate={calendarModel === "start" ? startDate : endDate}
+          visible={calendarModel !== ""}
+          onClose={() => setCalendarModel("")}
+          onSelect={(e) =>
+            calendarModel === "start" ? setStartDate(e) : setEndDate(e)
+          }
+          maxDate={moment().format("YYYY-MM-DD")}
+        />
       </Modal>
 
       {/* Buttons Container - Fixed at bottom */}

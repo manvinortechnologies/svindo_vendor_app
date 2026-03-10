@@ -6,20 +6,18 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
-import { StreamChat } from "stream-chat";
 import {
   Chat,
   Channel,
   MessageList,
   MessageInput,
   OverlayProvider,
-  Loading,
 } from "stream-chat-react-native";
 import api from "../services/api/api";
 import getChatChannel, { client } from "../utils/chatUtils";
-import { useSelector } from "react-redux";
 import { StorageUtils } from "../utils/storage";
 import CustomHeader from "../CommonComponent/CustomHeader";
+import { s } from "react-native-size-matters";
 
 type RouteParams = {
   userId: string;
@@ -45,6 +43,7 @@ const ChatScreenStream = () => {
         const userData = await StorageUtils.getUserData();
         const token = initResponse.data.token;
         const userId = userData?.id;
+
         // Connect user with token from navigation params
         if (userId && otherUserId && token) {
           setIsInitializing(true);
@@ -60,7 +59,7 @@ const ChatScreenStream = () => {
                 "/customer/stream/chatinit/",
                 {
                   other_user_id: parseInt(otherUserId, 10),
-                }
+                },
               );
 
               // After initialization, check again for the channel
@@ -132,12 +131,12 @@ const ChatScreenStream = () => {
     >
       <OverlayProvider>
         <Chat client={client}>
-          <Channel channel={channel}>
+          <Channel channel={channel} keyboardVerticalOffset={s(2)}>
             <CustomHeader title="Chat" />
-            <View style={styles.chatContainer}>
-              <MessageList />
-              <MessageInput InputButtons={() => null} />
-            </View>
+            {/* <View style={styles.chatContainer}> */}
+            <MessageList />
+            <MessageInput InputButtons={() => null} />
+            {/* </View> */}
           </Channel>
         </Chat>
       </OverlayProvider>

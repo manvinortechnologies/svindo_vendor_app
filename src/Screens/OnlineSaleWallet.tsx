@@ -70,7 +70,7 @@ const OnlineSaleWallet = () => {
         let totalSettledAmount = 0;
 
         const transformedTransactions: Transaction[] = Object.keys(
-          orderGroups
+          orderGroups,
         ).map((orderId) => {
           const entries = orderGroups[Number(orderId)];
           // Use the first entry's date for the transaction
@@ -87,7 +87,7 @@ const OnlineSaleWallet = () => {
           // Determine if order is settled (all items settled)
           const allSettled = entries.every(
             (entry) =>
-              entry.status === "settled" || entry.status === "completed"
+              entry.status === "settled" || entry.status === "completed",
           );
 
           // Add to totals
@@ -111,11 +111,11 @@ const OnlineSaleWallet = () => {
         transformedTransactions.sort((a, b) => {
           const dateA = moment(
             a.date + " " + a.time,
-            "D/M/YYYY h:mm A"
+            "D/M/YYYY h:mm A",
           ).toDate();
           const dateB = moment(
             b.date + " " + b.time,
-            "D/M/YYYY h:mm A"
+            "D/M/YYYY h:mm A",
           ).toDate();
           return dateB.getTime() - dateA.getTime();
         });
@@ -157,7 +157,7 @@ const OnlineSaleWallet = () => {
   useFocusEffect(
     React.useCallback(() => {
       fetchLedgerData();
-    }, [])
+    }, []),
   );
 
   const formatCurrency = (amount: number): string => {
@@ -221,10 +221,10 @@ const OnlineSaleWallet = () => {
           {/* Transaction Details Header */}
           <View style={styles.transactionHeader}>
             <Text style={styles.transactionTitle}>Transaction Details</Text>
-            <TouchableOpacity style={styles.filterButton}>
+            {/* <TouchableOpacity style={styles.filterButton}>
               <Text style={styles.filterButtonText}>Till day</Text>
               <Icon name="chevron-down" size={20} />
-            </TouchableOpacity>
+            </TouchableOpacity> */}
           </View>
 
           {/* Sales and Settled Boxes */}

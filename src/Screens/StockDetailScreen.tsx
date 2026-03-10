@@ -64,12 +64,7 @@ const StockDetailsScreen = () => {
         { paddingTop: insets.top, paddingBottom: insets.bottom },
       ]}
     >
-      <ReportHeader
-        title="Stock Details"
-        onBack={() => console.log("Back pressed")}
-        onPdfPress={() => console.log("Download PDF")}
-        onXlsPress={() => console.log("Download XLS")}
-      />
+      <ReportHeader title="Stock Details" />
 
       <View style={styles.tabContainer}>
         <TouchableOpacity

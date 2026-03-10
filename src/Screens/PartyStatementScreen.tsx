@@ -64,12 +64,7 @@ const PartyStatementScreen = () => {
         { paddingTop: insets.top, paddingBottom: insets.bottom },
       ]}
     >
-      <ReportHeader
-        title="Party Statement"
-        onBack={() => console.log("Back pressed")}
-        onPdfPress={() => console.log("Download PDF")}
-        onXlsPress={() => console.log("Download XLS")}
-      />
+      <ReportHeader title="Party Statement" />
 
       <View style={styles.tabContainer}>
         <TouchableOpacity

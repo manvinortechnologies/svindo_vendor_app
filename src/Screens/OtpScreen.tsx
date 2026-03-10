@@ -287,10 +287,12 @@ export default function OtpScreen() {
 
         {/* Header with Logo */}
         <LinearGradient colors={["#F9C313", "#FCA511"]} style={styles.header}>
-          <Image source={require("../assets/logo.png")} style={styles.logo} />
-          <Text style={styles.title}>Svindo</Text>
-          <Text style={styles.title}>Business</Text>
-          <Text style={styles.subtitle}>Window to Real Growth</Text>
+          <View style={styles.headerContent}>
+            <Image source={require("../assets/logo.png")} style={styles.logo} />
+            <Text style={styles.title}>Svindo</Text>
+            <Text style={styles.title}>Business</Text>
+            <Text style={styles.subtitle}>Window to Real Growth</Text>
+          </View>
         </LinearGradient>
 
         {/* OTP Verification Section */}
@@ -410,12 +412,17 @@ const styles = ScaledSheet.create({
   header: {
     width: "100%",
     // height: "50%",
-    paddingTop: "60@s",
-    paddingBottom: "20@s",
+
     alignItems: "center",
     justifyContent: "center",
     borderBottomLeftRadius: 60,
     borderBottomRightRadius: 60,
+  },
+  headerContent: {
+    paddingTop: "60@vs",
+    paddingBottom: "20@vs",
+    alignItems: "center",
+    justifyContent: "center",
   },
   logo: {
     width: "140@s",
@@ -487,8 +494,6 @@ const styles = ScaledSheet.create({
     marginTop: 10,
   },
   resendButtonGradient: {
-    paddingHorizontal: "20@s",
-    paddingVertical: 8,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -496,6 +501,8 @@ const styles = ScaledSheet.create({
     color: "#000",
     fontSize: 14,
     fontWeight: "bold",
+    paddingHorizontal: "20@s",
+    paddingVertical: 8,
   },
 
   termsText: {

@@ -64,12 +64,7 @@ const SaleReportScreen = () => {
         { paddingTop: insets.top, paddingBottom: insets.bottom },
       ]}
     >
-      <ReportHeader
-        title="Sale Report"
-        onBack={() => console.log("Back pressed")}
-        onPdfPress={() => console.log("Download PDF")}
-        onXlsPress={() => console.log("Download XLS")}
-      />
+      <ReportHeader title="Sale Report" />
 
       <View style={styles.tabContainer}>
         <TouchableOpacity

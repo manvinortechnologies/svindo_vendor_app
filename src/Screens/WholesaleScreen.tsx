@@ -9,6 +9,7 @@ import {
   KeyboardTypeOptions,
   StatusBar,
   Platform,
+  KeyboardAvoidingView,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import Headerwithback from "./Headerwithback"; // Use your actual path
@@ -179,14 +180,15 @@ export default function WholesaleScreen() {
   useEffect(() => {
     (async () => {
       const res = await api.get(
-        API_ROUTES.invoiceNumber + `?invoice_type=${selectedType?.key}`
+        API_ROUTES.invoiceNumber + `?invoice_type=${selectedType?.key}`,
       );
       setInvoiceNumber(res.data?.invoice_number);
     })();
   }, [selectedType?.name]);
 
   return (
-    <View
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={[
         styles.container,
         { paddingTop: insets.top, paddingBottom: insets.bottom },
@@ -272,7 +274,7 @@ export default function WholesaleScreen() {
           <Text style={styles.proceedButtonText}>Proceed</Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 

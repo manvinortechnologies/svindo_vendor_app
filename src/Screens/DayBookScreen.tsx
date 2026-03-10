@@ -50,7 +50,7 @@ const DayBookScreen = () => {
   const [error, setError] = useState<string | null>(null);
   const [calendarModel, setCalendarModel] = useState<string>("");
   const [startDate, setStartDate] = useState<string>(
-    moment().format("YYYY-MM-DD")
+    moment().format("YYYY-MM-DD"),
   );
   const [endDate, setEndDate] = useState<string>(moment().format("YYYY-MM-DD"));
   const [selectedEntry, setSelectedEntry] = useState<any | null>(null);
@@ -189,12 +189,7 @@ const DayBookScreen = () => {
         { paddingTop: insets.top, paddingBottom: insets.bottom },
       ]}
     >
-      <ReportHeader
-        title="Day Book "
-        onBack={() => { }}
-      // onPdfPress={() => console.log('Download PDF')}
-      // onXlsPress={() => console.log('Download XLS')}
-      />
+      <ReportHeader title="Day Book" />
 
       {/* Date Selector */}
       <View style={styles.dateContainer}>
@@ -337,6 +332,7 @@ const DayBookScreen = () => {
           contentContainerStyle={{ paddingBottom: 100 }}
         />
       )}
+
       <CalendarModal
         visible={isDatePickerVisible}
         onClose={() => setDatePickerVisible(false)}
@@ -392,7 +388,9 @@ const DayBookScreen = () => {
                     <View style={styles.entryDetailRow}>
                       <Text style={styles.entryDetailLabel}>Time</Text>
                       <Text style={styles.entryDetailValue}>
-                        {moment(selectedEntry.time).format("DD/MM/YYYY HH:mm:ss")}
+                        {moment(selectedEntry.time).format(
+                          "DD/MM/YYYY HH:mm:ss",
+                        )}
                       </Text>
                     </View>
                   )}
@@ -401,10 +399,7 @@ const DayBookScreen = () => {
                     <View style={styles.entryDetailRow}>
                       <Text style={styles.entryDetailLabel}>Debit</Text>
                       <Text
-                        style={[
-                          styles.entryDetailValue,
-                          { color: "#FF0000" },
-                        ]}
+                        style={[styles.entryDetailValue, { color: "#FF0000" }]}
                       >
                         ₹{Number(selectedEntry.debit).toFixed(2)}
                       </Text>
@@ -415,10 +410,7 @@ const DayBookScreen = () => {
                     <View style={styles.entryDetailRow}>
                       <Text style={styles.entryDetailLabel}>Credit</Text>
                       <Text
-                        style={[
-                          styles.entryDetailValue,
-                          { color: "#163881" },
-                        ]}
+                        style={[styles.entryDetailValue, { color: "#163881" }]}
                       >
                         ₹{Number(selectedEntry.credit).toFixed(2)}
                       </Text>
@@ -438,7 +430,10 @@ const DayBookScreen = () => {
                         },
                       ]}
                     >
-                      ₹{Number(selectedEntry.credit || selectedEntry.debit).toFixed(2)}
+                      ₹
+                      {Number(
+                        selectedEntry.credit || selectedEntry.debit,
+                      ).toFixed(2)}
                     </Text>
                   </View>
                 </>

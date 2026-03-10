@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import {
-  Modal,
   View,
   Text,
   TouchableOpacity,
   TextInput,
   Alert,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { ScaledSheet } from "react-native-size-matters";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -16,6 +17,7 @@ import CustomDropdown, {
   DropDownOption,
 } from "../CommonComponent/CustomDropdown";
 import Toast from "react-native-toast-message";
+import Modal from "react-native-modal";
 
 interface BankTransferModalProps {
   visible: boolean;
@@ -50,7 +52,7 @@ const BankTransferModal: React.FC<BankTransferModalProps> = ({
           (item: any) => ({
             id: item.id,
             name: item.name || item.bank_name || item.account_name,
-          })
+          }),
         );
         setBankList(transformedBanks);
       }
@@ -121,12 +123,17 @@ const BankTransferModal: React.FC<BankTransferModalProps> = ({
 
   return (
     <Modal
-      visible={visible}
-      transparent={true}
-      animationType="slide"
-      onRequestClose={handleClose}
+      isVisible={visible}
+      animationIn="slideInUp"
+      animationOut="slideOutDown"
+      onBackdropPress={handleClose}
+      onBackButtonPress={handleClose}
+      onDismiss={handleClose}
     >
-      <View style={styles.overlay}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.overlay}
+      >
         <View style={styles.modalContainer}>
           <View style={styles.header}>
             <Text style={styles.title}>Cash to Bank Transfer</Text>
@@ -189,7 +196,7 @@ const BankTransferModal: React.FC<BankTransferModalProps> = ({
             </View>
           </View>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
@@ -197,7 +204,7 @@ const BankTransferModal: React.FC<BankTransferModalProps> = ({
 const styles = ScaledSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    // backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
   },

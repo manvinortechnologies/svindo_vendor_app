@@ -64,12 +64,7 @@ const ExpenseTransactionScreen = () => {
         { paddingTop: insets.top, paddingBottom: insets.bottom },
       ]}
     >
-      <ReportHeader
-        title="Expense Transaction"
-        onBack={() => console.log("Back pressed")}
-        onPdfPress={() => console.log("Download PDF")}
-        onXlsPress={() => console.log("Download XLS")}
-      />
+      <ReportHeader title="Expense Transaction" />
 
       <View style={styles.tabContainer}>
         <TouchableOpacity

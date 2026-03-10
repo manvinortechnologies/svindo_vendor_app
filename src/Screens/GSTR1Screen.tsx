@@ -42,12 +42,7 @@ const GSTR1Screen = () => {
         { paddingTop: insets.top, paddingBottom: insets.bottom },
       ]}
     >
-      <ReportHeader
-        title="Day Book "
-        onBack={() => console.log("Back pressed")}
-        onPdfPress={() => console.log("Download PDF")}
-        onXlsPress={() => console.log("Download XLS")}
-      />
+      <ReportHeader title="Day Book" />
 
       <View style={styles.tabContainer}>
         <TouchableOpacity

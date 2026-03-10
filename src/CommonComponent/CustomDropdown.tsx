@@ -11,6 +11,8 @@ import {
 import { ScaledSheet } from "react-native-size-matters";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import SearchBar from "./SearchBar";
+import { KeyboardAvoidingView } from "react-native";
+import { Platform } from "react-native";
 
 export interface DropDownOption {
   name: string;
@@ -51,7 +53,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   const selectedOption = options.find(
     (opt) =>
       opt.id === selectedValue ||
-      opt.id?.toString() === selectedValue?.toString()
+      opt.id?.toString() === selectedValue?.toString(),
   );
 
   // Filter options based on search query
@@ -61,7 +63,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
     }
     const query = searchQuery.toLowerCase();
     return options.filter((option) =>
-      option.name.toLowerCase().includes(query)
+      option.name.toLowerCase().includes(query),
     );
   }, [options, searchQuery, isSearchable]);
 
@@ -114,76 +116,81 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
         animationType="fade"
         onRequestClose={handleClose}
       >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={handleClose}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.overlay}
         >
-          <View
-            style={styles.modalContent}
-            onStartShouldSetResponder={() => true}
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={handleClose}
           >
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>{placeholder}</Text>
-              <TouchableOpacity
-                onPress={handleClose}
-                style={styles.closeButton}
-              >
-                <Icon name="close" size={24} color="#000" />
-              </TouchableOpacity>
-            </View>
-
-            {isSearchable && (
-              <View style={styles.searchContainer}>
-                <SearchBar
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                />
-              </View>
-            )}
-
-            <ScrollView
-              style={styles.optionsScrollView}
-              showsVerticalScrollIndicator={true}
+            <View
+              style={styles.modalContent}
+              onStartShouldSetResponder={() => true}
             >
-              {filteredOptions.length === 0 ? (
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>No options found</Text>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>{placeholder}</Text>
+                <TouchableOpacity
+                  onPress={handleClose}
+                  style={styles.closeButton}
+                >
+                  <Icon name="close" size={24} color="#000" />
+                </TouchableOpacity>
+              </View>
+
+              {isSearchable && (
+                <View style={styles.searchContainer}>
+                  <SearchBar
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                  />
                 </View>
-              ) : (
-                filteredOptions.map((option) => {
-                  const isSelected =
-                    option.id === selectedValue ||
-                    option.id?.toString() === selectedValue?.toString();
-                  return (
-                    <TouchableOpacity
-                      key={option.id?.toString()}
-                      style={[
-                        styles.optionItem,
-                        isSelected && styles.optionItemSelected,
-                      ]}
-                      onPress={() => handleSelect(option)}
-                      activeOpacity={0.7}
-                    >
-                      <Text
-                        style={[
-                          styles.optionText,
-                          isSelected && styles.optionTextSelected,
-                        ]}
-                      >
-                        {option.name}
-                      </Text>
-                      {isSelected && (
-                        <Icon name="check" size={20} color="#FCA311" />
-                      )}
-                    </TouchableOpacity>
-                  );
-                })
               )}
-            </ScrollView>
-          </View>
-        </TouchableOpacity>
+
+              <ScrollView
+                style={styles.optionsScrollView}
+                showsVerticalScrollIndicator={true}
+              >
+                {filteredOptions.length === 0 ? (
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>No options found</Text>
+                  </View>
+                ) : (
+                  filteredOptions.map((option) => {
+                    const isSelected =
+                      option.id === selectedValue ||
+                      option.id?.toString() === selectedValue?.toString();
+                    return (
+                      <TouchableOpacity
+                        key={option.id?.toString()}
+                        style={[
+                          styles.optionItem,
+                          isSelected && styles.optionItemSelected,
+                        ]}
+                        onPress={() => handleSelect(option)}
+                        activeOpacity={0.7}
+                      >
+                        <Text
+                          style={[
+                            styles.optionText,
+                            isSelected && styles.optionTextSelected,
+                          ]}
+                        >
+                          {option.name}
+                        </Text>
+                        {isSelected && (
+                          <Icon name="check" size={20} color="#FCA311" />
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })
+                )}
+              </ScrollView>
+            </View>
+          </TouchableOpacity>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -216,6 +223,12 @@ const styles = ScaledSheet.create({
   },
   disabledText: {
     color: "#ccc",
+  },
+  overlay: {
+    flex: 1,
+    // backgroundColor: "rgba(0, 0, 0, 0.5)",
+    // justifyContent: "center",
+    // alignItems: "center",
   },
   modalOverlay: {
     flex: 1,
