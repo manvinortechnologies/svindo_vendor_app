@@ -21,6 +21,7 @@ import Toast from "react-native-toast-message";
 import CustomDropdown from "../CommonComponent/CustomDropdown";
 import { StorageUtils } from "../utils/storage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { STATE_CHOICES } from "../constants/states.constants";
 
 type RootStackParamList = {
   AddCustomer: {
@@ -81,7 +82,7 @@ const AddCustomer = ({ navigation }: any) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [states, setStates] = useState<{ id: string | number; name: string }[]>(
-    []
+    STATE_CHOICES
   );
 
   useEffect(() => {
@@ -137,24 +138,6 @@ const AddCustomer = ({ navigation }: any) => {
     }
   }, [isEdit, customer]);
 
-  useEffect(() => {
-    const fetchStates = async () => {
-      try {
-        const response = await api.get("masters/get-state/");
-        if (response?.data) {
-          const formattedStates = response.data.map((item: any) => ({
-            id: item.id,
-            name: item.name,
-          }));
-          setStates(formattedStates);
-        }
-      } catch (error) {
-        console.error("Failed to load states:", error);
-      }
-    };
-
-    fetchStates();
-  }, []);
 
   const validateForm = () => {
     let tempErrors: { [key: string]: string } = {};
@@ -419,20 +402,44 @@ const AddCustomer = ({ navigation }: any) => {
                   placeholder: string;
                   key: keyof typeof billingAddress;
                 }[]
-              ).map(({ placeholder, key }, idx) => (
-                <TextInput
-                  key={idx}
-                  placeholder={placeholder}
-                  placeholderTextColor="#888"
-                  style={[styles.input, { marginBottom: 10 }]}
-                  keyboardType={key === "pincode" ? "numeric" : "ascii-capable"}
-                  maxLength={key === "pincode" ? 6 : 100}
-                  value={billingAddress[key]}
-                  onChangeText={(text) =>
-                    setBillingAddress((prev) => ({ ...prev, [key]: text }))
-                  }
-                />
-              ))}
+              ).map(({ placeholder, key }, idx) => {
+                if (key === "state") {
+                  return (
+                    <CustomDropdown
+                      key={idx}
+                      placeholder="Select State"
+                      options={states}
+                      onSelect={(option) => {
+                        setBillingAddress((prev) => ({
+                          ...prev,
+                          state: option.id,
+                        }));
+                      }}
+                      selectedValue={billingAddress.state || null}
+                      dropDownBoxStyle={[
+                        styles.dropdown,
+                        { marginBottom: 10 },
+                      ]}
+                    />
+                  );
+                }
+                return (
+                  <TextInput
+                    key={idx}
+                    placeholder={placeholder}
+                    placeholderTextColor="#888"
+                    style={[styles.input, { marginBottom: 10 }]}
+                    keyboardType={
+                      key === "pincode" ? "numeric" : "ascii-capable"
+                    }
+                    maxLength={key === "pincode" ? 6 : 100}
+                    value={billingAddress[key]}
+                    onChangeText={(text) =>
+                      setBillingAddress((prev) => ({ ...prev, [key]: text }))
+                    }
+                  />
+                );
+              })}
             </View>
           </View>
 
@@ -461,21 +468,46 @@ const AddCustomer = ({ navigation }: any) => {
                   placeholder: string;
                   key: keyof typeof dispatchAddress;
                 }[]
-              ).map(({ placeholder, key }, idx) => (
-                <TextInput
-                  key={idx}
-                  placeholder={placeholder}
-                  placeholderTextColor="#888"
-                  style={[styles.input, { marginBottom: 10 }]}
-                  value={dispatchAddress[key]}
-                  keyboardType={key === "pincode" ? "numeric" : "ascii-capable"}
-                  maxLength={key === "pincode" ? 6 : 100}
-                  onChangeText={(text) =>
-                    setDispatchAddress((prev) => ({ ...prev, [key]: text }))
-                  }
-                  // editable={!sameAsBilling}
-                />
-              ))}
+              ).map(({ placeholder, key }, idx) => {
+                if (key === "state") {
+                  return (
+                    <CustomDropdown
+                      key={idx}
+                      placeholder="Select State"
+                      options={states}
+                      onSelect={(option) => {
+                        setDispatchAddress((prev) => ({
+                          ...prev,
+                          state: option.id,
+                        }));
+                      }}
+                      selectedValue={dispatchAddress.state || null}
+                      dropDownBoxStyle={[
+                        styles.dropdown,
+                        { marginBottom: 10 },
+                      ]}
+                      disabled={sameAsBilling}
+                    />
+                  );
+                }
+                return (
+                  <TextInput
+                    key={idx}
+                    placeholder={placeholder}
+                    placeholderTextColor="#888"
+                    style={[styles.input, { marginBottom: 10 }]}
+                    value={dispatchAddress[key]}
+                    keyboardType={
+                      key === "pincode" ? "numeric" : "ascii-capable"
+                    }
+                    maxLength={key === "pincode" ? 6 : 100}
+                    onChangeText={(text) =>
+                      setDispatchAddress((prev) => ({ ...prev, [key]: text }))
+                    }
+                    editable={!sameAsBilling}
+                  />
+                );
+              })}
             </View>
           </View>
 

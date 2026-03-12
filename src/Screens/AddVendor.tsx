@@ -20,6 +20,7 @@ import { useRoute, RouteProp } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
 import CustomDropdown from "../CommonComponent/CustomDropdown";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { STATE_CHOICES } from "../constants/states.constants";
 
 type RootStackParamList = {
   AddVendor: {
@@ -38,7 +39,7 @@ const AddVendor = ({ navigation }: any) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [states, setStates] = useState<{ id: string | number; name: string }[]>(
-    []
+    STATE_CHOICES
   );
   const [basicDetails, setBasicDetails] = useState({
     name: "",
@@ -64,24 +65,6 @@ const AddVendor = ({ navigation }: any) => {
     country: "",
   });
 
-  useEffect(() => {
-    const fetchStates = async () => {
-      try {
-        const response = await api.get("masters/get-state/");
-        if (response?.data) {
-          const formattedStates = response.data.map((item: any) => ({
-            id: item.id,
-            name: item.name,
-          }));
-          setStates(formattedStates);
-        }
-      } catch (error) {
-        console.error("Failed to load states:", error);
-      }
-    };
-
-    fetchStates();
-  }, []);
 
   useEffect(() => {
     if (isEdit && vendor) {
@@ -344,20 +327,44 @@ const AddVendor = ({ navigation }: any) => {
                   { placeholder: "State", key: "state" },
                   { placeholder: "Country", key: "country" },
                 ] as { placeholder: string; key: keyof typeof address }[]
-              ).map(({ placeholder, key }, idx) => (
-                <TextInput
-                  key={idx}
-                  placeholder={placeholder}
-                  placeholderTextColor="#888"
-                  style={[styles.input, { marginBottom: 10 }]}
-                  keyboardType={key === "pincode" ? "numeric" : "ascii-capable"}
-                  maxLength={key === "pincode" ? 6 : 200}
-                  value={address[key]}
-                  onChangeText={(text) =>
-                    setAddress((prev) => ({ ...prev, [key]: text }))
-                  }
-                />
-              ))}
+              ).map(({ placeholder, key }, idx) => {
+                if (key === "state") {
+                  return (
+                    <CustomDropdown
+                      key={idx}
+                      placeholder="Select State"
+                      options={states}
+                      onSelect={(option) => {
+                        setAddress((prev) => ({
+                          ...prev,
+                          state: option.id,
+                        }));
+                      }}
+                      selectedValue={address.state || null}
+                      dropDownBoxStyle={[
+                        styles.dropdown,
+                        { marginBottom: 10 },
+                      ]}
+                    />
+                  );
+                }
+                return (
+                  <TextInput
+                    key={idx}
+                    placeholder={placeholder}
+                    placeholderTextColor="#888"
+                    style={[styles.input, { marginBottom: 10 }]}
+                    keyboardType={
+                      key === "pincode" ? "numeric" : "ascii-capable"
+                    }
+                    maxLength={key === "pincode" ? 6 : 200}
+                    value={address[key]}
+                    onChangeText={(text) =>
+                      setAddress((prev) => ({ ...prev, [key]: text }))
+                    }
+                  />
+                );
+              })}
             </View>
           </View>
 

@@ -22,6 +22,7 @@ import CustomDropdown from "../CommonComponent/CustomDropdown";
 import { DropDownOption } from "../CommonComponent/CustomDropdown";
 import { StorageUtils } from "../utils/storage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { STATE_CHOICES } from "../constants/states.constants";
 
 const CompanyProfile = ({ navigation, route }: any) => {
   const profileId = route?.params?.id;
@@ -32,7 +33,7 @@ const CompanyProfile = ({ navigation, route }: any) => {
   const [signatureFile, setSignatureFile] = useState<any>();
   const [signaturePickerModel, setSignaturePickerModel] = useState(false);
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [states, setStates] = useState<DropDownOption[]>([]);
+  const [states, setStates] = useState<DropDownOption[]>(STATE_CHOICES);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const [form, setForm] = useState({
@@ -68,28 +69,6 @@ const CompanyProfile = ({ navigation, route }: any) => {
   useEffect(() => {
     getProfileData();
   }, [profileId]);
-
-  useEffect(() => {
-    const fetchStates = async () => {
-      try {
-        const response = await api.get("masters/get-state/");
-        if (Array.isArray(response?.data)) {
-          setStates(response.data);
-          setForm((prev) => ({
-            ...prev,
-            state:
-              response.data
-                .find((item: any) => item.id.toString() === prev.state)
-                ?.id.toString() || "",
-          }));
-        }
-      } catch (error) {
-        console.error("Failed to load states:", error);
-      }
-    };
-
-    form.companyName && fetchStates();
-  }, [form.companyName]);
 
   const getProfileData = async () => {
     try {
@@ -138,10 +117,7 @@ const CompanyProfile = ({ navigation, route }: any) => {
             address2: data.shipping_address_line_2 || "",
             pincode: data.shipping_pincode || "",
             city: data.shipping_city || "",
-            state:
-              data.shipping_state_details?.id.toString() ||
-              data.shipping_state?.toString() ||
-              "",
+            state: data.shipping_state?.toString() || "",
             country: data.shipping_country || "India",
           }
         : splitAddress(data.address);
@@ -346,20 +322,15 @@ const CompanyProfile = ({ navigation, route }: any) => {
       // Shipping address - separate fields
       formData.append(
         "shipping_same_as_billing",
-        sameAsBilling ? "true" : "false"
+        sameAsBilling ? "true" : "false",
       );
       formData.append("shipping_address_line_1", form.shipping.address1 || "");
       formData.append("shipping_address_line_2", form.shipping.address2 || "");
       formData.append("shipping_pincode", form.shipping.pincode || "");
       formData.append("shipping_city", form.shipping.city || "");
       // Use billing state if same as billing, otherwise try to parse shipping state
-      const shippingStateId = sameAsBilling
-        ? form.state
-          ? parseInt(form.state)
-          : ""
-        : form.shipping.state && !isNaN(parseInt(form.shipping.state))
-        ? parseInt(form.shipping.state)
-        : "";
+      const shippingStateId = sameAsBilling ? form.state : form.shipping.state;
+
       formData.append("shipping_state", shippingStateId);
       formData.append("shipping_country", form.shipping.country || "India");
 
@@ -392,7 +363,7 @@ const CompanyProfile = ({ navigation, route }: any) => {
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
-        }
+        },
       );
 
       if (response.status === 201 || response.status === 200) {
@@ -585,6 +556,41 @@ const CompanyProfile = ({ navigation, route }: any) => {
           <View style={styles.addressContainer}>
             {Object.keys(form.billing).map((key, i) => {
               const errorKey = `billing_${key}` as keyof typeof errors;
+              if (key === "state") {
+                return (
+                  <View key={i}>
+                    <Text style={[styles.dropdownLabel, { marginTop: 0 }]}>
+                      State
+                    </Text>
+                    <CustomDropdown
+                      placeholder="Select State"
+                      options={states}
+                      onSelect={(option) => {
+                        handleBillingChange(
+                          "state",
+                          option?.id?.toString() || "",
+                        );
+                        if (errors[errorKey]) {
+                          setErrors((prev) => ({ ...prev, [errorKey]: "" }));
+                        }
+                      }}
+                      selectedValue={
+                        states.find(
+                          (item) => item.id.toString() === form.billing.state,
+                        )?.id || null
+                      }
+                      dropDownBoxStyle={[
+                        styles.dropdown,
+                        { backgroundColor: "#FFEBCB", marginBottom: 15 },
+                        errors[errorKey] && styles.dropdownError,
+                      ]}
+                    />
+                    {errors[errorKey] && (
+                      <Text style={styles.errorText}>{errors[errorKey]}</Text>
+                    )}
+                  </View>
+                );
+              }
               return (
                 <InputBox
                   key={i}
@@ -619,6 +625,47 @@ const CompanyProfile = ({ navigation, route }: any) => {
           <View style={styles.addressContainer}>
             {Object.keys(form.shipping).map((key, i) => {
               const errorKey = `shipping_${key}` as keyof typeof errors;
+              if (key === "state") {
+                return (
+                  <View key={i}>
+                    <Text style={[styles.dropdownLabel, { marginTop: 0 }]}>
+                      State
+                    </Text>
+                    <CustomDropdown
+                      disabled={sameAsBilling}
+                      placeholder="Select State"
+                      options={states}
+                      onSelect={(option) => {
+                        setForm((prev) => ({
+                          ...prev,
+                          shipping: {
+                            ...prev.shipping,
+                            state: option?.id?.toString() || "",
+                          },
+                        }));
+                        if (errors[errorKey]) {
+                          setErrors((prev) => ({ ...prev, [errorKey]: "" }));
+                        }
+                      }}
+                      selectedValue={
+                        states.find(
+                          (item) => item.id.toString() === form.shipping.state,
+                        )?.id || null
+                      }
+                      dropDownBoxStyle={[
+                        styles.dropdown,
+                        { backgroundColor: "#FFEBCB", marginBottom: 15 },
+                        !sameAsBilling &&
+                          errors[errorKey] &&
+                          styles.dropdownError,
+                      ]}
+                    />
+                    {!sameAsBilling && errors[errorKey] && (
+                      <Text style={styles.errorText}>{errors[errorKey]}</Text>
+                    )}
+                  </View>
+                );
+              }
               return (
                 <InputBox
                   key={i}

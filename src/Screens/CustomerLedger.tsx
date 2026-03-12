@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   FlatList,
   ScrollView,
-  Modal,
   TextInput,
   Dimensions,
   Linking,
@@ -28,6 +27,8 @@ import {
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
 import { useIsFocused } from "@react-navigation/native";
+import Modal from "react-native-modal";
+import { s } from "react-native-size-matters";
 
 interface LedgerTransaction {
   type: "invoice" | "payment";
@@ -72,7 +73,7 @@ const CustomerLedger = ({ navigation, route }: any) => {
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
   const [filteredLedgerData, setFilteredLedgerData] = useState<LedgerSection[]>(
-    []
+    [],
   );
   const [isFiltered, setIsFiltered] = useState<boolean>(false);
   const [calendarModel, setCalendarModel] = useState<string>("");
@@ -96,7 +97,7 @@ const CustomerLedger = ({ navigation, route }: any) => {
       setError(null);
 
       const response = await api.get(
-        API_ROUTES.customerLedger.replace(":id", customerId.toString())
+        API_ROUTES.customerLedger.replace(":id", customerId.toString()),
       );
 
       if (response.data) {
@@ -206,7 +207,7 @@ const CustomerLedger = ({ navigation, route }: any) => {
       : `+91${customerInfo.phone}`;
     const message = "Hello!";
     const url = `whatsapp://send?phone=${phoneNumber}&text=${encodeURIComponent(
-      message
+      message,
     )}`;
 
     try {
@@ -217,7 +218,7 @@ const CustomerLedger = ({ navigation, route }: any) => {
         // Fallback to web WhatsApp if app is not installed
         const webUrl = `https://wa.me/${phoneNumber.replace(
           /\D/g,
-          ""
+          "",
         )}?text=${encodeURIComponent(message)}`;
         await Linking.openURL(webUrl);
       }
@@ -273,7 +274,7 @@ const CustomerLedger = ({ navigation, route }: any) => {
 
     return ledgerData.filter((section) => {
       const sectionDate = new Date(
-        moment(section.date, "DD-MM-YYYY").format("YYYY-MM-DD")
+        moment(section.date, "DD-MM-YYYY").format("YYYY-MM-DD"),
       );
       return sectionDate >= startDateObj && sectionDate <= endDateObj;
     });
@@ -484,6 +485,7 @@ const CustomerLedger = ({ navigation, route }: any) => {
                     { backgroundColor: i % 2 === 0 ? "#fff8f0" : "#fff" },
                   ]}
                   onPress={() => {
+                    console.log(txn);
                     setSelectedTransaction(txn);
                     setShowTransactionModal(true);
                   }}
@@ -539,7 +541,7 @@ const CustomerLedger = ({ navigation, route }: any) => {
                 </TouchableOpacity>
               ))}
             </View>
-          )
+          ),
         )}
       </ScrollView>
 
@@ -555,23 +557,14 @@ const CustomerLedger = ({ navigation, route }: any) => {
         <Text style={styles.addButtonText}>Add Transaction</Text>
       </TouchableOpacity>
 
-      {/* Calendar Modal */}
-      <CalendarModal
-        visible={calendarModel !== ""}
-        onClose={() => setCalendarModel("")}
-        onSelect={(e) =>
-          calendarModel === "start" ? setStartDate(e) : setEndDate(e)
-        }
-        maxDate={moment().format("YYYY-MM-DD")}
-        initialDate={calendarModel === "start" ? startDate : endDate}
-      />
-
       {/* Date Range Filter Modal */}
       <Modal
-        visible={showCalendarModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowCalendarModal(false)}
+        isVisible={showCalendarModal}
+        animationIn="slideInUp"
+        animationOut="slideOutDown"
+        onBackdropPress={() => setShowCalendarModal(false)}
+        onBackButtonPress={() => setShowCalendarModal(false)}
+        onDismiss={() => setShowCalendarModal(false)}
       >
         <View style={styles.filterModalOverlay}>
           <View style={styles.filterModalContainer}>
@@ -588,27 +581,35 @@ const CustomerLedger = ({ navigation, route }: any) => {
             <View style={styles.filterModalContent}>
               <View style={styles.dateInputContainer}>
                 <Text style={styles.dateLabel}>Start Date</Text>
-                <TouchableOpacity onPress={() => setCalendarModel("start")}>
-                  <TextInput
-                    style={styles.dateInput}
-                    value={startDate}
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#999"
-                    editable={false}
-                  />
+                <TouchableOpacity
+                  style={styles.dateInput}
+                  onPress={() => setCalendarModel("start")}
+                >
+                  <Text
+                    style={{
+                      color: startDate ? "#000" : "#999",
+                      fontSize: s(14),
+                    }}
+                  >
+                    {startDate || "YYYY-MM-DD"}
+                  </Text>
                 </TouchableOpacity>
               </View>
 
               <View style={styles.dateInputContainer}>
                 <Text style={styles.dateLabel}>End Date</Text>
-                <TouchableOpacity onPress={() => setCalendarModel("end")}>
-                  <TextInput
-                    style={styles.dateInput}
-                    value={endDate}
-                    editable={false}
-                    placeholder="YYYY-MM-DD"
-                    placeholderTextColor="#999"
-                  />
+                <TouchableOpacity
+                  style={styles.dateInput}
+                  onPress={() => setCalendarModel("end")}
+                >
+                  <Text
+                    style={{
+                      color: endDate ? "#000" : "#999",
+                      fontSize: s(14),
+                    }}
+                  >
+                    {endDate || "YYYY-MM-DD"}
+                  </Text>
                 </TouchableOpacity>
               </View>
 
@@ -644,14 +645,26 @@ const CustomerLedger = ({ navigation, route }: any) => {
             </View>
           </View>
         </View>
+        {/* Calendar Modal */}
+        <CalendarModal
+          visible={calendarModel !== ""}
+          onClose={() => setCalendarModel("")}
+          onSelect={(e) =>
+            calendarModel === "start" ? setStartDate(e) : setEndDate(e)
+          }
+          maxDate={moment().format("YYYY-MM-DD")}
+          initialDate={calendarModel === "start" ? startDate : endDate}
+        />
       </Modal>
 
       {/* Transaction Details Modal */}
       <Modal
-        visible={showTransactionModal}
-        transparent={true}
-        animationType="slide"
-        onRequestClose={() => setShowTransactionModal(false)}
+        isVisible={showTransactionModal}
+        animationIn="slideInUp"
+        animationOut="slideOutDown"
+        onBackdropPress={() => setShowTransactionModal(false)}
+        onBackButtonPress={() => setShowTransactionModal(false)}
+        onDismiss={() => setShowTransactionModal(false)}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.transactionModalContainer}>
@@ -709,15 +722,15 @@ const CustomerLedger = ({ navigation, route }: any) => {
                           Amount
                         </Text>
                         <Text style={styles.transactionDetailValue}>
-                          ₹{selectedTransaction.amount?.toFixed(2) || "0.00"}
+                          ₹{selectedTransaction.balance?.toFixed(2) || "0.00"}
                         </Text>
                       </View>
-                      <View style={styles.transactionDetailRow}>
+                      {/* <View style={styles.transactionDetailRow}>
                         <Text style={styles.transactionDetailLabel}>Paid</Text>
                         <Text style={styles.transactionDetailValue}>
                           ₹{selectedTransaction.paid.toFixed(2)}
                         </Text>
-                      </View>
+                      </View> */}
                     </>
                   ) : (
                     <View style={styles.transactionDetailRow}>
@@ -960,7 +973,7 @@ const styles = StyleSheet.create({
   // Calendar Filter Modal Styles
   filterModalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    // backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -1127,7 +1140,7 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    // backgroundColor: "rgba(0, 0, 0, 0.5)",
     justifyContent: "center",
     alignItems: "center",
   },
