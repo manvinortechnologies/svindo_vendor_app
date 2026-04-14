@@ -324,8 +324,22 @@ const AdminProfile = ({ navigation }: any) => {
         <View style={styles.footer}>
           <Text style={styles.termsText}>
             By continuing, you agree to our {"\n"}
-            <Text style={styles.linkText}>Terms of Service</Text> and{" "}
-            <Text style={styles.linkText}>Privacy Policy</Text>.
+            <Text
+              onPress={() => navigation.navigate(HomeNavigation.TERMS_SCREEN)}
+              style={styles.linkText}
+            >
+              Terms of Service
+            </Text>{" "}
+            and{" "}
+            <Text
+              onPress={() =>
+                navigation.navigate(HomeNavigation.PRIVACY_POLICY_SCREEN)
+              }
+              style={styles.linkText}
+            >
+              Privacy Policy
+            </Text>
+            .
           </Text>
         </View>
       </ScrollView>

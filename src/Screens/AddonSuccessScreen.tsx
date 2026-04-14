@@ -27,11 +27,13 @@ const AddonSuccessScreen: React.FC<AddonSuccessScreenProps> = ({
   const productDescription =
     route?.params?.productDescription || "White cotton logo print";
   const productImage = route?.params?.productImage;
-  const stock = route?.params?.stock || 5;
+  const stock = route?.params?.sale_available_stock || 5;
 
   const handleContinue = () => {
     // Navigate back or to next screen
-    navigation.replace(HomeNavigation.STOCK_SCREEN);
+    navigation.replace(HomeNavigation.BOTTOM_NAVIGATION, {
+      screen: HomeNavigation.STOCK_SCREEN,
+    });
   };
 
   return (

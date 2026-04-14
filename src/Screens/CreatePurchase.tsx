@@ -75,7 +75,7 @@ const CreatePurchase = ({ navigation }: any) => {
     setIsPurchasePriceWarningModalVisible,
   ] = useState(false);
   const [editingProductIndex, setEditingProductIndex] = useState<number | null>(
-    null
+    null,
   );
   const [editProductPrice, setEditProductPrice] = useState<string>("");
   const [selectedVendor, setSelectedVendor] = useState<Vendor | null>(null);
@@ -84,7 +84,7 @@ const CreatePurchase = ({ navigation }: any) => {
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [purchasecode, setPurchasecode] = useState("");
   const [purchaseDate, setPurchaseDate] = useState(
-    moment().format("YYYY-MM-DD")
+    moment().format("YYYY-MM-DD"),
   );
   const [discount, setDiscount] = useState({ amount: "", pr: "" });
   const [dueDate, setDueDate] = useState<string>("");
@@ -93,7 +93,7 @@ const CreatePurchase = ({ navigation }: any) => {
   const [advanceAmount, setAdvanceAmount] = useState<string>("0");
   const [selectedBank, setSelectedBank] = useState<DropDownOption>();
   const [supplierDate, setSupplierDate] = useState<string>(
-    moment().format("YYYY-MM-DD")
+    moment().format("YYYY-MM-DD"),
   );
   const [supplierDateCallModel, setSupplierDateCallModel] =
     useState<boolean>(false);
@@ -128,7 +128,7 @@ const CreatePurchase = ({ navigation }: any) => {
       gstNumber: "",
       reverseCharge: false,
       bank: "",
-    }
+    },
   );
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -175,10 +175,11 @@ const CreatePurchase = ({ navigation }: any) => {
     const totalAmount = selectedProducts.reduce(
       (sum, item) =>
         sum + (item.purchase_price || item.price || 0) * item.quantity,
-      0
+      0,
     );
     setDiscount((p) => ({ ...p, pr: value }));
     const percent = parseFloat(value);
+
     if (!isNaN(percent)) {
       const amount = (totalAmount * percent) / 100;
       setDiscount((p) => ({ ...p, amount: amount.toFixed(2) }));
@@ -191,7 +192,7 @@ const CreatePurchase = ({ navigation }: any) => {
     const totalAmount = selectedProducts.reduce(
       (sum, item) =>
         sum + (item.purchase_price || item.price || 0) * item.quantity,
-      0
+      0,
     );
     setDiscount((p) => ({ ...p, amount: value }));
     const amount = parseFloat(value);
@@ -297,7 +298,7 @@ const CreatePurchase = ({ navigation }: any) => {
   // Advance amount as numeric value
   const advanceNumeric = useMemo(
     () => Number(advanceAmount) || 0,
-    [advanceAmount]
+    [advanceAmount],
   );
 
   // Due amount calculation
@@ -317,47 +318,8 @@ const CreatePurchase = ({ navigation }: any) => {
         route.params.selectedProducts.map((p) => ({
           ...p,
           ogPurchasePrice: p.purchase_price,
-        }))
+        })),
       );
-    }
-
-    // Restore form data if coming back from ProductSelectionScreen
-    if (route.params?.formData) {
-      const { formData: preservedData } = route.params;
-
-      // Restore all form states except selectedProducts
-      if (preservedData.selectedVendor)
-        setSelectedVendor(preservedData.selectedVendor);
-      if (preservedData.purchaseDate)
-        setPurchaseDate(preservedData.purchaseDate);
-      if (preservedData.selectedPayment)
-        setSelectedPayment(preservedData.selectedPayment);
-      if (preservedData.selectedAdvanceType)
-        setSelectedAdvanceType(preservedData.selectedAdvanceType);
-      if (preservedData.discount) setDiscount(preservedData.discount);
-      if (preservedData.dueDate) setDueDate(preservedData.dueDate);
-      if (preservedData.serialNo) setSerialNo(preservedData.serialNo);
-      if (preservedData.advanceAmount)
-        setAdvanceAmount(preservedData.advanceAmount);
-      if (preservedData.selectedBank)
-        setSelectedBank(preservedData.selectedBank);
-      if (preservedData.supplierDate)
-        setSupplierDate(preservedData.supplierDate);
-      if (preservedData.packingCharges)
-        setPackingCharges(preservedData.packingCharges);
-      if (preservedData.dispatchAddress)
-        setDispatchAddress(preservedData.dispatchAddress);
-      if (preservedData.signature) setSignature(preservedData.signature);
-      if (preservedData.references) setReferences(preservedData.references);
-      if (preservedData.notes) setNotes(preservedData.notes);
-      if (preservedData.terms) setTerms(preservedData.terms);
-      if (preservedData.extraDiscount)
-        setExtraDiscount(preservedData.extraDiscount);
-      if (preservedData.selectedBank)
-        setSelectedBank(preservedData.selectedBank);
-      if (preservedData.deliveryCharges)
-        setDeliveryCharges(preservedData.deliveryCharges);
-      if (preservedData.formData) setFormData(preservedData.formData);
     }
   }, [route.params?.selectedProducts, route.params?.formData]);
 
@@ -371,7 +333,7 @@ const CreatePurchase = ({ navigation }: any) => {
       // Set vendor
       if (purchaseData.vendor_details && allVendorList) {
         const vendor = allVendorList.find(
-          (v) => v.id === purchaseData.vendor_details.id
+          (v) => v.id === purchaseData.vendor_details.id,
         );
         if (vendor) setSelectedVendor(vendor);
       }
@@ -398,7 +360,9 @@ const CreatePurchase = ({ navigation }: any) => {
 
       if (purchaseData.bank_details) {
         setBank(purchaseData.bank_details.name);
-        setSelectedBank(bankList.find((b) => b.name === purchaseData.bank_details.name));
+        setSelectedBank(
+          bankList.find((b) => b.id === purchaseData.bank_details.id),
+        );
       }
 
       // Set payment method
@@ -410,16 +374,18 @@ const CreatePurchase = ({ navigation }: any) => {
           cash: "Cash",
         };
         setSelectedPayment(
-          paymentMap[purchaseData.payment_method] || purchaseData.payment_method
+          paymentMap[purchaseData.payment_method] ||
+          purchaseData.payment_method,
         );
       }
 
       // Set discount
-      if (purchaseData.discount_percentage || purchaseData.discount_amount) {
-        setDiscount({
+      if (purchaseData.discount_percentage) {
+        handlePercentChange(purchaseData.discount_percentage);
+        setDiscount((p) => ({
+          ...p,
           pr: purchaseData.discount_percentage || "",
-          amount: purchaseData.discount_amount || "",
-        });
+        }));
       }
 
       // Set advance amount and mode
@@ -480,7 +446,7 @@ const CreatePurchase = ({ navigation }: any) => {
             stock: item.product_details?.stock || 0,
             stock_cached: item.product_details?.stock_cached || 0,
             product_type: item.product_details?.product_type || "",
-          })
+          }),
         );
         setSelectedProducts(mappedProducts);
       }
@@ -527,7 +493,7 @@ const CreatePurchase = ({ navigation }: any) => {
           (item: any) => ({
             id: item.id,
             name: item.name || item.vendor_name,
-          })
+          }),
         );
         setBankList(transformedBank);
       }
@@ -551,7 +517,7 @@ const CreatePurchase = ({ navigation }: any) => {
       const totalAmount = selectedProducts.reduce(
         (sum, item) =>
           sum + (item.purchase_price || item.price || 0) * item.quantity,
-        0
+        0,
       );
 
       const totalDiscountedAmount = totalAmount - Number(discount.amount || 0);
@@ -572,7 +538,7 @@ const CreatePurchase = ({ navigation }: any) => {
                   ? "cash"
                   : "other",
         discount_percentage: discount.pr || "0",
-        discount_amount: discount.amount || "0",
+        // discount_amount: discount.amount || "0",
 
         dispatch_address: formData.dispatchAddress || "",
         gst_number: formData.gstNumber || "",
@@ -587,7 +553,10 @@ const CreatePurchase = ({ navigation }: any) => {
         transport_name: formData.transportName || "",
         number_of_parcels: Number(formData.parcels) || null,
         reverse_charges: formData.reverseCharge || false,
-        bank: selectedPayment !== "Cash" && selectedPayment !== "In Credit" ? selectedBank?.id : '',
+        bank:
+          selectedPayment !== "Cash" && selectedPayment !== "In Credit"
+            ? selectedBank?.id
+            : "",
         items: selectedProducts.map((p) => ({
           product: p.id,
           quantity: p.quantity,
@@ -798,12 +767,6 @@ const CreatePurchase = ({ navigation }: any) => {
                       onChangeText={(text) => {
                         const newQuantity = parseInt(text) || 0;
                         if (newQuantity >= 0) {
-                          const stock = Number(item?.stock_cached ?? 0);
-                          const trackStock = item?.track_stock !== false;
-                          // const boundedQty =
-                          //   trackStock && stock > 0
-                          //     ? Math.min(newQuantity, stock)
-                          //     : newQuantity;
                           const updatedProducts = [...selectedProducts];
 
                           // Update quantity
@@ -841,7 +804,7 @@ const CreatePurchase = ({ navigation }: any) => {
                           // Allow editing if purchase_price is 0
                           setEditingProductIndex(index);
                           setEditProductPrice(
-                            (item?.purchase_price || 0).toString()
+                            (item?.purchase_price || 0).toString(),
                           );
                           setIsPurchasePlanModalVisible(true);
                         }
@@ -853,14 +816,14 @@ const CreatePurchase = ({ navigation }: any) => {
                     </TouchableOpacity>
                     <Text style={styles.tableText}>
                       {formatNumber(
-                        (item?.purchase_price || 0) * item?.quantity
+                        (item?.purchase_price || 0) * item?.quantity,
                       )}
                     </Text>
 
                     <TouchableOpacity
                       onPress={() => {
                         const updated = selectedProducts.filter(
-                          (_, i) => i !== index
+                          (_, i) => i !== index,
                         );
                         setSelectedProducts(updated);
                       }}

@@ -2,16 +2,15 @@
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, TouchableOpacity, Text } from "react-native";
 import {
-  SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native";
+import { useRoute, RouteProp } from "@react-navigation/native";
 import {
   Chat,
   Channel,
   MessageList,
   MessageInput,
-  OverlayProvider,
+  useAttachmentPickerContext,
 } from "stream-chat-react-native";
 import api from "../services/api/api";
 import getChatChannel, { client } from "../utils/chatUtils";
@@ -27,10 +26,10 @@ type RouteParams = {
 };
 
 const ChatScreenStream = () => {
-  const navigation = useNavigation();
   const route = useRoute<RouteProp<{ params: RouteParams }, "params">>();
   const { otherUserId } = route.params || {};
   const insets = useSafeAreaInsets();
+  const { closePicker } = useAttachmentPickerContext();
   const [channel, setChannel] = useState<any>(null);
   const [isClientReady, setIsClientReady] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
@@ -122,6 +121,7 @@ const ChatScreenStream = () => {
     );
   }
 
+
   return (
     <View
       style={[
@@ -129,17 +129,15 @@ const ChatScreenStream = () => {
         { paddingTop: insets.top, paddingBottom: insets.bottom },
       ]}
     >
-      <OverlayProvider>
-        <Chat client={client}>
-          <Channel channel={channel} keyboardVerticalOffset={s(2)}>
-            <CustomHeader title="Chat" />
-            {/* <View style={styles.chatContainer}> */}
-            <MessageList />
-            <MessageInput InputButtons={() => null} />
-            {/* </View> */}
-          </Channel>
-        </Chat>
-      </OverlayProvider>
+      <Chat client={client} >
+        <Channel channel={channel}>
+          <CustomHeader title="Chat" />
+          <MessageList />
+          <MessageInput
+            InputButtons={() => null}
+          />
+        </Channel>
+      </Chat>
     </View>
   );
 };

@@ -139,22 +139,25 @@ const getValidationSchema = (selectedType: string) =>
     opening_stock:
       selectedType === "product"
         ? Yup.number().when("is_stock_enabled", {
-            is: true,
-            then: (schema) =>
-              schema
-                .required("Opening stock is required")
-                .min(1, "Opening stock must be greater than 0"),
-            otherwise: (schema) => schema.notRequired(),
-          })
+          is: true,
+          then: (schema) =>
+            schema
+              .required("Opening stock is required")
+              .min(1, "Opening stock must be greater than 0"),
+          otherwise: (schema) => schema.notRequired(),
+        })
         : Yup.number().notRequired(),
-    low_stock_quantity: Yup.number().when("low_stock_alert", {
-      is: true,
-      then: (schema) =>
-        schema
-          .required("Low stock quantity is required")
-          .min(1, "Low stock quantity must be greater than 0"),
-      otherwise: (schema) => schema.notRequired(),
-    }),
+    low_stock_quantity:
+      selectedType === "product"
+        ? Yup.number().when("low_stock_alert", {
+          is: true,
+          then: (schema) =>
+            schema
+              .required("Low stock quantity is required")
+              .min(1, "Low stock quantity must be greater than 0"),
+          otherwise: (schema) => schema.notRequired(),
+        })
+        : Yup.number().notRequired(),
     batch_number: Yup.string().when("batchSwitch", {
       is: true,
       then: (schema) => schema.required("Batch number is required"),
@@ -310,8 +313,8 @@ const ForSelector = ({
             disabled[option] && styles.disabledButton,
             selectedFor === option && styles.selectedOrange,
             option === "offline" &&
-              selectedType === "print" &&
-              styles.disabledButton,
+            selectedType === "print" &&
+            styles.disabledButton,
           ]}
           onPress={() => onSelect(option)}
           disabled={
@@ -337,7 +340,7 @@ const SectionHeader = ({
   title,
   showSwitch,
   switchValue = false,
-  onSwitchChange = () => {},
+  onSwitchChange = () => { },
   showAddButton,
   onAddPress,
 }: {
@@ -476,9 +479,9 @@ const PrintVariant = ({
 }: PrintVariantProps) => {
   const isVariantComplete = Boolean(
     variant?.sided &&
-      variant?.price &&
-      variant?.min_quantity &&
-      variant?.max_quantity,
+    variant?.price &&
+    variant?.min_quantity &&
+    variant?.max_quantity,
   );
 
   return (
@@ -638,13 +641,16 @@ const AddProductScreen = ({
     unit_choices: any[];
     paper_choices: any[];
     sided_choices: any[];
+    color_choices: any[];
   }>({
     print_variants: [],
     unit_choices: [],
     paper_choices: [],
     sided_choices: [],
+    color_choices: [],
   });
   const [sizeList, setSizeList] = useState([]);
+  const [colorList, setColorList] = useState([]);
   // Selection States
   const [selectedCategory, setSelectedCategory] =
     useState<DropDownOption | null>(null);
@@ -674,7 +680,7 @@ const AddProductScreen = ({
 
   const [settings, setSettings] = useState<{ [key: string]: boolean }>({});
   const [hasCompanyGst, setHasCompanyGst] = useState<boolean | null>(null);
-
+  const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '');
   const getSidedLabel = (value: string) => {
     if (!value) return "-";
     const match = variantData?.sided_choices?.find(
@@ -710,7 +716,7 @@ const AddProductScreen = ({
         formikRef.current.setValues({
           ...formikRef.current.values,
           name: product.name || "",
-          description: product.description || "",
+          description: stripHtml(product.description) || "",
           sales_price: "",
           purchase_price: "",
           wholesale_price: "",
@@ -727,13 +733,13 @@ const AddProductScreen = ({
           batch_number: "",
           size: product.size || "",
           expiry_date: "",
-          color: product.color || "",
+          color: product.color?.replace(/\s*\(#.*?\)/, '') || null,
           image1: product.image
             ? {
-                uri: product.image.includes("http")
-                  ? product.image
-                  : `https://syndobackend.pythonanywhere.com${product.image}`,
-              }
+              uri: product.image.includes("http")
+                ? product.image
+                : `https://syndobackend.pythonanywhere.com${product.image}`,
+            }
             : null,
           image2: null,
           image3: null,
@@ -801,7 +807,7 @@ const AddProductScreen = ({
           formikRef.current.setValues({
             ...formikRef.current.values,
             name: product.name || "",
-            description: product.description || "",
+            description: stripHtml(product.description) || "",
             // sales_price: product.sales_price?.toString() || "",
             // purchase_price: product.purchase_price?.toString() || "",
             // wholesale_price: product.wholesale_price?.toString() || "",
@@ -848,7 +854,7 @@ const AddProductScreen = ({
           formikRef.current.setValues({
             ...formikRef.current.values,
             name: product.name || "",
-            description: product.description || "",
+            description: stripHtml(product.description) || "",
             sales_price: product.sales_price?.toString() || "",
             purchase_price: product.purchase_price?.toString() || "",
             wholesale_price: product.wholesale_price?.toString() || "",
@@ -868,7 +874,7 @@ const AddProductScreen = ({
             batch_number: product.batch_number || "",
             size: product.size || "",
             expiry_date: product.expiry_date || "",
-            color: product.color || "",
+            color: product.color?.replace(/\s*\(#.*?\)/, '') || null,
             image1: product.image ? { uri: product.image } : null,
             image2: product.image2 ? { uri: product.image2 } : null,
             image3: product.image3 ? { uri: product.image3 } : null,
@@ -988,6 +994,10 @@ const AddProductScreen = ({
       setAddonData(addonRes.data);
       setVariantData(variantRes.data);
       setSizeList(sizeRes.data);
+      setColorList(variantRes.data?.color_choices.map((p: any) => ({
+        name: p.label,
+        id: p.value,
+      })) || []);
 
       // Try to get company profile from storage first
       let companyData = StorageUtils.getCompanyProfile();
@@ -1223,7 +1233,7 @@ const AddProductScreen = ({
         navigation.replace(HomeNavigation.PRODUCT_ADDED_SUCCESS, {
           // productId: res.data.id,
           productName: values.name,
-          productDescription: values.description,
+          productDescription: stripHtml(values.description),
           productImage: values.image1?.uri,
           stock: values.opening_stock,
           payload: res.data,
@@ -1519,7 +1529,7 @@ const AddProductScreen = ({
         if (formikRef.current) {
           formikRef.current.setValues({
             name: existingProduct.name || "",
-            description: existingProduct.description || "",
+            description: stripHtml(existingProduct.description) || "",
             sales_price: existingProduct.sales_price?.toString() || "",
             purchase_price: existingProduct.purchase_price?.toString() || "",
             wholesale_price: existingProduct.wholesale_price?.toString() || "",
@@ -1540,7 +1550,7 @@ const AddProductScreen = ({
             batch_number: existingProduct.batch_number || "",
             size: existingProduct.size || "",
             expiry_date: existingProduct.expiry_date || "",
-            color: existingProduct.color || "",
+            color: existingProduct.color?.replace(/\s*\(#.*?\)/, '') || null,
             image1: existingProduct.image
               ? { uri: existingProduct.image }
               : null,
@@ -1628,10 +1638,10 @@ const AddProductScreen = ({
             disabled={
               existingProduct && route.params?.isEdit
                 ? {
-                    print: existingProduct?.product_type !== "print",
-                    service: existingProduct?.product_type !== "service",
-                    product: existingProduct?.product_type !== "product",
-                  }
+                  print: existingProduct?.product_type !== "print",
+                  service: existingProduct?.product_type !== "service",
+                  product: existingProduct?.product_type !== "product",
+                }
                 : {}
             }
           />
@@ -1643,9 +1653,9 @@ const AddProductScreen = ({
             disabled={
               existingProduct && route.params?.isEdit
                 ? {
-                    offline: existingProduct?.sale_type !== "offline",
-                    both: existingProduct?.sale_type !== "both",
-                  }
+                  offline: existingProduct?.sale_type !== "offline",
+                  both: existingProduct?.sale_type !== "both",
+                }
                 : {}
             }
           />
@@ -1870,7 +1880,7 @@ const AddProductScreen = ({
                         onSelect={(val) => setFieldValue("unit", val.id)}
                         selectedValue={values.unit}
                         dropDownBoxStyle={styles.dropdownStyle}
-                        // position="top"
+                      // position="top"
                       />
                     </FormField>
                   </View>
@@ -1979,7 +1989,7 @@ const AddProductScreen = ({
                           value={values.opening_stock}
                           keyboardType="number-pad"
                           onChangeText={handleChange("opening_stock")}
-                          editable={!imeiList.length || !isEditMode}
+                          editable={imeiList.length === 0 && !isEditMode}
                         />
                       </FormField>
 
@@ -2108,10 +2118,10 @@ const AddProductScreen = ({
                         <View style={styles.colorPickerContainer}>
                           <View style={styles.colorDropdownWrapper}>
                             <CustomDropdown
-                              options={COLOR_OPTIONS}
+                              options={colorList}
                               placeholder="Select Color"
                               onSelect={(val) => setFieldValue("color", val.id)}
-                              selectedValue={values.color || ""}
+                              selectedValue={values.color || null}
                             />
                           </View>
                           <View
@@ -2270,7 +2280,7 @@ const AddProductScreen = ({
                                   style={[
                                     styles.submittedVariantCard,
                                     isActive &&
-                                      styles.submittedVariantCardActive,
+                                    styles.submittedVariantCardActive,
                                   ]}
                                   onPress={() =>
                                     handleShowSubmittedVariant(variantIndex)
@@ -2298,7 +2308,7 @@ const AddProductScreen = ({
                       )}
                       {values.print_variants?.map((variant, index) =>
                         submittedPrintVariants.includes(index) &&
-                        activePrintVariantIndex !== index ? null : (
+                          activePrintVariantIndex !== index ? null : (
                           <PrintVariant
                             key={index}
                             variant={variant}
@@ -2321,13 +2331,13 @@ const AddProductScreen = ({
                             isSubmitted={submittedPrintVariants.includes(index)}
                             errors={
                               errors.print_variants?.[index] &&
-                              typeof errors.print_variants[index] === "object"
+                                typeof errors.print_variants[index] === "object"
                                 ? errors.print_variants[index]
                                 : undefined
                             }
                             touched={
                               (touched.print_variants as any)?.[index] &&
-                              typeof (touched.print_variants as any)[index] ===
+                                typeof (touched.print_variants as any)[index] ===
                                 "object"
                                 ? (touched.print_variants as any)[index]
                                 : undefined

@@ -72,8 +72,8 @@ const ModalUpdatePhoto: React.FC<ModalUpdatePhotoProps> = ({
       Platform.OS === "ios"
         ? PERMISSIONS.IOS.PHOTO_LIBRARY
         : Number(Platform.Version) >= 33
-        ? PERMISSIONS.ANDROID.READ_MEDIA_IMAGES
-        : PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE;
+          ? PERMISSIONS.ANDROID.READ_MEDIA_IMAGES
+          : PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE;
 
     try {
       const result = await check(permission);

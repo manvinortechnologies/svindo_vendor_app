@@ -7,8 +7,6 @@ import {
   ScrollView,
   Image,
   Alert,
-  Linking,
-  Platform,
 } from "react-native";
 import React, { useEffect, useState } from "react";
 import Headerwithback from "./Headerwithback";
@@ -23,6 +21,7 @@ import { API_ROUTES } from "../constants/api-routes.constants";
 import Loading from "../CommonComponent/Loading";
 import { useNavigation } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
+import { openSvindoConsumerApp } from "../utils/openSvindoConsumerApp";
 
 const CreateRequestScreen = () => {
   const navigation = useNavigation();
@@ -375,26 +374,7 @@ const CreateRequestScreen = () => {
   };
 
   const openPersonalUse = async () => {
-    const packageName = "in.webgrid.svindo"; // target app id
-
-    const intentUrl = `svindo://`;
-    const storeUrl = Platform.select({
-      android: `market://details?id=${packageName}`,
-      ios: `https://apps.apple.com/app/id${packageName}`,
-    });
-    try {
-      const canOpen = await Linking.canOpenURL(storeUrl || "");
-      if (canOpen) {
-        await Linking.openURL(intentUrl); // 🎯 App installed → open it
-      } else {
-        await Linking.openURL(storeUrl || ""); // 🛒 Not installed → Play Store
-      }
-    } catch (e) {
-      // Fallback in rare cases → open Play Store web link
-      await Linking.openURL(
-        `https://play.google.com/store/apps/details?id=${packageName}`
-      );
-    }
+    await openSvindoConsumerApp("svindo://");
   };
 
   return (

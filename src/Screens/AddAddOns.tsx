@@ -71,7 +71,7 @@ const AddAddOns = () => {
   }, [productId]);
 
   const fetchProduct = async () => {
-    const response = await api.get(`${API_ROUTES.addons}/${productId}/`);
+    const response = await api.get(`${API_ROUTES.addons}${productId}/`);
     setFormData(response.data);
   };
 
@@ -155,13 +155,13 @@ const AddAddOns = () => {
       }
 
       const response = await api[isEdit ? "put" : "post"](
-        `${API_ROUTES.addons}${productId ? `/${productId}/` : ""}`,
+        `${API_ROUTES.addons}${productId ? `${productId}/` : ""}`,
         formDatas,
         {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       // Navigate to success screen with product details
@@ -407,14 +407,16 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   buttonContainer: {
-    padding: 16,
-    backgroundColor: "#fff",
-    borderTopWidth: 1,
-    borderTopColor: "#E0E0E0",
+    padding: 10,
+    // backgroundColor: "#fff",
+    // borderTopWidth: 1,
+    // borderTopColor: "#E0E0E0",
   },
   submitButton: {
+    width: "50%",
+    alignSelf: "center",
     backgroundColor: "#FCA311",
-    paddingVertical: 16,
+    paddingVertical: 10,
     borderRadius: 8,
     alignItems: "center",
     shadowColor: "#000",

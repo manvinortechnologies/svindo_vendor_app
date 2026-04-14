@@ -32,6 +32,21 @@
 				<string>app-1-330403096037-ios-335c91b79dec18ca40bb0c</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>in.webgrid.svindobusiness</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>svindobusiness</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>svindo</string>
+		<string>svindoapp</string>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>

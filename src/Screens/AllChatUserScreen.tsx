@@ -6,7 +6,6 @@ import {
   Chat,
   ChannelList,
   ChannelPreviewMessenger,
-  OverlayProvider,
 } from "stream-chat-react-native";
 import api from "../services/api/api";
 import Loading from "../CommonComponent/Loading";
@@ -122,16 +121,14 @@ const AllChatUserScreen = () => {
     >
       {/* <StatusBar barStyle="dark-content" backgroundColor="#fff" /> */}
       <CustomHeader title="Chats" />
-      <OverlayProvider>
-        <Chat client={client}>
-          <ChannelList
-            filters={filters}
-            sort={sort}
-            onSelect={onSelectChannel}
-            Preview={ChannelPreviewMessenger}
-          />
-        </Chat>
-      </OverlayProvider>
+      <Chat client={client}>
+        <ChannelList
+          filters={filters}
+          sort={sort}
+          onSelect={onSelectChannel}
+          Preview={ChannelPreviewMessenger}
+        />
+      </Chat>
       <Loading visible={isLoading} />
     </View>
   );

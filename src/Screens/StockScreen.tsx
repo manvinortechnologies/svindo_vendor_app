@@ -42,6 +42,15 @@ interface Addon {
   is_active?: boolean;
 }
 
+interface PaginationMeta {
+  count: number;
+  total_pages: number;
+  current_page: number;
+  next?: string | null;
+  previous?: string | null;
+  results: any[];
+}
+
 const orderTypes = ["Product/Service", " | ", "Add Ons"];
 // Static color and price, but size is now from API
 const staticFilterOptions = {
@@ -58,6 +67,12 @@ const staticFilterOptions = {
     { id: "low-to-high", name: "Low to High" },
     { id: "high-to-low", name: "High to Low" },
   ],
+  stock: [
+    { id: "any", name: "Any" },
+    { id: "in-stock", name: "In stock" },
+    { id: "low-stock", name: "Low stock" },
+    { id: "out-of-stock", name: "Out of stock" },
+  ],
 };
 
 const StockScreen = () => {
@@ -69,6 +84,7 @@ const StockScreen = () => {
   const [products, setProducts] = useState<ProductType[]>([]);
   const [addons, setAddons] = useState<Addon[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMoreProducts, setLoadingMoreProducts] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterModalVisible, setFilterModalVisible] = useState(false);
@@ -78,6 +94,7 @@ const StockScreen = () => {
     color: "",
     size: "",
     price: "",
+    stock: "any",
   });
   const [appliedFilters, setAppliedFilters] = useState({
     category: "",
@@ -85,6 +102,7 @@ const StockScreen = () => {
     color: "",
     size: "",
     price: "",
+    stock: "any",
   });
 
   // API data states
@@ -106,6 +124,12 @@ const StockScreen = () => {
   // Sizes from API
   const [sizeOptions, setSizeOptions] = useState<DropDownOption[]>([]);
   const [loadingSizes, setLoadingSizes] = useState(false);
+  const [productPagination, setProductPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    hasNext: false,
+  });
 
   useEffect(() => {
     setLoadingSizes(true);
@@ -117,7 +141,7 @@ const StockScreen = () => {
             resp.data.map((sz: any) => ({
               id: sz.id,
               name: sz.name,
-            }))
+            })),
           );
         }
       })
@@ -127,7 +151,7 @@ const StockScreen = () => {
 
   // Organize products hierarchically
   const organizeProductsHierarchically = (
-    products: ProductType[]
+    products: ProductType[],
   ): ProductType[] => {
     const parentProducts: ProductType[] = [];
     const childProducts: ProductType[] = [];
@@ -152,37 +176,81 @@ const StockScreen = () => {
     return products;
   };
 
-  // Fetch products from vendorProduct API
-  const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      const response = await api.get(API_ROUTES.vendorProduct);
+  const transformProduct = (item: any): ProductType => ({
+    id: item.id?.toString() || item.product_id?.toString(),
+    name: item.name || item.product_name || "Unknown Product",
+    stock: item.stock || item.quantity || 0,
+    description: item.description || "",
+    image: item.image || item.product_image,
+    price: parseFloat(item.price || item.sales_price || 0),
+    category: item.category,
+    subcategory: item.subcategory,
+    color: item.color,
+    size: item.size,
+    sale_type: item.sale_type || "offline",
+    parent: item.parent || null,
+    ...item,
+  });
 
-      const transformedProducts = response.data.map((item: any) => ({
-        id: item.id?.toString() || item.product_id?.toString(),
-        name: item.name || item.product_name || "Unknown Product",
-        stock: item.stock || item.quantity || 0,
-        description: item.description || "",
-        image: item.image || item.product_image,
-        price: parseFloat(item.price || item.sales_price || 0),
-        category: item.category,
-        subcategory: item.subcategory,
-        color: item.color,
-        size: item.size,
-        sale_type: item.sale_type || "offline", // Default to offline if not specified
-        parent: item.parent || null,
-        ...item,
-      }));
+  const mergeUniqueProducts = (
+    previousProducts: ProductType[],
+    newProducts: ProductType[],
+  ) => {
+    const mergedMap = new Map<string, ProductType>();
+    previousProducts.forEach((product) => mergedMap.set(product.id, product));
+    newProducts.forEach((product) => mergedMap.set(product.id, product));
+    return Array.from(mergedMap.values());
+  };
+
+  // Fetch products from vendorProduct API
+  const fetchProducts = async (page = 1, append = false) => {
+    try {
+      if (append) {
+        setLoadingMoreProducts(true);
+      } else {
+        setLoading(true);
+      }
+      const response = await api.get(API_ROUTES.vendorProduct, {
+        params: { page },
+      });
+      const payload = response.data as PaginationMeta;
+      const productItems = payload?.results || [];
+
+      const transformedProducts = productItems.map(transformProduct);
 
       // Organize products hierarchically
       const organizedProducts =
         organizeProductsHierarchically(transformedProducts);
-      setProducts(organizedProducts);
+      setProducts((prevProducts) =>
+        append
+          ? mergeUniqueProducts(prevProducts, organizedProducts)
+          : organizedProducts,
+      );
+
+      if (Array.isArray(payload)) {
+        setProductPagination({
+          currentPage: 1,
+          totalPages: 1,
+          totalCount: payload.length,
+          hasNext: false,
+        });
+      } else {
+        setProductPagination({
+          currentPage: Number(payload?.current_page || page || 1),
+          totalPages: Number(payload?.total_pages || 1),
+          totalCount: Number(payload?.count || productItems.length || 0),
+          hasNext: Boolean(payload?.next),
+        });
+      }
     } catch (error) {
       console.error("Failed to fetch products:", error);
       // Fallback to dummy data
     } finally {
-      setLoading(false);
+      if (append) {
+        setLoadingMoreProducts(false);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
@@ -198,7 +266,7 @@ const StockScreen = () => {
         description: item.description || "",
         price_per_unit: parseFloat(item.price_per_unit || 0),
         image: item.image,
-        product_category: item.product_category,
+        category: item.product_category,
         ...item,
       }));
 
@@ -234,7 +302,7 @@ const StockScreen = () => {
     setRefreshing(true);
     try {
       if (selectedType === "Product/Service") {
-        await fetchProducts();
+        await fetchProducts(1, false);
       } else if (selectedType === "Add Ons") {
         await fetchAddons();
       }
@@ -246,11 +314,20 @@ const StockScreen = () => {
   // Fetch data based on selected type
   useEffect(() => {
     if (selectedType === "Product/Service") {
-      fetchProducts();
+      fetchProducts(1, false);
     } else if (selectedType === "Add Ons") {
       fetchAddons();
     }
   }, [selectedType]);
+
+  const handleLoadMoreProducts = () => {
+    if (selectedType !== "Product/Service") return;
+    if (loading || loadingMoreProducts || refreshing) return;
+    if (!productPagination.hasNext) return;
+    if (productPagination.currentPage >= productPagination.totalPages) return;
+
+    fetchProducts(productPagination.currentPage + 1, true);
+  };
 
   // Fetch categories on component mount
   useEffect(() => {
@@ -295,10 +372,23 @@ const StockScreen = () => {
     // Apply advanced filters (only for products)\
     let productsArr: ProductType[] = data as ProductType[];
     productsArr = productsArr.filter((product: ProductType) => {
+      const productWithStockMeta = product as ProductType & {
+        low_stock_quantity?: number | string;
+        low_stock_alert?: boolean;
+      };
+      const stockValue = Number(
+        product.sale_available_stock ?? product.stock ?? product.stock_cached ?? 0,
+      );
+      const lowStockThreshold = Number(productWithStockMeta.low_stock_quantity ?? 0);
+      const isLowStock =
+        stockValue > 0 &&
+        Boolean(productWithStockMeta.low_stock_alert) &&
+        lowStockThreshold > 0 &&
+        stockValue <= lowStockThreshold;
+
       // Category filter
       if (
         appliedFilters.category &&
-        selectedType === "Product/Service" &&
         product.category !== appliedFilters.category
       ) {
         return false;
@@ -329,6 +419,19 @@ const StockScreen = () => {
         selectedType === "Product/Service"
       ) {
         return false;
+      }
+
+      // Stock filter
+      if (selectedType === "Product/Service" && appliedFilters.stock) {
+        if (appliedFilters.stock === "in-stock" && stockValue <= 0) {
+          return false;
+        }
+        if (appliedFilters.stock === "out-of-stock" && stockValue > 0) {
+          return false;
+        }
+        if (appliedFilters.stock === "low-stock" && !isLowStock) {
+          return false;
+        }
       }
 
       // Price filter
@@ -387,23 +490,24 @@ const StockScreen = () => {
         (item) =>
           item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item?.batch_number?.toLowerCase().includes(searchQuery.toLowerCase())
+          item?.batch_number?.toLowerCase().includes(searchQuery.toLowerCase()),
       );
     }
     return data;
   };
 
-  const updateQuantity = (id: string, amount: number) => {
-    setQuantities((prev) => ({
-      ...prev,
-      [id]: Math.max(0, (prev[id] || 0) + amount),
-    }));
-  };
-
   const handleFilterSelect = (
     filterType: keyof typeof selectedFilters,
-    value: string
+    value: string,
   ) => {
+    if (filterType === "stock") {
+      setSelectedFilters((prev) => ({
+        ...prev,
+        stock: value,
+      }));
+      return;
+    }
+
     setSelectedFilters((prev) => ({
       ...prev,
       [filterType]: prev[filterType] === value ? "" : value,
@@ -417,6 +521,7 @@ const StockScreen = () => {
       color: "",
       size: "",
       price: "",
+      stock: "any",
     });
     setAppliedFilters({
       category: "",
@@ -424,6 +529,7 @@ const StockScreen = () => {
       color: "",
       size: "",
       price: "",
+      stock: "any",
     });
   };
 
@@ -457,8 +563,8 @@ const StockScreen = () => {
         prev.map((item) =>
           item.id === pendingActiveChange.id
             ? { ...item, is_active: pendingActiveChange.value }
-            : item
-        )
+            : item,
+        ),
       );
     } catch (error) {
       console.error("Failed to update product active status:", error);
@@ -491,15 +597,18 @@ const StockScreen = () => {
   const confirmDeleteProduct = async () => {
     try {
       setLoading(true);
-      const response = await api.delete(
-        `${API_ROUTES.deleteProduct}${selectedProduct}/`
-      );
+      const endpoint =
+        selectedType === "product"
+          ? API_ROUTES.vendorProduct
+          : API_ROUTES.deleteAddon;
+      const response = await api.delete(`${endpoint}${selectedProduct}/`);
 
       if (response.status === 200 || response.status === 204) {
         // Remove product from local state
         setProducts((prev) =>
-          prev.filter((item) => item.id !== selectedProduct)
+          prev.filter((item) => item.id !== selectedProduct),
         );
+        setAddons((prev) => prev.filter((item) => item.id !== selectedProduct));
       } else {
         throw new Error("Failed to delete product");
       }
@@ -530,7 +639,7 @@ const StockScreen = () => {
       {
         productId: id,
         isEdit: true,
-      }
+      },
     );
   };
 
@@ -608,6 +717,20 @@ const StockScreen = () => {
             ]}
             refreshing={refreshing}
             onRefresh={onRefresh}
+            onEndReached={
+              selectedType === "Product/Service"
+                ? handleLoadMoreProducts
+                : undefined
+            }
+            onEndReachedThreshold={0.4}
+            ListFooterComponent={
+              selectedType === "Product/Service" && loadingMoreProducts ? (
+                <View style={styles.paginationFooter}>
+                  <ActivityIndicator size="small" color="#FCA311" />
+                  <Text style={styles.paginationText}>Loading more...</Text>
+                </View>
+              ) : null
+            }
             ListEmptyComponent={
               <View style={styles.emptyContainer}>
                 <Text style={styles.emptyText}>
@@ -677,7 +800,7 @@ const StockScreen = () => {
                     }
                     selectedValue={
                       categoryList.find(
-                        (cat) => cat.id === selectedFilters.category
+                        (cat) => cat.id === selectedFilters.category,
                       )?.id || null
                     }
                     dropDownBoxStyle={styles.dropdown}
@@ -701,13 +824,15 @@ const StockScreen = () => {
                     ) : (
                       <CustomDropdown
                         placeholder="Select Subcategory"
-                        options={subCategoryList.filter((sub) => sub.id === selectedFilters.category)}
+                        options={subCategoryList.filter(
+                          (sub) => sub.id === selectedFilters.category,
+                        )}
                         onSelect={(option) =>
                           handleFilterSelect("subcategory", option.id)
                         }
                         selectedValue={
                           subCategoryList.find(
-                            (sub) => sub.id === selectedFilters.subcategory
+                            (sub) => sub.id === selectedFilters.subcategory,
                           )?.id || null
                         }
                         dropDownBoxStyle={styles.dropdown}
@@ -724,7 +849,7 @@ const StockScreen = () => {
                       }
                       selectedValue={
                         staticFilterOptions.color.find(
-                          (color) => color.name === selectedFilters.color
+                          (color) => color.name === selectedFilters.color,
                         )?.id || null
                       }
                       dropDownBoxStyle={styles.dropdown}
@@ -745,6 +870,23 @@ const StockScreen = () => {
                   </View>
                 </>
               )}
+              {/* Price Filter */}
+              {selectedType === "Product/Service" && (
+                <View style={styles.filterSection}>
+                  <Text style={styles.filterSectionTitle}>Stock</Text>
+                  <CustomDropdown
+                    placeholder="Select Stock"
+                    options={staticFilterOptions.stock}
+                    onSelect={(option) =>
+                      handleFilterSelect("stock", option.id.toString())
+                    }
+                    selectedValue={selectedFilters.stock || "any"}
+                    dropDownBoxStyle={styles.dropdown}
+                    isSearchable={false}
+                  />
+                </View>
+              )}
+
               {/* Price Filter */}
               <View style={styles.filterSection}>
                 <Text style={styles.filterSectionTitle}>Price</Text>
@@ -1078,6 +1220,16 @@ const styles = ScaledSheet.create({
     fontSize: 16,
     color: "#666",
     textAlign: "center",
+  },
+  paginationFooter: {
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  paginationText: {
+    marginTop: 6,
+    color: "#666",
+    fontSize: 12,
   },
   priceText: {
     fontSize: 12,

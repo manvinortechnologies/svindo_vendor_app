@@ -42,7 +42,7 @@ const ManageVendors = ({ navigation }: any) => {
   useFocusEffect(
     useCallback(() => {
       getVendeorData();
-    }, [])
+    }, []),
   );
   const getVendeorData = async () => {
     try {
@@ -53,8 +53,8 @@ const ManageVendors = ({ navigation }: any) => {
       setTotalPendingAmount(
         res.data.reduce(
           (acc: number, vendor: Vendor) => acc + Number(vendor.balance),
-          0
-        )
+          0,
+        ),
       );
     } catch (error) {
       console.error(error);
@@ -67,7 +67,7 @@ const ManageVendors = ({ navigation }: any) => {
       const filtered = vendorList.filter(
         (vendor) =>
           vendor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          vendor.contact.toLowerCase().includes(searchTerm.toLowerCase())
+          vendor.contact.toLowerCase().includes(searchTerm.toLowerCase()),
       );
       setFilteredVendors(filtered);
     }
@@ -202,6 +202,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 8,
     marginLeft: 6,
+    color: "#000",
   },
   addText: {
     color: "#000",

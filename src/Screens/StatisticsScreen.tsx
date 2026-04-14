@@ -85,7 +85,7 @@ const StatisticsScreen = ({ navigation }: any) => {
 
   // Company profile state
   const [companyProfile, setCompanyProfile] = useState<CompanyProfile | null>(
-    null
+    null,
   );
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const isFocused = useIsFocused();
@@ -217,7 +217,7 @@ const StatisticsScreen = ({ navigation }: any) => {
             buttonNeutral: "Ask Me Later",
             buttonNegative: "Cancel",
             buttonPositive: "OK",
-          }
+          },
         );
       } catch (err) {
         console.warn("Error requesting notification permission:", err);
@@ -237,7 +237,7 @@ const StatisticsScreen = ({ navigation }: any) => {
             buttonNeutral: "Ask Me Later",
             buttonNegative: "Cancel",
             buttonPositive: "OK",
-          }
+          },
         );
       } catch (err) {
         console.warn("Error requesting location permission:", err);
@@ -257,7 +257,7 @@ const StatisticsScreen = ({ navigation }: any) => {
             buttonNeutral: "Ask Me Later",
             buttonNegative: "Cancel",
             buttonPositive: "OK",
-          }
+          },
         );
       } catch (err) {
         console.warn("Error requesting camera permission:", err);
@@ -323,7 +323,7 @@ const StatisticsScreen = ({ navigation }: any) => {
   const navigateWithCondition = async (
     screenName: string,
     params: any = {},
-    conditions: { [key: string]: boolean } = {}
+    conditions: { [key: string]: boolean } = {},
   ) => {
     try {
       setIsNavigating(true);
@@ -331,21 +331,21 @@ const StatisticsScreen = ({ navigation }: any) => {
 
       // Check all conditions before navigation
       const failedConditions = Object.entries(conditions).filter(
-        ([condition, isMet]) => !isMet
+        ([condition, isMet]) => !isMet,
       );
 
       if (failedConditions.length > 0) {
         const failedConditionNames = failedConditions.map(([name]) => name);
         setNavigationError(
           `Cannot navigate: ${failedConditionNames.join(
-            ", "
-          )} conditions not met`
+            ", ",
+          )} conditions not met`,
         );
         Toast.show({
           type: "error",
           text1: "Error",
           text2: `Cannot navigate: ${failedConditionNames.join(
-            ", "
+            ", ",
           )} conditions not met`,
         });
         return;
@@ -375,7 +375,7 @@ const StatisticsScreen = ({ navigation }: any) => {
         // Add conditions here if needed
         // userLoggedIn: true,
         // hasBusinessProfile: true,
-      }
+      },
     );
   };
 
@@ -387,7 +387,7 @@ const StatisticsScreen = ({ navigation }: any) => {
         // Add conditions here if needed
         // hasBankAccounts: true,
         // hasCustomers: true,
-      }
+      },
     );
   };
 
@@ -405,7 +405,7 @@ const StatisticsScreen = ({ navigation }: any) => {
       {
         // Add conditions here if needed
         // hasTransactions: true,
-      }
+      },
     );
   };
 
@@ -416,7 +416,7 @@ const StatisticsScreen = ({ navigation }: any) => {
       {
         // Add conditions here if needed
         // hasProducts: true,
-      }
+      },
     );
   };
 
@@ -427,7 +427,7 @@ const StatisticsScreen = ({ navigation }: any) => {
       {
         // Add conditions here if needed
         // hasData: true,
-      }
+      },
     );
   };
 
@@ -438,7 +438,7 @@ const StatisticsScreen = ({ navigation }: any) => {
       {
         // Add conditions here if needed
         // hasNotifications: true,
-      }
+      },
     );
   };
 
@@ -635,7 +635,7 @@ const StatisticsScreen = ({ navigation }: any) => {
       {
         title: "Total Cash in Hand",
         value: formatNumber(
-          dashboardData?.total_cash || dashboardData?.cash_in_hand || 0
+          dashboardData?.total_cash || dashboardData?.cash_in_hand || 0,
         ),
         icon: "cash",
         change: "0",
@@ -645,7 +645,7 @@ const StatisticsScreen = ({ navigation }: any) => {
       {
         title: "Total Bank Balance",
         value: formatNumber(
-          dashboardData?.total_bank_balance || dashboardData?.bank_balance || 0
+          dashboardData?.total_bank_balance || dashboardData?.bank_balance || 0,
         ),
         icon: "bank",
         change: "0",
@@ -782,12 +782,6 @@ const StatisticsScreen = ({ navigation }: any) => {
                 ? "Loading..."
                 : companyProfile?.company_name || "Business Name"}{" "}
             </Text>
-            {/* <Text style={styles.subTitle}>
-              ID:{" "}
-              {isLoadingProfile
-                ? "Loading..."
-                : companyProfile?.id || "12345678"}
-            </Text> */}
           </View>
         </View>
         <View style={styles.headerRight}>
@@ -879,7 +873,7 @@ const StatisticsScreen = ({ navigation }: any) => {
                     navigateWithCondition(
                       HomeNavigation.EXPENESES_SCREEN,
                       {},
-                      {}
+                      {},
                     );
                     break;
                   case "Total Stock Value":
@@ -968,9 +962,9 @@ const StatisticsScreen = ({ navigation }: any) => {
                             value: monthData.count || 0,
                             label: moment(
                               monthData.month_key || monthData.month,
-                              "YYYY-MM"
+                              "YYYY-MM",
                             ).format("MMM"),
-                          })
+                          }),
                         )
                       : []
                   }
@@ -992,9 +986,9 @@ const StatisticsScreen = ({ navigation }: any) => {
                             value: monthData.count || 0,
                             label: moment(
                               monthData.month_key || monthData.month,
-                              "YYYY-MM"
+                              "YYYY-MM",
                             ).format("MMM"),
-                          })
+                          }),
                         )
                       : []
                   }
@@ -1057,7 +1051,7 @@ const StatisticsScreen = ({ navigation }: any) => {
                     {/* <Text style={styles.viewall}>View all</Text> */}
                   </View>
                 </View>
-              )
+              ),
           )}
         </View>
 
@@ -1066,7 +1060,9 @@ const StatisticsScreen = ({ navigation }: any) => {
             <View style={styles.sectionHeader}>
               <Text style={styles.title}>Recent Store Activity</Text>
               <TouchableOpacity
-                onPress={() => navigation.navigate(HomeNavigation.NOTIFICATION_SCREEN)}
+                onPress={() =>
+                  navigation.navigate(HomeNavigation.NOTIFICATION_SCREEN)
+                }
                 style={styles.viewAllButton}
               >
                 <Text style={styles.viewAllText}>View All</Text>
@@ -1274,11 +1270,8 @@ const styles = ScaledSheet.create({
     justifyContent: "space-between",
     padding: 10,
     backgroundColor: "#fff",
-    shadowColor: "#000",
-    shadowOffset: { width: 1, height: 1 },
-    shadowOpacity: 0.4,
-    shadowRadius: 3,
-    elevation: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E5E5",
     zIndex: 1000,
   },
   headerTitle: {
@@ -1291,7 +1284,7 @@ const styles = ScaledSheet.create({
   subTitle: { color: "#555" },
   titlecontent: {
     paddingHorizontal: 10,
-    maxWidth: "80%",
+    maxWidth: "180@s",
   },
   notificationIcon: { marginLeft: 10 },
   title: {

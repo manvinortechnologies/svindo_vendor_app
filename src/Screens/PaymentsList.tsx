@@ -80,6 +80,12 @@ interface Payment {
   vendor: number | null;
   customer: number | null;
   bank: number | null;
+  bank_details: {
+    id: number;
+    name: string;
+    account_number: string;
+    ifsc_code: string;
+  } | null;
 }
 
 const PaymentsList = () => {
@@ -280,7 +286,9 @@ const PaymentsList = () => {
           <View style={styles.headerLeft}>
             <View style={styles.partyInfo}>
               <Text style={styles.partyType}>{partyType} : </Text>
-              <Text style={styles.partyName}>{partyName}</Text>
+              <Text style={styles.partyName} numberOfLines={2}>
+                {partyName}
+              </Text>
             </View>
             <View style={styles.detailRow}>
               <Text style={styles.detailLabel}>Payment Type : </Text>
@@ -832,6 +840,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#333",
     marginBottom: 2,
+    maxWidth: "80%",
   },
   partyType: {
     fontSize: 12,

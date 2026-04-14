@@ -8,8 +8,6 @@ import {
   Dimensions,
   Modal,
   Alert,
-  Linking,
-  Platform,
 } from "react-native";
 import React, { useRef, useState, useEffect } from "react";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -29,6 +27,7 @@ import { APP_CONSTANTS } from "../constants/app.constants";
 import ImagePreviewModal from "../Modals/ImagePreviewModal";
 import Toast from "react-native-toast-message";
 import ReadMoreText from "../CommonComponent/ReadMoreText";
+import { openSvindoConsumerApp } from "../utils/openSvindoConsumerApp";
 
 const { width } = Dimensions.get("window");
 
@@ -500,26 +499,7 @@ const BuyersRequestScreen: React.FC = () => {
   };
 
   const openAndroidApp = async (storeId: string) => {
-    const packageName = "in.webgrid.svindo"; // target app id
-
-    const intentUrl = `svindo://store/${storeId}`;
-    const storeUrl = Platform.select({
-      android: `market://details?id=${packageName}`,
-      ios: `https://apps.apple.com/app/id${packageName}`,
-    });
-    try {
-      const canOpen = await Linking.canOpenURL(storeUrl || "");
-      if (canOpen) {
-        await Linking.openURL(intentUrl); // 🎯 App installed → open it
-      } else {
-        await Linking.openURL(storeUrl || ""); // 🛒 Not installed → Play Store
-      }
-    } catch (e) {
-      // Fallback in rare cases → open Play Store web link
-      await Linking.openURL(
-        `https://play.google.com/store/apps/details?id=${packageName}`
-      );
-    }
+    await openSvindoConsumerApp(`svindo://store/${storeId}`);
   };
 
   return (

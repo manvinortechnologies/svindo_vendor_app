@@ -32,7 +32,7 @@ export const API_ROUTES = {
   productBaseData: "/products/base-data",
   vendorProduct: "/vendor/product/",
   superCatalogue: "/vendor/super-catalogue",
-  deleteProduct: "/vendor/product/",
+  deleteAddon: "/vendor/addon/",
   updateProductSetting: "/vendor/productsetting/update/",
 
   vendor: "/vendors",

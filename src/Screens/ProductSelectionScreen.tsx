@@ -38,6 +38,7 @@ interface Product {
   quantity?: number;
   stock?: number;
   stock_cached?: number;
+  sale_available_stock?: number;
   product_type?: string;
   track_stock?: boolean;
   color?: string;
@@ -312,7 +313,7 @@ const ProductSelectionScreen: React.FC = () => {
     (itemId: number, text: string) => {
       const quantity = parseInt(text) || 0;
       const product = productList.find((p) => p.id === itemId);
-      const stock = Number(product?.stock_cached ?? 0);
+      const stock = Number(product?.sale_available_stock ?? 0);
       const trackStock = product?.track_stock !== false; // Default to true if not specified
 
       // If track_stock is false, allow any quantity (no limit)
@@ -329,7 +330,7 @@ const ProductSelectionScreen: React.FC = () => {
 
   const renderQuantityControls = useCallback(
     (item: Product, quantity: number) => {
-      const stock = Number(item?.stock_cached ?? 0);
+      const stock = Number(item?.sale_available_stock ?? 0);
       const trackStock = item?.track_stock; // Default to true if not specified
       const isPrintProduct = item?.product_type === "print";
 

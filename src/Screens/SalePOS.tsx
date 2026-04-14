@@ -36,7 +36,8 @@ import moment from "moment";
 
 interface Product {
   id: number;
-  stock_cached?: number;
+  sale_available_stock?: number;
+  stock?: number;
   track_stock?: boolean;
   name: string;
   desc: string;
@@ -269,10 +270,12 @@ const SalePOS = () => {
       }
 
       // Set advance bank if exists
-      if (saleData.advance_bank_details) {
+      if (saleData.advance_bank_details || saleData.bank_details) {
         setSelectedBank({
-          id: saleData.advance_bank_details.id,
-          name: saleData.advance_bank_details.bank_name,
+          id: saleData.advance_bank_details?.id || saleData.bank_details?.id,
+          name:
+            saleData.advance_bank_details?.bank_name ||
+            saleData.bank_details?.bank_name,
         });
       }
 
@@ -291,6 +294,10 @@ const SalePOS = () => {
           ? moment(saleData.credit_date).format("YYYY-MM-DD")
           : "",
       );
+      setDiscount({
+        pr: saleData.discount_percentage || "",
+        amount: saleData.discount_amount || "",
+      });
     } catch (error) {
       console.error("Error populating form with sale data:", error);
     }
@@ -356,7 +363,7 @@ const SalePOS = () => {
       (sum, item) =>
         sum +
         (wholesale ? item.wholesale_price || item.price : item.price) *
-          item.quantity,
+        item.quantity,
       0,
     );
     setDiscount((p) => ({ ...p, pr: value }));
@@ -374,7 +381,7 @@ const SalePOS = () => {
       (sum, item) =>
         sum +
         (wholesale ? item.wholesale_price || item.price : item.price) *
-          item.quantity,
+        item.quantity,
       0,
     );
     setDiscount((p) => ({ ...p, amount: value }));
@@ -461,13 +468,13 @@ const SalePOS = () => {
       const data =
         paymentMode === "credit"
           ? {
-              ...baseData,
-              advance_bank: selectedBank?.id || "",
-              advance_amount: advanceAmount,
-              advance_payment_method:
-                advancePaymentMode === 1 ? "bank" : "cash",
-              credit_date: new Date(dueDate).toISOString(),
-            }
+            ...baseData,
+            advance_bank: selectedBank?.id || "",
+            advance_amount: advanceAmount,
+            advance_payment_method:
+              advancePaymentMode === 1 ? "bank" : "cash",
+            credit_date: new Date(dueDate).toISOString(),
+          }
           : baseData;
       if (wholesale) {
         navigation.navigate(HomeNavigation.WHOLESALE, data);
@@ -475,8 +482,7 @@ const SalePOS = () => {
         setIsLoading(true);
 
         const res = await api[route.params?.editMode ? "put" : "post"](
-          `${API_ROUTES.posSales}${
-            route.params?.editMode ? `${route.params?.saleData?.id}/` : ""
+          `${API_ROUTES.posSales}${route.params?.editMode ? `${route.params?.saleData?.id}/` : ""
           }`,
           data,
         );
@@ -690,7 +696,7 @@ const SalePOS = () => {
                   if (newQuantity >= 0) {
                     const updatedProducts = [...products];
                     const quantity = parseInt(text) || 0;
-                    const stock = Number(item?.stock_cached ?? 0);
+                    const stock = Number(item?.sale_available_stock ?? 0);
                     const trackStock = item?.track_stock !== false; // Default to true if not specified
                     const boundedQty =
                       trackStock && stock > 0
@@ -707,14 +713,14 @@ const SalePOS = () => {
                 }}
                 keyboardType="numeric"
                 selectTextOnFocus
-                // onSubmitEditing={() => {
-                //   const updatedProducts = [...products];
-                //   if (item.quantity === 0) {
-                //     // Remove item if quantity is 0
-                //     updatedProducts.splice(index, 1);
-                //     setProducts(updatedProducts);
-                //   }
-                // }}
+              // onSubmitEditing={() => {
+              //   const updatedProducts = [...products];
+              //   if (item.quantity === 0) {
+              //     // Remove item if quantity is 0
+              //     updatedProducts.splice(index, 1);
+              //     setProducts(updatedProducts);
+              //   }
+              // }}
               />
               <Text style={styles.tableText}>
                 {formatNumber(

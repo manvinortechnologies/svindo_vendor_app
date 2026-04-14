@@ -33,6 +33,7 @@ export type VerifiedProduct = {
   price: number;
   image?: string;
   stock?: number;
+  sale_available_stock?: number;
   product_type?: string;
   track_stock?: boolean;
   timestamp: number;
@@ -110,6 +111,7 @@ const ScanProductModal: React.FC<ScanProductModalProps> = ({
             price: apiProduct.sales_price || apiProduct.price || 0,
             image: apiProduct.image || "",
             stock: apiProduct.stock,
+            sale_available_stock: apiProduct.sale_available_stock,
             product_type: apiProduct.product_type,
             track_stock: apiProduct.track_stock,
             timestamp: Date.now(),
@@ -433,9 +435,9 @@ const ScanProductModal: React.FC<ScanProductModalProps> = ({
                               • ₹{item.price.toFixed(2)}
                             </Text>
                           </View>
-                          {item.stock !== undefined && (
+                          {item.sale_available_stock !== undefined && (
                             <Text style={styles.productStock}>
-                              Stock: {item.stock}
+                              Stock: {item.sale_available_stock}
                             </Text>
                           )}
                         </>

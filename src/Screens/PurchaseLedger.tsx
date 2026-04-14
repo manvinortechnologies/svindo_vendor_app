@@ -139,13 +139,13 @@ const PurchaseLedger = () => {
       const sortedData = response.data.sort(
         (a: PurchaseEntry, b: PurchaseEntry) => {
           const dateA = new Date(
-            a.purchase_date || a.created_at || ""
+            a.purchase_date || a.created_at || "",
           ).getTime();
           const dateB = new Date(
-            b.purchase_date || b.created_at || ""
+            b.purchase_date || b.created_at || "",
           ).getTime();
           return dateB - dateA;
-        }
+        },
       );
       setPurchaseData(sortedData || []);
     } catch (error) {
@@ -208,13 +208,15 @@ const PurchaseLedger = () => {
 
       // Remove purchase from local state
       setPurchaseData((prevPurchases) =>
-        prevPurchases.filter((purchase) => purchase.id !== selectedPurchase.id)
+        prevPurchases.filter((purchase) => purchase.id !== selectedPurchase.id),
       );
 
       // Update filtered data if it exists
       if (isFiltered) {
         setFilteredPurchaseData((prevFiltered) =>
-          prevFiltered.filter((purchase) => purchase.id !== selectedPurchase.id)
+          prevFiltered.filter(
+            (purchase) => purchase.id !== selectedPurchase.id,
+          ),
         );
       }
 
@@ -250,7 +252,7 @@ const PurchaseLedger = () => {
 
     return purchaseData.filter((purchase) => {
       const purchaseDate = new Date(
-        purchase.purchase_date || purchase.created_at || ""
+        purchase.purchase_date || purchase.created_at || "",
       );
       return purchaseDate >= startDateObj && purchaseDate <= endDateObj;
     });
@@ -283,7 +285,7 @@ const PurchaseLedger = () => {
   useEffect(() => {
     if (route.params?.purchaseId && purchaseData.length > 0) {
       const purchase = purchaseData.find(
-        (p) => p.id === route.params?.purchaseId
+        (p) => p.id === route.params?.purchaseId,
       );
       if (purchase) {
         openModal(purchase);
@@ -327,7 +329,7 @@ const PurchaseLedger = () => {
 
   const groupedPurchases = currentPurchaseData.reduce((groups, purchase) => {
     const date = formatDate(
-      purchase.purchase_date || purchase.created_at || ""
+      purchase.purchase_date || purchase.created_at || "",
     );
     if (!groups[date]) {
       groups[date] = [];
@@ -344,7 +346,7 @@ const PurchaseLedger = () => {
     const isCredit = item.payment_method === "credit";
     const totalAmount = Number(item.total_amount || 0);
     const paidAmount = Number(
-      !isCredit ? item.total_amount : item.advance_amount || 0
+      !isCredit ? item.total_amount : item.advance_amount || 0,
     );
     const balanceAmount = isCredit ? totalAmount - paidAmount : 0;
     const paymentMethod =
@@ -584,12 +586,14 @@ const PurchaseLedger = () => {
                     selectedPurchase.payment_method.slice(1)}
                 </Text>
               </View>
-              {selectedPurchase.bank_details && <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>Bank:</Text>
-                <Text style={styles.detailValue}>
-                  {selectedPurchase.bank_details.name}
-                </Text>
-              </View>}
+              {selectedPurchase.bank_details && (
+                <View style={styles.detailRow}>
+                  <Text style={styles.detailLabel}>Bank:</Text>
+                  <Text style={styles.detailValue}>
+                    {selectedPurchase.bank_details.name}
+                  </Text>
+                </View>
+              )}
             </View>
 
             {/* Items Details */}
@@ -654,7 +658,7 @@ const PurchaseLedger = () => {
                   <Text style={styles.detailValue}>
                     ₹
                     {Number(selectedPurchase.delivery_shipping_charges).toFixed(
-                      2
+                      2,
                     )}
                   </Text>
                 </View>
@@ -709,58 +713,58 @@ const PurchaseLedger = () => {
               selectedPurchase.eway_bill_no ||
               selectedPurchase.lr_no ||
               selectedPurchase.vehicle_no) && (
-                <View style={styles.sectionContainer}>
-                  <Text style={styles.sectionTitle}>Additional Details</Text>
-                  {selectedPurchase.notes && (
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Notes:</Text>
-                      <Text style={styles.detailValue}>
-                        {selectedPurchase.notes}
-                      </Text>
-                    </View>
-                  )}
-                  {selectedPurchase.references && (
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>References:</Text>
-                      <Text style={styles.detailValue}>
-                        {selectedPurchase.references}
-                      </Text>
-                    </View>
-                  )}
-                  {selectedPurchase.eway_bill_no && (
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>E-Way Bill No:</Text>
-                      <Text style={styles.detailValue}>
-                        {selectedPurchase.eway_bill_no}
-                      </Text>
-                    </View>
-                  )}
-                  {selectedPurchase.lr_no && (
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>LR No:</Text>
-                      <Text style={styles.detailValue}>
-                        {selectedPurchase.lr_no}
-                      </Text>
-                    </View>
-                  )}
-                  {selectedPurchase.vehicle_no && (
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Vehicle No:</Text>
-                      <Text style={styles.detailValue}>
-                        {selectedPurchase.vehicle_no}
-                      </Text>
-                    </View>
-                  )}
-                  {selectedPurchase.transport_name && (
-                    <View style={styles.detailRow}>
-                      <Text style={styles.detailLabel}>Transport Name:</Text>
-                      <Text style={styles.detailValue}>
-                        {selectedPurchase.transport_name}
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              )}
+              <View style={styles.sectionContainer}>
+                <Text style={styles.sectionTitle}>Additional Details</Text>
+                {selectedPurchase.notes && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Notes:</Text>
+                    <Text style={styles.detailValue}>
+                      {selectedPurchase.notes}
+                    </Text>
+                  </View>
+                )}
+                {selectedPurchase.references && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>References:</Text>
+                    <Text style={styles.detailValue}>
+                      {selectedPurchase.references}
+                    </Text>
+                  </View>
+                )}
+                {selectedPurchase.eway_bill_no && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>E-Way Bill No:</Text>
+                    <Text style={styles.detailValue}>
+                      {selectedPurchase.eway_bill_no}
+                    </Text>
+                  </View>
+                )}
+                {selectedPurchase.lr_no && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>LR No:</Text>
+                    <Text style={styles.detailValue}>
+                      {selectedPurchase.lr_no}
+                    </Text>
+                  </View>
+                )}
+                {selectedPurchase.vehicle_no && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Vehicle No:</Text>
+                    <Text style={styles.detailValue}>
+                      {selectedPurchase.vehicle_no}
+                    </Text>
+                  </View>
+                )}
+                {selectedPurchase.transport_name && (
+                  <View style={styles.detailRow}>
+                    <Text style={styles.detailLabel}>Transport Name:</Text>
+                    <Text style={styles.detailValue}>
+                      {selectedPurchase.transport_name}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
           </ScrollView>
         )}
       </CustomModal>

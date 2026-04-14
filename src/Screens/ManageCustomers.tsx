@@ -54,7 +54,7 @@ const ManageCustomers = ({ navigation }: any) => {
   useFocusEffect(
     useCallback(() => {
       getCustomerData();
-    }, [])
+    }, []),
   );
 
   const getCustomerData = async () => {
@@ -64,10 +64,12 @@ const ManageCustomers = ({ navigation }: any) => {
       setCustomersList(res.data);
       setFilteredCustomers(res.data); // initially show all
       setTotalPendingAmount(
-        res.data.reduce(
-          (acc: number, customer: Customer) => acc + Number(customer.balance),
-          0
-        )
+        res.data
+          .reduce(
+            (acc: number, customer: Customer) => acc + Number(customer.balance),
+            0,
+          )
+          .toFixed(2),
       );
     } catch (error) {
       console.error(error);
@@ -81,7 +83,7 @@ const ManageCustomers = ({ navigation }: any) => {
       const filtered = customersList.filter(
         (customer) =>
           customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          customer.contact.toLowerCase().includes(searchTerm.toLowerCase())
+          customer.contact.toLowerCase().includes(searchTerm.toLowerCase()),
       );
       setFilteredCustomers(filtered);
     }
@@ -225,6 +227,7 @@ const styles = ScaledSheet.create({
     flex: 1,
     padding: 8,
     marginLeft: 6,
+    color: "#000",
   },
   addText: {
     color: "#000",

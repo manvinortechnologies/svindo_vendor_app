@@ -63,7 +63,6 @@ const DownloadQRCode = () => {
         else if (stores.id) {
           setStoreId(stores.id.toString());
         }
-
       }
     } catch (error: any) {
       console.error("Error fetching vendor stores:", error);

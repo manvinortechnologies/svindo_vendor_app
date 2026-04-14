@@ -44,7 +44,7 @@ const PaymentsScreen = () => {
   const insets = useSafeAreaInsets();
   const [selectedType, setSelectedType] = useState(true);
   const [selectedParty, setSelectedParty] = useState<"Customer" | "Vendor">(
-    "Customer"
+    "Customer",
   );
   const [selectedPaymentMethod, setSelectedPaymentMethod] =
     useState<string>("UPI");
@@ -57,7 +57,7 @@ const PaymentsScreen = () => {
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [paymentDate, setPaymentDate] = useState<string>(
-    moment().format("YYYY-MM-DD")
+    moment().format("YYYY-MM-DD"),
   );
   const [selectedPartyId, setSelectedPartyId] = useState<number | null>(null);
   const [partyList, setPartyList] = useState<DropDownOption[]>([]);
@@ -106,13 +106,13 @@ const PaymentsScreen = () => {
       setSelectedPaymentMethod(
         paymentMethods.find(
           (method) =>
-            method.toLowerCase() === paymentData.payment_type.toLowerCase()
-        ) || "Cash"
+            method.toLowerCase() === paymentData.payment_type.toLowerCase(),
+        ) || "Cash",
       );
 
       // Set notes
       setDescription(paymentData.notes || "");
-
+      setSelectedBank(paymentData.bank_details);
       // Set attachment if exists
       if (paymentData.attachment) {
         setImageFile({ uri: paymentData.attachment });
@@ -131,7 +131,7 @@ const PaymentsScreen = () => {
           (item: any) => ({
             id: item.id,
             name: item.name || item.vendor_name,
-          })
+          }),
         );
         setBankList(transformedBank);
       }
@@ -161,19 +161,19 @@ const PaymentsScreen = () => {
               item.customer_name ||
               item.vendor_name ||
               item.party_name,
-          })
+          }),
         );
         setPartyList(transformedParties);
         if (route.params.paymentData.customer) {
           const customer = transformedParties.find(
-            (party) => party.id === Number(route.params.paymentData.customer)
+            (party) => party.id === Number(route.params.paymentData.customer),
           );
           if (customer) {
             setSelectedPartyId(Number(customer.id));
           }
         } else if (route.params.paymentData.vendor) {
           const vendor = transformedParties.find(
-            (party) => party.id === Number(route.params.paymentData.vendor)
+            (party) => party.id === Number(route.params.paymentData.vendor),
           );
           if (vendor) {
             setSelectedPartyId(Number(vendor.id));
@@ -215,14 +215,14 @@ const PaymentsScreen = () => {
       const formData = new FormData();
 
       const selectedPartyData = partyList.find(
-        (party) => party.id === selectedPartyId
+        (party) => party.id === selectedPartyId,
       );
       formData.append("type", selectedType ? "gave" : "received");
       formData.append("party", selectedParty.toLocaleLowerCase());
       formData.append("party_name", selectedPartyData?.name || "");
       formData.append(
         selectedParty === "Vendor" ? "vendor" : "customer",
-        selectedPartyData?.id
+        selectedPartyData?.id,
       );
       formData.append("amount", Number(amount).toFixed(2));
       formData.append("payment_date", paymentDate);
@@ -430,7 +430,7 @@ const PaymentsScreen = () => {
                 style={[
                   styles.paymentMethodText,
                   selectedPaymentMethod === method &&
-                  styles.paymentMethodTextActive,
+                    styles.paymentMethodTextActive,
                 ]}
               >
                 {method}

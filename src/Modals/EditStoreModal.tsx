@@ -8,6 +8,7 @@ import {
   Image,
   Alert,
   ActivityIndicator,
+  Platform,
 } from "react-native";
 import { ScaledSheet } from "react-native-size-matters";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
@@ -65,6 +66,12 @@ const EditStoreModal: React.FC<EditStoreModalProps> = ({
     const options: Options = {
       mediaType: "photo",
       cropping: true,
+      // iOS specific
+      ...(Platform.OS === 'ios' && {
+        cropperChooseText: 'Choose',
+        cropperCancelText: 'Cancel',
+        forceJpg: true,
+      }),
     };
 
     const image: ImageOrVideo = await ImageCropPicker.openPicker(options);
@@ -143,8 +150,8 @@ const EditStoreModal: React.FC<EditStoreModalProps> = ({
                     uri: imageUri
                       ? imageUri
                       : selectedImage.includes("http")
-                      ? selectedImage
-                      : APP_CONSTANTS.API_BASE_URL + selectedImage,
+                        ? selectedImage
+                        : APP_CONSTANTS.API_BASE_URL + selectedImage,
                   }}
                   style={styles.selectedImage}
                 />

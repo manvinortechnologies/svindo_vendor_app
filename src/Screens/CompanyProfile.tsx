@@ -23,6 +23,7 @@ import { DropDownOption } from "../CommonComponent/CustomDropdown";
 import { StorageUtils } from "../utils/storage";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { STATE_CHOICES } from "../constants/states.constants";
+import { ScaledSheet } from "react-native-size-matters";
 
 const CompanyProfile = ({ navigation, route }: any) => {
   const profileId = route?.params?.id;
@@ -48,7 +49,7 @@ const CompanyProfile = ({ navigation, route }: any) => {
       address2: "",
       pincode: "",
       city: "",
-      state: "",
+      // state: "",
       country: "",
     },
     shipping: {
@@ -106,7 +107,7 @@ const CompanyProfile = ({ navigation, route }: any) => {
             address2: data.address_line_2 || "",
             pincode: data.pincode || "",
             city: data.city || "",
-            state: data.state_details?.id.toString() || "",
+            // state: data.state_details?.id.toString() || "",
             country: data.country || "India",
           }
         : splitAddress(data.billing_address);
@@ -172,7 +173,7 @@ const CompanyProfile = ({ navigation, route }: any) => {
     if (updatedSame) {
       setForm((prev) => ({
         ...prev,
-        shipping: { ...prev.billing },
+        // shipping: { ...prev.billing },
       }));
       // Clear shipping errors when same as billing is enabled
       setErrors((prev) => {
@@ -193,7 +194,7 @@ const CompanyProfile = ({ navigation, route }: any) => {
     setForm((prev) => ({
       ...prev,
       billing: updatedBilling,
-      shipping: sameAsBilling ? { ...updatedBilling } : prev.shipping,
+      // shipping: sameAsBilling ? { ...updatedBilling } : prev.shipping,
     }));
   };
 
@@ -244,19 +245,19 @@ const CompanyProfile = ({ navigation, route }: any) => {
     }
 
     // Validate shipping address (only if not same as billing)
-    if (!sameAsBilling) {
-      if (!form.shipping.address1.trim()) {
-        newErrors.shipping_address1 = "Shipping address line 1 is required";
-      }
-      if (!form.shipping.city.trim()) {
-        newErrors.shipping_city = "Shipping city is required";
-      }
-      if (!form.shipping.pincode.trim()) {
-        newErrors.shipping_pincode = "Shipping pincode is required";
-      } else if (form.shipping.pincode.length !== 6) {
-        newErrors.shipping_pincode = "Pincode must be 6 digits";
-      }
-    }
+    // if (!sameAsBilling) {
+    //   if (!form.shipping.address1.trim()) {
+    //     newErrors.shipping_address1 = "Shipping address line 1 is required";
+    //   }
+    //   if (!form.shipping.city.trim()) {
+    //     newErrors.shipping_city = "Shipping city is required";
+    //   }
+    //   if (!form.shipping.pincode.trim()) {
+    //     newErrors.shipping_pincode = "Shipping pincode is required";
+    //   } else if (form.shipping.pincode.length !== 6) {
+    //     newErrors.shipping_pincode = "Pincode must be 6 digits";
+    //   }
+    // }
 
     // Validate PAN (optional but must be valid format if provided)
     if (form.pan.trim()) {
@@ -320,19 +321,19 @@ const CompanyProfile = ({ navigation, route }: any) => {
       formData.append("country", form.billing.country || "India");
 
       // Shipping address - separate fields
-      formData.append(
-        "shipping_same_as_billing",
-        sameAsBilling ? "true" : "false",
-      );
-      formData.append("shipping_address_line_1", form.shipping.address1 || "");
-      formData.append("shipping_address_line_2", form.shipping.address2 || "");
-      formData.append("shipping_pincode", form.shipping.pincode || "");
-      formData.append("shipping_city", form.shipping.city || "");
+      // formData.append(
+      //   "shipping_same_as_billing",
+      //   sameAsBilling ? "true" : "false",
+      // );
+      // formData.append("shipping_address_line_1", form.shipping.address1 || "");
+      // formData.append("shipping_address_line_2", form.shipping.address2 || "");
+      // formData.append("shipping_pincode", form.shipping.pincode || "");
+      // formData.append("shipping_city", form.shipping.city || "");
       // Use billing state if same as billing, otherwise try to parse shipping state
       const shippingStateId = sameAsBilling ? form.state : form.shipping.state;
 
-      formData.append("shipping_state", shippingStateId);
-      formData.append("shipping_country", form.shipping.country || "India");
+      // formData.append("shipping_state", shippingStateId);
+      // formData.append("shipping_country", form.shipping.country || "India");
 
       // Optional fields
       formData.append("pan", form.pan || "");
@@ -556,63 +557,68 @@ const CompanyProfile = ({ navigation, route }: any) => {
           <View style={styles.addressContainer}>
             {Object.keys(form.billing).map((key, i) => {
               const errorKey = `billing_${key}` as keyof typeof errors;
-              if (key === "state") {
-                return (
-                  <View key={i}>
-                    <Text style={[styles.dropdownLabel, { marginTop: 0 }]}>
-                      State
-                    </Text>
-                    <CustomDropdown
-                      placeholder="Select State"
-                      options={states}
-                      onSelect={(option) => {
-                        handleBillingChange(
-                          "state",
-                          option?.id?.toString() || "",
-                        );
-                        if (errors[errorKey]) {
-                          setErrors((prev) => ({ ...prev, [errorKey]: "" }));
-                        }
-                      }}
-                      selectedValue={
-                        states.find(
-                          (item) => item.id.toString() === form.billing.state,
-                        )?.id || null
-                      }
-                      dropDownBoxStyle={[
-                        styles.dropdown,
-                        { backgroundColor: "#FFEBCB", marginBottom: 15 },
-                        errors[errorKey] && styles.dropdownError,
-                      ]}
-                    />
-                    {errors[errorKey] && (
-                      <Text style={styles.errorText}>{errors[errorKey]}</Text>
-                    )}
-                  </View>
-                );
-              }
+              // if (key === "state") {
+              //   return (
+              //     <View key={i}>
+              //       <Text style={[styles.dropdownLabel, { marginTop: 0 }]}>
+              //         State
+              //       </Text>
+              //       <CustomDropdown
+              //         placeholder="Select State"
+              //         options={states}
+              //         onSelect={(option) => {
+              //           handleBillingChange(
+              //             "state",
+              //             option?.id?.toString() || "",
+              //           );
+              //           if (errors[errorKey]) {
+              //             setErrors((prev) => ({ ...prev, [errorKey]: "" }));
+              //           }
+              //         }}
+              //         selectedValue={
+              //           states.find(
+              //             (item) => item.id.toString() === form.billing.state,
+              //           )?.id || null
+              //         }
+              //         dropDownBoxStyle={[
+              //           styles.dropdown,
+              //           { backgroundColor: "#FFEBCB", marginBottom: 15 },
+              //           errors[errorKey] && styles.dropdownError,
+              //         ]}
+              //       />
+              //       {errors[errorKey] && (
+              //         <Text style={styles.errorText}>{errors[errorKey]}</Text>
+              //       )}
+              //     </View>
+              //   );
+              // }
               return (
-                <InputBox
-                  key={i}
-                  placeholder={key.replace(/^\w/, (c) => c.toUpperCase())}
-                  background="#FFEBCB"
-                  value={form.billing[key as keyof typeof form.billing]}
-                  keyboardType={key === "pincode" ? "number-pad" : "default"}
-                  maxLength={key === "pincode" ? 6 : undefined}
-                  onChangeText={(text) => {
-                    handleBillingChange(key, text);
-                    if (errors[errorKey]) {
-                      setErrors((prev) => ({ ...prev, [errorKey]: "" }));
-                    }
-                  }}
-                  error={errors[errorKey]}
-                />
+                <>
+                  <Text style={[styles.dropdownLabel, { marginTop: 0 }]}>
+                    {key.replace(/^\w/, (c) => c.toUpperCase())}
+                  </Text>
+                  <InputBox
+                    key={i}
+                    placeholder={key.replace(/^\w/, (c) => c.toUpperCase())}
+                    background="#FFEBCB"
+                    value={form.billing[key as keyof typeof form.billing]}
+                    keyboardType={key === "pincode" ? "number-pad" : "default"}
+                    maxLength={key === "pincode" ? 6 : undefined}
+                    onChangeText={(text) => {
+                      handleBillingChange(key, text);
+                      if (errors[errorKey]) {
+                        setErrors((prev) => ({ ...prev, [errorKey]: "" }));
+                      }
+                    }}
+                    error={errors[errorKey]}
+                  />
+                </>
               );
             })}
           </View>
 
           {/* Shipping Address */}
-          <View style={styles.shippingHeader}>
+          {/* <View style={styles.shippingHeader}>
             <Text style={styles.sectionTitle}>Shipping Address</Text>
             <View style={styles.sameAsBilling}>
               <Text style={styles.sameText}>Same as Billing</Text>
@@ -688,55 +694,54 @@ const CompanyProfile = ({ navigation, route }: any) => {
                 />
               );
             })}
-          </View>
+          </View> */}
 
           {/* Optional Fields */}
-          <Text style={styles.optionalTitle}>Optional Fields</Text>
-          <InputBox
-            placeholder="PAN"
-            background="#FFEBCB"
-            autoCapitalize="characters"
-            value={form.pan}
-            onChangeText={(text) => {
-              setForm({ ...form, pan: text.toUpperCase() });
-              if (errors.pan) {
-                setErrors((prev) => ({ ...prev, pan: "" }));
-              }
-            }}
-            error={errors.pan}
-          />
-          <InputBox
-            placeholder="Website"
-            background="#FFEBCB"
-            value={form.website}
-            onChangeText={(text) => {
-              setForm({ ...form, website: text });
-              if (errors.website) {
-                setErrors((prev) => ({ ...prev, website: "" }));
-              }
-            }}
-            error={errors.website}
-          />
-          <InputBox
-            placeholder="UPI Id"
-            background="#FFEBCB"
-            value={form.upiId}
-            onChangeText={(text) => {
-              setForm({ ...form, upiId: text });
-              if (errors.upiId) {
-                setErrors((prev) => ({ ...prev, upiId: "" }));
-              }
-            }}
-            error={errors.upiId}
-          />
-
-          {/* Save */}
-          <TouchableOpacity
-            style={styles.saveButton}
-            onPress={handleSaveCompany}
-          >
-            <Text style={styles.saveText}>Save & Update</Text>
-          </TouchableOpacity>
+          <Text style={styles.sectionTitle}>Optional Fields</Text>
+          <View style={styles.addressContainer}>
+            <Text style={[styles.dropdownLabel, { marginTop: 0 }]}>PAN</Text>
+            <InputBox
+              placeholder="PAN"
+              background="#FFEBCB"
+              autoCapitalize="characters"
+              value={form.pan}
+              onChangeText={(text) => {
+                setForm({ ...form, pan: text.toUpperCase() });
+                if (errors.pan) {
+                  setErrors((prev) => ({ ...prev, pan: "" }));
+                }
+              }}
+              error={errors.pan}
+            />
+            <Text style={[styles.dropdownLabel, { marginTop: 0 }]}>
+              Website
+            </Text>
+            <InputBox
+              placeholder="Website"
+              background="#FFEBCB"
+              value={form.website}
+              onChangeText={(text) => {
+                setForm({ ...form, website: text });
+                if (errors.website) {
+                  setErrors((prev) => ({ ...prev, website: "" }));
+                }
+              }}
+              error={errors.website}
+            />
+            <Text style={[styles.dropdownLabel, { marginTop: 0 }]}>UPI Id</Text>
+            <InputBox
+              placeholder="UPI Id"
+              background="#FFEBCB"
+              value={form.upiId}
+              onChangeText={(text) => {
+                setForm({ ...form, upiId: text });
+                if (errors.upiId) {
+                  setErrors((prev) => ({ ...prev, upiId: "" }));
+                }
+              }}
+              error={errors.upiId}
+            />
+          </View>
 
           <Loading visible={isLoading} />
           <ModalUpdatePhoto
@@ -750,7 +755,11 @@ const CompanyProfile = ({ navigation, route }: any) => {
             onSelectedFile={(file: any) => setSignatureFile(file)}
           />
         </ScrollView>
+        {/* Save */}
       </KeyboardAvoidingView>
+      <TouchableOpacity style={styles.saveButton} onPress={handleSaveCompany}>
+        <Text style={styles.saveText}>Save & Update</Text>
+      </TouchableOpacity>
     </View>
   );
 };
@@ -759,14 +768,14 @@ export default CompanyProfile;
 // ========== Reusable InputBox Component ==========
 
 // ========== Styles ==========
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#fff",
   },
   scrollContent: {
     padding: 16,
-    paddingBottom: 32,
+    paddingBottom: "80@s",
   },
   header: {
     height: 60,
@@ -894,6 +903,10 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   saveButton: {
+    position: "absolute",
+    bottom: 20,
+    left: 50,
+    right: 50,
     backgroundColor: "#FCA511",
     borderRadius: 8,
     paddingVertical: 14,

@@ -14,7 +14,7 @@ import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { HomeNavigation } from "../constants/app-routes.constants";
 import { OtpInput } from "react-native-otp-entry";
-import auth from "@react-native-firebase/auth";
+import auth, { onAuthStateChanged, getAuth } from "@react-native-firebase/auth";
 import { useLoginMutation } from "../services/api/state-api-slice";
 import {
   DEFAULT_STATUS_CODE_CREATED,
@@ -129,7 +129,7 @@ export default function OtpScreen() {
   );
 
   useEffect(() => {
-    const subscriber = auth().onAuthStateChanged(handleAuthStateChanged);
+    const subscriber = onAuthStateChanged(getAuth(), handleAuthStateChanged);
     return subscriber;
   }, [handleAuthStateChanged]);
 
@@ -375,8 +375,22 @@ export default function OtpScreen() {
         <View style={styles.footer}>
           <Text style={styles.termsText}>
             By continuing, you agree to our {"\n"}
-            <Text style={styles.linkText}>Terms of Service</Text> and{" "}
-            <Text style={styles.linkText}>Privacy Policy</Text>.
+            <Text
+              onPress={() => navigation.navigate(HomeNavigation.TERMS_SCREEN)}
+              style={styles.linkText}
+            >
+              Terms of Service
+            </Text>{" "}
+            and{" "}
+            <Text
+              onPress={() =>
+                navigation.navigate(HomeNavigation.PRIVACY_POLICY_SCREEN)
+              }
+              style={styles.linkText}
+            >
+              Privacy Policy
+            </Text>
+            .
           </Text>
         </View>
       </ScrollView>

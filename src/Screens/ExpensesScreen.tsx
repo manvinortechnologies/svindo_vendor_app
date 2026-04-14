@@ -105,7 +105,7 @@ const ExpensesScreen = ({ navigation }: any) => {
 
     // Sort dates in descending order (newest first)
     const sortedDates = Object.keys(grouped).sort(
-      (a, b) => new Date(b).getTime() - new Date(a).getTime()
+      (a, b) => new Date(b).getTime() - new Date(a).getTime(),
     );
 
     const sortedGrouped: { [key: string]: Expense[] } = {};
@@ -141,7 +141,7 @@ const ExpensesScreen = ({ navigation }: any) => {
   const filterExpenses = (
     start: string,
     end: string,
-    categoryId: number | null
+    categoryId: number | null,
   ) => {
     let filtered = expensesList;
 
@@ -294,7 +294,7 @@ const ExpensesScreen = ({ navigation }: any) => {
         contentContainerStyle={{ paddingBottom: insets.bottom + s(70) }}
       >
         {Object.entries(groupedExpenses).map(([date, expenses]) =>
-          renderDateSection(date, expenses)
+          renderDateSection(date, expenses),
         )}
       </ScrollView>
 
@@ -559,7 +559,7 @@ const styles = ScaledSheet.create({
     borderBottomColor: "#E0E0E0",
   },
   modalTitle: {
-    fontSize: 18,
+    fontSize: "14@s",
     fontWeight: "bold",
     color: "#000",
   },
@@ -583,8 +583,8 @@ const styles = ScaledSheet.create({
     borderColor: "#E0E0E0",
     borderRadius: 8,
     paddingHorizontal: 12,
-    paddingVertical: 12,
-    fontSize: 16,
+    paddingVertical: "6@s",
+    fontSize: "12@s",
     color: "#000",
     backgroundColor: "#fff",
   },
@@ -593,7 +593,7 @@ const styles = ScaledSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
     backgroundColor: "#F0F8FF",
-    padding: 12,
+    padding: "8@s",
     borderRadius: 8,
     marginBottom: 20,
   },
@@ -620,7 +620,7 @@ const styles = ScaledSheet.create({
   },
   modalButton: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: "8@s",
     borderRadius: 8,
     alignItems: "center",
     marginHorizontal: 5,

@@ -9,6 +9,7 @@ import { NotificationProvider } from "./src/contexts/NotificationContext";
 import { NavigationContainerRef } from "@react-navigation/native";
 import Toast from "react-native-toast-message";
 import { StatusBar } from "react-native";
+import { OverlayProvider } from "stream-chat-react-native";
 
 const App = () => {
   const navigationRef = useRef<NavigationContainerRef<any> | null>(null);
@@ -23,7 +24,7 @@ const App = () => {
         // Set navigation reference
         if (navigationRef.current) {
           NotificationService.setNavigationRef(
-            navigationRef.current as NavigationContainerRef<any>
+            navigationRef.current as NavigationContainerRef<any>,
           );
         }
 
@@ -55,15 +56,17 @@ const App = () => {
     <Provider store={store}>
       <StatusBar
         translucent
-        backgroundColor="#FFFFFF9B"
+        backgroundColor="#FFFFFF00"
         barStyle="dark-content"
       />
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <NotificationProvider>
-          <AppNavigation />
-        </NotificationProvider>
-        <Toast />
-      </GestureHandlerRootView>
+      <OverlayProvider>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <NotificationProvider>
+            <AppNavigation />
+          </NotificationProvider>
+          <Toast />
+        </GestureHandlerRootView>
+      </OverlayProvider>
     </Provider>
   );
 };

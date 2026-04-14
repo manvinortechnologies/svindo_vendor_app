@@ -50,28 +50,37 @@ const AddPostScreen = ({ navigation }: any) => {
   const [boostEnabled, setBoostEnabled] = useState(true);
   const [description, setDescription] = useState(item?.description || "");
   const [selectedProduct, setSelectedProduct] = useState<any | null>(
-    item?.product ? { id: item.product, name: item?.product?.name || "" } : null
+    item?.product
+      ? { id: item.product, name: item?.product?.name || "" }
+      : null,
   );
   const [productOptions, setProductOptions] = useState<any[]>([]);
   const [amount, setAmount] = useState(item?.budget || "");
   const [media, setMedia] = useState<any>(
     item?.media
       ? {
-          uri: APP_CONSTANTS.API_BASE_URL + item.media,
-          type: item.media.includes(".mp4") ? "video/mp4" : "image/jpeg",
-        }
-      : null
+        uri: APP_CONSTANTS.API_BASE_URL + item.media,
+        type: item.media.includes(".mp4") ? "video/mp4" : "image/jpeg",
+      }
+      : null,
   );
   const [mediaType, setMediaType] = useState<"video" | "image" | null>(
     item?.media?.includes(".mp4")
       ? "video"
       : item?.media?.includes(".jp")
-      ? "image"
-      : null
+        ? "image"
+        : null,
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState<boolean>(false);
+  const [isLoadingMoreProducts, setIsLoadingMoreProducts] =
+    useState<boolean>(false);
   const [showProductModal, setShowProductModal] = useState<boolean>(false);
+  const [productPagination, setProductPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    hasNext: false,
+  });
 
   // Error state management
   const [errors, setErrors] = useState({
@@ -141,7 +150,7 @@ const AddPostScreen = ({ navigation }: any) => {
       });
 
       // Validate file size (max 100MB)
-      const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+      const maxSize = 50 * 1024 * 1024; // 10MB in bytes
       if (result.size && result.size > maxSize) {
         setErrors((prev) => ({
           ...prev,
@@ -205,7 +214,6 @@ const AddPostScreen = ({ navigation }: any) => {
         setMediaType("image");
       }
     } catch (error: any) {
-
       // Check if user cancelled
       if (error.code === "E_PICKER_CANCELLED") {
         return; // User cancelled, don't show error
@@ -220,91 +228,136 @@ const AddPostScreen = ({ navigation }: any) => {
   };
 
   // Check and request permissions for media access
-  const checkPermissions = async () => {
+  // const checkPermissions = async () => {
+  //   try {
+  //     // Define permissions based on platform
+  //     const storagePermission =
+  //       Platform.OS === "ios"
+  //         ? PERMISSIONS.IOS.PHOTO_LIBRARY
+  //         : PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE;
+
+  //     // Check current permission status
+  //     const currentStatus = await check(storagePermission);
+
+  //     if (currentStatus === RESULTS.GRANTED) {
+  //       return true;
+  //     }
+
+  //     // Request permission if not granted
+  //     const requestResult = await request(storagePermission);
+
+  //     if (requestResult === RESULTS.GRANTED) {
+  //       return true;
+  //     } else if (requestResult === RESULTS.DENIED) {
+  //       Alert.alert(
+  //         "Permission Denied",
+  //         "Storage permission is required to upload media. Please grant permission to continue.",
+  //         [
+  //           { text: "Cancel", style: "cancel" },
+  //           { text: "Try Again", onPress: () => checkPermissions() },
+  //         ]
+  //       );
+  //       return false;
+  //     } else if (
+  //       requestResult === RESULTS.BLOCKED ||
+  //       requestResult === RESULTS.UNAVAILABLE
+  //     ) {
+  //       Alert.alert(
+  //         "Permission Required",
+  //         "Storage permission is required to upload media. Please enable it in settings.",
+  //         [
+  //           { text: "Cancel", style: "cancel" },
+  //           {
+  //             text: "Settings",
+  //             onPress: () => {
+  //               Linking.openSettings();
+  //             },
+  //           },
+  //         ]
+  //       );
+  //       return false;
+  //     }
+
+  //     return false;
+  //   } catch (error) {
+  //     console.error("Permission error:", error);
+  //     return false;
+  //   }
+  // };
+
+  const fetchVendorProducts = async (page = 1, append = false) => {
     try {
-      // Define permissions based on platform
-      const storagePermission =
-        Platform.OS === "ios"
-          ? PERMISSIONS.IOS.PHOTO_LIBRARY
-          : PERMISSIONS.ANDROID.READ_EXTERNAL_STORAGE;
-
-      // Check current permission status
-      const currentStatus = await check(storagePermission);
-
-      if (currentStatus === RESULTS.GRANTED) {
-        return true;
+      if (append) {
+        setIsLoadingMoreProducts(true);
+      } else {
+        setIsLoadingProducts(true);
       }
 
-      // Request permission if not granted
-      const requestResult = await request(storagePermission);
+      const response = await api.get(API_ROUTES.vendorProduct, {
+        params: { page },
+      });
+      const payload = response.data;
+      const items = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.results)
+          ? payload.results
+          : [];
 
-      if (requestResult === RESULTS.GRANTED) {
-        return true;
-      } else if (requestResult === RESULTS.DENIED) {
-        Alert.alert(
-          "Permission Denied",
-          "Storage permission is required to upload media. Please grant permission to continue.",
-          [
-            { text: "Cancel", style: "cancel" },
-            { text: "Try Again", onPress: () => checkPermissions() },
-          ]
-        );
-        return false;
-      } else if (
-        requestResult === RESULTS.BLOCKED ||
-        requestResult === RESULTS.UNAVAILABLE
-      ) {
-        Alert.alert(
-          "Permission Required",
-          "Storage permission is required to upload media. Please enable it in settings.",
-          [
-            { text: "Cancel", style: "cancel" },
-            {
-              text: "Settings",
-              onPress: () => {
-                Linking.openSettings();
-              },
-            },
-          ]
-        );
-        return false;
+      const products = items
+        .filter((product: any) => product?.is_active)
+        .map((product: any) => ({
+          id: product.id,
+          name: product.name || product.product_name || "Unnamed Product",
+          image: product.image || product.feature_image || null,
+          ...product,
+        }));
+
+      setProductOptions((prev) => {
+        if (!append) return products;
+        const productMap = new Map(prev.map((product) => [product.id, product]));
+        products.forEach((product: any) => productMap.set(product.id, product));
+        return Array.from(productMap.values());
+      });
+
+      if (Array.isArray(payload)) {
+        setProductPagination({
+          currentPage: 1,
+          totalPages: 1,
+          hasNext: false,
+        });
+      } else {
+        setProductPagination({
+          currentPage: Number(payload?.current_page || page || 1),
+          totalPages: Number(payload?.total_pages || 1),
+          hasNext: Boolean(payload?.next),
+        });
       }
 
-      return false;
-    } catch (error) {
-      console.error("Permission error:", error);
-      return false;
-    }
-  };
-
-  const fetchVendorProducts = async () => {
-    try {
-      setIsLoadingProducts(true);
-      const response = await api.get(API_ROUTES.vendorProduct);
-      if (response.data && Array.isArray(response.data)) {
-        const products = response.data
-          .filter((product: any) => product?.is_active)
-          .map((product: any) => ({
-            id: product.id,
-            name: product.name || product.product_name || "Unnamed Product",
-            image: product.image || product.feature_image || null,
-            ...product,
-          }));
-        setProductOptions(products);
-        if (item?.product) {
-          const foundProduct = products.find(
-            (product: any) => product.id === item.product
-          );
-          if (foundProduct) {
-            setSelectedProduct(foundProduct);
-          }
+      if (item?.product) {
+        const foundProduct = products.find(
+          (product: any) => product.id === item.product,
+        );
+        if (foundProduct) {
+          setSelectedProduct(foundProduct);
         }
       }
     } catch (error) {
       console.error("Error fetching vendor products:", error);
     } finally {
-      setIsLoadingProducts(false);
+      if (append) {
+        setIsLoadingMoreProducts(false);
+      } else {
+        setIsLoadingProducts(false);
+      }
     }
+  };
+
+  const handleLoadMoreProducts = () => {
+    if (isLoadingProducts || isLoadingMoreProducts) return;
+    if (!productPagination.hasNext) return;
+    if (productPagination.currentPage >= productPagination.totalPages) return;
+
+    fetchVendorProducts(productPagination.currentPage + 1, true);
   };
 
   const validateForm = () => {
@@ -368,13 +421,13 @@ const AddPostScreen = ({ navigation }: any) => {
         ? API_ROUTES.reel
         : API_ROUTES.post;
       const res = await api[item ? "patch" : "post"](
-        apiEndPoing + (item?.id ? `/${item?.id}/` : ""),
+        apiEndPoing + (item?.id ? `${item?.id}/` : ""),
         formdata,
         {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       navigation.goBack();
@@ -480,8 +533,8 @@ const AddPostScreen = ({ navigation }: any) => {
               {isLoadingProducts
                 ? "Loading..."
                 : selectedProduct?.name
-                ? `Selected: ${selectedProduct.name}`
-                : "Select Product"}
+                  ? `Selected: ${selectedProduct.name}`
+                  : "Select Product"}
             </Text>
           </TouchableOpacity>
           {errors.selectedProduct ? (
@@ -567,7 +620,7 @@ const AddPostScreen = ({ navigation }: any) => {
             ) : (
               <FlatList
                 data={productOptions.filter(
-                  (product: any) => product.sale_type === "both"
+                  (product: any) => product.sale_type === "both",
                 )}
                 keyExtractor={(item: any) =>
                   item?.id?.toString() || Math.random().toString()
@@ -596,6 +649,15 @@ const AddPostScreen = ({ navigation }: any) => {
                 ListEmptyComponent={() => (
                   <Text style={styles.loadingText}>No products found</Text>
                 )}
+                onEndReached={handleLoadMoreProducts}
+                onEndReachedThreshold={0.4}
+                ListFooterComponent={
+                  isLoadingMoreProducts ? (
+                    <View style={styles.paginationFooter}>
+                      <Text style={styles.loadingText}>Loading more...</Text>
+                    </View>
+                  ) : null
+                }
               />
             )}
           </View>
@@ -765,6 +827,10 @@ const styles = ScaledSheet.create({
   },
   loadingText: {
     color: "#666",
+  },
+  paginationFooter: {
+    alignItems: "center",
+    paddingVertical: 12,
   },
   columnWrapper: {
     justifyContent: "space-between",

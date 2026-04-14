@@ -107,7 +107,7 @@ const VariantsScreen = () => {
   const confirmDeleteVariant = async (id: string) => {
     try {
       setIsLoading(true);
-      const response = await api.delete(`${API_ROUTES.deleteProduct}${id}/`);
+      const response = await api.delete(`${API_ROUTES.vendorProduct}${id}/`);
 
       if (response.status === 200 || response.status === 204) {
         // Remove variant from local state

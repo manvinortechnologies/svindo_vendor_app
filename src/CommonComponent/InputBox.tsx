@@ -6,6 +6,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { ScaledSheet } from "react-native-size-matters";
 
 export const InputBox = ({
   label,
@@ -48,7 +49,10 @@ export const InputBox = ({
       editable={editable}
       style={[
         styles.input,
-        { backgroundColor: background },
+        {
+          backgroundColor: background,
+          textAlignVertical: multiline ? "top" : "auto",
+        },
         error && styles.inputError,
         textInputStyle,
       ]}
@@ -66,7 +70,7 @@ export const InputBox = ({
     {error && <Text style={styles.errorText}>{error}</Text>}
   </View>
 );
-const styles = StyleSheet.create({
+const styles = ScaledSheet.create({
   label: {
     marginBottom: 4,
     fontWeight: "600",
@@ -80,7 +84,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     fontSize: 14,
     color: "#000",
-    textAlignVertical: "top", // For Android multiline text alignment
   },
   inputError: {
     borderColor: "#FF0000",

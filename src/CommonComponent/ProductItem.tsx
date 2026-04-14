@@ -18,6 +18,7 @@ export interface ProductType {
   name: string;
   stock: number;
   stock_cached?: number;
+  sale_available_stock?: number;
   unit?: string;
   track_stock?: boolean;
   description: string;
@@ -68,6 +69,7 @@ const ProductItem: React.FC<ProductItemProps> = ({
     selectedType === "Product/Service" &&
     product.track_stock &&
     product.product_type === "product";
+  const stripHtml = (html: string) => html.replace(/<[^>]*>/g, '');
   return (
     <TouchableOpacity
       style={styles.productCard}
@@ -78,7 +80,7 @@ const ProductItem: React.FC<ProductItemProps> = ({
       {showStock && (
         <View style={styles.stockBadgeAbove}>
           <Text style={styles.stockText}>
-            {product.stock_cached} {product.unit} Left
+            {product.sale_available_stock?.toString()} {product.unit} Left
           </Text>
         </View>
       )}
@@ -105,7 +107,7 @@ const ProductItem: React.FC<ProductItemProps> = ({
           source={{ uri: product.image }}
           style={styles.productImage}
           resizeMode="cover"
-          // isBackground={true}
+        // isBackground={true}
         />
       ) : (
         <View style={styles.placeholderImage}>
@@ -138,7 +140,7 @@ const ProductItem: React.FC<ProductItemProps> = ({
             )}
           </View>
           <Text style={styles.productDesc} numberOfLines={1}>
-            {product.description || "-------"}
+            {stripHtml(product.description) || "-------"}
           </Text>
         </View>
         {showSwitch &&
