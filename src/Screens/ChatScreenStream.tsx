@@ -10,7 +10,6 @@ import {
   Channel,
   MessageList,
   MessageInput,
-  useAttachmentPickerContext,
 } from "stream-chat-react-native";
 import api from "../services/api/api";
 import getChatChannel, { client } from "../utils/chatUtils";
@@ -29,7 +28,6 @@ const ChatScreenStream = () => {
   const route = useRoute<RouteProp<{ params: RouteParams }, "params">>();
   const { otherUserId } = route.params || {};
   const insets = useSafeAreaInsets();
-  const { closePicker } = useAttachmentPickerContext();
   const [channel, setChannel] = useState<any>(null);
   const [isClientReady, setIsClientReady] = useState(false);
   const [isInitializing, setIsInitializing] = useState(false);
@@ -130,7 +128,7 @@ const ChatScreenStream = () => {
       ]}
     >
       <Chat client={client} >
-        <Channel channel={channel}>
+        <Channel channel={channel} keyboardVerticalOffset={s(0)} >
           <CustomHeader title="Chat" />
           <MessageList />
           <MessageInput
