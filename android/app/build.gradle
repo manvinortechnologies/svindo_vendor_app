@@ -86,7 +86,7 @@ android {
         applicationId "in.webgrid.svindobusiness"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 31
+        versionCode 32
         versionName "1.0.2"
     }
 

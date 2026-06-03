@@ -59,17 +59,17 @@ const AddPostScreen = ({ navigation }: any) => {
   const [media, setMedia] = useState<any>(
     item?.media
       ? {
-        uri: APP_CONSTANTS.API_BASE_URL + item.media,
-        type: item.media.includes(".mp4") ? "video/mp4" : "image/jpeg",
-      }
+          uri: APP_CONSTANTS.API_BASE_URL + item.media,
+          type: item.media.includes(".mp4") ? "video/mp4" : "image/jpeg",
+        }
       : null,
   );
   const [mediaType, setMediaType] = useState<"video" | "image" | null>(
     item?.media?.includes(".mp4")
       ? "video"
       : item?.media?.includes(".jp")
-        ? "image"
-        : null,
+      ? "image"
+      : null,
   );
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState<boolean>(false);
@@ -297,11 +297,7 @@ const AddPostScreen = ({ navigation }: any) => {
         params: { page },
       });
       const payload = response.data;
-      const items = Array.isArray(payload)
-        ? payload
-        : Array.isArray(payload?.results)
-          ? payload.results
-          : [];
+      const items = payload.results || [];
 
       const products = items
         .filter((product: any) => product?.is_active)
@@ -314,24 +310,18 @@ const AddPostScreen = ({ navigation }: any) => {
 
       setProductOptions((prev) => {
         if (!append) return products;
-        const productMap = new Map(prev.map((product) => [product.id, product]));
+        const productMap = new Map(
+          prev.map((product) => [product.id, product]),
+        );
         products.forEach((product: any) => productMap.set(product.id, product));
         return Array.from(productMap.values());
       });
 
-      if (Array.isArray(payload)) {
-        setProductPagination({
-          currentPage: 1,
-          totalPages: 1,
-          hasNext: false,
-        });
-      } else {
-        setProductPagination({
-          currentPage: Number(payload?.current_page || page || 1),
-          totalPages: Number(payload?.total_pages || 1),
-          hasNext: Boolean(payload?.next),
-        });
-      }
+      setProductPagination({
+        currentPage: Number(payload?.current_page || page || 1),
+        totalPages: Number(payload?.total_pages || 1),
+        hasNext: Boolean(payload?.next),
+      });
 
       if (item?.product) {
         const foundProduct = products.find(
@@ -533,8 +523,8 @@ const AddPostScreen = ({ navigation }: any) => {
               {isLoadingProducts
                 ? "Loading..."
                 : selectedProduct?.name
-                  ? `Selected: ${selectedProduct.name}`
-                  : "Select Product"}
+                ? `Selected: ${selectedProduct.name}`
+                : "Select Product"}
             </Text>
           </TouchableOpacity>
           {errors.selectedProduct ? (

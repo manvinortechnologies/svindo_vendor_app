@@ -73,7 +73,7 @@ const AddSpotlightScreen = () => {
   const [showProductModal, setShowProductModal] = useState(false);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<ProductOption | null>(
-    null
+    null,
   );
 
   useEffect(() => {
@@ -83,13 +83,13 @@ const AddSpotlightScreen = () => {
   const fetchProducts = async () => {
     try {
       const response = await api.get(API_ROUTES.vendorProduct);
-      const activeProducts = response.data.filter(
-        (product: any) => product.is_active
+      const activeProducts = response.data?.results?.filter(
+        (product: any) => product.is_active,
       );
       setProducts(activeProducts || []);
       if (item?.product) {
         const foundProduct = activeProducts.find(
-          (product: any) => product.id === item.product
+          (product: any) => product.id === item.product,
         );
         if (foundProduct) {
           setSelectedProduct(foundProduct);
@@ -106,13 +106,13 @@ const AddSpotlightScreen = () => {
       setLoadingProducts(true);
       if (products.length === 0) {
         const res = await api.get(API_ROUTES.vendorProduct);
-        const activeProducts = res.data.filter(
-          (product: any) => product.is_active
+        const activeProducts = res.data.results?.filter(
+          (product: any) => product.is_active,
         );
         setProducts(activeProducts);
         if (item?.product) {
           const foundProduct = activeProducts.find(
-            (product: any) => product.id === item.product
+            (product: any) => product.id === item.product,
           );
           if (foundProduct) {
             setSelectedProduct(foundProduct);
@@ -130,7 +130,7 @@ const AddSpotlightScreen = () => {
 
   const handleInputChange = (
     field: keyof SpotlightFormData,
-    value: string | boolean
+    value: string | boolean,
   ) => {
     setFormData((prev) => ({
       ...prev,
@@ -179,7 +179,7 @@ const AddSpotlightScreen = () => {
 
       const response = await api[item ? "patch" : "post"](
         API_ROUTES.spotlightProduct + (item?.id ? `/${item?.id}/` : ""),
-        payload
+        payload,
       );
       navigation.goBack();
       if (response.status === 200 || response.status === 201) {
@@ -349,7 +349,7 @@ const AddSpotlightScreen = () => {
             ) : (
               <FlatList
                 data={products.filter(
-                  (product: any) => product.sale_type === "both"
+                  (product: any) => product.sale_type === "both",
                 )}
                 keyExtractor={(item) =>
                   item.id?.toString() || Math.random().toString()

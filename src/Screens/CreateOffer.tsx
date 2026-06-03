@@ -40,14 +40,14 @@ const CreateOffer = () => {
     try {
       setProductsLoading(true);
       const response = await api.get(API_ROUTES.vendorProduct);
-      const activeProducts = (response?.data || []).filter(
-        (product: ProductOption) => product?.is_active
+      const activeProducts = (response?.data?.results || []).filter(
+        (product: ProductOption) => product?.is_active,
       );
       setProducts(activeProducts);
       if (formData.connected_product) {
         const alreadySelected = activeProducts.find(
           (item: ProductOption) =>
-            item.id?.toString() === formData.connected_product
+            item.id?.toString() === formData.connected_product,
         );
         if (alreadySelected) {
           setSelectedProduct(alreadySelected);
@@ -94,7 +94,7 @@ const CreateOffer = () => {
   const [productsLoading, setProductsLoading] = useState(false);
   const [productModalVisible, setProductModalVisible] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<ProductOption | null>(
-    null
+    null,
   );
 
   useEffect(() => {
@@ -411,7 +411,7 @@ const CreateOffer = () => {
             ) : (
               <FlatList
                 data={products.filter(
-                  (product: any) => product.sale_type === "both"
+                  (product: any) => product.sale_type === "both",
                 )}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (

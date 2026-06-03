@@ -128,7 +128,7 @@ const ProductSelectionScreen: React.FC = () => {
     try {
       setIsLoading(true);
       const res = await api.get("vendor/product/"); // Replace with your API URL
-      const data = res.data?.map((item: any) => ({
+      const data = res.data?.results?.map((item: any) => ({
         id: item.id,
         name: item.name || item.product_name,
         desc: item.description || "",
@@ -154,7 +154,7 @@ const ProductSelectionScreen: React.FC = () => {
     (id: number): CartItem | undefined => {
       return cart.find((item) => item.id === id);
     },
-    [cart]
+    [cart],
   );
 
   /**
@@ -171,7 +171,7 @@ const ProductSelectionScreen: React.FC = () => {
       const existingItem = prev.find((item) => item.id === id);
       if (existingItem) {
         return prev.map((item) =>
-          item.id === id ? { ...item, quantity } : item
+          item.id === id ? { ...item, quantity } : item,
         );
       } else {
         return [...prev, { id, quantity }];
@@ -183,7 +183,7 @@ const ProductSelectionScreen: React.FC = () => {
     (currentId?: number): boolean => {
       // Build a set of product ids in cart with qty > 0
       const selectedIds = new Set(
-        cart.filter((c) => c.quantity > 0).map((c) => c.id)
+        cart.filter((c) => c.quantity > 0).map((c) => c.id),
       );
       // Iterate over selected products and see if any other print item exists
       for (const id of Array.from(selectedIds)) {
@@ -193,7 +193,7 @@ const ProductSelectionScreen: React.FC = () => {
       }
       return false;
     },
-    [cart, productList]
+    [cart, productList],
   );
 
   const handleSelectPrintProduct = useCallback(() => {
@@ -250,7 +250,7 @@ const ProductSelectionScreen: React.FC = () => {
         }
       }
     },
-    [findCartItem, updateCartItemQuantity, productList, selectedPrintProductId]
+    [findCartItem, updateCartItemQuantity, productList, selectedPrintProductId],
   );
 
   /**
@@ -265,7 +265,7 @@ const ProductSelectionScreen: React.FC = () => {
         updateCartItemQuantity(id, newQuantity);
       }
     },
-    [findCartItem, updateCartItemQuantity]
+    [findCartItem, updateCartItemQuantity],
   );
 
   // Search and Filter Functions
@@ -296,7 +296,7 @@ const ProductSelectionScreen: React.FC = () => {
       return mergedProductList;
     }
     return mergedProductList.filter((product: Product) =>
-      product.name.toLowerCase().includes(searchText.toLowerCase())
+      product.name.toLowerCase().includes(searchText.toLowerCase()),
     );
   }, [mergedProductList, searchText]);
 
@@ -325,7 +325,7 @@ const ProductSelectionScreen: React.FC = () => {
         updateCartItemQuantity(itemId, boundedQty);
       }
     },
-    [updateCartItemQuantity, productList]
+    [updateCartItemQuantity, productList],
   );
 
   const renderQuantityControls = useCallback(
@@ -377,7 +377,7 @@ const ProductSelectionScreen: React.FC = () => {
         </View>
       );
     },
-    [increment, decrement, handleQuantityChange]
+    [increment, decrement, handleQuantityChange],
   );
 
   const renderItem = useCallback(
@@ -391,7 +391,11 @@ const ProductSelectionScreen: React.FC = () => {
         <View style={styles.card}>
           <Image source={{ uri: item.image }} style={styles.image} />
           <Text style={styles.title}>{item.name}</Text>
-          {item.desc && <Text style={styles.desc} numberOfLines={1} ellipsizeMode="tail">{item.desc}</Text>}
+          {item.desc && (
+            <Text style={styles.desc} numberOfLines={1} ellipsizeMode="tail">
+              {item.desc}
+            </Text>
+          )}
           {(item.color || item.size_details) && (
             <View style={styles.variantInfoRow}>
               {item.color && (
@@ -401,7 +405,9 @@ const ProductSelectionScreen: React.FC = () => {
               )}
               {item.size_details && (
                 <View style={styles.sizeBadge}>
-                  <Text style={styles.sizeText}>Size: {item.size_details.name}</Text>
+                  <Text style={styles.sizeText}>
+                    Size: {item.size_details.name}
+                  </Text>
                 </View>
               )}
             </View>
@@ -415,14 +421,14 @@ const ProductSelectionScreen: React.FC = () => {
         </View>
       );
     },
-    [findCartItem, renderQuantityControls, cart]
+    [findCartItem, renderQuantityControls, cart],
   );
 
   const convertCartToProducts = useCallback((): Product[] => {
     return cart
       .map((cartItem) => {
         const product = mergedProductList.find(
-          (item: Product) => item.id === cartItem.id
+          (item: Product) => item.id === cartItem.id,
         );
         return product ? { ...product, quantity: cartItem.quantity } : null;
       })
@@ -449,7 +455,7 @@ const ProductSelectionScreen: React.FC = () => {
 
       return Array.from(existingMap.values());
     },
-    []
+    [],
   );
 
   const handleProceed = useCallback(() => {
@@ -464,7 +470,7 @@ const ProductSelectionScreen: React.FC = () => {
     const cartProducts = convertCartToProducts();
     const mergedProducts = mergeProductsWithCart(
       selectedProducts,
-      cartProducts
+      cartProducts,
     );
 
     navigation.popTo(navigateScreen as any, {
@@ -532,7 +538,7 @@ const ProductSelectionScreen: React.FC = () => {
         }
       }
     },
-    [findCartItem, updateCartItemQuantity, productList]
+    [findCartItem, updateCartItemQuantity, productList],
   );
 
   const handleScanBarcode = useCallback(() => {
@@ -595,7 +601,7 @@ const ProductSelectionScreen: React.FC = () => {
         });
       }
     },
-    [addVerifiedProductToCart]
+    [addVerifiedProductToCart],
   );
 
   return (

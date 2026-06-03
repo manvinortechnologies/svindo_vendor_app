@@ -44,7 +44,7 @@ const SendNotifications = ({ navigation }: any) => {
     end_time: "",
   });
   const [startDate, setStartDate] = useState<string>(
-    moment().format("YYYY-MM-DD")
+    moment().format("YYYY-MM-DD"),
   );
   const [startTime, setStartTime] = useState<string>(moment().format("HH:mm"));
   const [endDate, setEndDate] = useState<string>(moment().format("YYYY-MM-DD"));
@@ -85,9 +85,9 @@ const SendNotifications = ({ navigation }: any) => {
       if (products.length === 0) {
         const res = await api.get(API_ROUTES.vendorProduct);
         setProducts(
-          res.data.filter(
-            (product: any) => product.is_active && product.sale_type === "both"
-          )
+          res.data.results?.filter(
+            (product: any) => product.is_active && product.sale_type === "both",
+          ),
         );
       }
       setShowProductModal(true);
@@ -309,7 +309,7 @@ const SendNotifications = ({ navigation }: any) => {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       if (response.status === 200 || response.status === 201) {

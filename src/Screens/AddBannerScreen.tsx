@@ -51,7 +51,9 @@ const AddBannerScreen = ({ navigation }: any) => {
   const [products, setProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any | null>(
-    item?.product ? { id: item.product, name: item?.product?.name || "" } : null
+    item?.product
+      ? { id: item.product, name: item?.product?.name || "" }
+      : null,
   );
   const [items, setItems] = useState([
     { name: "Store", id: "store" },
@@ -60,19 +62,21 @@ const AddBannerScreen = ({ navigation }: any) => {
   const [imageFile, setImageFile] = useState<any>(
     item?.banner_image
       ? { uri: APP_CONSTANTS.API_BASE_URL + item.banner_image }
-      : null
+      : null,
   );
   const [imageModel, setImageModel] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState(false);
   const insets = useSafeAreaInsets();
+
   const openProductPicker = async () => {
     try {
       setLoadingProducts(true);
       if (products.length === 0) {
         const res = await api.get(API_ROUTES.vendorProduct);
-        setProducts(res.data.filter((product: any) => product.is_active));
+        const productsList = res.data.results || [];
+        setProducts(productsList.filter((product: any) => product.is_active));
         if (item?.product) {
-          const foundProduct = res.data
+          const foundProduct = productsList
             .filter((product: any) => product.is_active)
             .find((product: any) => product.id === item.product);
           setSelectedProduct(foundProduct || null);
@@ -142,7 +146,7 @@ const AddBannerScreen = ({ navigation }: any) => {
           headers: {
             "Content-Type": "multipart/form-data",
           },
-        }
+        },
       );
 
       navigation.goBack();
@@ -156,8 +160,10 @@ const AddBannerScreen = ({ navigation }: any) => {
     try {
       setLoadingProducts(true);
       const res = await api.get(API_ROUTES.vendorProduct);
-      setProducts(res.data.filter((product: any) => product.is_active));
-      const foundProduct = res.data
+      setProducts(
+        res.data.results?.filter((product: any) => product.is_active),
+      );
+      const foundProduct = res.data?.results
         .filter((product: any) => product.is_active)
         .find((product: any) => product.id === item.product);
       setSelectedProduct(foundProduct || null);
@@ -377,7 +383,7 @@ const AddBannerScreen = ({ navigation }: any) => {
             ) : (
               <FlatList
                 data={products.filter(
-                  (product: any) => product.sale_type === "both"
+                  (product: any) => product.sale_type === "both",
                 )}
                 keyExtractor={(it: any) =>
                   it.id?.toString() || Math.random().toString()

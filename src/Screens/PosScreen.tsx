@@ -113,7 +113,7 @@ const PosScreen = ({ navigation }: any) => {
       const filtered = products.filter(
         (product) =>
           product.name.toLowerCase().includes(query.toLowerCase()) ||
-          product.category?.toLowerCase().includes(query.toLowerCase())
+          product.category?.toLowerCase().includes(query.toLowerCase()),
       );
       setFilteredProducts(filtered);
     }
